@@ -1,0 +1,206 @@
+{
+  "write-blog-posts": {
+    "label": "Write blog posts",
+    "icon": "✍️",
+    "description": "Create SEO-friendly blog posts, articles, newsletters, landing page copy, and social media content using powerful AI writing tools. This use case is ideal for people who want to publish faster without losing quality, structure, or creativity.",
+    "hero_text": "Turn ideas into polished blog content faster with AI writing assistants built for research, drafting, and optimization.",
+    "audience": "Bloggers, marketers, founders, students, agencies",
+    "popular_tasks": [
+      "Write blog posts faster from a simple prompt",
+      "Create newsletters and email campaigns",
+      "Generate landing page copy and product descriptions",
+      "Rewrite content in a better tone or style",
+      "Create SEO outlines, headlines, and meta descriptions"
+    ],
+    "example_tools": [
+      "ChatGPT",
+      "Jasper",
+      "Copy.ai",
+      "Writesonic",
+      "Notion AI"
+    ],
+    "benefits": [
+      "Save hours on research and first drafts",
+      "Improve consistency across blog posts and campaigns",
+      "Generate more content ideas and angles",
+      "Create content optimized for traffic and engagement"
+    ],
+    "keywords": [
+      "write",
+      "blog",
+      "content",
+      "article",
+      "seo",
+      "copy",
+      "newsletter"
+    ],
+    "fallback": [
+      "ChatGPT",
+      "Jasper",
+      "Copy.ai"
+    ]
+  },
+  "create-videos": {
+    "label": "Create videos",
+    "icon": "🎬",
+    "description": "Produce videos, subtitles, voiceovers, short clips, and marketing content with AI video and audio tools. These platforms help creators and brands move from idea to finished content much faster.",
+    "hero_text": "Create engaging videos, captions, and voiceovers with tools that speed up production and improve quality.",
+    "audience": "Creators, YouTubers, marketers, agencies, educators",
+    "popular_tasks": [
+      "Create short videos for social media",
+      "Generate subtitles and captions automatically",
+      "Create AI voiceovers and narration",
+      "Edit clips faster with smart tools",
+      "Produce ad creatives and explainer videos"
+    ],
+    "example_tools": [
+      "Runway",
+      "Pictory",
+      "Descript",
+      "Synthesia",
+      "ElevenLabs"
+    ],
+    "benefits": [
+      "Reduce editing time dramatically",
+      "Create more content with a small team",
+      "Add professional voice and subtitle layers quickly",
+      "Build branded videos for marketing and education"
+    ],
+    "keywords": [
+      "video",
+      "voice",
+      "audio",
+      "subtitle",
+      "editing",
+      "clip",
+      "voiceover"
+    ],
+    "fallback": [
+      "Runway",
+      "Descript",
+      "Synthesia"
+    ]
+  },
+  "build-websites": {
+    "label": "Build websites",
+    "icon": "💻",
+    "description": "Build websites, landing pages, apps, and prototypes faster using AI coding and website generation tools. This use case is great for developers, startups, and agencies that want to launch faster.",
+    "hero_text": "Go from idea to landing page, app, or prototype faster with AI tools for coding, design, and content generation.",
+    "audience": "Developers, startups, agencies, product builders",
+    "popular_tasks": [
+      "Generate landing pages and hero sections",
+      "Build websites faster with coding assistants",
+      "Create reusable UI sections and components",
+      "Prototype apps and internal tools quickly",
+      "Write code snippets, content, and docs"
+    ],
+    "example_tools": [
+      "GitHub Copilot",
+      "ChatGPT",
+      "Codeium",
+      "Replit",
+      "Framer AI"
+    ],
+    "benefits": [
+      "Speed up development and iteration",
+      "Reduce repetitive coding work",
+      "Prototype ideas before full development",
+      "Improve productivity for solo builders and teams"
+    ],
+    "keywords": [
+      "website",
+      "build",
+      "app",
+      "code",
+      "coding",
+      "landing page",
+      "developer"
+    ],
+    "fallback": [
+      "GitHub Copilot",
+      "ChatGPT",
+      "Codeium"
+    ]
+  },
+  "automate-work": {
+    "label": "Automate work",
+    "icon": "⚙️",
+    "description": "Save time by automating repetitive work, workflows, notifications, reports, and business tasks with AI automation tools. This category helps teams eliminate manual tasks and focus on higher-value work.",
+    "hero_text": "Connect tools, remove repetitive work, and build faster workflows with AI automation platforms.",
+    "audience": "Teams, operations, founders, marketers, admins",
+    "popular_tasks": [
+      "Automate workflows between apps and forms",
+      "Connect CRM, email, spreadsheets, and alerts",
+      "Generate reports automatically",
+      "Send notifications and task updates",
+      "Reduce repetitive admin and business work"
+    ],
+    "example_tools": [
+      "Zapier",
+      "Make",
+      "n8n",
+      "Bardeen",
+      "Taskade"
+    ],
+    "benefits": [
+      "Save time on manual business tasks",
+      "Reduce human error in repetitive workflows",
+      "Improve team speed and operational efficiency",
+      "Scale processes without adding more manual work"
+    ],
+    "keywords": [
+      "automation",
+      "workflow",
+      "task",
+      "notification",
+      "report",
+      "business"
+    ],
+    "fallback": [
+      "Zapier",
+      "Make",
+      "n8n"
+    ]
+  },
+  "design-graphics": {
+    "label": "Design graphics",
+    "icon": "🎨",
+    "description": "Create logos, graphics, thumbnails, presentations, banners, and branded visuals using AI design tools. This use case is perfect for marketers, creators, designers, and startups that need visual content fast.",
+    "hero_text": "Design eye-catching graphics and brand assets without spending hours in traditional design software.",
+    "audience": "Designers, marketers, content creators, founders",
+    "popular_tasks": [
+      "Create logos and brand visuals",
+      "Design social media graphics and ads",
+      "Generate thumbnails for videos and channels",
+      "Build presentations and marketing banners",
+      "Create moodboards, concepts, and visual drafts"
+    ],
+    "example_tools": [
+      "Canva AI",
+      "Midjourney",
+      "Leonardo AI",
+      "DALL·E",
+      "Adobe Firefly"
+    ],
+    "benefits": [
+      "Create visuals faster with fewer design bottlenecks",
+      "Explore multiple creative directions quickly",
+      "Produce branded assets for marketing and content",
+      "Support campaigns, launches, and presentations visually"
+    ],
+    "keywords": [
+      "design",
+      "graphics",
+      "logo",
+      "thumbnail",
+      "presentation",
+      "image",
+      "brand"
+    ],
+    "fallback": [
+      "Canva AI",
+      "Midjourney",
+      "Adobe Firefly"
+    ]
+  }
+}

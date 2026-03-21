@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Example AI",
+    "verified": true,
+    "badge": "Verified Company"
+  },
+  {
+    "name": "Startup ML",
+    "verified": false,
+    "badge": ""
+  }
+]

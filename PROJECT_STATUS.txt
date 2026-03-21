@@ -1,0 +1,18 @@
+AIHubpedia One Updated Project
+This is a single merged project containing:
+- original AIHubpedia site
+- merged platform upgrades
+- innovation hub pages
+- homepage + navigation updates
+
+Main pages:
+- index.php
+- new-features-hub.php
+- ai-innovation-hub.php
+- filters.php
+- compare-tools.php
+- leaderboard.php
+- analytics-dashboard.php
+- affiliate-dashboard.php
+- login.php
+- bookmarks.php

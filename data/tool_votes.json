@@ -1,0 +1,12 @@
+{
+    "monica": {
+        "up": 1,
+        "down": 0
+    },
+    "chatgpt": {
+        "51ae73d6e8bd504bd3bff955b5bcfe64": "down"
+    },
+    "gemini": {
+        "51ae73d6e8bd504bd3bff955b5bcfe64": "up"
+    }
+}

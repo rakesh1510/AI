@@ -1,0 +1,14 @@
+[
+  {
+    "tool": "ChatGPT",
+    "score": 98
+  },
+  {
+    "tool": "Claude",
+    "score": 94
+  },
+  {
+    "tool": "Perplexity",
+    "score": 91
+  }
+]

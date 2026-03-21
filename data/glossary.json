@@ -1,0 +1,10 @@
+[
+  {
+    "term": "LLM",
+    "meaning": "Large language model"
+  },
+  {
+    "term": "RAG",
+    "meaning": "Retrieval-augmented generation"
+  }
+]

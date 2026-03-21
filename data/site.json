@@ -1,0 +1,53 @@
+{
+  "site_name": "AIHubpedia",
+  "base_url": "",
+  "affiliate_default": "",
+  "exclude_categories": [
+    "Personal Assistant",
+    "Research Assistant",
+    "Research",
+    "People",
+    "Person",
+    "Individuals"
+  ],
+  "admin_pass": "admin123",
+  "currency": "USD",
+  "payment": {
+    "paypal_url": "https://www.paypal.com/",
+    "stripe_url": "https://stripe.com/",
+    "pricing": {
+      "free": {
+        "label": "Free listing",
+        "price": 0,
+        "desc": "Manual approval (may take several days)."
+      },
+      "priority": {
+        "label": "Priority approval (24h)",
+        "price": 19,
+        "desc": "Fast approval within 24 hours."
+      },
+      "featured": {
+        "label": "Featured listing (Homepage)",
+        "price": 49,
+        "desc": "Homepage featured placement (7 days)."
+      },
+      "homepage": {
+        "label": "Homepage Spotlight",
+        "price": 99,
+        "desc": "Top homepage spotlight (14 days)."
+      }
+    }
+  },
+  "mail": {
+  "from_email": "rp151090@gmail.com",
+  "from_name": "AIHubpedia",
+  "to_email": "rp151090@gmail.com",
+
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_secure": "tls",
+
+  "smtp_user": "rp151090@gmail.com",
+  "smtp_pass": "gkxdviavowwugiio"
+}
+}
