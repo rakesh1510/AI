@@ -1,4 +1,3 @@
-
 name: Deploy AI to VPS
 
 on:
@@ -22,8 +21,13 @@ jobs:
           username: ${{ secrets.AI_VPS_USER }}
           key: ${{ secrets.AI_VPS_SSH_KEY }}
           port: ${{ secrets.AI_VPS_PORT }}
+          debug: true
           script: |
             set -e
+            whoami
+            pwd
             cd /var/www/html/AI
+            git remote -v
             git fetch origin main
             git reset --hard origin/main
+            git log --oneline -n 3
