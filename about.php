@@ -12,6 +12,8 @@ require __DIR__ . '/layout_top.php';
 
 
 
+
+
 <section class="aboutHero card" style="padding:32px; margin-bottom:24px;">
   <div style="max-width:900px;">
     <p class="small" style="text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px;">About AIHubpedia</p>
