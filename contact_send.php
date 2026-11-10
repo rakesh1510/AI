@@ -68,15 +68,15 @@ $stmt->execute([
 $cfg = site_cfg();
 $mailCfg = $cfg['mail'] ?? [];
 
-$toEmail   = $mailCfg['to_email'] ?? '';
-$fromEmail = $mailCfg['from_email'] ?? '';
-$fromName  = $mailCfg['from_name'] ?? 'AIHubpedia';
+$toEmail   = (string)Env::get('AIHUB_MAIL_TO', $mailCfg['to_email'] ?? 'contact@aihubpedia.com');
+$fromEmail = (string)Env::get('AIHUB_MAIL_FROM', $mailCfg['from_email'] ?? 'contact@aihubpedia.com');
+$fromName  = (string)Env::get('AIHUB_MAIL_FROM_NAME', $mailCfg['from_name'] ?? 'AIHubpedia');
 
-$smtpHost   = $mailCfg['smtp_host'] ?? '';
-$smtpPort   = (int)($mailCfg['smtp_port'] ?? 587);
-$smtpSecure = $mailCfg['smtp_secure'] ?? 'tls';
-$smtpUser   = $mailCfg['smtp_user'] ?? '';
-$smtpPass   = $mailCfg['smtp_pass'] ?? '';
+$smtpHost   = (string)Env::get('AIHUB_SMTP_HOST', $mailCfg['smtp_host'] ?? '');
+$smtpPort   = (int)Env::get('AIHUB_SMTP_PORT', $mailCfg['smtp_port'] ?? 587);
+$smtpSecure = (string)Env::get('AIHUB_SMTP_SECURE', $mailCfg['smtp_secure'] ?? 'tls');
+$smtpUser   = (string)Env::get('AIHUB_SMTP_USER', $mailCfg['smtp_user'] ?? '');
+$smtpPass   = (string)Env::get('AIHUB_SMTP_PASS', $mailCfg['smtp_pass'] ?? '');
 
 if($toEmail==='' || $smtpUser==='' || $smtpPass===''){
   fail("Mail configuration missing.");

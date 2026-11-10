@@ -10,41 +10,38 @@ $err = '';
 $selected = trim($_POST['plan'] ?? 'free');
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-  $name = trim($_POST['name'] ?? '');
-  $category = trim($_POST['category'] ?? '');
-  $website = trim($_POST['website'] ?? '');
-  $short = trim($_POST['short'] ?? '');
-  $plan = trim($_POST['plan'] ?? 'free');
-
-  if($name==='' || $category==='' || $website==='' || $short===''){
-    $err = "Please fill in all fields.";
-  } elseif(!isset($tiers[$plan])){
-    $err = "Invalid plan.";
+  if(!csrf_validate()){
+    $err = "Security validation failed. Please refresh and try again.";
   } else {
-    $tier = $tiers[$plan];
-    $price = (int)($tier['price'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $category = trim($_POST['category'] ?? '');
+    $website = trim($_POST['website'] ?? '');
+    $short = trim($_POST['short'] ?? '');
+    $plan = trim($_POST['plan'] ?? 'free');
 
-    require_once __DIR__ . '/db.php';
+    if($name==='' || $category==='' || $website==='' || $short===''){
+      $err = "Please fill in all fields.";
+    } elseif(!isset($tiers[$plan])){
+      $err = "Invalid plan.";
+    } else {
+      $tier = $tiers[$plan];
+      $price = (int)($tier['price'] ?? 0);
 
-$stmt = db()->prepare("
-INSERT INTO submissions
-(name, category, website, short_desc, plan, price, currency, status, payment_status)
-VALUES
-(:name,:category,:website,:short_desc,:plan,:price,:currency,'pending',:payment_status)
-");
+      save_submission_dual([
+        'name' => $name,
+        'category' => $category,
+        'website' => $website,
+        'short' => $short,
+        'plan' => $plan,
+        'price' => $price,
+        'currency' => (site_cfg()['currency'] ?? 'USD'),
+        'status' => 'pending',
+        'payment_status' => ($price > 0 ? 'unpaid' : 'not_required')
+      ]);
 
-$stmt->execute([
-  ':name' => $name,
-  ':category' => $category,
-  ':website' => $website,
-  ':short_desc' => $short,
-  ':plan' => $plan,
-  ':price' => $price,
-  ':currency' => (site_cfg()['currency'] ?? 'USD'),
-  ':payment_status' => ($price > 0 ? 'unpaid' : 'not_required')
-]);
-    $ok = true;
-    $selected = $plan;
+      $ok = true;
+      $selected = $plan;
+    }
   }
 }
 
@@ -195,6 +192,7 @@ require __DIR__ . '/layout_top.php';
       <p class="small">We review all submissions before publishing.</p>
 
       <form method="post">
+        <?= csrf_field() ?>
         <div class="fieldRow">
           <div>
             <label class="small">Tool name</label>

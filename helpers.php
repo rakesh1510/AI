@@ -1,5 +1,8 @@
 
 <?php
+require_once __DIR__ . '/src/Env.php';
+require_once __DIR__ . '/src/Auth.php';
+
 // ----------------------
 // JSON helpers
 // ----------------------
@@ -162,6 +165,198 @@ function load_tools(){
   return ['tools'=>$tools, 'categories'=>$cats];
 }
 
+function save_tool_dual(array $tool): bool {
+  $slug = (string)($tool['id'] ?? $tool['slug'] ?? '');
+  if ($slug === '') return false;
+
+  // 1. Save to MySQL if tables are available
+  if (mysql_tables_available_for_content()) {
+    try {
+      $pdo = db();
+      
+      $catName = (string)($tool['category'] ?? 'Other');
+      $catSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $catName), '-')) ?: 'other';
+      $catStmt = $pdo->prepare("INSERT INTO categories (slug, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)");
+      $catStmt->execute([$catSlug, $catName]);
+
+      $catIdStmt = $pdo->prepare("SELECT id FROM categories WHERE name = ? OR slug = ? LIMIT 1");
+      $catIdStmt->execute([$catName, $catSlug]);
+      $catId = $catIdStmt->fetchColumn() ?: null;
+
+      $stmt = $pdo->prepare("INSERT INTO tools 
+        (slug, name, category_id, short_description, description, features, pros, cons, use_cases, pricing, website, affiliate, added, tags, logo, pricing_type, seo_title, seo_description, featured_level, featured_until, status)
+        VALUES
+        (:slug, :name, :category_id, :short_description, :description, :features, :pros, :cons, :use_cases, :pricing, :website, :affiliate, :added, :tags, :logo, :pricing_type, :seo_title, :seo_description, :featured_level, :featured_until, 'published')
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        category_id = VALUES(category_id),
+        short_description = VALUES(short_description),
+        description = VALUES(description),
+        features = VALUES(features),
+        pros = VALUES(pros),
+        cons = VALUES(cons),
+        use_cases = VALUES(use_cases),
+        pricing = VALUES(pricing),
+        website = VALUES(website),
+        affiliate = VALUES(affiliate),
+        added = VALUES(added),
+        tags = VALUES(tags),
+        logo = VALUES(logo),
+        pricing_type = VALUES(pricing_type),
+        seo_title = VALUES(seo_title),
+        seo_description = VALUES(seo_description),
+        featured_level = VALUES(featured_level),
+        featured_until = VALUES(featured_until),
+        status = 'published'");
+
+      $stmt->execute([
+        ':slug' => $slug,
+        ':name' => (string)($tool['name'] ?? ''),
+        ':category_id' => $catId,
+        ':short_description' => (string)($tool['short'] ?? $tool['short_description'] ?? ''),
+        ':description' => (string)($tool['description'] ?? ''),
+        ':features' => json_encode($tool['features'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':pros' => json_encode($tool['pros'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':cons' => json_encode($tool['cons'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':use_cases' => json_encode($tool['use_cases'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':pricing' => (string)($tool['pricing'] ?? 'Varies'),
+        ':website' => (string)($tool['website'] ?? ''),
+        ':affiliate' => (string)($tool['affiliate'] ?? ''),
+        ':added' => (string)($tool['added'] ?? date('Y-m-d')),
+        ':tags' => json_encode($tool['tags'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':logo' => (string)($tool['logo'] ?? ''),
+        ':pricing_type' => (string)($tool['pricing_type'] ?? 'Varies'),
+        ':seo_title' => (string)($tool['seo_title'] ?? ''),
+        ':seo_description' => (string)($tool['seo_description'] ?? ''),
+        ':featured_level' => (int)($tool['featured_level'] ?? 0),
+        ':featured_until' => !empty($tool['featured_until']) ? (string)$tool['featured_until'] : null,
+      ]);
+    } catch(Throwable $e) {
+      // db fallback
+    }
+  }
+
+  // 2. Save to tools.json
+  $data = read_json('tools.json', ['tools'=>[], 'categories'=>[]]);
+  $existing = false;
+  foreach($data['tools'] as $idx => $t) {
+    if (($t['id'] ?? '') === $slug) {
+      $data['tools'][$idx] = array_merge($t, $tool, ['id' => $slug]);
+      $existing = true;
+      break;
+    }
+  }
+  if (!$existing) {
+    $tool['id'] = $slug;
+    $data['tools'][] = $tool;
+  }
+  $cat = (string)($tool['category'] ?? 'Other');
+  if (!in_array($cat, $data['categories'] ?? [], true)) {
+    $data['categories'][] = $cat;
+    sort($data['categories']);
+  }
+  write_json('tools.json', $data);
+
+  return true;
+}
+
+function load_submissions_dual(): array {
+  if (db_connection_available()) {
+    try {
+      $pdo = db();
+      $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
+      if ($stmt->fetchColumn()) {
+        $rows = $pdo->query("SELECT id, name, category, website, short_desc AS short, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id DESC")->fetchAll();
+        if ($rows) {
+          return $rows;
+        }
+      }
+    } catch (Throwable $e) {
+      // fallback
+    }
+  }
+  return read_json('submissions.json', []);
+}
+
+function update_submission_status_dual(int $index, string $status, ?string $paymentStatus = null, ?string $name = null): bool {
+  // 1. Update in submissions.json
+  $subs = read_json('submissions.json', []);
+  if (isset($subs[$index])) {
+    $subs[$index]['status'] = $status;
+    if ($paymentStatus !== null) {
+      $subs[$index]['payment_status'] = $paymentStatus;
+    }
+    write_json('submissions.json', $subs);
+    if ($name === null) {
+      $name = $subs[$index]['name'] ?? '';
+    }
+  }
+
+  // 2. Update in MySQL if available
+  if (db_connection_available() && $name) {
+    try {
+      $pdo = db();
+      $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
+      if ($stmt->fetchColumn()) {
+        if ($paymentStatus !== null) {
+          $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
+          $up->execute([$status, $paymentStatus, $name]);
+        } else {
+          $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
+          $up->execute([$status, $name]);
+        }
+      }
+    } catch(Throwable $e) {
+      // fallback
+    }
+  }
+
+  return true;
+}
+
+function save_submission_dual(array $sub): bool {
+  // 1. Save to MySQL
+  if (db_connection_available()) {
+    try {
+      $pdo = db();
+      $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
+      if ($stmt->fetchColumn()) {
+        $ins = $pdo->prepare("INSERT INTO submissions (name, category, website, short_desc, plan, price, currency, status, payment_status) VALUES (:name, :category, :website, :short_desc, :plan, :price, :currency, :status, :payment_status)");
+        $ins->execute([
+          ':name' => (string)($sub['name'] ?? ''),
+          ':category' => (string)($sub['category'] ?? ''),
+          ':website' => (string)($sub['website'] ?? ''),
+          ':short_desc' => (string)($sub['short'] ?? $sub['short_desc'] ?? ''),
+          ':plan' => (string)($sub['plan'] ?? 'free'),
+          ':price' => (int)($sub['price'] ?? 0),
+          ':currency' => (string)($sub['currency'] ?? 'USD'),
+          ':status' => (string)($sub['status'] ?? 'pending'),
+          ':payment_status' => (string)($sub['payment_status'] ?? 'not_required')
+        ]);
+      }
+    } catch(Throwable $e) {
+      // fallback
+    }
+  }
+
+  // 2. Save to submissions.json
+  $subs = read_json('submissions.json', []);
+  $subs[] = [
+    'name' => (string)($sub['name'] ?? ''),
+    'category' => (string)($sub['category'] ?? ''),
+    'website' => (string)($sub['website'] ?? ''),
+    'short' => (string)($sub['short'] ?? $sub['short_desc'] ?? ''),
+    'plan' => (string)($sub['plan'] ?? 'free'),
+    'price' => (int)($sub['price'] ?? 0),
+    'currency' => (string)($sub['currency'] ?? 'USD'),
+    'status' => (string)($sub['status'] ?? 'pending'),
+    'payment_status' => (string)($sub['payment_status'] ?? 'not_required'),
+    'created_at' => date('Y-m-d H:i:s')
+  ];
+  write_json('submissions.json', $subs);
+  return true;
+}
+
 function find_tool($id){
   $id = (string)$id;
   if(mysql_tables_available_for_content()){
@@ -236,11 +431,19 @@ function h($s){ return htmlspecialchars($s ?? '', ENT_QUOTES); }
 
 
 function db_connection_available(){
+  static $ok = null;
+  if($ok !== null) return $ok;
   if(!function_exists('db')){
     $dbFile = __DIR__ . '/db.php';
     if(file_exists($dbFile)) require_once $dbFile;
   }
-  return function_exists('db');
+  if(!function_exists('db')) return $ok = false;
+  try {
+    db();
+    return $ok = true;
+  } catch(Throwable $e){
+    return $ok = false;
+  }
 }
 
 function interaction_tables_exist(){

@@ -1,149 +1,558 @@
-
 <?php
+/**
+ * AIHubpedia Admin Management Portal
+ *
+ * Secure administration panel:
+ * - Session-based authentication with bcrypt password verification
+ * - Rate-limited login attempts with IP throttling
+ * - Strict CSRF protection on all state-changing actions
+ * - Dual-layer storage synchronization (MySQL + JSON fallback)
+ * - Zero plaintext credentials in URLs or responses
+ */
+
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/src/Auth.php';
+
+Auth::startSession();
+
 $title = "Admin — AIHubpedia";
+$loginError = '';
+$flashMessage = '';
+$flashType = 'info';
 
-$pass = $_GET['pass'] ?? ($_POST['pass'] ?? '');
-$cfg = site_cfg();
-$admin_pass = $cfg['admin_pass'] ?? 'admin123'; // change in data/site.json
+// ==============================================================================
+// 1. HANDLE LOGIN & LOGOUT ACTIONS
+// ==============================================================================
 
-if($pass !== $admin_pass){
-  require __DIR__ . '/layout_top.php';
-  echo "<h1>Admin login</h1>";
-  echo "<p class='small'>Add <code>?pass={$admin_pass}</code> (default). Change it in <code>data/site.json</code>.</p>";
-  echo "<div class='card'><b>Example:</b> admin.php?pass={$admin_pass}</div>";
-  require __DIR__ . '/layout_bottom.php';
-  exit;
-}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Admin Login Attempt
+    if (isset($_POST['admin_login_action'])) {
+        if (!csrf_validate()) {
+            $loginError = 'Security verification failed. Please refresh the page and try again.';
+        } else {
+            $username = trim((string)($_POST['username'] ?? ''));
+            $password = (string)($_POST['password'] ?? '');
 
-$tiers = pricing_tiers();
-$subs = read_json('submissions.json', []);
-
-// Actions: mark_paid, approve, reject
-$action = $_GET['action'] ?? '';
-$idx = isset($_GET['i']) ? (int)$_GET['i'] : -1;
-
-function featured_settings_for_plan($plan){
-  $today = date('Y-m-d');
-  if($plan === 'featured'){
-    return ['featured_level'=>1, 'featured_until'=>date('Y-m-d', strtotime($today . ' +7 days'))];
-  }
-  if($plan === 'homepage'){
-    return ['featured_level'=>2, 'featured_until'=>date('Y-m-d', strtotime($today . ' +14 days'))];
-  }
-  return ['featured_level'=>0, 'featured_until'=>''];
-}
-
-if($action && $idx >= 0 && $idx < count($subs)){
-  if($action === 'mark_paid'){
-    $subs[$idx]['payment_status'] = 'paid';
-    write_json('submissions.json', $subs);
-  }
-
-  if($action === 'reject'){
-    $subs[$idx]['status'] = 'rejected';
-    write_json('submissions.json', $subs);
-  }
-
-  if($action === 'approve'){
-    $s = $subs[$idx];
-    $plan = $s['plan'] ?? 'free';
-    $price = (int)($s['price'] ?? 0);
-    $paid_ok = ($price <= 0) || (($s['payment_status'] ?? '') === 'paid');
-
-    if(!$paid_ok){
-      header('Location: admin.php?pass=' . urlencode($pass) . '&msg=need_payment');
-      exit;
+            $authResult = Auth::adminLogin($username, $password);
+            if ($authResult['success']) {
+                header('Location: admin.php');
+                exit;
+            } else {
+                $loginError = $authResult['error'] ?? 'Authentication failed.';
+            }
+        }
     }
 
-    $feat = featured_settings_for_plan($plan);
+    // Admin Logout Attempt
+    if (isset($_POST['admin_logout_action'])) {
+        if (csrf_validate()) {
+            Auth::adminLogout();
+        }
+        header('Location: admin.php');
+        exit;
+    }
+}
 
-    $new = [
-      'id' => strtolower(preg_replace('/[^a-z0-9]+/','-', $s['name'])),
-      'name' => $s['name'],
-      'category' => $s['category'],
-      'short' => $s['short'],
-      'description' => $s['short'],
-      'pricing' => 'Varies',
-      'pricing_type' => 'Varies',
-      'website' => $s['website'],
-      'tags' => [$s['category'], 'AI'],
-      'features' => ['Fast onboarding','AI-assisted workflow','Export/share options (plan dependent)'],
-      'pros' => ['Saves time','Easy to start','Good for iterative work'],
-      'cons' => ['Quality depends on input','Pricing/features vary by plan'],
-      'use_cases' => ['Create drafts faster','Automate repetitive tasks','Improve consistency'],
-      'logo' => '',
-      'affiliate' => '',
-      'seo_title' => $s['name'] . ' — AI Tool',
-      'seo_description' => $s['short'],
-      'added' => date('Y-m-d'),
-      'featured_level' => $feat['featured_level'],
-      'featured_until' => $feat['featured_until']
-    ];
+// ==============================================================================
+// 2. UNATHENTICATED VIEW: SECURE LOGIN FORM
+// ==============================================================================
 
-    $tools = read_json('tools.json', ['tools'=>[],'categories'=>[]]);
-    $tools['tools'][] = $new;
-    write_json('tools.json', $tools);
+if (!Auth::isAdminLoggedIn()) {
+    $rateLimit = Auth::checkRateLimit();
+    require __DIR__ . '/layout_top.php';
+    ?>
+    <style>
+      .adminLoginWrap {
+        max-width: 440px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      .adminLoginCard {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      }
+      .adminLoginHeader {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .adminLoginHeader h1 {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 8px;
+        color: #111827;
+      }
+      .adminLoginHeader p {
+        color: #6b7280;
+        font-size: 14px;
+        margin: 0;
+      }
+      .adminFormGroup {
+        margin-bottom: 18px;
+      }
+      .adminFormGroup label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+      }
+      .adminInput {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .adminInput:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      }
+      .adminAlert {
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin-bottom: 18px;
+        line-height: 1.4;
+      }
+      .adminAlertError {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+      }
+      .adminAlertWarning {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+      }
+      .adminSubmitBtn {
+        width: 100%;
+        padding: 12px;
+        background: #4f46e5;
+        color: #ffffff;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background 0.15s ease;
+      }
+      .adminSubmitBtn:hover:not(:disabled) {
+        background: #4338ca;
+      }
+      .adminSubmitBtn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+      .securityNotice {
+        margin-top: 20px;
+        font-size: 12px;
+        color: #9ca3af;
+        text-align: center;
+        line-height: 1.4;
+      }
+    </style>
 
-    $subs[$idx]['status'] = 'approved';
-    write_json('submissions.json', $subs);
-  }
+    <div class="adminLoginWrap">
+      <div class="adminLoginCard">
+        <div class="adminLoginHeader">
+          <h1>Admin Portal</h1>
+          <p>Sign in to manage AIHubpedia tool submissions</p>
+        </div>
 
-  header('Location: admin.php?pass=' . urlencode($pass));
-  exit;
+        <?php if ($loginError !== ''): ?>
+          <div class="adminAlert adminAlertError">
+            ⚠️ <?= h($loginError) ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($rateLimit['is_blocked']): ?>
+          <div class="adminAlert adminAlertWarning">
+            🔒 IP temporarily locked due to repeated failed attempts. Please try again in <?= ceil($rateLimit['remaining_seconds'] / 60) ?> minute(s).
+          </div>
+        <?php endif; ?>
+
+        <form method="post" action="admin.php">
+          <?= csrf_field() ?>
+          <input type="hidden" name="admin_login_action" value="1">
+
+          <div class="adminFormGroup">
+            <label for="username">Username</label>
+            <input class="adminInput" id="username" name="username" type="text" autocomplete="username" required autofocus placeholder="Admin username">
+          </div>
+
+          <div class="adminFormGroup">
+            <label for="password">Password</label>
+            <input class="adminInput" id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••••••">
+          </div>
+
+          <button class="adminSubmitBtn" type="submit" <?= $rateLimit['is_blocked'] ? 'disabled' : '' ?>>
+            Secure Sign In
+          </button>
+        </form>
+
+        <div class="securityNotice">
+          🛡️ Protected by session encryption, bcrypt hashing, and rate limiting.
+        </div>
+      </div>
+    </div>
+    <?php
+    require __DIR__ . '/layout_bottom.php';
+    exit;
+}
+
+// ==============================================================================
+// 3. AUTHENTICATED ACTIONS (POST ONLY + CSRF VALIDATED)
+// ==============================================================================
+
+$tiers = pricing_tiers();
+$subs = load_submissions_dual();
+
+function featured_settings_for_plan(string $plan): array {
+    $today = date('Y-m-d');
+    if ($plan === 'featured') {
+        return ['featured_level' => 1, 'featured_until' => date('Y-m-d', strtotime($today . ' +7 days'))];
+    }
+    if ($plan === 'homepage') {
+        return ['featured_level' => 2, 'featured_until' => date('Y-m-d', strtotime($today . ' +14 days'))];
+    }
+    return ['featured_level' => 0, 'featured_until' => ''];
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = trim((string)($_POST['action'] ?? ''));
+    $idx = isset($_POST['submission_index']) ? (int)$_POST['submission_index'] : -1;
+
+    if ($action !== '' && !csrf_validate()) {
+        header('Location: admin.php?msg=csrf_error');
+        exit;
+    }
+
+    if ($action && $idx >= 0 && $idx < count($subs)) {
+        $sub = $subs[$idx];
+        $subName = (string)($sub['name'] ?? '');
+
+        if ($action === 'mark_paid') {
+            update_submission_status_dual($idx, $sub['status'] ?? 'pending', 'paid', $subName);
+            header('Location: admin.php?msg=marked_paid');
+            exit;
+        }
+
+        if ($action === 'reject') {
+            update_submission_status_dual($idx, 'rejected', null, $subName);
+            header('Location: admin.php?msg=rejected');
+            exit;
+        }
+
+        if ($action === 'approve') {
+            $plan = (string)($sub['plan'] ?? 'free');
+            $price = (int)($sub['price'] ?? 0);
+            $paidOk = ($price <= 0) || (($sub['payment_status'] ?? '') === 'paid');
+
+            if (!$paidOk) {
+                header('Location: admin.php?msg=need_payment');
+                exit;
+            }
+
+            $feat = featured_settings_for_plan($plan);
+            $cleanSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $subName), '-'));
+            if ($cleanSlug === '') {
+                $cleanSlug = 'tool-' . time();
+            }
+
+            $shortDesc = (string)($sub['short'] ?? $sub['short_desc'] ?? '');
+            $category = (string)($sub['category'] ?? 'Other');
+
+            $newTool = [
+                'id' => $cleanSlug,
+                'name' => $subName,
+                'category' => $category,
+                'short' => $shortDesc,
+                'description' => $shortDesc,
+                'pricing' => 'Varies',
+                'pricing_type' => 'Varies',
+                'website' => (string)($sub['website'] ?? ''),
+                'tags' => [$category, 'AI'],
+                'features' => ['Fast onboarding', 'AI-assisted workflow', 'Export and share options'],
+                'pros' => ['Saves time', 'Easy to start', 'Good for iterative work'],
+                'cons' => ['Quality depends on input', 'Pricing and features vary by plan'],
+                'use_cases' => ['Create drafts faster', 'Automate repetitive tasks', 'Improve workflow efficiency'],
+                'logo' => '',
+                'affiliate' => '',
+                'seo_title' => $subName . ' — AI Tool',
+                'seo_description' => $shortDesc,
+                'added' => date('Y-m-d'),
+                'featured_level' => (int)$feat['featured_level'],
+                'featured_until' => (string)$feat['featured_until']
+            ];
+
+            // Dual sync to MySQL and JSON
+            save_tool_dual($newTool);
+            update_submission_status_dual($idx, 'approved', null, $subName);
+
+            header('Location: admin.php?msg=approved');
+            exit;
+        }
+    }
+}
+
+// Handle flash messages
+$msgCode = (string)($_GET['msg'] ?? '');
+$flashMap = [
+    'approved' => ['Tool approved and published to MySQL & JSON catalog successfully.', 'success'],
+    'rejected' => ['Submission has been marked as rejected.', 'info'],
+    'marked_paid' => ['Submission marked as paid.', 'success'],
+    'need_payment' => ['This submission requires payment before it can be approved.', 'error'],
+    'csrf_error' => ['Security verification failed (CSRF token mismatch). Please retry.', 'error'],
+];
+
+if (isset($flashMap[$msgCode])) {
+    [$flashMessage, $flashType] = $flashMap[$msgCode];
+}
+
+// Refresh submissions after state changes
+$subs = load_submissions_dual();
+$totalSubs = count($subs);
+$pendingCount = 0;
+$approvedCount = 0;
+$paidCount = 0;
+
+foreach ($subs as $s) {
+    if (($s['status'] ?? '') === 'pending') $pendingCount++;
+    if (($s['status'] ?? '') === 'approved') $approvedCount++;
+    if (($s['payment_status'] ?? '') === 'paid') $paidCount++;
 }
 
 require __DIR__ . '/layout_top.php';
-$msg = $_GET['msg'] ?? '';
-if($msg === 'need_payment'){
-  echo "<div class='card'>❌ This submission requires payment. First click <b>Mark paid</b>, then approve.</div>";
-}
 ?>
 
-<h1>Admin</h1>
-<p class="small">Approve submissions, mark payments, and manage paid placements.</p>
+<style>
+  .adminDashboard {
+    max-width: 1200px;
+    margin: 20px auto 40px;
+    padding: 0 16px;
+  }
+  .adminTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .adminStatsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .adminStatCard {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .adminStatNum {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    margin-top: 4px;
+  }
+  .adminStatLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .submissionCard {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .submissionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .statusBadge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .statusPending { background: #fef3c7; color: #92400e; }
+  .statusApproved { background: #dcfce7; color: #166534; }
+  .statusRejected { background: #fee2e2; color: #991b1b; }
+  .statusPaid { background: #e0e7ff; color: #3730a3; }
+  .statusUnpaid { background: #f3f4f6; color: #4b5563; }
+  .submissionActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .actionBtn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s ease;
+  }
+  .actionBtn:hover { opacity: 0.9; }
+  .btnApprove { background: #10b981; color: #ffffff; }
+  .btnReject { background: #ef4444; color: #ffffff; }
+  .btnPaid { background: #6366f1; color: #ffffff; }
+  .btnLogout {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btnLogout:hover { background: #e5e7eb; }
+</style>
 
-<div class="card" style="background:rgba(255,255,255,.03)">
-  <h2 style="margin-top:0">Pricing tiers</h2>
-  <ul>
-    <?php foreach($tiers as $k=>$t): ?>
-      <li><b><?= h($t['label'] ?? $k) ?></b> — $<?= (int)($t['price'] ?? 0) ?> • <?= h($t['desc'] ?? '') ?></li>
-    <?php endforeach; ?>
-  </ul>
-  <p class="small">Edit PayPal/Stripe URLs and pricing in <code>data/site.json</code>.</p>
-</div>
-
-<h2>Tool submissions</h2>
-<div class="grid">
-<?php foreach($subs as $i=>$s):
-  $plan = $s['plan'] ?? 'free';
-  $tier = $tiers[$plan] ?? ['label'=>$plan,'price'=>0];
-  $price = (int)($s['price'] ?? ($tier['price'] ?? 0));
-  $payStatus = $s['payment_status'] ?? ($price>0 ? 'unpaid' : 'not_required');
-?>
-  <div class="card">
-    <h3 style="margin:0 0 6px"><?= h($s['name'] ?? '') ?></h3>
-    <div class="small">
-      Category: <?= h($s['category'] ?? '') ?> •
-      Plan: <b><?= h($tier['label'] ?? $plan) ?></b> •
-      Price: <b>$<?= (int)$price ?></b> •
-      Payment: <b><?= h($payStatus) ?></b> •
-      Status: <b><?= h($s['status'] ?? '') ?></b>
+<div class="adminDashboard">
+  <div class="adminTopBar">
+    <div>
+      <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827">Admin Control Center</h1>
+      <p style="margin:4px 0 0;color:#6b7280;font-size:14px">
+        Logged in as <b><?= h($_SESSION['admin_auth']['user'] ?? 'admin') ?></b> • Session active
+      </p>
     </div>
-    <p style="margin-top:10px"><?= h($s['short'] ?? '') ?></p>
-    <div class="small"><?= h($s['website'] ?? '') ?></div>
+    <form method="post" action="admin.php" style="margin:0">
+      <?= csrf_field() ?>
+      <input type="hidden" name="admin_logout_action" value="1">
+      <button class="btnLogout" type="submit">Log Out</button>
+    </form>
+  </div>
 
-    <div class="actions">
-      <?php if(($s['status'] ?? '') === 'pending'): ?>
-        <?php if($price > 0 && $payStatus !== 'paid'): ?>
-          <a class="btn" href="admin.php?pass=<?= urlencode($pass) ?>&action=mark_paid&i=<?= (int)$i ?>">Mark paid</a>
-        <?php endif; ?>
-        <a class="btn secondary" href="admin.php?pass=<?= urlencode($pass) ?>&action=approve&i=<?= (int)$i ?>">Approve</a>
-        <a class="btn secondary" href="admin.php?pass=<?= urlencode($pass) ?>&action=reject&i=<?= (int)$i ?>">Reject</a>
-      <?php endif; ?>
+  <?php if ($flashMessage !== ''): ?>
+    <div class="adminAlert <?= $flashType === 'success' ? 'alertOk' : ($flashType === 'error' ? 'alertErr' : 'card') ?>" style="margin-bottom:20px">
+      <?= $flashType === 'success' ? '✅' : ($flashType === 'error' ? '❌' : 'ℹ️') ?> <?= h($flashMessage) ?>
+    </div>
+  <?php endif; ?>
+
+  <div class="adminStatsGrid">
+    <div class="adminStatCard">
+      <div class="adminStatLabel">Pending Submissions</div>
+      <div class="adminStatNum" style="color:#d97706"><?= (int)$pendingCount ?></div>
+    </div>
+    <div class="adminStatCard">
+      <div class="adminStatLabel">Approved Submissions</div>
+      <div class="adminStatNum" style="color:#16a34a"><?= (int)$approvedCount ?></div>
+    </div>
+    <div class="adminStatCard">
+      <div class="adminStatLabel">Paid Placements</div>
+      <div class="adminStatNum" style="color:#4f46e5"><?= (int)$paidCount ?></div>
+    </div>
+    <div class="adminStatCard">
+      <div class="adminStatLabel">Total Submissions</div>
+      <div class="adminStatNum"><?= (int)$totalSubs ?></div>
     </div>
   </div>
-<?php endforeach; ?>
+
+  <div class="card" style="margin-bottom:28px">
+    <h2 style="margin-top:0;font-size:18px;font-weight:700">Listing Plans & Pricing Tiers</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
+      <?php foreach ($tiers as $k => $t): ?>
+        <div style="background:rgba(0,0,0,0.02);border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+          <div style="font-weight:700;color:#111827"><?= h($t['label'] ?? $k) ?></div>
+          <div style="font-size:18px;font-weight:800;color:#4f46e5;margin:4px 0">$<?= (int)($t['price'] ?? 0) ?></div>
+          <div style="font-size:12px;color:#6b7280"><?= h($t['desc'] ?? '') ?></div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:16px">Tool Submissions Queue</h2>
+
+  <?php if (empty($subs)): ?>
+    <div class="card" style="text-align:center;padding:40px 20px;color:#6b7280">
+      🎉 No submissions in queue.
+    </div>
+  <?php else: ?>
+    <?php foreach ($subs as $i => $s):
+      $plan = (string)($s['plan'] ?? 'free');
+      $tier = $tiers[$plan] ?? ['label' => $plan, 'price' => 0];
+      $price = (int)($s['price'] ?? ($tier['price'] ?? 0));
+      $payStatus = (string)($s['payment_status'] ?? ($price > 0 ? 'unpaid' : 'not_required'));
+      $status = (string)($s['status'] ?? 'pending');
+      $statusClass = $status === 'approved' ? 'statusApproved' : ($status === 'rejected' ? 'statusRejected' : 'statusPending');
+      $payClass = $payStatus === 'paid' ? 'statusPaid' : 'statusUnpaid';
+    ?>
+      <div class="submissionCard">
+        <div class="submissionHeader">
+          <div>
+            <h3 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111827"><?= h($s['name'] ?? 'Unnamed Tool') ?></h3>
+            <div style="font-size:13px;color:#6b7280">
+              Category: <b><?= h($s['category'] ?? 'General') ?></b> •
+              Plan: <b><?= h($tier['label'] ?? $plan) ?></b> ($<?= (int)$price ?>) •
+              Submitted: <?= h($s['created_at'] ?? 'Recently') ?>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="statusBadge <?= $statusClass ?>">Status: <?= h(ucfirst($status)) ?></span>
+            <span class="statusBadge <?= $payClass ?>">Payment: <?= h(ucfirst($payStatus)) ?></span>
+          </div>
+        </div>
+
+        <p style="margin:12px 0 8px;font-size:14px;color:#374151;line-height:1.5">
+          <?= h($s['short'] ?? $s['short_desc'] ?? '') ?>
+        </p>
+
+        <div style="font-size:13px">
+          🌐 Website: <a href="<?= h($s['website'] ?? '#') ?>" target="_blank" rel="noopener noreferrer" style="color:#4f46e5;text-decoration:none"><?= h($s['website'] ?? '') ?></a>
+        </div>
+
+        <?php if ($status === 'pending'): ?>
+          <div class="submissionActions">
+            <?php if ($price > 0 && $payStatus !== 'paid'): ?>
+              <form method="post" action="admin.php" style="margin:0;display:inline">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="mark_paid">
+                <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
+                <button class="actionBtn btnPaid" type="submit">Mark Paid ($<?= (int)$price ?>)</button>
+              </form>
+            <?php endif; ?>
+
+            <form method="post" action="admin.php" style="margin:0;display:inline">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="approve">
+              <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
+              <button class="actionBtn btnApprove" type="submit">Approve & Publish</button>
+            </form>
+
+            <form method="post" action="admin.php" style="margin:0;display:inline" onsubmit="return confirm('Are you sure you want to reject this submission?');">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="reject">
+              <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
+              <button class="actionBtn btnReject" type="submit">Reject</button>
+            </form>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
 </div>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>
