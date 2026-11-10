@@ -1,0 +1,126 @@
+/* ============================================================
+   AIHubpedia — Trust Badges & Phase 1 styles
+   Add this file to your <head>:
+   <link rel="stylesheet" href="trust-badges.css">
+   ============================================================ */
+
+/* --- Badge base ------------------------------------------- */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+  padding: .2em .65em;
+  border-radius: 99px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.trust-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  align-items: center;
+}
+
+/* --- Badge variants --------------------------------------- */
+.trust-badge--verified {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.trust-badge--live {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.trust-badge--editorial {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.trust-badge--affiliate {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.trust-badge--sponsored {
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+.trust-badge--featured {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Dark-mode overrides */
+@media (prefers-color-scheme: dark) {
+  .trust-badge--verified  { background: #14532d; color: #86efac; border-color: #166534; }
+  .trust-badge--live      { background: #1e3a5f; color: #93c5fd; border-color: #1e40af; }
+  .trust-badge--editorial { background: #3b0764; color: #d8b4fe; border-color: #581c87; }
+  .trust-badge--affiliate { background: #431407; color: #fdba74; border-color: #7c2d12; }
+  .trust-badge--sponsored { background: #422006; color: #fde68a; border-color: #713f12; }
+  .trust-badge--featured  { background: #451a03; color: #fcd34d; border-color: #78350f; }
+}
+
+/* --- Reviewed-by block ------------------------------------ */
+.reviewed-by-block {
+  color: inherit;
+  opacity: .7;
+  margin: .25rem 0 1.25rem;
+  font-size: .8rem;
+}
+
+/* --- Homepage trust section ------------------------------- */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.trust-strip__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .3rem;
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  background: var(--surface-alt, #f9fafb);
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.trust-strip__item .trust-strip__icon {
+  font-size: 1.4rem;
+}
+
+.trust-strip__item strong {
+  font-size: .9rem;
+  line-height: 1.3;
+}
+
+.trust-strip__item span {
+  font-size: .75rem;
+  opacity: .65;
+  line-height: 1.4;
+}
+
+/* --- Partner options grid --------------------------------- */
+.partner-options .card h3 { font-size: .95rem; }
+.partner-options .card p.small { font-size: .78rem; opacity: .8; margin: .3rem 0; }
+
+/* --- Org schema / footer trust note ----------------------- */
+.footer-trust-note {
+  font-size: .72rem;
+  opacity: .5;
+  margin-top: .5rem;
+}

@@ -99,6 +99,8 @@ function load_tools(){
                 t.added,
                 t.tags,
                 t.logo,
+                t.signup_url, 
+                t.signup_verified,
                 t.pricing_type,
                 t.seo_title,
                 t.seo_description,
@@ -107,13 +109,16 @@ function load_tools(){
               FROM tools t
               LEFT JOIN categories c ON c.id = t.category_id
               WHERE t.status = 'published'
-              ORDER BY t.name ASC";
+              ORDER BY t.signup_verified DESC"
+              ;
       $rows = $pdo->query($sql)->fetchAll();
       $exclude = exclude_categories();
       $tools = [];
       foreach($rows as $row){
         $tool = [
           'id' => (string)($row['id'] ?? ''),
+            'signup_url' => $row['signup_url'] ?? '',
+'signup_verified' => (int)($row['signup_verified'] ?? 0),
           'name' => (string)($row['name'] ?? ''),
           'category' => (string)($row['category'] ?? 'Other'),
           'short' => (string)($row['short'] ?? ''),
@@ -966,42 +971,106 @@ function compare_factual_fallbacks(array $tool): array{
   ];
 }
 
-function compare_tool_bundle($tool): array{
-  $tool = is_array($tool) ? $tool : [];
+function compare_to_array($value): array{
+  if(is_array($value)){
+    return array_values(array_filter(array_map(function($v){ return trim((string)$v); }, $value), function($v){ return $v !== ''; }));
+  }
+  if($value === null || $value === '') return [];
+  $decoded = json_decode((string)$value, true);
+  if(is_array($decoded)){
+    return array_values(array_filter(array_map(function($v){ return trim((string)$v); }, $decoded), function($v){ return $v !== ''; }));
+  }
+  return [];
+}
+
+function compare_integrations_from_tags(array $tool): array{
+  $tags = array_map('strtolower', compare_to_array($tool['tags'] ?? []));
+  $map = [
+    'slack' => 'Slack',
+    'google meet' => 'Google Meet',
+    'meet' => 'Google Meet',
+    'zoom' => 'Zoom',
+    'gmail' => 'Gmail',
+    'notion' => 'Notion',
+    'zapier' => 'Zapier',
+    'api' => 'API',
+    'chrome' => 'Chrome Extension',
+    'teams' => 'Microsoft Teams',
+    'microsoft teams' => 'Microsoft Teams',
+  ];
+
+  $out = [];
+  foreach($tags as $tag){
+    if(isset($map[$tag])) $out[] = $map[$tag];
+  }
+  return array_values(array_unique($out));
+}
+
+function compare_platforms_from_tool(array $tool): array{
+  $platforms = compare_to_array($tool['platforms'] ?? []);
+  if(!empty($platforms)) return $platforms;
+
+  $out = [];
+  if(!empty($tool['website'])) $out[] = 'Web';
+
+  $hay = strtolower(implode(' ', compare_to_array($tool['tags'] ?? [])) . ' ' . ($tool['description'] ?? '') . ' ' . ($tool['short'] ?? ''));
+  if(strpos($hay, 'ios') !== false || strpos($hay, 'iphone') !== false || strpos($hay, 'mobile') !== false) $out[] = 'iOS / Mobile';
+  if(strpos($hay, 'android') !== false) $out[] = 'Android';
+  if(strpos($hay, 'chrome') !== false || strpos($hay, 'extension') !== false) $out[] = 'Chrome Extension';
+  if(empty($out)) $out[] = 'Web';
+
+  return array_values(array_unique($out));
+}
+
+function compare_tool_bundle(array $tool): array{
   $slug = (string)($tool['id'] ?? '');
   $profile = compare_profile_row($slug);
-  $fallback = compare_factual_fallbacks($tool);
 
-  $features = $profile ? compare_labels_from_points(compare_tool_points($slug, 'feature')) : [];
-  $useCases = $profile ? compare_labels_from_points(compare_tool_points($slug, 'use_case')) : [];
-  $pros = $profile ? compare_labels_from_points(compare_tool_points($slug, 'pro')) : [];
-  $watchouts = $profile ? compare_labels_from_points(compare_tool_points($slug, 'watchout')) : [];
-  $integrations = $profile ? compare_labels_from_points(compare_tool_points($slug, 'integration')) : [];
-  $platforms = $profile ? array_values(array_unique(array_filter($profile['platforms'] ?? []))) : [];
+  $profileFeatures = $profile ? compare_labels_from_points(compare_tool_points($slug, 'feature')) : [];
+  $profileUseCases = $profile ? compare_labels_from_points(compare_tool_points($slug, 'use_case')) : [];
+  $profilePros = $profile ? compare_labels_from_points(compare_tool_points($slug, 'pro')) : [];
+  $profileWatchouts = $profile ? compare_labels_from_points(compare_tool_points($slug, 'watchout')) : [];
+  $profileIntegrations = $profile ? compare_labels_from_points(compare_tool_points($slug, 'integration')) : [];
 
-  if(!$features) $features = $fallback['features'];
-  if(!$useCases) $useCases = $fallback['use_cases'];
-  if(!$pros) $pros = $fallback['pros'];
-  if(!$watchouts) $watchouts = $fallback['watchouts'];
-  if(!$integrations) $integrations = $fallback['integrations'];
-  if(!$platforms) $platforms = $fallback['platforms'];
+  $features = $profileFeatures ?: compare_to_array($tool['features'] ?? []);
+  $useCases = $profileUseCases ?: compare_to_array($tool['use_cases'] ?? []);
+  $pros = $profilePros ?: compare_to_array($tool['pros'] ?? []);
+  $watchouts = $profileWatchouts ?: compare_to_array($tool['cons'] ?? []);
 
-  $pricing = trim((string)($profile['pricing_model'] ?? ($tool['pricing'] ?? '')));
+  $integrations = $profileIntegrations ?: compare_to_array($tool['integrations'] ?? []);
+  if(empty($integrations)) $integrations = compare_integrations_from_tags($tool);
+
+  $platforms = [];
+  if($profile && !empty($profile['platforms'])) $platforms = compare_to_array($profile['platforms']);
+  if(empty($platforms)) $platforms = compare_platforms_from_tool($tool);
+
   $summary = trim((string)($profile['summary'] ?? ''));
-  if($summary === ''){
-    $summary = trim((string)($tool['short'] ?? ''));
-  }
-  if($summary === ''){
-    $summary = trim((string)($tool['description'] ?? ''));
-  }
+  if($summary === '') $summary = trim((string)($tool['description'] ?? ''));
+  if($summary === '') $summary = trim((string)($tool['short'] ?? ''));
 
-  $freePlan = isset($profile['free_plan']) && $profile['free_plan'] !== null ? (int)$profile['free_plan'] : null;
-  $freeTrial = isset($profile['free_trial']) && $profile['free_trial'] !== null ? (int)$profile['free_trial'] : null;
-  $sourceStatus = trim((string)($profile['source_status'] ?? 'pending'));
-  $sourceConfidence = trim((string)($profile['source_confidence'] ?? 'basic'));
+  $pricing = trim((string)($profile['pricing_model'] ?? ''));
+  if($pricing === '') $pricing = trim((string)($tool['pricing'] ?? ($tool['pricing_type'] ?? 'Unknown')));
+  if($pricing === '') $pricing = 'Unknown';
+
+  $featureDepth = isset($tool['feature_depth']) && $tool['feature_depth'] !== ''
+    ? (int)$tool['feature_depth']
+    : min(10, max(3, count($features) + min(3, count($integrations)) + (strlen($summary) > 120 ? 1 : 0)));
+
+  $easeOfUse = isset($tool['ease_of_use']) && $tool['ease_of_use'] !== ''
+    ? (int)$tool['ease_of_use']
+    : min(10, max(3, 5 + (!empty($platforms) ? 1 : 0) + (stripos($pricing, 'free') !== false ? 1 : 0) + (count($features) >= 3 ? 1 : 0)));
+
+  $useCaseRange = isset($tool['use_case_range']) && $tool['use_case_range'] !== ''
+    ? (int)$tool['use_case_range']
+    : min(10, max(3, count($useCases) + 3 + min(2, count($platforms))));
+
+  $featureDepth = min(10, max(1, $featureDepth));
+  $easeOfUse = min(10, max(1, $easeOfUse));
+  $useCaseRange = min(10, max(1, $useCaseRange));
+
+  $hasRealData = !empty($features) || !empty($useCases) || !empty($pros) || !empty($profile);
   $sourceCount = 0;
-
-  if(compare_tables_exist()){
+  if($profile && compare_tables_exist()){
     try {
       $pdo = db();
       $stmt = $pdo->prepare("SELECT COUNT(*) FROM compare_tool_sources WHERE tool_slug = ?");
@@ -1011,51 +1080,45 @@ function compare_tool_bundle($tool): array{
       $sourceCount = 0;
     }
   }
+  if($sourceCount === 0 && $hasRealData) $sourceCount = 1;
 
   return [
     'profile' => $profile,
-    'real_data' => (bool)$profile,
-    'source_status' => $sourceStatus,
-    'source_confidence' => $sourceConfidence,
+    'real_data' => $hasRealData,
+    'source_status' => $profile['source_status'] ?? ($hasRealData ? 'available from tool profile' : 'basic'),
+    'source_confidence' => $profile['source_confidence'] ?? ($hasRealData ? 'basic' : 'low'),
     'source_count' => $sourceCount,
     'summary' => $summary,
     'pricing' => $pricing,
-    'free_plan' => $freePlan,
-    'free_trial' => $freeTrial,
+    'free_plan' => isset($profile['free_plan']) ? (int)$profile['free_plan'] : null,
+    'free_trial' => isset($profile['free_trial']) ? (int)$profile['free_trial'] : null,
     'platforms' => $platforms,
     'integrations' => $integrations,
     'features' => $features,
     'use_cases' => $useCases,
     'pros' => $pros,
     'watchouts' => $watchouts,
+    'feature_depth' => $featureDepth,
+    'ease_of_use' => $easeOfUse,
+    'use_case_range' => $useCaseRange,
+    'score_feature_depth' => $featureDepth,
+    'score_ease_of_use' => $easeOfUse,
+    'score_use_case_range' => $useCaseRange,
   ];
 }
 
 function compare_score_items_from_bundle(array $bundle): array{
-  $featureCount = count(array_filter($bundle['features'] ?? []));
-  $integrationCount = count(array_filter($bundle['integrations'] ?? []));
-  $useCount = count(array_filter($bundle['use_cases'] ?? []));
-  $platformCount = count(array_filter($bundle['platforms'] ?? []));
-  $ease = 4;
-  if(($bundle['free_plan'] ?? null) === 1) $ease += 2;
-  if(($bundle['free_trial'] ?? null) === 1) $ease += 1;
-  if($platformCount > 0) $ease += 1;
-  if(!empty($bundle['summary'])) $ease += 1;
-  if($integrationCount >= 3) $ease += 1;
-  $featureDepth = min(10, max(1, 4 + $featureCount + min(2, $integrationCount)));
-  $useRange = min(10, max(1, 4 + $useCount + min(2, $platformCount)));
-  $ease = min(10, max(1, $ease));
   return [
-    'Feature depth' => $featureDepth,
-    'Ease of use' => $ease,
-    'Use-case range' => $useRange,
+    'Feature depth' => (int)($bundle['feature_depth'] ?? $bundle['score_feature_depth'] ?? 0),
+    'Ease of use' => (int)($bundle['ease_of_use'] ?? $bundle['score_ease_of_use'] ?? 0),
+    'Use-case range' => (int)($bundle['use_case_range'] ?? $bundle['score_use_case_range'] ?? 0),
   ];
 }
 
 function compare_snapshot_from_bundle(array $bundle): array{
   return [
-    'Feature depth' => count(array_filter($bundle['features'] ?? [])),
-    'Use-case range' => count(array_filter($bundle['use_cases'] ?? [])),
+    'Features' => count(array_filter($bundle['features'] ?? [])),
+    'Use cases' => count(array_filter($bundle['use_cases'] ?? [])),
     'Integrations' => count(array_filter($bundle['integrations'] ?? [])),
   ];
 }
@@ -1071,3 +1134,42 @@ function compare_pick_winner_from_bundles(array $bundleA, array $bundleB){
   if($sa === $sb) return null;
   return $sa > $sb ? 'a' : 'b';
 }
+
+function tool_signup_url(array $t): string {
+    $url = trim((string)($t['signup_url'] ?? ''));
+    $verified = (int)($t['signup_verified'] ?? 0);
+
+    if ($verified === 1 && $url !== '') {
+        return $url;
+    }
+    return '#';
+}
+
+function tool_open_url(array $t): string {
+    // prefer affiliate, then website
+    $aff = trim((string)($t['affiliate'] ?? ''));
+    if ($aff !== '') return $aff;
+
+    $web = trim((string)($t['website'] ?? ''));
+    if ($web !== '') return $web;
+
+    return '#';
+}
+
+function tool_click_count($tool_id){
+  if(!$tool_id) return 0;
+
+  try {
+    $pdo = db();
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM tool_clicks WHERE tool_id = ?");
+    $stmt->execute([$tool_id]);
+
+    return (int)$stmt->fetchColumn();
+  } catch (Throwable $e) {
+    error_log("tool_click_count error: " . $e->getMessage());
+    return 0;
+  }
+}
+
+require_once __DIR__ . '/trust-badges.php';

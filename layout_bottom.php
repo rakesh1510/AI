@@ -1,6 +1,7 @@
 </main>
 
 <footer class="footer simpleFooter">
+<?php// require __DIR__ . '/footer-links-snippet.php'; ?>
   <div class="wrap simpleFooterInner">
     <div class="simpleFooterGrid">
 
@@ -14,10 +15,10 @@
 
       <div class="footerCol">
         <h3>USE CASES</h3>
-        <a href="ai-use-case.php?slug=write-blog-posts">AI tools for Writing & content</a>
-        <a href="ai-use-case.php?slug=design-graphics">AI tools for Image & design</a>
-        <a href="ai-use-case.php?slug=automate-work">AI tools for Automation</a>
-        <a href="ai-use-case.php?slug=build-websites">AI tools for Coding & dev</a>
+        <a href="ai-use-case.php?slug=write-blog-posts">AI tools for blog writing & SEO</a>
+        <a href="ai-use-case.php?slug=design-graphics">AI tools for image generation & design</a>
+        <a href="ai-use-case.php?slug=automate-work">AI tools for automation & workflows</a>
+        <a href="ai-use-case.php?slug=build-websites">AI tools for coding & development</a>
       </div>
 
       <div class="footerCol">
@@ -28,13 +29,16 @@
       </div>
 
       <div class="footerCol">
-        <h3>COMPANY</h3>
-        <a href="about.php">About AIHubpedia</a>
-        <a href="privacy.php">Privacy policy</a>
-        <a href="terms.php">Terms of service</a>
-        <a href="impressum.php">Impressum</a>
-        <a href="/sitemap.xml">Sitemap</a>
-      </div>
+  <h3>COMPANY</h3>
+  <a href="about.php">About AIHubpedia</a>
+  <a href="affiliate-disclosure.php">Affiliate Disclosure</a>
+  <a href="editorial-policy.php">Editorial Policy</a>
+  <a href="partner.php">Partner With Us</a>
+  <a href="privacy.php">Privacy policy</a>
+  <a href="terms.php">Terms of service</a>
+  <a href="impressum.php">Impressum</a>
+  <a href="/sitemap.xml">Sitemap</a>
+</div>
 
     </div>
 
@@ -61,7 +65,12 @@
     </div>
 
     <div class="simpleFooterBottom">
-      <div>© <?= date('Y') ?> AIHubpedia — Launch, grow, and discover AI tools faster.</div>
+      <div>
+  © <?= date('Y') ?> AIHubpedia<br>
+  <span style="font-size:13px;color:#6B7280;">
+    A product of <strong>TrustNova Tech</strong> — Germany
+  </span>
+</div>
       <div class="small footerLegalNote">
         All trademarks, logos, and product names are the property of their respective owners. AIHubpedia is an independent AI tools directory.
       </div>
@@ -104,6 +113,6 @@
 }
 </style>
 
-<script src="assets/js/interactions.js"></script>
+<script src="/assets/js/interactions.js?v=9999"></script>
 </body>
 </html>

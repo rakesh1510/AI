@@ -14,7 +14,7 @@ document.addEventListener('click', async function (event) {
     body.set('type', vote);
 
     try {
-      const response = await fetch('vote-tool-ajax.php', {
+      const response = await fetch('/vote-tool-ajax', {
         method: 'POST',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',

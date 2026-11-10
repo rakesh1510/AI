@@ -5,79 +5,204 @@ $meta_desc = "Terms of Service for AIHubpedia";
 require __DIR__ . '/layout_top.php';
 ?>
 
-<h1>Terms of Service</h1>
+<style>
+  .legal-page {
+    max-width: 950px;
+    margin: 0 auto;
+    padding: 40px 20px 70px;
+  }
 
-<div class="card">
+  .legal-hero {
+    text-align: center;
+    margin-bottom: 32px;
+  }
 
-<h3>1. Acceptance of Terms</h3>
-<p>
-By accessing and using AIHubpedia, you agree to these Terms of Service.
-If you do not agree with these terms, please do not use this website.
-</p>
+  .legal-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.10);
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
 
-<h3>2. Purpose of the Website</h3>
-<p>
-AIHubpedia is an informational platform that provides listings and descriptions
-of artificial intelligence tools and services. The website is intended to help
-users discover and compare AI tools.
-</p>
+  .legal-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #0f172a;
+  }
 
-<h3>3. Accuracy of Information</h3>
-<p>
-We strive to keep the information on this website accurate and up to date.
-However, we do not guarantee the completeness, reliability, or accuracy of the
-information provided. Tool features, pricing, and availability may change at any time.
-Users should always verify details on the official websites of the respective providers.
-</p>
+  .legal-subtitle {
+    max-width: 760px;
+    margin: 0 auto;
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #475569;
+  }
 
-<h3>4. External Links</h3>
-<p>
-AIHubpedia contains links to external websites and AI tools operated by third parties.
-We have no control over the content or availability of these websites and are not responsible
-for their services, privacy practices, or content.
-</p>
+  .legal-grid {
+    display: grid;
+    gap: 22px;
+    margin-top: 30px;
+  }
 
-<h3>5. User Interaction</h3>
-<p>
-The website may allow interaction features such as likes, dislikes, or click tracking
-to provide popularity statistics for listed tools. These features are intended solely
-for improving the platform and must not be abused or manipulated.
-</p>
+  .legal-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 26px;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    transition: 0.25s;
+  }
 
-<h3>6. Intellectual Property</h3>
-<p>
-All content on this website, including text, design, and structure,
-is the property of AIHubpedia unless otherwise stated.
-Unauthorized reproduction, distribution, or commercial use is not permitted.
-</p>
+  .legal-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 35px rgba(0,0,0,0.08);
+  }
 
-<h3>7. Limitation of Liability</h3>
-<p>
-The operator of AIHubpedia shall not be liable for any damages resulting from
-the use of this website or the use of third-party tools linked on this platform.
-All information is provided "as is" without warranties of any kind.
-</p>
+  .legal-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    font-weight: 800;
+  }
 
-<h3>8. Changes to the Service</h3>
-<p>
-We reserve the right to modify, update, or discontinue parts of the website
-or these Terms of Service at any time without prior notice.
-</p>
+  .legal-card p {
+    color: #334155;
+    line-height: 1.8;
+  }
 
-<h3>9. Governing Law</h3>
-<p>
-These terms shall be governed by the laws of Germany.
-</p>
+  .contact-link {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+  }
 
-<h3>10. Contact</h3>
-<p>
-If you have questions about these Terms of Service, please contact:
-</p>
+  .contact-link:hover {
+    text-decoration: underline;
+  }
 
-<p>
-<strong>Email:</strong> contact@aihubpedia.com
-</p>
+  .contact-box {
+    margin-top: 15px;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.05);
+    border: 1px solid rgba(37, 99, 235, 0.1);
+  }
 
-</div>
+  .mini-note {
+    font-size: 0.9rem;
+    color: #64748b;
+  }
+</style>
+
+<section class="legal-page">
+
+  <div class="legal-hero">
+    <div class="legal-badge">Legal Terms</div>
+    <h1 class="legal-title">Terms of Service</h1>
+    <p class="legal-subtitle">
+      These Terms of Service govern the use of <strong>AIHubpedia</strong>,
+      a product of <strong>TrustNova Tech</strong>, operated by Rakesh Prajapati.
+      By using this website, you agree to the terms set out below.
+    </p>
+  </div>
+
+  <div class="legal-grid">
+
+    <div class="legal-card">
+      <h3>1. Acceptance of Terms</h3>
+      <p>
+        By accessing and using AIHubpedia, a product of TrustNova Tech,
+        operated by Rakesh Prajapati, you agree to these Terms of Service.
+        If you do not agree with these terms, please do not use this website.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>2. Purpose of the Website</h3>
+      <p>
+        AIHubpedia is an informational platform that provides listings and descriptions
+        of artificial intelligence tools and services. The website is intended to help
+        users discover and compare AI tools.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>3. Accuracy of Information</h3>
+      <p>
+        We strive to keep the information accurate and up to date.
+        However, we do not guarantee completeness or accuracy.
+        Users should verify details directly with tool providers.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>4. External Links</h3>
+      <p>
+        This website contains links to third-party websites.
+        We are not responsible for their content, services, or privacy practices.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>5. User Interaction</h3>
+      <p>
+        Features like clicks, likes, and dislikes are provided for improving the platform.
+        Any misuse or manipulation is not allowed.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>6. Intellectual Property</h3>
+      <p>
+        All content on this website belongs to AIHubpedia unless stated otherwise.
+        Unauthorized use is not permitted.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>7. Limitation of Liability</h3>
+      <p>
+        The operator is not liable for damages resulting from use of this website
+        or third-party tools. Content is provided "as is".
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>8. Changes to the Service</h3>
+      <p>
+        We may modify or discontinue the website or these terms at any time.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>9. Governing Law</h3>
+      <p>
+        These terms are governed by the laws of Germany.
+      </p>
+    </div>
+
+    <div class="legal-card">
+      <h3>10. Contact</h3>
+      <p>If you have questions, contact us:</p>
+
+      <div class="contact-box">
+        <p>
+          <strong>Email:</strong>
+          <a href="mailto:contact@aihubpedia.com" class="contact-link">contact@aihubpedia.com</a><br>
+          <span class="mini-note">
+            Business inquiries:
+            <a href="mailto:info@trustnovatech.de" class="contact-link">info@trustnovatech.de</a>
+          </span>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</section>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>

@@ -11,8 +11,9 @@ require __DIR__ . '/layout_top.php';
     <h1 style="margin-bottom:14px;">Helping users and businesses discover the right AI tools with confidence</h1>
     <p style="font-size:1.05rem; line-height:1.8; margin:0;">
       AIHubpedia is a growing platform built to make AI tool discovery simple, trustworthy, and practical.
-      We help users, founders, teams, and businesses explore high-value AI tools in one place —
-      with clear listings, smart comparisons, and useful insights that save time and support better decisions.
+      It is a product of <strong>TrustNova Tech</strong>, created to help users, founders, teams, and businesses
+      explore high-value AI tools in one place — with clear listings, smart comparisons, and useful insights
+      that save time and support better decisions.
     </p>
   </div>
 </section>

@@ -19,13 +19,12 @@ if (!$canonical) {
     $canonical = $current_url;
 }
 
-/* normalize canonical to primary domain */
 $canonical = preg_replace('#^https?://(www\.)?187\.77\.184\.173#', 'https://aihubpedia.com', $canonical);
 $canonical = preg_replace('#^http://#', 'https://', $canonical);
 
-/* optional page-specific og type */
 $og_type = $og_type ?? 'website';
 ?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -34,102 +33,162 @@ $og_type = $og_type ?? 'website';
 
 <title><?= h($title) ?></title>
 <meta name="description" content="<?= h($meta_desc) ?>">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<meta name="application-name" content="AIHubpedia">
-<meta name="theme-color" content="#4f46e5">
 <link rel="canonical" href="<?= h($canonical) ?>">
 
-<link rel="icon" type="image/png" href="https://aihubpedia.com/favicon.png">
-<link rel="shortcut icon" href="https://aihubpedia.com/favicon.png">
+<link rel="icon" href="/favicon.png">
 
-<!-- Open Graph -->
-<meta property="og:site_name" content="AIHubpedia">
-<meta property="og:type" content="<?= h($og_type) ?>">
 <meta property="og:title" content="<?= h($title) ?>">
 <meta property="og:description" content="<?= h($meta_desc) ?>">
-<meta property="og:url" content="<?= h($canonical) ?>">
 <meta property="og:image" content="<?= h($og_image) ?>">
 
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?= h($title) ?>">
-<meta name="twitter:description" content="<?= h($meta_desc) ?>">
-<meta name="twitter:image" content="<?= h($og_image) ?>">
-
 <link rel="stylesheet" href="/assets/css/style.css">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "AIHubpedia",
-  "url": "https://aihubpedia.com",
-  "logo": "https://aihubpedia.com/logo.png"
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "AIHubpedia",
-  "url": "https://aihubpedia.com",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://aihubpedia.com/search.php?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
-}
-</script>
-
+<link rel="stylesheet" href="trust-badges.css">
+<?php require __DIR__ . '/org-schema.php'; ?>
 <style>
+
+/* ===== HEADER FIX ===== */
+.simpleNav{
+  position: relative;
+  z-index: 10000;
+  background: #fff;
+}
+
+/* ===== BRAND ===== */
 .brand{
   display:flex;
   align-items:center;
   text-decoration:none;
-  flex-shrink:0;
 }
 
 .brandLogo{
   height:44px;
-  width:auto;
-  display:block;
 }
 
+/* ===== NAV ===== */
+.navInner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.simpleNavLinks{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+/* ===== DROPDOWN ===== */
+.simpleDropdown{
+  position: relative;
+}
+
+.simpleDropdownBtn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.simpleDropdownMenu{
+  position:absolute;
+  top:110%;
+  right:0;
+  background:#fff;
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+  display:none;
+  flex-direction:column;
+  min-width:200px;
+  z-index:99999;
+}
+
+.simpleDropdown:hover .simpleDropdownMenu{
+  display:flex;
+}
+
+.simpleDropdownMenu a{
+  padding:10px;
+  text-decoration:none;
+  color:#333;
+  border-radius:8px;
+}
+
+.simpleDropdownMenu a:hover{
+  background:#f5f5ff;
+}
+
+/* ===== BUTTON ===== */
+.contactBtn{
+  background:#4f46e5;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:10px;
+  text-decoration:none;
+}
+
+/* ===== FIX OVERLAY ===== */
+.hero,
+.card{
+  position:relative;
+  z-index:1;
+}
+
+/* ===== MOBILE ===== */
 @media (max-width:768px){
-  .brandLogo{
-    height:36px;
+  .brandLogo{height:36px;}
+  .simpleNavLinks{
+    flex-wrap:wrap;
+    gap:10px;
   }
 }
+
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WX1YVP7HCY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WX1YVP7HCY');
+</script>
 </head>
 <body>
+
 <header class="nav simpleNav">
   <div class="wrap navInner">
-    <a class="brand" href="/" aria-label="AIHubpedia home">
+
+    <!-- LOGO -->
+    <a class="brand" href="/">
       <img src="/logo.png" alt="AIHubpedia" class="brandLogo">
     </a>
 
-    <nav class="navLinks simpleNavLinks" aria-label="Main navigation">
+    <!-- NAV -->
+    <nav class="navLinks simpleNavLinks">
+
       <a href="/categories.php">Categories</a>
       <a href="/top.php">Top Tools</a>
       <a href="/compare.php">Compare</a>
       <a href="/leaderboard.php">Leaderboard</a>
-      <a href="/ai-use-case-explorer.php">Use Cases</a>
 
+      <!-- 🚀 IMPROVED DROPDOWN -->
       <div class="simpleDropdown">
-        <button class="simpleDropdownBtn" type="button" aria-haspopup="true" aria-expanded="false">More ▾</button>
+        <button class="simpleDropdownBtn">Explore ▾</button>
+
         <div class="simpleDropdownMenu">
-          <a href="/filters.php">Filters</a>
-          <a href="/community.php">Community</a>
-          <a href="/blog.php">Blog</a>
-          <a href="/about.php">About</a>
+          <a href="/top.php">🔥 Trending Tools</a>
+          <a href="/ai-use-case-explorer.php">🧭 Use-Case Explorer</a>
+          <a href="/community.php">💬 Community</a>
+          <a href="/blog.php">✍️ Blog</a>
         </div>
       </div>
 
       <a href="/submit.php">Submit</a>
       <a class="contactBtn" href="/contact.php">Contact</a>
+
     </nav>
   </div>
 </header>
+
 <main class="wrap">

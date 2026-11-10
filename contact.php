@@ -62,7 +62,7 @@ textarea.input{min-height:140px;resize:vertical}
         <b>Tip:</b> If you’re submitting a tool, use the <a href="submit.php">Submit page</a>.
       </div>
 
-      <div class="ad" style="margin-top:14px">Ad placeholder (Contact sidebar)</div>
+      <!--<div class="ad" style="margin-top:14px">Ad placeholder (Contact sidebar)</div>-->
     </div>
 
     <!-- Right: form -->
