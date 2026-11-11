@@ -27,7 +27,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
       $tier = $tiers[$plan];
       $price = (int)($tier['price'] ?? 0);
 
-      save_submission_dual([
+      $saveRes = save_submission_dual([
         'name' => $name,
         'category' => $category,
         'website' => $website,
@@ -39,8 +39,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         'payment_status' => ($price > 0 ? 'unpaid' : 'not_required')
       ]);
 
-      $ok = true;
-      $selected = $plan;
+      if ($saveRes['success']) {
+        $ok = true;
+        $selected = $plan;
+      } else {
+        $err = "Submission failed: " . ($saveRes['error'] ?? 'Please try again later.');
+      }
     }
   }
 }

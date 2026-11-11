@@ -77,16 +77,19 @@ CREATE TABLE IF NOT EXISTS tool_clicks (
 CREATE TABLE IF NOT EXISTS tool_votes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tool_slug VARCHAR(255) NOT NULL,
-    vote_type ENUM('like','dislike') NOT NULL,
+    vote_type ENUM('up','down','like','dislike') NOT NULL DEFAULT 'up',
+    visitor_id VARCHAR(64) DEFAULT NULL,
+    ip_hash VARCHAR(64) DEFAULT NULL,
     ip_address VARCHAR(45) DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uniq_tool_vote_ip (tool_slug, ip_address),
+    UNIQUE KEY uniq_tool_vote_visitor (tool_slug, visitor_id),
     INDEX idx_tool_votes_slug (tool_slug)
 );
 
 CREATE TABLE IF NOT EXISTS submissions (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    submission_id VARCHAR(64) NOT NULL,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(255) NOT NULL,
     website VARCHAR(1000) NOT NULL,
@@ -97,6 +100,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     payment_status VARCHAR(50) NOT NULL DEFAULT 'not_required',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_submission_id (submission_id),
     INDEX idx_submissions_status (status),
     INDEX idx_submissions_plan (plan)
 );

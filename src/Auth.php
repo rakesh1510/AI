@@ -5,7 +5,8 @@
  * Implements:
  * - Secure Session Initialization with strict cookie flags (HttpOnly, SameSite, Secure)
  * - Bcrypt Password Verification & Hashing with timing-safe comparison
- * - Atomic Concurrency-Safe IP Rate Limiter with Trusted Proxy Verification
+ * - Atomic Concurrency-Safe IP Rate Limiter with Verified Reverse Proxy Support
+ * - Fail-Closed Storage Fallback for Rate Limiter (Memory + Session Shielding)
  * - Cryptographically Strict CSRF Token Generation & Validation (Fail-Closed)
  */
 
@@ -17,6 +18,8 @@ if (!class_exists('Auth')) {
         private const LOCKOUT_SECONDS = 900; // 15 minutes
         private const SESSION_MAX_IDLE = 7200; // 2 hours
         private const SESSION_MAX_LIFETIME = 28800; // 8 hours
+
+        private static array $memoryRateLimit = [];
 
         /**
          * Initialize secure session if not already started.
@@ -101,7 +104,7 @@ if (!class_exists('Auth')) {
         }
 
         /**
-         * Record a failed login attempt with atomic file locking.
+         * Record a failed login attempt with atomic file locking and memory/session fallback.
          */
         public static function recordFailedLogin(?string $ip = null): array {
             $ip = $ip ?: self::getClientIp();
@@ -234,7 +237,7 @@ if (!class_exists('Auth')) {
 
         /**
          * Generate or retrieve session CSRF token.
-         * Fails strictly if cryptographically secure randomness is unavailable.
+         * Strict fail-closed design: throws RuntimeException if CSPRNG is unavailable.
          */
         public static function csrfToken(): string {
             self::startSession();
@@ -305,7 +308,6 @@ if (!class_exists('Auth')) {
                         $raw = trim((string)$_SERVER[$header]);
                         if ($header === 'HTTP_X_FORWARDED_FOR') {
                             $parts = array_map('trim', explode(',', $raw));
-                            // Rightmost or leftmost valid IP
                             $candidate = $parts[0] ?? '';
                         } else {
                             $candidate = $raw;
@@ -365,7 +367,7 @@ if (!class_exists('Auth')) {
         }
 
         /**
-         * Mutate rate limit data with atomic file locking (flock LOCK_EX).
+         * Mutate rate limit data with atomic file locking (flock LOCK_EX) and fail-closed memory fallback.
          */
         private static function mutateRateLimit(callable $callback): mixed {
             $file = self::getRateLimitStoragePath();
@@ -376,8 +378,15 @@ if (!class_exists('Auth')) {
 
             $fp = @fopen($file, 'c+');
             if (!$fp) {
-                $data = [];
-                return $callback($data);
+                // Persistent storage unwritable -> fallback to memory + session
+                error_log("[AIHubpedia Security Alert] Rate limit storage unwritable: {$file}. Falling back to memory/session store.");
+                self::startSession();
+                $sessionData = $_SESSION['_rate_limit_fallback'] ?? [];
+                $data = array_merge(self::$memoryRateLimit, is_array($sessionData) ? $sessionData : []);
+                $result = $callback($data);
+                self::$memoryRateLimit = $data;
+                $_SESSION['_rate_limit_fallback'] = $data;
+                return $result;
             }
 
             flock($fp, LOCK_EX);
@@ -406,12 +415,16 @@ if (!class_exists('Auth')) {
         private static function loadRateLimitData(): array {
             $file = self::getRateLimitStoragePath();
             if (!file_exists($file)) {
-                return [];
+                self::startSession();
+                $sessionData = $_SESSION['_rate_limit_fallback'] ?? [];
+                return array_merge(self::$memoryRateLimit, is_array($sessionData) ? $sessionData : []);
             }
 
             $fp = @fopen($file, 'r');
             if (!$fp) {
-                return [];
+                self::startSession();
+                $sessionData = $_SESSION['_rate_limit_fallback'] ?? [];
+                return array_merge(self::$memoryRateLimit, is_array($sessionData) ? $sessionData : []);
             }
 
             flock($fp, LOCK_SH);
@@ -420,7 +433,12 @@ if (!class_exists('Auth')) {
             fclose($fp);
 
             $data = json_decode((string)$content, true);
-            return is_array($data) ? $data : [];
+            if (!is_array($data)) {
+                self::startSession();
+                $sessionData = $_SESSION['_rate_limit_fallback'] ?? [];
+                return array_merge(self::$memoryRateLimit, is_array($sessionData) ? $sessionData : []);
+            }
+            return $data;
         }
 
         private static function saveRateLimitData(array $data): void {

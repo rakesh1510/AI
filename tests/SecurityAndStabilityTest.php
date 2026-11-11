@@ -5,12 +5,13 @@
  * Verifies:
  * 1. Environment configuration loader, explicit path & system precedence
  * 2. Database connection security, non-root user enforcement & timeout shielding
- * 3. Atomic rate limiter, reverse proxy IP verification & lockout
+ * 3. Atomic rate limiter, reverse proxy IP verification & fail-closed storage fallback
  * 4. Cryptographic CSRF generation, fail-closed handling & timing attack safety
- * 5. Stable unique submission IDs, transactional approval & zero silent DB failures
- * 6. End-to-end administrative flows (login, logout, mark_paid, reject, approve)
- * 7. Transactional email environment resolution & contact validation
- * 8. Complete data isolation & 100% test cleanup
+ * 5. Shared immutable submission IDs, duplicate name safety & zero silent DB failures
+ * 6. Isolated MySQL integration tests (duplicate names, failed inserts, failed updates, outages)
+ * 7. End-to-end administrative flows (login, logout, mark_paid, reject, approve)
+ * 8. Transactional email environment resolution & contact validation
+ * 9. 100% Isolated temporary test sandbox (Zero mutation of production JSON files)
  */
 
 require_once __DIR__ . '/../src/Env.php';
@@ -65,7 +66,7 @@ function assert_equals(mixed $expected, mixed $actual, string $msg = ''): void {
 }
 
 // ==============================================================================
-// TEST EXECUTION
+// TEST EXECUTION SETUP (100% ISOLATED SANDBOX)
 // ==============================================================================
 
 echo "\n=================================================================\n";
@@ -74,9 +75,31 @@ echo "=================================================================\n\n";
 
 $runner = new TestRunner();
 
-// Backup live files for isolation
-$toolsBackup = file_get_contents(__DIR__ . '/../data/tools.json');
-$subsBackup = file_exists(__DIR__ . '/../data/submissions.json') ? file_get_contents(__DIR__ . '/../data/submissions.json') : '[]';
+// Create isolated temporary test sandbox directory
+$testSandboxDir = sys_get_temp_dir() . '/aihub_test_sandbox_' . uniqid();
+@mkdir($testSandboxDir, 0750, true);
+
+// Configure AIHUB_DATA_DIR to point to isolated sandbox (protecting production data/ files)
+putenv("AIHUB_DATA_DIR={$testSandboxDir}");
+$_ENV['AIHUB_DATA_DIR'] = $testSandboxDir;
+$_SERVER['AIHUB_DATA_DIR'] = $testSandboxDir;
+
+// Copy test seed tools into sandbox
+$seedTools = [
+    'categories' => ['Design', 'Engineering', 'Marketing', 'Productivity'],
+    'tools' => [
+        [
+            'id' => 'seed-tool-1',
+            'name' => 'Seed Tool 1',
+            'category' => 'Marketing',
+            'short' => 'Seed tool description',
+            'website' => 'https://seed1.example.com'
+        ]
+    ]
+];
+file_put_contents($testSandboxDir . '/tools.json', json_encode($seedTools, JSON_PRETTY_PRINT));
+file_put_contents($testSandboxDir . '/submissions.json', json_encode([], JSON_PRETTY_PRINT));
+copy(__DIR__ . '/../data/site.json', $testSandboxDir . '/site.json');
 
 try {
     // --------------------------------------------------------------------------
@@ -142,9 +165,9 @@ try {
         assert_true($caught, "Expected exception when DB user is empty");
     });
 
-    $runner->test("Tracked files contain zero hardcoded plaintext passwords", function() {
+    $runner->test("Tracked source files contain zero hardcoded plaintext passwords", function() {
         $siteJson = file_get_contents(__DIR__ . '/../data/site.json');
-        assert_false(strpos($siteJson, 'admin123'), "Plaintext admin123 found in site.json");
+        assert_false(strpos($siteJson, 'admin123'), "Plaintext admin password found in site.json");
         assert_false(strpos($siteJson, 'gkxdviavowwugiio'), "Gmail SMTP app password found in site.json");
 
         $dbPhp = file_get_contents(__DIR__ . '/../db.php');
@@ -158,9 +181,13 @@ try {
             throw new TestSkippedException("AIHUB_TEST_DB_NAME environment variable not set. Skipping live MySQL test.");
         }
         $host = getenv('AIHUB_DB_HOST') ?: 'localhost';
-        $user = getenv('AIHUB_DB_USER') ?: 'root';
+        $user = getenv('AIHUB_DB_USER') ?: '';
         $pass = getenv('AIHUB_DB_PASS') ?: '';
         $port = (int)(getenv('AIHUB_DB_PORT') ?: 3306);
+
+        if ($user === '') {
+            throw new TestSkippedException("AIHUB_DB_USER not configured for live test.");
+        }
 
         $pdo = new PDO("mysql:host={$host};port={$port};dbname={$testDb};charset=utf8mb4", $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -242,25 +269,42 @@ try {
         assert_false($cleared['is_blocked'], "Rate limit must be cleared");
     });
 
+    $runner->test("Rate limiter fails closed with memory fallback when storage is unwritable", function() {
+        $unwritablePath = sys_get_temp_dir() . '/unwritable_dir_' . uniqid() . '/file.json';
+        putenv("AIHUB_RATE_LIMIT_PATH={$unwritablePath}");
+
+        $testIp = '198.51.100.' . mt_rand(1, 250);
+        Auth::clearRateLimit($testIp);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $res = Auth::recordFailedLogin($testIp);
+        }
+
+        $status = Auth::checkRateLimit($testIp);
+        assert_true($status['is_blocked'], "Rate limiter must block after 5 failed attempts even when disk storage is unwritable");
+
+        putenv('AIHUB_RATE_LIMIT_PATH=');
+    });
+
     // --------------------------------------------------------------------------
     // 5. Stable Submission IDs & Dual-Storage Sync Tests
     // --------------------------------------------------------------------------
-    echo "\n[5. Stable Submission IDs & Dual Storage Sync]\n";
+    echo "\n[5. Stable Submission IDs & Duplicate Name Safety]\n";
 
-    $runner->test("save_submission_dual generates stable unique IDs", function() {
+    $runner->test("save_submission_dual generates stable unique IDs across multiple records", function() {
         $sub1 = save_submission_dual([
-            'name' => 'AutoSync Tool 1',
+            'name' => 'Unique Tool A',
             'category' => 'Marketing',
-            'website' => 'https://autosync1.example.com',
+            'website' => 'https://tool-a.example.com',
             'short' => 'Automated marketing assistant',
             'plan' => 'free',
             'price' => 0
         ]);
 
         $sub2 = save_submission_dual([
-            'name' => 'AutoSync Tool 2',
+            'name' => 'Unique Tool B',
             'category' => 'Analytics',
-            'website' => 'https://autosync2.example.com',
+            'website' => 'https://tool-b.example.com',
             'short' => 'Data analytics suite',
             'plan' => 'featured',
             'price' => 29
@@ -268,41 +312,55 @@ try {
 
         assert_true($sub1['success'], "Submission 1 failed");
         assert_true($sub2['success'], "Submission 2 failed");
-        assert_true(!empty($sub1['id']), "Missing ID for sub1");
-        assert_true(!empty($sub2['id']), "Missing ID for sub2");
-        assert_true($sub1['id'] !== $sub2['id'], "IDs must be unique");
+        assert_true(!empty($sub1['submission_id']), "Missing submission_id for sub1");
+        assert_true(!empty($sub2['submission_id']), "Missing submission_id for sub2");
+        assert_true($sub1['submission_id'] !== $sub2['submission_id'], "IDs must be unique");
 
-        $found = find_submission_dual($sub1['id']);
+        $found = find_submission_dual($sub1['submission_id']);
         assert_true($found !== null, "find_submission_dual failed to locate record by ID");
-        assert_equals('AutoSync Tool 1', $found['name']);
+        assert_equals('Unique Tool A', $found['name']);
     });
 
-    $runner->test("update_submission_status_dual updates by immutable ID without position dependency", function() {
-        $sub = save_submission_dual([
-            'name' => 'Status Test Tool',
-            'category' => 'Productivity',
-            'website' => 'https://statustest.example.com',
-            'short' => 'Testing status update by ID',
+    $runner->test("Zero Name-Based Updating: Duplicate tool names with different IDs are updated independently", function() {
+        // Create two separate submissions with the EXACT SAME NAME
+        $sub1 = save_submission_dual([
+            'name' => 'Identical Name Tool',
+            'category' => 'SEO',
+            'website' => 'https://identical-1.example.com',
+            'short' => 'Submission 1',
+            'plan' => 'free',
+            'price' => 0
+        ]);
+
+        $sub2 = save_submission_dual([
+            'name' => 'Identical Name Tool',
+            'category' => 'SEO',
+            'website' => 'https://identical-2.example.com',
+            'short' => 'Submission 2',
             'plan' => 'priority',
             'price' => 19
         ]);
 
-        $subId = $sub['id'];
+        $id1 = $sub1['submission_id'];
+        $id2 = $sub2['submission_id'];
 
-        $upPaid = update_submission_status_dual($subId, 'pending', 'paid');
-        assert_true($upPaid['success'], "Mark paid failed");
+        assert_true($id1 !== $id2, "IDs must be different even with identical tool names");
 
-        $checkPaid = find_submission_dual($subId);
-        assert_equals('paid', $checkPaid['payment_status']);
+        // Approve sub1 and reject sub2
+        $up1 = update_submission_status_dual($id1, 'approved');
+        $up2 = update_submission_status_dual($id2, 'rejected');
 
-        $upReject = update_submission_status_dual($subId, 'rejected');
-        assert_true($upReject['success'], "Reject failed");
+        assert_true($up1['success'], "Failed updating sub1");
+        assert_true($up2['success'], "Failed updating sub2");
 
-        $checkReject = find_submission_dual($subId);
-        assert_equals('rejected', $checkReject['status']);
+        $check1 = find_submission_dual($id1);
+        $check2 = find_submission_dual($id2);
+
+        assert_equals('approved', $check1['status'], "Sub1 should be approved");
+        assert_equals('rejected', $check2['status'], "Sub2 should be rejected without cross-mutation");
     });
 
-    $runner->test("save_tool_dual returns explicit result with error details", function() {
+    $runner->test("save_tool_dual returns explicit result and error on failure", function() {
         $tool = [
             'id' => 'test-explicit-tool-' . uniqid(),
             'name' => 'Test Explicit Tool',
@@ -358,7 +416,7 @@ try {
             'plan' => 'free',
             'price' => 0
         ]);
-        $subId = $sub['id'];
+        $subId = $sub['submission_id'];
 
         $subRecord = find_submission_dual($subId);
         assert_true($subRecord !== null);
@@ -396,7 +454,7 @@ try {
             'plan' => 'featured',
             'price' => 29
         ]);
-        $subId = $sub['id'];
+        $subId = $sub['submission_id'];
 
         // Mark paid
         $paidRes = update_submission_status_dual($subId, 'pending', 'paid');
@@ -433,12 +491,11 @@ try {
     // --------------------------------------------------------------------------
     echo "\n[8. Public Catalog & Helper Function Stability]\n";
 
-    $runner->test("load_tools successfully loads 500+ curated tools without regression", function() {
+    $runner->test("load_tools successfully loads tools from isolated storage", function() {
         $catalog = load_tools();
         assert_true(is_array($catalog['tools']), "tools array missing");
-        assert_true(count($catalog['tools']) >= 500, "Expected >= 500 tools, got " . count($catalog['tools']));
         assert_true(is_array($catalog['categories']), "categories array missing");
-        assert_true(count($catalog['categories']) > 5, "Expected multiple categories");
+        assert_true(count($catalog['categories']) >= 1, "Expected categories to be populated");
     });
 
     $runner->test("pricing_tiers returns defined subscription options", function() {
@@ -456,9 +513,17 @@ try {
     });
 
 } finally {
-    // 100% Cleanup & Restoration of live files
-    file_put_contents(__DIR__ . '/../data/tools.json', $toolsBackup);
-    file_put_contents(__DIR__ . '/../data/submissions.json', $subsBackup);
+    // 100% Cleanup of temporary sandbox directory
+    putenv('AIHUB_DATA_DIR=');
+    unset($_ENV['AIHUB_DATA_DIR'], $_SERVER['AIHUB_DATA_DIR']);
+
+    if (is_dir($testSandboxDir)) {
+        $files = glob($testSandboxDir . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) @unlink($file);
+        }
+        @rmdir($testSandboxDir);
+    }
     if (file_exists(Auth::getRateLimitStoragePath())) {
         @unlink(Auth::getRateLimitStoragePath());
     }

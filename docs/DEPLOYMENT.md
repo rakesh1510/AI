@@ -99,14 +99,20 @@ ssh user@your-server-ip
 # 2. Navigate to project root
 cd /var/www/html/AI
 
-# 3. Fetch and switch to the release branch
+# 3. Check for any uncommitted server changes (must be clean)
+git status
+
+# 4. Fetch and switch to the release branch
 git fetch origin fix/aihubpedia-security-foundation
 git checkout fix/aihubpedia-security-foundation
 
-# 4. Run automated test suite to verify server compatibility
+# 5. Run idempotent database migration (adds shared submission_id column & index safely)
+mysql -u aihub_prod_user -p aihub < database/migrate_submissions_submission_id.sql
+
+# 6. Run automated test suite to verify server compatibility
 php tests/SecurityAndStabilityTest.php
 
-# 5. Reload PHP-FPM / Web Server (if caching bytecode via OPcache)
+# 7. Reload PHP-FPM / Web Server (if caching bytecode via OPcache)
 sudo systemctl reload php8.2-fpm
 sudo systemctl reload nginx # or sudo systemctl reload apache2
 ```

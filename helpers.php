@@ -6,7 +6,13 @@ require_once __DIR__ . '/src/Auth.php';
 // ----------------------
 // JSON helpers
 // ----------------------
-function data_path($name){ return __DIR__ . '/data/' . $name; }
+function data_path($name){
+  $customDir = getenv('AIHUB_DATA_DIR') ?: ($_SERVER['AIHUB_DATA_DIR'] ?? null);
+  if ($customDir && is_dir($customDir)) {
+    return rtrim($customDir, '/\\') . '/' . $name;
+  }
+  return __DIR__ . '/data/' . $name;
+}
 
 
 function read_json($file, $default){
@@ -285,7 +291,7 @@ function generate_submission_id(): string {
   try {
     return 'sub_' . bin2hex(random_bytes(6));
   } catch(Throwable $e) {
-    return 'sub_' . substr(md5(uniqid((string)microtime(true), true)), 0, 12);
+    throw new RuntimeException("CSPRNG unavailable for submission ID generation.");
   }
 }
 
@@ -298,12 +304,22 @@ function load_submissions_dual(): array {
       $pdo = db();
       $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
       if ($stmt->fetchColumn()) {
-        $rows = $pdo->query("SELECT id, name, category, website, short_desc AS short, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id DESC")->fetchAll();
+        $hasColStmt = $pdo->query("SHOW COLUMNS FROM submissions LIKE 'submission_id'");
+        $hasCol = (bool)$hasColStmt->fetchColumn();
+
+        if ($hasCol) {
+          $sql = "SELECT id, CASE WHEN submission_id IS NOT NULL AND submission_id != '' THEN submission_id ELSE CONCAT('sub_legacy_', id) END AS submission_id, name, category, website, short_desc AS short, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id DESC";
+        } else {
+          $sql = "SELECT id, CONCAT('sub_legacy_', id) AS submission_id, name, category, website, short_desc AS short, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id DESC";
+        }
+
+        $rows = $pdo->query($sql)->fetchAll();
         if ($rows) {
           foreach ($rows as $r) {
-            $idStr = (string)$r['id'];
+            $idStr = (string)$r['submission_id'];
             $submissions[] = [
               'id' => $idStr,
+              'submission_id' => $idStr,
               'db_id' => (int)$r['id'],
               'name' => (string)($r['name'] ?? ''),
               'category' => (string)($r['category'] ?? ''),
@@ -321,7 +337,7 @@ function load_submissions_dual(): array {
         }
       }
     } catch (Throwable $e) {
-      // fallback to JSON
+      error_log("[AIHubpedia Error] load_submissions_dual MySQL query failed: " . $e->getMessage());
     }
   }
 
@@ -329,9 +345,15 @@ function load_submissions_dual(): array {
   $jsonSubs = read_json('submissions.json', []);
   $modified = false;
   foreach ($jsonSubs as $idx => $s) {
-    if (empty($s['id'])) {
-      $jsonSubs[$idx]['id'] = generate_submission_id();
+    if (empty($s['id']) && empty($s['submission_id'])) {
+      $newId = generate_submission_id();
+      $jsonSubs[$idx]['id'] = $newId;
+      $jsonSubs[$idx]['submission_id'] = $newId;
       $modified = true;
+    } else {
+      $id = (string)($s['submission_id'] ?? $s['id'] ?? '');
+      $jsonSubs[$idx]['id'] = $id;
+      $jsonSubs[$idx]['submission_id'] = $id;
     }
   }
   if ($modified) {
@@ -346,7 +368,7 @@ function find_submission_dual(string $submissionId): ?array {
 
   $all = load_submissions_dual();
   foreach ($all as $sub) {
-    if ((string)($sub['id'] ?? '') === $submissionId) {
+    if ((string)($sub['submission_id'] ?? $sub['id'] ?? '') === $submissionId) {
       return $sub;
     }
   }
@@ -355,89 +377,149 @@ function find_submission_dual(string $submissionId): ?array {
 
 function update_submission_status_dual(string $submissionId, string $status, ?string $paymentStatus = null): array {
   if ($submissionId === '') {
-    return ['success' => false, 'error' => 'Submission ID is required.'];
+    return ['success' => false, 'error' => 'Submission ID is required.', 'storage' => 'none'];
   }
 
-  $updated = false;
-  $subName = null;
+  $mysqlUpdated = false;
+  $jsonUpdated = false;
 
-  // 1. Update in submissions.json
+  // 1. Update in MySQL if available (Strictly by submission_id or numeric PK - NEVER by name)
+  if (db_connection_available()) {
+    try {
+      $pdo = db();
+      $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
+      if ($stmt->fetchColumn()) {
+        $hasColStmt = $pdo->query("SHOW COLUMNS FROM submissions LIKE 'submission_id'");
+        $hasCol = (bool)$hasColStmt->fetchColumn();
+
+        if ($hasCol) {
+          $numericId = ctype_digit($submissionId) ? (int)$submissionId : -1;
+          if ($paymentStatus !== null) {
+            $up = $pdo->prepare("UPDATE submissions SET status = :status, payment_status = :payment_status WHERE submission_id = :submission_id OR id = :numeric_id");
+            $up->execute([
+              ':status' => $status,
+              ':payment_status' => $paymentStatus,
+              ':submission_id' => $submissionId,
+              ':numeric_id' => $numericId
+            ]);
+          } else {
+            $up = $pdo->prepare("UPDATE submissions SET status = :status WHERE submission_id = :submission_id OR id = :numeric_id");
+            $up->execute([
+              ':status' => $status,
+              ':submission_id' => $submissionId,
+              ':numeric_id' => $numericId
+            ]);
+          }
+          $mysqlUpdated = ($up->rowCount() > 0);
+        } else if (ctype_digit($submissionId)) {
+          $numericId = (int)$submissionId;
+          if ($paymentStatus !== null) {
+            $up = $pdo->prepare("UPDATE submissions SET status = :status, payment_status = :payment_status WHERE id = :id");
+            $up->execute([
+              ':status' => $status,
+              ':payment_status' => $paymentStatus,
+              ':id' => $numericId
+            ]);
+          } else {
+            $up = $pdo->prepare("UPDATE submissions SET status = :status WHERE id = :id");
+            $up->execute([
+              ':status' => $status,
+              ':id' => $numericId
+            ]);
+          }
+          $mysqlUpdated = ($up->rowCount() > 0);
+        }
+      }
+    } catch(Throwable $e) {
+      $mysqlError = $e->getMessage();
+      error_log("[AIHubpedia Error] update_submission_status_dual MySQL error: {$mysqlError}");
+      return [
+        'success' => false,
+        'error' => "Primary database update failed: {$mysqlError}",
+        'storage' => 'mysql'
+      ];
+    }
+  }
+
+  // 2. Update in submissions.json (Strictly by submission_id or id)
   $subs = read_json('submissions.json', []);
   foreach ($subs as $idx => $s) {
-    if ((string)($s['id'] ?? '') === $submissionId) {
+    if ((string)($s['submission_id'] ?? $s['id'] ?? '') === $submissionId) {
       $subs[$idx]['status'] = $status;
       if ($paymentStatus !== null) {
         $subs[$idx]['payment_status'] = $paymentStatus;
       }
-      $subName = $subs[$idx]['name'] ?? null;
-      $updated = true;
+      $jsonUpdated = true;
       break;
     }
   }
-  if ($updated) {
+  if ($jsonUpdated) {
     write_json('submissions.json', $subs);
   }
 
-  // 2. Update in MySQL if available
-  if (db_connection_available()) {
-    try {
-      $pdo = db();
-      $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
-      if ($stmt->fetchColumn()) {
-        $isNumeric = ctype_digit($submissionId);
-        if ($isNumeric) {
-          if ($paymentStatus !== null) {
-            $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE id = ?");
-            $up->execute([$status, $paymentStatus, (int)$submissionId]);
-          } else {
-            $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE id = ?");
-            $up->execute([$status, (int)$submissionId]);
-          }
-        } elseif ($subName) {
-          if ($paymentStatus !== null) {
-            $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
-            $up->execute([$status, $paymentStatus, $subName]);
-          } else {
-            $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
-            $up->execute([$status, $subName]);
-          }
-        }
-        $updated = true;
-      }
-    } catch(Throwable $e) {
-      error_log("[AIHubpedia Error] update_submission_status_dual MySQL error: " . $e->getMessage());
-    }
-  }
-
-  return ['success' => $updated, 'error' => ($updated ? null : 'Submission not found.')];
+  $success = $mysqlUpdated || $jsonUpdated;
+  return [
+    'success' => $success,
+    'error' => $success ? null : "Submission record not found for ID: {$submissionId}",
+    'storage' => ($mysqlUpdated && $jsonUpdated ? 'dual' : ($mysqlUpdated ? 'mysql' : ($jsonUpdated ? 'json' : 'none')))
+  ];
 }
 
 function save_submission_dual(array $sub): array {
-  $subId = (string)($sub['id'] ?? generate_submission_id());
+  $subId = (string)($sub['id'] ?? $sub['submission_id'] ?? generate_submission_id());
   $sub['id'] = $subId;
+  $sub['submission_id'] = $subId;
 
-  // 1. Save to MySQL
+  $mysqlSuccess = false;
+
+  // 1. Save to MySQL (Strict error handling - fail explicitly if MySQL write fails)
   if (db_connection_available()) {
     try {
       $pdo = db();
       $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
       if ($stmt->fetchColumn()) {
-        $ins = $pdo->prepare("INSERT INTO submissions (name, category, website, short_desc, plan, price, currency, status, payment_status) VALUES (:name, :category, :website, :short_desc, :plan, :price, :currency, :status, :payment_status)");
-        $ins->execute([
-          ':name' => (string)($sub['name'] ?? ''),
-          ':category' => (string)($sub['category'] ?? ''),
-          ':website' => (string)($sub['website'] ?? ''),
-          ':short_desc' => (string)($sub['short'] ?? $sub['short_desc'] ?? ''),
-          ':plan' => (string)($sub['plan'] ?? 'free'),
-          ':price' => (int)($sub['price'] ?? 0),
-          ':currency' => (string)($sub['currency'] ?? 'USD'),
-          ':status' => (string)($sub['status'] ?? 'pending'),
-          ':payment_status' => (string)($sub['payment_status'] ?? 'not_required')
-        ]);
+        $hasColStmt = $pdo->query("SHOW COLUMNS FROM submissions LIKE 'submission_id'");
+        $hasCol = (bool)$hasColStmt->fetchColumn();
+
+        if ($hasCol) {
+          $ins = $pdo->prepare("INSERT INTO submissions (submission_id, name, category, website, short_desc, plan, price, currency, status, payment_status) VALUES (:submission_id, :name, :category, :website, :short_desc, :plan, :price, :currency, :status, :payment_status)");
+          $ins->execute([
+            ':submission_id' => $subId,
+            ':name' => (string)($sub['name'] ?? ''),
+            ':category' => (string)($sub['category'] ?? ''),
+            ':website' => (string)($sub['website'] ?? ''),
+            ':short_desc' => (string)($sub['short'] ?? $sub['short_desc'] ?? ''),
+            ':plan' => (string)($sub['plan'] ?? 'free'),
+            ':price' => (int)($sub['price'] ?? 0),
+            ':currency' => (string)($sub['currency'] ?? 'USD'),
+            ':status' => (string)($sub['status'] ?? 'pending'),
+            ':payment_status' => (string)($sub['payment_status'] ?? 'not_required')
+          ]);
+        } else {
+          $ins = $pdo->prepare("INSERT INTO submissions (name, category, website, short_desc, plan, price, currency, status, payment_status) VALUES (:name, :category, :website, :short_desc, :plan, :price, :currency, :status, :payment_status)");
+          $ins->execute([
+            ':name' => (string)($sub['name'] ?? ''),
+            ':category' => (string)($sub['category'] ?? ''),
+            ':website' => (string)($sub['website'] ?? ''),
+            ':short_desc' => (string)($sub['short'] ?? $sub['short_desc'] ?? ''),
+            ':plan' => (string)($sub['plan'] ?? 'free'),
+            ':price' => (int)($sub['price'] ?? 0),
+            ':currency' => (string)($sub['currency'] ?? 'USD'),
+            ':status' => (string)($sub['status'] ?? 'pending'),
+            ':payment_status' => (string)($sub['payment_status'] ?? 'not_required')
+          ]);
+        }
         $sub['db_id'] = (int)$pdo->lastInsertId();
+        $mysqlSuccess = true;
       }
     } catch(Throwable $e) {
-      error_log("[AIHubpedia Error] save_submission_dual MySQL error: " . $e->getMessage());
+      $mysqlError = $e->getMessage();
+      error_log("[AIHubpedia Error] save_submission_dual MySQL error: {$mysqlError}");
+      return [
+        'success' => false,
+        'error' => "Primary database insertion failed: {$mysqlError}",
+        'storage' => 'mysql'
+      ];
     }
   }
 
@@ -445,6 +527,7 @@ function save_submission_dual(array $sub): array {
   $subs = read_json('submissions.json', []);
   $record = [
     'id' => $subId,
+    'submission_id' => $subId,
     'name' => (string)($sub['name'] ?? ''),
     'category' => (string)($sub['category'] ?? ''),
     'website' => (string)($sub['website'] ?? ''),
@@ -454,12 +537,18 @@ function save_submission_dual(array $sub): array {
     'currency' => (string)($sub['currency'] ?? 'USD'),
     'status' => (string)($sub['status'] ?? 'pending'),
     'payment_status' => (string)($sub['payment_status'] ?? 'not_required'),
-    'created_at' => date('Y-m-d H:i:s')
+    'created_at' => (string)($sub['created_at'] ?? date('Y-m-d H:i:s'))
   ];
   $subs[] = $record;
   write_json('submissions.json', $subs);
 
-  return ['success' => true, 'id' => $subId, 'data' => $record];
+  return [
+    'success' => true,
+    'id' => $subId,
+    'submission_id' => $subId,
+    'data' => $record,
+    'storage' => ($mysqlSuccess ? 'dual' : 'json')
+  ];
 }
 
 function find_tool($id){
@@ -874,7 +963,16 @@ function featured_tools($tools, $limit=6){
 
 function pricing_tiers(){
   $cfg = site_cfg();
-  return $cfg['payment']['pricing'] ?? [];
+  $pricing = $cfg['payment']['pricing'] ?? null;
+  if (!empty($pricing) && is_array($pricing)) {
+    return $pricing;
+  }
+  return [
+    'free' => ['label' => 'Free listing', 'price' => 0, 'desc' => 'Manual approval (may take several days).'],
+    'priority' => ['label' => 'Priority approval (24h)', 'price' => 19, 'desc' => 'Fast approval within 24 hours.'],
+    'featured' => ['label' => 'Featured listing (Homepage)', 'price' => 49, 'desc' => 'Top placement in category + Homepage featured.'],
+    'homepage' => ['label' => 'Homepage Spotlight', 'price' => 99, 'desc' => 'Top banner placement + verified badge.']
+  ];
 }
 function payment_links(){
   $cfg = site_cfg();

@@ -266,13 +266,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $subName = (string)($sub['name'] ?? '');
 
         if ($action === 'mark_paid') {
-            update_submission_status_dual($subId, $sub['status'] ?? 'pending', 'paid');
+            $paidRes = update_submission_status_dual($subId, $sub['status'] ?? 'pending', 'paid');
+            if (!$paidRes['success']) {
+                $err = urlencode($paidRes['error'] ?? 'Failed updating payment status.');
+                header("Location: admin.php?msg=db_error&err={$err}");
+                exit;
+            }
             header('Location: admin.php?msg=marked_paid');
             exit;
         }
 
         if ($action === 'reject') {
-            update_submission_status_dual($subId, 'rejected', null);
+            $rejectRes = update_submission_status_dual($subId, 'rejected', null);
+            if (!$rejectRes['success']) {
+                $err = urlencode($rejectRes['error'] ?? 'Failed rejecting submission.');
+                header("Location: admin.php?msg=db_error&err={$err}");
+                exit;
+            }
             header('Location: admin.php?msg=rejected');
             exit;
         }
@@ -327,7 +337,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            update_submission_status_dual($subId, 'approved', null);
+            $statusRes = update_submission_status_dual($subId, 'approved', null);
+            if (!$statusRes['success']) {
+                $err = urlencode($statusRes['error'] ?? 'Failed updating submission status.');
+                header("Location: admin.php?msg=db_error&err={$err}");
+                exit;
+            }
 
             header('Location: admin.php?msg=approved');
             exit;
