@@ -1,0 +1,39 @@
+# Environment Configuration & Local Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Local logs & sessions
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+
+# Temporary test or backup files
+/tmp/
+*.bak
+*.tmp
+.rate_limits.json
+data/.rate_limits.json
