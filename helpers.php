@@ -165,15 +165,20 @@ function load_tools(){
   return ['tools'=>$tools, 'categories'=>$cats];
 }
 
-function save_tool_dual(array $tool): bool {
+function save_tool_dual(array $tool): array {
   $slug = (string)($tool['id'] ?? $tool['slug'] ?? '');
-  if ($slug === '') return false;
+  if ($slug === '') {
+    return ['success' => false, 'error' => 'Tool slug/id cannot be empty.', 'storage' => 'none'];
+  }
+
+  $mysqlSuccess = false;
 
   // 1. Save to MySQL if tables are available
   if (mysql_tables_available_for_content()) {
     try {
       $pdo = db();
-      
+      $pdo->beginTransaction();
+
       $catName = (string)($tool['category'] ?? 'Other');
       $catSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $catName), '-')) ?: 'other';
       $catStmt = $pdo->prepare("INSERT INTO categories (slug, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)");
@@ -215,15 +220,15 @@ function save_tool_dual(array $tool): bool {
         ':category_id' => $catId,
         ':short_description' => (string)($tool['short'] ?? $tool['short_description'] ?? ''),
         ':description' => (string)($tool['description'] ?? ''),
-        ':features' => json_encode($tool['features'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
-        ':pros' => json_encode($tool['pros'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
-        ':cons' => json_encode($tool['cons'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
-        ':use_cases' => json_encode($tool['use_cases'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':features' => is_string($tool['features'] ?? null) ? $tool['features'] : json_encode($tool['features'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':pros' => is_string($tool['pros'] ?? null) ? $tool['pros'] : json_encode($tool['pros'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':cons' => is_string($tool['cons'] ?? null) ? $tool['cons'] : json_encode($tool['cons'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':use_cases' => is_string($tool['use_cases'] ?? null) ? $tool['use_cases'] : json_encode($tool['use_cases'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
         ':pricing' => (string)($tool['pricing'] ?? 'Varies'),
         ':website' => (string)($tool['website'] ?? ''),
         ':affiliate' => (string)($tool['affiliate'] ?? ''),
         ':added' => (string)($tool['added'] ?? date('Y-m-d')),
-        ':tags' => json_encode($tool['tags'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+        ':tags' => is_string($tool['tags'] ?? null) ? $tool['tags'] : json_encode($tool['tags'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
         ':logo' => (string)($tool['logo'] ?? ''),
         ':pricing_type' => (string)($tool['pricing_type'] ?? 'Varies'),
         ':seo_title' => (string)($tool['seo_title'] ?? ''),
@@ -231,8 +236,20 @@ function save_tool_dual(array $tool): bool {
         ':featured_level' => (int)($tool['featured_level'] ?? 0),
         ':featured_until' => !empty($tool['featured_until']) ? (string)$tool['featured_until'] : null,
       ]);
+
+      $pdo->commit();
+      $mysqlSuccess = true;
     } catch(Throwable $e) {
-      // db fallback
+      if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+      }
+      $mysqlError = $e->getMessage();
+      error_log("[AIHubpedia Error] save_tool_dual failed for {$slug}: {$mysqlError}");
+      return [
+        'success' => false,
+        'error' => "Primary database write failed: {$mysqlError}",
+        'storage' => 'mysql'
+      ];
     }
   }
 
@@ -257,10 +274,25 @@ function save_tool_dual(array $tool): bool {
   }
   write_json('tools.json', $data);
 
-  return true;
+  return [
+    'success' => true,
+    'error' => null,
+    'storage' => ($mysqlSuccess ? 'dual' : 'json')
+  ];
+}
+
+function generate_submission_id(): string {
+  try {
+    return 'sub_' . bin2hex(random_bytes(6));
+  } catch(Throwable $e) {
+    return 'sub_' . substr(md5(uniqid((string)microtime(true), true)), 0, 12);
+  }
 }
 
 function load_submissions_dual(): array {
+  $submissions = [];
+
+  // 1. Load from MySQL if available
   if (db_connection_available()) {
     try {
       $pdo = db();
@@ -268,53 +300,122 @@ function load_submissions_dual(): array {
       if ($stmt->fetchColumn()) {
         $rows = $pdo->query("SELECT id, name, category, website, short_desc AS short, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id DESC")->fetchAll();
         if ($rows) {
-          return $rows;
+          foreach ($rows as $r) {
+            $idStr = (string)$r['id'];
+            $submissions[] = [
+              'id' => $idStr,
+              'db_id' => (int)$r['id'],
+              'name' => (string)($r['name'] ?? ''),
+              'category' => (string)($r['category'] ?? ''),
+              'website' => (string)($r['website'] ?? ''),
+              'short' => (string)($r['short'] ?? ''),
+              'plan' => (string)($r['plan'] ?? 'free'),
+              'price' => (int)($r['price'] ?? 0),
+              'currency' => (string)($r['currency'] ?? 'USD'),
+              'status' => (string)($r['status'] ?? 'pending'),
+              'payment_status' => (string)($r['payment_status'] ?? 'not_required'),
+              'created_at' => (string)($r['created_at'] ?? '')
+            ];
+          }
+          return $submissions;
         }
       }
     } catch (Throwable $e) {
-      // fallback
+      // fallback to JSON
     }
   }
-  return read_json('submissions.json', []);
+
+  // 2. Load from submissions.json
+  $jsonSubs = read_json('submissions.json', []);
+  $modified = false;
+  foreach ($jsonSubs as $idx => $s) {
+    if (empty($s['id'])) {
+      $jsonSubs[$idx]['id'] = generate_submission_id();
+      $modified = true;
+    }
+  }
+  if ($modified) {
+    write_json('submissions.json', $jsonSubs);
+  }
+
+  return $jsonSubs;
 }
 
-function update_submission_status_dual(int $index, string $status, ?string $paymentStatus = null, ?string $name = null): bool {
+function find_submission_dual(string $submissionId): ?array {
+  if ($submissionId === '') return null;
+
+  $all = load_submissions_dual();
+  foreach ($all as $sub) {
+    if ((string)($sub['id'] ?? '') === $submissionId) {
+      return $sub;
+    }
+  }
+  return null;
+}
+
+function update_submission_status_dual(string $submissionId, string $status, ?string $paymentStatus = null): array {
+  if ($submissionId === '') {
+    return ['success' => false, 'error' => 'Submission ID is required.'];
+  }
+
+  $updated = false;
+  $subName = null;
+
   // 1. Update in submissions.json
   $subs = read_json('submissions.json', []);
-  if (isset($subs[$index])) {
-    $subs[$index]['status'] = $status;
-    if ($paymentStatus !== null) {
-      $subs[$index]['payment_status'] = $paymentStatus;
+  foreach ($subs as $idx => $s) {
+    if ((string)($s['id'] ?? '') === $submissionId) {
+      $subs[$idx]['status'] = $status;
+      if ($paymentStatus !== null) {
+        $subs[$idx]['payment_status'] = $paymentStatus;
+      }
+      $subName = $subs[$idx]['name'] ?? null;
+      $updated = true;
+      break;
     }
+  }
+  if ($updated) {
     write_json('submissions.json', $subs);
-    if ($name === null) {
-      $name = $subs[$index]['name'] ?? '';
-    }
   }
 
   // 2. Update in MySQL if available
-  if (db_connection_available() && $name) {
+  if (db_connection_available()) {
     try {
       $pdo = db();
       $stmt = $pdo->query("SHOW TABLES LIKE 'submissions'");
       if ($stmt->fetchColumn()) {
-        if ($paymentStatus !== null) {
-          $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
-          $up->execute([$status, $paymentStatus, $name]);
-        } else {
-          $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
-          $up->execute([$status, $name]);
+        $isNumeric = ctype_digit($submissionId);
+        if ($isNumeric) {
+          if ($paymentStatus !== null) {
+            $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE id = ?");
+            $up->execute([$status, $paymentStatus, (int)$submissionId]);
+          } else {
+            $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE id = ?");
+            $up->execute([$status, (int)$submissionId]);
+          }
+        } elseif ($subName) {
+          if ($paymentStatus !== null) {
+            $up = $pdo->prepare("UPDATE submissions SET status = ?, payment_status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
+            $up->execute([$status, $paymentStatus, $subName]);
+          } else {
+            $up = $pdo->prepare("UPDATE submissions SET status = ? WHERE name = ? ORDER BY id DESC LIMIT 1");
+            $up->execute([$status, $subName]);
+          }
         }
+        $updated = true;
       }
     } catch(Throwable $e) {
-      // fallback
+      error_log("[AIHubpedia Error] update_submission_status_dual MySQL error: " . $e->getMessage());
     }
   }
 
-  return true;
+  return ['success' => $updated, 'error' => ($updated ? null : 'Submission not found.')];
 }
 
-function save_submission_dual(array $sub): bool {
+function save_submission_dual(array $sub): array {
+  $subId = (string)($sub['id'] ?? generate_submission_id());
+  $sub['id'] = $subId;
+
   // 1. Save to MySQL
   if (db_connection_available()) {
     try {
@@ -333,15 +434,17 @@ function save_submission_dual(array $sub): bool {
           ':status' => (string)($sub['status'] ?? 'pending'),
           ':payment_status' => (string)($sub['payment_status'] ?? 'not_required')
         ]);
+        $sub['db_id'] = (int)$pdo->lastInsertId();
       }
     } catch(Throwable $e) {
-      // fallback
+      error_log("[AIHubpedia Error] save_submission_dual MySQL error: " . $e->getMessage());
     }
   }
 
   // 2. Save to submissions.json
   $subs = read_json('submissions.json', []);
-  $subs[] = [
+  $record = [
+    'id' => $subId,
     'name' => (string)($sub['name'] ?? ''),
     'category' => (string)($sub['category'] ?? ''),
     'website' => (string)($sub['website'] ?? ''),
@@ -353,8 +456,10 @@ function save_submission_dual(array $sub): bool {
     'payment_status' => (string)($sub['payment_status'] ?? 'not_required'),
     'created_at' => date('Y-m-d H:i:s')
   ];
+  $subs[] = $record;
   write_json('submissions.json', $subs);
-  return true;
+
+  return ['success' => true, 'id' => $subId, 'data' => $record];
 }
 
 function find_tool($id){

@@ -4,9 +4,10 @@
  *
  * Secure administration panel:
  * - Session-based authentication with bcrypt password verification
- * - Rate-limited login attempts with IP throttling
+ * - Rate-limited login attempts with IP throttling & verified reverse proxy support
  * - Strict CSRF protection on all state-changing actions
- * - Dual-layer storage synchronization (MySQL + JSON fallback)
+ * - Stable, unique submission IDs for reliable dual-layer storage synchronization
+ * - Transactional database writes with explicit error handling (zero silent failures)
  * - Zero plaintext credentials in URLs or responses
  */
 
@@ -15,20 +16,20 @@ require_once __DIR__ . '/src/Auth.php';
 
 Auth::startSession();
 
-$title = "Admin — AIHubpedia";
+$title = "Admin Portal — AIHubpedia";
 $loginError = '';
 $flashMessage = '';
 $flashType = 'info';
 
 // ==============================================================================
-// 1. HANDLE LOGIN & LOGOUT ACTIONS
+// 1. AUTHENTICATION CONTROLLER (LOGIN & LOGOUT)
 // ==============================================================================
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Admin Login Attempt
     if (isset($_POST['admin_login_action'])) {
         if (!csrf_validate()) {
-            $loginError = 'Security verification failed. Please refresh the page and try again.';
+            $loginError = 'Security verification failed (CSRF token mismatch). Please refresh and try again.';
         } else {
             $username = trim((string)($_POST['username'] ?? ''));
             $password = (string)($_POST['password'] ?? '');
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==============================================================================
-// 2. UNATHENTICATED VIEW: SECURE LOGIN FORM
+// 2. UNAUTHENTICATED VIEW: SECURE LOGIN FORM
 // ==============================================================================
 
 if (!Auth::isAdminLoggedIn()) {
@@ -182,17 +183,39 @@ if (!Auth::isAdminLoggedIn()) {
           <input type="hidden" name="admin_login_action" value="1">
 
           <div class="adminFormGroup">
-            <label for="username">Username</label>
-            <input class="adminInput" id="username" name="username" type="text" autocomplete="username" required autofocus placeholder="Admin username">
+            <label for="adminUser">Username</label>
+            <input
+              id="adminUser"
+              class="adminInput"
+              type="text"
+              name="username"
+              required
+              autocomplete="username"
+              placeholder="e.g. admin"
+              <?= $rateLimit['is_blocked'] ? 'disabled' : '' ?>
+            >
           </div>
 
           <div class="adminFormGroup">
-            <label for="password">Password</label>
-            <input class="adminInput" id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••••••">
+            <label for="adminPass">Password</label>
+            <input
+              id="adminPass"
+              class="adminInput"
+              type="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="Enter admin password"
+              <?= $rateLimit['is_blocked'] ? 'disabled' : '' ?>
+            >
           </div>
 
-          <button class="adminSubmitBtn" type="submit" <?= $rateLimit['is_blocked'] ? 'disabled' : '' ?>>
-            Secure Sign In
+          <button
+            class="adminSubmitBtn"
+            type="submit"
+            <?= $rateLimit['is_blocked'] ? 'disabled' : '' ?>
+          >
+            <?= $rateLimit['is_blocked'] ? 'Locked (Rate Limited)' : 'Authenticate & Sign In' ?>
           </button>
         </form>
 
@@ -207,11 +230,10 @@ if (!Auth::isAdminLoggedIn()) {
 }
 
 // ==============================================================================
-// 3. AUTHENTICATED ACTIONS (POST ONLY + CSRF VALIDATED)
+// 3. AUTHENTICATED ACTIONS (POST ONLY + CSRF VALIDATED + STABLE IDs)
 // ==============================================================================
 
 $tiers = pricing_tiers();
-$subs = load_submissions_dual();
 
 function featured_settings_for_plan(string $plan): array {
     $today = date('Y-m-d');
@@ -226,25 +248,31 @@ function featured_settings_for_plan(string $plan): array {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = trim((string)($_POST['action'] ?? ''));
-    $idx = isset($_POST['submission_index']) ? (int)$_POST['submission_index'] : -1;
+    $subId = trim((string)($_POST['submission_id'] ?? ''));
 
     if ($action !== '' && !csrf_validate()) {
         header('Location: admin.php?msg=csrf_error');
         exit;
     }
 
-    if ($action && $idx >= 0 && $idx < count($subs)) {
-        $sub = $subs[$idx];
+    if ($action && $subId !== '') {
+        $sub = find_submission_dual($subId);
+
+        if (!$sub) {
+            header('Location: admin.php?msg=not_found');
+            exit;
+        }
+
         $subName = (string)($sub['name'] ?? '');
 
         if ($action === 'mark_paid') {
-            update_submission_status_dual($idx, $sub['status'] ?? 'pending', 'paid', $subName);
+            update_submission_status_dual($subId, $sub['status'] ?? 'pending', 'paid');
             header('Location: admin.php?msg=marked_paid');
             exit;
         }
 
         if ($action === 'reject') {
-            update_submission_status_dual($idx, 'rejected', null, $subName);
+            update_submission_status_dual($subId, 'rejected', null);
             header('Location: admin.php?msg=rejected');
             exit;
         }
@@ -291,9 +319,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'featured_until' => (string)$feat['featured_until']
             ];
 
-            // Dual sync to MySQL and JSON
-            save_tool_dual($newTool);
-            update_submission_status_dual($idx, 'approved', null, $subName);
+            // Transactional Dual Sync to MySQL and JSON
+            $saveResult = save_tool_dual($newTool);
+            if (!$saveResult['success']) {
+                $err = urlencode($saveResult['error'] ?? 'Database save failed.');
+                header("Location: admin.php?msg=db_error&err={$err}");
+                exit;
+            }
+
+            update_submission_status_dual($subId, 'approved', null);
 
             header('Location: admin.php?msg=approved');
             exit;
@@ -303,12 +337,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Handle flash messages
 $msgCode = (string)($_GET['msg'] ?? '');
+$errMsg = (string)($_GET['err'] ?? '');
 $flashMap = [
     'approved' => ['Tool approved and published to MySQL & JSON catalog successfully.', 'success'],
     'rejected' => ['Submission has been marked as rejected.', 'info'],
     'marked_paid' => ['Submission marked as paid.', 'success'],
     'need_payment' => ['This submission requires payment before it can be approved.', 'error'],
+    'not_found' => ['Submission record not found.', 'error'],
     'csrf_error' => ['Security verification failed (CSRF token mismatch). Please retry.', 'error'],
+    'db_error' => ['Database write failed: ' . $errMsg, 'error'],
 ];
 
 if (isset($flashMap[$msgCode])) {
@@ -323,21 +360,24 @@ $approvedCount = 0;
 $paidCount = 0;
 
 foreach ($subs as $s) {
-    if (($s['status'] ?? '') === 'pending') $pendingCount++;
-    if (($s['status'] ?? '') === 'approved') $approvedCount++;
-    if (($s['payment_status'] ?? '') === 'paid') $paidCount++;
+    $st = $s['status'] ?? 'pending';
+    $ps = $s['payment_status'] ?? 'not_required';
+    if ($st === 'pending') {
+        $pendingCount++;
+    }
+    if ($st === 'approved') {
+        $approvedCount++;
+    }
+    if ($ps === 'paid') {
+        $paidCount++;
+    }
 }
 
 require __DIR__ . '/layout_top.php';
 ?>
 
 <style>
-  .adminDashboard {
-    max-width: 1200px;
-    margin: 20px auto 40px;
-    padding: 0 16px;
-  }
-  .adminTopBar {
+  .adminDashboardHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -349,7 +389,7 @@ require __DIR__ . '/layout_top.php';
   }
   .adminStatsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 28px;
   }
@@ -357,14 +397,8 @@ require __DIR__ . '/layout_top.php';
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 20px;
+    padding: 18px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-  .adminStatNum {
-    font-size: 28px;
-    font-weight: 800;
-    color: #111827;
-    margin-top: 4px;
   }
   .adminStatLabel {
     font-size: 13px;
@@ -373,27 +407,37 @@ require __DIR__ . '/layout_top.php';
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+  .adminStatNum {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    margin-top: 6px;
+  }
   .submissionCard {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: box-shadow 0.15s ease;
+  }
+  .submissionCard:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
   .submissionHeader {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
     flex-wrap: wrap;
+    gap: 12px;
   }
   .statusBadge {
     display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 999px;
   }
   .statusPending { background: #fef3c7; color: #92400e; }
   .statusApproved { background: #dcfce7; color: #166534; }
@@ -403,40 +447,47 @@ require __DIR__ . '/layout_top.php';
   .submissionActions {
     display: flex;
     gap: 8px;
-    margin-top: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
     flex-wrap: wrap;
   }
   .actionBtn {
-    padding: 8px 14px;
+    padding: 7px 14px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
+    border: 1px solid transparent;
     cursor: pointer;
-    border: none;
-    transition: opacity 0.15s ease;
+    transition: all 0.15s ease;
   }
-  .actionBtn:hover { opacity: 0.9; }
-  .btnApprove { background: #10b981; color: #ffffff; }
-  .btnReject { background: #ef4444; color: #ffffff; }
-  .btnPaid { background: #6366f1; color: #ffffff; }
+  .btnApprove { background: #16a34a; color: #ffffff; }
+  .btnApprove:hover { background: #15803d; }
+  .btnReject { background: #ffffff; border-color: #d1d5db; color: #dc2626; }
+  .btnReject:hover { background: #fee2e2; }
+  .btnPaid { background: #4f46e5; color: #ffffff; }
+  .btnPaid:hover { background: #4338ca; }
   .btnLogout {
     background: #f3f4f6;
     color: #374151;
     border: 1px solid #d1d5db;
     padding: 8px 16px;
     border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
   }
   .btnLogout:hover { background: #e5e7eb; }
+  .alertOk { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+  .alertErr { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
 </style>
 
-<div class="adminDashboard">
-  <div class="adminTopBar">
+<div class="adminWrap" style="max-width:1100px;margin:30px auto;padding:0 16px">
+  <div class="adminDashboardHeader">
     <div>
-      <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827">Admin Control Center</h1>
-      <p style="margin:4px 0 0;color:#6b7280;font-size:14px">
-        Logged in as <b><?= h($_SESSION['admin_auth']['user'] ?? 'admin') ?></b> • Session active
+      <h1 style="margin:0 0 6px;font-size:26px;font-weight:800;color:#111827">Admin Submissions Portal</h1>
+      <p style="margin:0;color:#6b7280;font-size:14px">
+        Logged in as <b><?= h(Auth::getAdminUsername()) ?></b> • Session Active
       </p>
     </div>
     <form method="post" action="admin.php" style="margin:0">
@@ -491,7 +542,8 @@ require __DIR__ . '/layout_top.php';
       🎉 No submissions in queue.
     </div>
   <?php else: ?>
-    <?php foreach ($subs as $i => $s):
+    <?php foreach ($subs as $s):
+      $subId = (string)($s['id'] ?? '');
       $plan = (string)($s['plan'] ?? 'free');
       $tier = $tiers[$plan] ?? ['label' => $plan, 'price' => 0];
       $price = (int)($s['price'] ?? ($tier['price'] ?? 0));
@@ -505,6 +557,7 @@ require __DIR__ . '/layout_top.php';
           <div>
             <h3 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111827"><?= h($s['name'] ?? 'Unnamed Tool') ?></h3>
             <div style="font-size:13px;color:#6b7280">
+              ID: <code><?= h($subId) ?></code> •
               Category: <b><?= h($s['category'] ?? 'General') ?></b> •
               Plan: <b><?= h($tier['label'] ?? $plan) ?></b> ($<?= (int)$price ?>) •
               Submitted: <?= h($s['created_at'] ?? 'Recently') ?>
@@ -530,7 +583,7 @@ require __DIR__ . '/layout_top.php';
               <form method="post" action="admin.php" style="margin:0;display:inline">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="mark_paid">
-                <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
+                <input type="hidden" name="submission_id" value="<?= h($subId) ?>">
                 <button class="actionBtn btnPaid" type="submit">Mark Paid ($<?= (int)$price ?>)</button>
               </form>
             <?php endif; ?>
@@ -538,14 +591,14 @@ require __DIR__ . '/layout_top.php';
             <form method="post" action="admin.php" style="margin:0;display:inline">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="approve">
-              <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
-              <button class="actionBtn btnApprove" type="submit">Approve & Publish</button>
+              <input type="hidden" name="submission_id" value="<?= h($subId) ?>">
+              <button class="actionBtn btnApprove" type="submit">Approve & Publish Tool</button>
             </form>
 
-            <form method="post" action="admin.php" style="margin:0;display:inline" onsubmit="return confirm('Are you sure you want to reject this submission?');">
+            <form method="post" action="admin.php" style="margin:0;display:inline">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="reject">
-              <input type="hidden" name="submission_index" value="<?= (int)$i ?>">
+              <input type="hidden" name="submission_id" value="<?= h($subId) ?>">
               <button class="actionBtn btnReject" type="submit">Reject</button>
             </form>
           </div>

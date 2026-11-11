@@ -1,32 +1,72 @@
 <?php
 /**
  * AIHubpedia Environment Loader
- * 
+ *
  * Lightweight, zero-dependency .env parser and environment accessor.
- * Supports comments, quotes, inline values, and existing system environment variables.
+ * Supports:
+ * - Explicit configuration path outside public webroot (AIHUB_ENV_PATH)
+ * - Strict preservation of system environment variables
+ * - Comments, quotes, inline values, and boolean/null normalization
+ * - Test isolation reset capabilities
  */
 
 if (!class_exists('Env')) {
     class Env {
         private static bool $loaded = false;
+        private static ?string $loadedPath = null;
+
+        /**
+         * Reset loader state (primarily for automated testing isolation).
+         */
+        public static function reset(): void {
+            self::$loaded = false;
+            self::$loadedPath = null;
+        }
+
+        /**
+         * Resolve the effective .env file path.
+         */
+        public static function resolvePath(?string $customPath = null): ?string {
+            if ($customPath !== null && file_exists($customPath) && is_readable($customPath)) {
+                return $customPath;
+            }
+
+            // 1. Check explicit environment override
+            $envPath = getenv('AIHUB_ENV_PATH') ?: ($_SERVER['AIHUB_ENV_PATH'] ?? null);
+            if ($envPath && file_exists($envPath) && is_readable($envPath)) {
+                return $envPath;
+            }
+
+            // 2. Check standard outside-webroot candidate (/var/www/aihubpedia_secrets/.env or parent dir)
+            $parentEnv = dirname(__DIR__, 2) . '/aihubpedia_secrets/.env';
+            if (file_exists($parentEnv) && is_readable($parentEnv)) {
+                return $parentEnv;
+            }
+
+            // 3. Check project root .env
+            $rootEnv = dirname(__DIR__) . '/.env';
+            if (file_exists($rootEnv) && is_readable($rootEnv)) {
+                return $rootEnv;
+            }
+
+            return null;
+        }
 
         /**
          * Load environment variables from a .env file into getenv(), $_ENV, and $_SERVER.
+         * System environment variables take precedence unless $overwrite is true.
          */
-        public static function load(?string $path = null): bool {
-            if (self::$loaded && $path === null) {
+        public static function load(?string $path = null, bool $overwrite = false): bool {
+            if (self::$loaded && $path === null && !$overwrite) {
                 return true;
             }
 
-            if ($path === null) {
-                $path = dirname(__DIR__) . '/.env';
-            }
-
-            if (!file_exists($path) || !is_readable($path)) {
+            $resolved = self::resolvePath($path);
+            if ($resolved === null) {
                 return false;
             }
 
-            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $lines = file($resolved, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             if ($lines === false) {
                 return false;
             }
@@ -48,6 +88,10 @@ if (!class_exists('Env')) {
                 $key = trim(substr($line, 0, $pos));
                 $value = trim(substr($line, $pos + 1));
 
+                if ($key === '') {
+                    continue;
+                }
+
                 // Strip surrounding single or double quotes
                 if (strlen($value) >= 2) {
                     $first = $value[0];
@@ -57,19 +101,21 @@ if (!class_exists('Env')) {
                     }
                 }
 
-                // Set into environment if not already set by system or overwrite
-                if ($key !== '') {
-                    if (!isset($_SERVER[$key])) {
-                        $_SERVER[$key] = $value;
-                    }
-                    if (!isset($_ENV[$key])) {
-                        $_ENV[$key] = $value;
-                    }
+                // Preserve system environment precedence unless overwrite is requested
+                $systemVal = getenv($key);
+                $isSystemSet = ($systemVal !== false);
+
+                if (!$isSystemSet || $overwrite) {
                     putenv("{$key}={$value}");
+                    $_ENV[$key] = $value;
+                    $_SERVER[$key] = $value;
+                } elseif (!isset($_ENV[$key])) {
+                    $_ENV[$key] = $systemVal;
                 }
             }
 
             self::$loaded = true;
+            self::$loadedPath = $resolved;
             return true;
         }
 
@@ -77,7 +123,9 @@ if (!class_exists('Env')) {
          * Retrieve an environment variable with a default fallback.
          */
         public static function get(string $key, mixed $default = null): mixed {
-            self::load();
+            if (!self::$loaded) {
+                self::load();
+            }
 
             $val = getenv($key);
             if ($val !== false) {
@@ -96,7 +144,7 @@ if (!class_exists('Env')) {
         }
 
         /**
-         * Normalize boolean and integer strings.
+         * Normalize boolean and null string representations.
          */
         private static function normalizeValue(mixed $val): mixed {
             if (!is_string($val)) {
@@ -115,6 +163,10 @@ if (!class_exists('Env')) {
             }
 
             return $val;
+        }
+
+        public static function getLoadedPath(): ?string {
+            return self::$loadedPath;
         }
     }
 }
