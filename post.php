@@ -3,7 +3,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/blog-seo.php';
 
 /* ─── Load post ───────────────────────────────────────────── */
-$slug = trim($_GET['slug'] ?? '');
+$slug = seo_param($_GET, 'slug');
 $p    = $slug ? find_post($slug) : null;
 
 if (!$p) {
@@ -20,10 +20,11 @@ if (!$p) {
 $title     = blog_seo_title($p);
 $meta_desc = blog_seo_description($p);
 
+$canonical = seo_url('/post.php', ['slug' => $p['slug']]);
+$og_type = 'article';
+$og_image = $p['image'] ?? '';
+$head_extra = function () use ($p) { blog_emit_head_seo($p); };
 require __DIR__ . '/layout_top.php';
-
-/* ─── All head SEO (OG + schemas) ────────────────────────── */
-blog_emit_head_seo($p);
 
 /* ─── Load tools for internal link injection + related tools */
 $toolsData   = load_tools();
@@ -157,3 +158,4 @@ if (empty($relatedPosts)) {
 </section>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>
+

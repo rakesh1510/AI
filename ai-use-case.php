@@ -1,12 +1,16 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 
-$slug = trim($_GET['slug'] ?? '');
+$slug = seo_param($_GET, 'slug');
 $useCases = load_use_cases();
 $case = $useCases[$slug] ?? null;
 
 if (!$case) {
-    header('Location: ai-use-case-explorer.php');
+    http_response_code(404);
+    $title = 'Use case not found — AIHubpedia';
+    require __DIR__ . '/layout_top.php';
+    echo '<h1>Use case not found</h1><p><a href="/ai-use-case-explorer.php">Explore use cases</a></p>';
+    require __DIR__ . '/layout_bottom.php';
     exit;
 }
 
@@ -149,3 +153,4 @@ require __DIR__ . '/layout_top.php';
 </section>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>
+

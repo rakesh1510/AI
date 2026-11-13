@@ -1,32 +1,22 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-
 $site = site_cfg();
 $site_name = $site['site_name'] ?? 'AIHubpedia';
-
-$title = $title ?? ($site_name . ' — Discover, Compare & Explore the Best AI Tools');
-$meta_desc = $meta_desc ?? 'Discover, compare, and explore the best AI tools for writing, coding, design, productivity, and business on AIHubpedia.';
-
-$canonical = $canonical ?? null;
-$og_image = $og_image ?? 'https://aihubpedia.com/logo.png';
-
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'aihubpedia.com';
+$title = seo_text($title ?? '', $site_name . ' — Discover & Compare AI Tools');
+$meta_desc = seo_text($meta_desc ?? '', 'Discover AI tools for writing, coding, design, productivity, and business. Compare listed features and explore alternatives on AIHubpedia.');
 $request_uri = $_SERVER['REQUEST_URI'] ?? '/';
-$current_url = $scheme . '://' . $host . $request_uri;
-
-if (!$canonical) {
-    $canonical = $current_url;
-}
-
-$canonical = preg_replace('#^https?://(www\.)?187\.77\.184\.173#', 'https://aihubpedia.com', $canonical);
-$canonical = preg_replace('#^http://#', 'https://', $canonical);
-
+$canonical = seo_canonical($canonical ?? $request_uri);
+$robots_meta = $robots_meta ?? seo_default_robots($request_uri, (int)http_response_code());
+if ((int)http_response_code() >= 400) $robots_meta = 'noindex,follow';
+$og_image = seo_http_url($og_image ?? '') ?: SEO_ORIGIN . '/logo.png';
 $og_type = $og_type ?? 'website';
+$page_language = $page_language ?? 'en';
+if (!preg_match('/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/D', $page_language)) $page_language = 'en';
+$translations = seo_language_links($published_translations ?? []);
 ?>
 
 <!doctype html>
-<html lang="en">
+<html lang="<?= h($page_language) ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,17 +24,36 @@ $og_type = $og_type ?? 'website';
 <title><?= h($title) ?></title>
 <meta name="description" content="<?= h($meta_desc) ?>">
 <link rel="canonical" href="<?= h($canonical) ?>">
+<meta name="robots" content="<?= h($robots_meta) ?>">
+<?php foreach ($translations as $language => $url): ?>
+<link rel="alternate" hreflang="<?= h($language) ?>" href="<?= h($url) ?>">
+<?php endforeach; ?>
 
 <link rel="icon" href="/favicon.png">
 
 <meta property="og:title" content="<?= h($title) ?>">
 <meta property="og:description" content="<?= h($meta_desc) ?>">
 <meta property="og:image" content="<?= h($og_image) ?>">
+<meta property="og:image:alt" content="<?= h($og_image_alt ?? 'AIHubpedia') ?>">
+<meta property="og:url" content="<?= h($canonical) ?>">
+<meta property="og:type" content="<?= h($og_type) ?>">
+<meta property="og:site_name" content="<?= h($site_name) ?>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= h($title) ?>">
+<meta name="twitter:description" content="<?= h($meta_desc) ?>">
+<meta name="twitter:image" content="<?= h($og_image) ?>">
+<?php foreach ($page_schemas ?? [] as $schema): ?>
+<script type="application/ld+json"><?= seo_json_ld($schema) ?></script>
+<?php endforeach; ?>
+<?php if (isset($head_extra) && is_callable($head_extra)) $head_extra(); ?>
 
 <link rel="stylesheet" href="/assets/css/style.css">
-<link rel="stylesheet" href="trust-badges.css">
+<link rel="stylesheet" href="/trust-badges.css">
 <?php require __DIR__ . '/org-schema.php'; ?>
 <style>
+.seoBreadcrumbs {display:flex;flex-wrap:wrap;gap:1em;list-style:none;padding:0;}
+.seoBreadcrumbs li+li:before {content:"/";margin-right:1em;}
+
 
 /* ===== HEADER FIX ===== */
 .simpleNav{

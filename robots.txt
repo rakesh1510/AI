@@ -1,3 +1,11 @@
+# Search crawlers inherit the public-content rules below, including Googlebot,
+# Bingbot, OAI-SearchBot, PerplexityBot and Claude-SearchBot.
+# Training preferences are independent; this change preserves the existing
+# wildcard policy for GPTBot, ClaudeBot and Google-Extended. See docs/global-discoverability.md.
 User-agent: *
-Allow: /
-Sitemap: sitemap.php
+Disallow: /data/
+Disallow: /database/
+Disallow: /vendor/
+Disallow: /.git/
+
+Sitemap: https://aihubpedia.com/sitemap.xml

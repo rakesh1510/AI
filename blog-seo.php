@@ -145,23 +145,10 @@ function blog_emit_head_seo(array $p, string $baseUrl = 'https://aihubpedia.com'
     $type   = blog_post_type($p);
     $topic  = blog_post_topic($p);
 
-    // ── OG + Twitter ──────────────────────────────────────
-    echo '<meta property="og:type"        content="article">' . "\n";
-    echo '<meta property="og:title"       content="' . $title . '">' . "\n";
-    echo '<meta property="og:description" content="' . $desc  . '">' . "\n";
-    echo '<meta property="og:url"         content="' . h($url) . '">' . "\n";
-    if (!empty($p['image'])) {
-        echo '<meta property="og:image" content="' . h($p['image']) . '">' . "\n";
-    }
-    echo '<meta name="twitter:card"        content="summary_large_image">' . "\n";
-    echo '<meta name="twitter:title"       content="' . $title . '">' . "\n";
-    echo '<meta name="twitter:description" content="' . $desc  . '">' . "\n";
-    echo '<link rel="canonical"            href="'    . h($url) . '">' . "\n";
-
     // ── Article Schema ────────────────────────────────────
     $articleSchema = [
         '@context'         => 'https://schema.org',
-        '@type'            => ($type === 'howto') ? 'HowTo' : 'Article',
+        '@type'            => 'Article',
         'headline'         => $p['title'] ?? '',
         'description'      => blog_seo_description($p),
         'url'              => $url,
@@ -171,7 +158,7 @@ function blog_emit_head_seo(array $p, string $baseUrl = 'https://aihubpedia.com'
         'publisher'        => [
             '@type' => 'Organization',
             'name'  => 'AIHubpedia',
-            'logo'  => ['@type' => 'ImageObject', 'url' => $baseUrl . '/assets/img/logo.png'],
+            'logo'  => ['@type' => 'ImageObject', 'url' => $baseUrl . '/logo.png'],
         ],
         'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $url],
     ];
@@ -187,27 +174,15 @@ function blog_emit_head_seo(array $p, string $baseUrl = 'https://aihubpedia.com'
         ],
     ];
 
-    // ── FAQ Schema (if post has faq data) ────────────────
-    $schemas = [$articleSchema, $breadcrumbSchema];
-    if (!empty($p['faqs']) && is_array($p['faqs'])) {
-        $faqEntities = [];
-        foreach ($p['faqs'] as $faq) {
-            if (!empty($faq['q']) && !empty($faq['a'])) {
-                $faqEntities[] = [
-                    '@type'          => 'Question',
-                    'name'           => $faq['q'],
-                    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['a']],
-                ];
-            }
-        }
-        if ($faqEntities) {
-            $schemas[] = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => $faqEntities];
-        }
+    // FAQ markup is omitted because the post template does not render the FAQ field.
+    foreach (['datePublished', 'dateModified'] as $field) {
+        if (empty($articleSchema[$field]) || strtotime($articleSchema[$field]) === false) unset($articleSchema[$field]);
     }
+    $schemas = [$articleSchema, $breadcrumbSchema];
 
     foreach ($schemas as $schema) {
         echo '<script type="application/ld+json">' . "\n";
-        echo json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo seo_json_ld($schema);
         echo "\n</script>\n";
     }
 }
@@ -587,3 +562,4 @@ function blog_render_compare_cta(array $p): void {
     </div>
     <?php
 }
+

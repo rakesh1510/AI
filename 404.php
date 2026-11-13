@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "404 — AIHubpedia";
@@ -11,3 +10,4 @@ require __DIR__ . '/layout_top.php';
   <a class="btn" href="index.php">Go home</a>
 </div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>
+

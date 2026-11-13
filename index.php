@@ -17,19 +17,21 @@ $data = load_tools();
 $tools = $data['tools'] ?? [];
 $cats  = $data['categories'] ?? [];
 
-$q   = trim($_GET['q'] ?? '');
-$cat = trim($_GET['cat'] ?? '');
+$q   = seo_param($_GET, 'q');
+$cat = seo_param($_GET, 'cat');
 
 $siteName = 'AIHubpedia';
 $baseUrl  = 'https://aihubpedia.com';
 
-function current_clean_url(string $baseUrl, string $cat = '', string $q = ''): string {
-  if ($cat !== '') return $baseUrl . '/?cat=' . rawurlencode($cat);
-  if ($q !== '') return $baseUrl . '/?q=' . rawurlencode($q);
-  return $baseUrl . '/';
+$canonical = seo_canonical($_SERVER['REQUEST_URI'] ?? '/');
+if ($cat !== '' && !in_array($cat, $cats, true)) {
+  http_response_code(404);
+  $title = 'Category not found — AIHubpedia';
+  require __DIR__ . '/layout_top.php';
+  echo '<h1>Category not found</h1><p><a href="/categories.php">Browse categories</a></p>';
+  require __DIR__ . '/layout_bottom.php';
+  exit;
 }
-
-$canonical = current_clean_url($baseUrl, $cat, $q);
 
 /* =========================
    DYNAMIC SEO META
@@ -109,7 +111,7 @@ arsort($catCounts);
    SEO HELPERS
 ========================= */
 function seo_json($data): string {
-  return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+  return seo_json_ld($data);
 }
 
 function seo_tool_url(array $t): string {
@@ -118,7 +120,7 @@ function seo_tool_url(array $t): string {
 }
 
 function seo_category_url(string $c): string {
-  return 'https://aihubpedia.com/?cat=' . rawurlencode($c);
+  return seo_url('/category.php', ['name' => $c]);
 }
 
 /* =========================
@@ -131,7 +133,7 @@ function render_growth_tool_card(array $t, string $returnPage = 'index.php', ?in
   $votes = tool_vote_total($id);
   $comments = count(tool_comments($id));
 
-  $pricingText = (string)($t['pricing'] ?? 'Free');
+  $pricingText = (string)($t['pricing'] ?? 'Not recorded');
   $pricingType = (string)($t['pricing_type'] ?? 'Varies');
   $pricingLower = strtolower($pricingText . ' ' . $pricingType);
 
@@ -147,7 +149,7 @@ function render_growth_tool_card(array $t, string $returnPage = 'index.php', ?in
     $short = $name . ' helps users improve productivity with AI-powered workflows.';
   }
   ?>
-  <article class="card hoverCard growthToolCard" itemscope itemtype="https://schema.org/SoftwareApplication">
+  <article class="card hoverCard growthToolCard" >
     <div style="display:flex;gap:12px;align-items:center">
       <img class="logo"
            src="<?= h(tool_logo($t)) ?>"
@@ -155,10 +157,10 @@ function render_growth_tool_card(array $t, string $returnPage = 'index.php', ?in
            loading="lazy"
            width="56"
            height="56"
-           itemprop="image" />
+           />
 
       <div style="min-width:0">
-        <h3 style="margin:0 0 4px" itemprop="name">
+        <h3 style="margin:0 0 4px">
           <?php if($rank !== null): ?>
             🏆 #<?= (int)$rank ?>
           <?php endif; ?>
@@ -168,8 +170,8 @@ function render_growth_tool_card(array $t, string $returnPage = 'index.php', ?in
         </h3>
 
         <div class="small">
-          <span itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-            <span itemprop="price"><?= h($pricingText) ?></span>
+          <span>
+            <span><?= h($pricingText) ?></span>
           </span>
           • 🔥 <?= number_format($clicks) ?> clicks
         </div>
@@ -227,127 +229,24 @@ function render_growth_tool_card(array $t, string $returnPage = 'index.php', ?in
   <?php
 }
 
+$page_schemas = [['@context' => 'https://schema.org', '@type' => 'WebSite', '@id' => SEO_ORIGIN . '/#website', 'name' => 'AIHubpedia', 'url' => SEO_ORIGIN . '/', 'publisher' => ['@id' => SEO_ORIGIN . '/#organization']]];
 require __DIR__ . '/layout_top.php';
 ?>
 
 <div style="display:none;">Impact-Site-Verification: 968dd254-5013-4efd-ad39-8cbc46defd12</div>
-<div style="display:none;">AIHubpedia is an independent AI tools directory by TrustNova Tech, Germany.</div>
 
-<link rel="canonical" href="<?= h($canonical) ?>">
-<meta name="robots" content="<?= h($robots_meta) ?>">
-<meta property="og:title" content="<?= h($title) ?>">
-<meta property="og:description" content="<?= h($meta_desc) ?>">
-<meta property="og:type" content="website">
-<meta property="og:url" content="<?= h($canonical) ?>">
-<meta name="twitter:card" content="summary_large_image">
 
 <?php
 $itemList = [];
-$pos = 1;
-
-foreach(array_slice($trend, 0, 10) as $t){
-  $itemList[] = [
-    '@type' => 'ListItem',
-    'position' => $pos++,
-    'url' => seo_tool_url($t),
-    'name' => $t['name'] ?? 'AI Tool'
-  ];
+foreach (array_slice($trend, 0, 10) as $t) {
+  $itemList[] = ['@type' => 'ListItem', 'position' => count($itemList) + 1,
+    'url' => seo_tool_url($t), 'name' => $t['name']];
 }
-
-$schemaGraph = [
-  [
-    '@context' => 'https://schema.org',
-    '@type' => 'WebSite',
-    'name' => 'AIHubpedia',
-    'alternateName' => 'AIHubpedia AI Tools Directory',
-    'url' => $baseUrl . '/',
-    'description' => $meta_desc,
-    'publisher' => [
-      '@type' => 'Organization',
-      'name' => 'AIHubpedia'
-    ],
-    'potentialAction' => [
-      '@type' => 'SearchAction',
-      'target' => $baseUrl . '/?q={search_term_string}',
-      'query-input' => 'required name=search_term_string'
-    ]
-  ],
-  [
-    '@context' => 'https://schema.org',
-    '@type' => 'Organization',
-    'name' => 'AIHubpedia',
-    'alternateName' => 'AIHubpedia AI Tools Directory',
-    'url' => $baseUrl . '/',
-    'logo' => $baseUrl . '/assets/img/logo.png',
-    'description' => 'AIHubpedia is an AI tools directory to discover, compare, and explore AI tools, alternatives, pricing, and use cases.',
-    'founder' => [
-      '@type' => 'Organization',
-      'name' => 'TrustNova Tech'
-    ],
-    'sameAs' => [
-      'https://trustnovatech.com'
-    ]
-  ],
-  [
-    '@context' => 'https://schema.org',
-    '@type' => 'ItemList',
-    'name' => 'Most Clicked AI Tools on AIHubpedia',
-    'itemListElement' => $itemList
-  ],
-  [
-    '@context' => 'https://schema.org',
-    '@type' => 'BreadcrumbList',
-    'itemListElement' => [
-      [
-        '@type' => 'ListItem',
-        'position' => 1,
-        'name' => 'Home',
-        'item' => $baseUrl . '/'
-      ],
-      [
-        '@type' => 'ListItem',
-        'position' => 2,
-        'name' => $cat !== '' ? $cat . ' AI Tools' : 'AI Tools Directory',
-        'item' => $canonical
-      ]
-    ]
-  ],
-  [
-    '@context' => 'https://schema.org',
-    '@type' => 'FAQPage',
-    'mainEntity' => [
-      [
-        '@type' => 'Question',
-        'name' => 'What is AIHubpedia?',
-        'acceptedAnswer' => [
-          '@type' => 'Answer',
-          'text' => 'AIHubpedia is an AI tools directory where users can discover, compare, and explore AI tools for coding, writing, automation, design, SEO, marketing, productivity, and business.'
-        ]
-      ],
-      [
-        '@type' => 'Question',
-        'name' => 'How are trending AI tools ranked?',
-        'acceptedAnswer' => [
-          '@type' => 'Answer',
-          'text' => 'Trending AI tools are ranked using user click activity and discovery signals on AIHubpedia.'
-        ]
-      ],
-      [
-        '@type' => 'Question',
-        'name' => 'Can I compare AI tools on AIHubpedia?',
-        'acceptedAnswer' => [
-          '@type' => 'Answer',
-          'text' => 'Yes. AIHubpedia allows users to compare AI tools, check alternatives, explore pricing types, and find tools by category or use case.'
-        ]
-      ]
-    ]
-  ]
-];
 ?>
-
-<script type="application/ld+json">
-<?= seo_json(['@graph' => $schemaGraph]) ?>
-</script>
+<script type="application/ld+json"><?= seo_json_ld([
+  '@context' => 'https://schema.org', '@type' => 'ItemList',
+  'name' => 'Most Clicked AI Tools on AIHubpedia', 'itemListElement' => $itemList
+]) ?></script>
 
 <style>
 .hoverCard{transition:all .25s ease;border:1px solid rgba(99,102,241,.15)}
@@ -499,7 +398,7 @@ $schemaGraph = [
 
   <div class="categoryPills">
     <?php foreach(array_slice($catCounts, 0, 18, true) as $c => $count): ?>
-      <a class="badge" href="/?cat=<?= urlencode($c) ?>" title="Best <?= h($c) ?> AI tools">
+      <a class="badge" href="<?= h(seo_category_url($c)) ?>" title="Best <?= h($c) ?> AI tools">
         <?= h($c) ?> AI Tools · <?= (int)$count ?>
       </a>
     <?php endforeach; ?>
