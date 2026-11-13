@@ -1,5 +1,6 @@
-
 <?php
+require_once __DIR__ . '/seo.php';
+
 // ----------------------
 // JSON helpers
 // ----------------------
@@ -155,7 +156,7 @@ function load_tools(){
   $exclude = exclude_categories();
   $tools = array_values(array_filter($data['tools'] ?? [], function($t) use ($exclude){
     $c = $t['category'] ?? '';
-    return !in_array($c, $exclude, true);
+    return !in_array($c, $exclude, true) && (!isset($t['status']) || $t['status'] === 'published');
   }));
   $cats = array_values(array_unique(array_map(function($t){ return $t['category'] ?? 'Other'; }, $tools)));
   sort($cats);
@@ -190,12 +191,13 @@ function find_tool($id){
                 t.featured_until
               FROM tools t
               LEFT JOIN categories c ON c.id = t.category_id
-              WHERE t.slug = ?
+              WHERE t.slug = ? AND t.status = 'published'
               LIMIT 1";
       $stmt = $pdo->prepare($sql);
       $stmt->execute([$id]);
       $row = $stmt->fetch();
       if($row){
+        if (in_array($row['category'] ?? '', exclude_categories(), true)) return null;
         return [
           'id' => (string)($row['id'] ?? ''),
           'name' => (string)($row['name'] ?? ''),
@@ -219,6 +221,7 @@ function find_tool($id){
           'featured_until' => (string)($row['featured_until'] ?? ''),
         ];
       }
+      return null;
     } catch(Throwable $e){
       // fallback
     }
@@ -511,22 +514,22 @@ function load_posts(){
     try {
       $pdo = db();
       $rows = $pdo->query("SELECT slug, title, published_at AS date, excerpt, content FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC")->fetchAll();
-      if($rows) return $rows;
+      return $rows;
     } catch(Throwable $e){
       // fallback
     }
   }
-  return read_json('posts.json', []);
+  return array_values(array_filter(read_json('posts.json', []), fn($p) => !isset($p['status']) || $p['status'] === 'published'));
 }
 function find_post($slug){
   $slug = (string)$slug;
   if(mysql_tables_available_for_content()){
     try {
       $pdo = db();
-      $stmt = $pdo->prepare("SELECT slug, title, published_at AS date, excerpt, content FROM posts WHERE slug = ? LIMIT 1");
+      $stmt = $pdo->prepare("SELECT slug, title, published_at AS date, excerpt, content FROM posts WHERE slug = ? AND status = 'published' LIMIT 1");
       $stmt->execute([$slug]);
       $row = $stmt->fetch();
-      if($row) return $row;
+      return $row ?: null;
     } catch(Throwable $e){
       // fallback
     }

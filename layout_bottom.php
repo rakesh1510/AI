@@ -1,7 +1,7 @@
 </main>
 
 <footer class="footer simpleFooter">
-<?php// require __DIR__ . '/footer-links-snippet.php'; ?>
+<?php // Footer links are rendered below. ?>
   <div class="wrap simpleFooterInner">
     <div class="simpleFooterGrid">
 
@@ -23,7 +23,10 @@
 
       <div class="footerCol">
         <h3>TOOLS</h3>
-        <a href="submit.php">Submit your AI tool</a>
+        <a href="/submit.php">Submit your AI tool</a>
+        <a href="/advertise.php" data-conversion="sponsorship_interest">Sponsored listings</a>
+        <a href="/partner.php" data-conversion="partnership_interest">Affiliate partnerships</a>
+        <a href="/contact.php" data-conversion="development_interest">Discuss a custom AI development project</a>
         <a href="contact.php">Contact</a>
         <a href="blog.php">Blog</a>
       </div>

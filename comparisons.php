@@ -1,7 +1,7 @@
-
 <?php
 require_once __DIR__ . '/helpers.php';
-$title = "Comparison Pages — AIHubpedia";
+$title = 'Comparison Drafts — AIHubpedia';
+$robots_meta = 'noindex,follow';
 $dir = __DIR__ . '/compare';
 $files = [];
 if(is_dir($dir)){
@@ -14,7 +14,7 @@ sort($files);
 require __DIR__ . '/layout_top.php';
 ?>
 <h1>Comparison pages</h1>
-<p class="small">Auto-generated SEO pages. Use <code>generate_compare_pages.php</code> to create more.</p>
+<p class="small">These comparison drafts have not been reviewed. <a href="/compare.php">Compare recorded tool information</a>.</p>
 
 <div class="grid">
 <?php foreach(array_slice($files,0,200) as $f): ?>
@@ -28,3 +28,4 @@ require __DIR__ . '/layout_top.php';
 </div>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>
+

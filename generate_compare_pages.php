@@ -1,5 +1,6 @@
-
 <?php
+// Legacy generator is CLI-only and creates noindex drafts, never indexable landing pages.
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/helpers.php';
 $data = load_tools();
 $tools = $data['tools'] ?? [];
@@ -17,8 +18,8 @@ $created = 0;
 for($i=0; $i<count($tools) && $created<$max; $i++){
   for($j=$i+1; $j<count($tools) && $created<$max; $j++){
     $a = $tools[$i]; $b = $tools[$j];
-    // pick pairs from different categories to diversify
-    if(($a['category'] ?? '') === ($b['category'] ?? '')) continue;
+    // Draft comparisons must at least concern tools in the same category.
+    if(($a['category'] ?? '') !== ($b['category'] ?? '')) continue;
 
     $fn = slugify($a['name'] . '-vs-' . $b['name']) . '.php';
     $path = $dir . '/' . $fn;
@@ -26,10 +27,11 @@ for($i=0; $i<count($tools) && $created<$max; $i++){
     $title = $a['name'] . ' vs ' . $b['name'] . ' — AIHubpedia';
     $body = "<?php\n"
       . "\$title=" . var_export($title,true) . ";\n"
+      . "\$robots_meta='noindex,follow';\n"
       . "require __DIR__ . '/../layout_top.php';\n"
       . "?>\n"
       . "<h1>" . htmlspecialchars($a['name']) . " vs " . htmlspecialchars($b['name']) . "</h1>\n"
-      . "<p class='small'>SEO comparison page.</p>\n"
+      . "<p class='small'>Comparison draft. Confirm product details with provider sources.</p>\n"
       . "<div class='actions'><a class='btn secondary' href='../tool.php?id=" . urlencode($a['id']) . "'>Details: " . htmlspecialchars($a['name']) . "</a>"
       . "<a class='btn secondary' href='../tool.php?id=" . urlencode($b['id']) . "'>Details: " . htmlspecialchars($b['name']) . "</a>"
       . "<a class='btn' href='../compare.php?a=" . urlencode($a['id']) . "&b=" . urlencode($b['id']) . "'>Compare interactively</a></div>\n"
@@ -47,3 +49,4 @@ for($i=0; $i<count($tools) && $created<$max; $i++){
 }
 
 echo "Created {$created} pages in {$dir}\n";
+
