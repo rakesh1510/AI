@@ -1,6 +1,6 @@
-
 <?php require 'layout_top.php'; ?>
 <h1>AI Trend Radar</h1>
+<p class="noticeBox">Preview only: editorial examples, not measured growth data.</p>
 
 <div class="card">
 Fastest growing tools: ChatGPT, Runway, Claude

@@ -1,4 +1,3 @@
-
 <?php require 'layout_top.php'; ?>
 <h1>AI Workflow Generator</h1>
 <p>Create a workflow combining multiple AI tools.</p>

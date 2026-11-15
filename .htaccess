@@ -1,0 +1,56 @@
+# AIHubpedia Apache configuration (requires AllowOverride FileInfo/All; ignored otherwise).
+# Every block is guarded with <IfModule> so a missing module never breaks the site.
+
+# Real 404 status + branded page for missing URLs
+ErrorDocument 404 /404.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Canonical host: www -> apex (HTTPS is left to the server/TLS config to avoid proxy redirect loops)
+  RewriteCond %{HTTP_HOST} ^www\.aihubpedia\.com$ [NC]
+  RewriteRule ^ https://aihubpedia.com%{REQUEST_URI} [R=301,L]
+
+  # /index.php (no parameters) -> / (duplicate homepage URL)
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{THE_REQUEST} ^GET\s/index\.php\s [NC]
+  RewriteRule ^index\.php$ / [R=301,L]
+
+  # Dynamic sitemap at the conventional URL
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # Never serve private data, SQL dumps, tests, scripts, VCS or dependency metadata
+  RewriteRule ^(data|database|tests|scripts|\.git|\.github)(/|$) - [R=404,L]
+  RewriteRule ^(composer\.(json|lock)|helpersold\.php|vote_debug\.php)$ - [R=404,L]
+  RewriteRule \.(sql|bak|log|ini|sh)$ - [R=404,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  <FilesMatch "^(admin|login|logout|bookmarks|redirect|track-click|toggle-bookmark|vote-tool|vote-tool-ajax|rate|submit-comment|submit-tool|submit_tool_save|subscribe|contact_send|compare-tools|compare_.*|generate_compare_pages|import-json-to-mysql|install-.*)\.php$">
+    Header set X-Robots-Tag "noindex, nofollow"
+  </FilesMatch>
+  <FilesMatch "\.(css|js|webp|png|jpg|jpeg|gif|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  <FilesMatch "\.(xml|txt)$">
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/xml application/javascript application/json application/ld+json image/svg+xml application/manifest+json
+</IfModule>
+
+AddType application/manifest+json .webmanifest

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-$title = "AI Use-Case Explorer — AIHubpedia";
+$title = "AI Use Case Explorer — Find AI Tools by Goal";
 $meta_desc = "Explore AI tools by real use case such as writing blog posts, creating videos, building websites, automating work, and designing graphics.";
 
 $useCases = load_use_cases();

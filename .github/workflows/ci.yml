@@ -1,0 +1,78 @@
+name: CI (lint, SEO, browser tests)
+
+# Test-only workflow: never deploys. Runs against an isolated MySQL service container
+# seeded from the repository's schema/JSON plus synthetic data.
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_test_only
+          MYSQL_DATABASE: aihub_test
+          MYSQL_USER: aihub_test
+          MYSQL_PASSWORD: test_only_pw
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot_test_only"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      AIHUB_DB_HOST: 127.0.0.1
+      AIHUB_DB_NAME: aihub_test
+      AIHUB_DB_USER: aihub_test
+      AIHUB_DB_PASS: test_only_pw
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, dom, curl
+          coverage: none
+
+      - name: PHP syntax check
+        run: ./tests/php_lint.sh
+
+      - name: Build isolated test database
+        run: ./tests/setup_test_db.sh
+
+      - name: Start SMTP sink and PHP server
+        run: |
+          nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
+          nohup php -d output_buffering=0 -S 127.0.0.1:8002 -t . tests/router.php > /tmp/php-server.log 2>&1 &
+          sleep 2
+          curl -fsS -o /dev/null http://127.0.0.1:8002/
+
+      - name: SEO tests (incl. every sitemap URL)
+        run: php tests/seo_test.php http://127.0.0.1:8002 --full-sitemap
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Browser tests (Chromium desktop + mobile)
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/browser_test.js http://127.0.0.1:8002 ./ci-screenshots ci
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: ci-screenshots/
+
+      - name: Server log
+        if: failure()
+        run: cat /tmp/php-server.log

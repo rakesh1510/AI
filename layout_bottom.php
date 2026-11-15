@@ -6,33 +6,35 @@
 
       <div class="footerCol">
         <h3>DISCOVER</h3>
-        <a href="categories.php">All categories</a>
-        <a href="top.php">Top AI tools</a>
-        <a href="compare.php">Compare tools</a>
-        <a href="leaderboard.php">Leaderboard</a>
+        <a href="/categories.php">All categories</a>
+        <a href="/top.php">Top AI tools</a>
+        <a href="/compare.php">Compare tools</a>
+        <a href="/comparisons.php">Popular comparisons</a>
+        <a href="/leaderboard.php">Leaderboard</a>
       </div>
 
       <div class="footerCol">
         <h3>USE CASES</h3>
-        <a href="ai-use-case.php?slug=write-blog-posts">AI tools for Writing & content</a>
-        <a href="ai-use-case.php?slug=design-graphics">AI tools for Image & design</a>
-        <a href="ai-use-case.php?slug=automate-work">AI tools for Automation</a>
-        <a href="ai-use-case.php?slug=build-websites">AI tools for Coding & dev</a>
+        <a href="/ai-use-case.php?slug=write-blog-posts">AI tools for Writing & content</a>
+        <a href="/ai-use-case.php?slug=design-graphics">AI tools for Image & design</a>
+        <a href="/ai-use-case.php?slug=automate-work">AI tools for Automation</a>
+        <a href="/ai-use-case.php?slug=build-websites">AI tools for Coding & dev</a>
       </div>
 
       <div class="footerCol">
         <h3>TOOLS</h3>
-        <a href="submit.php">Submit your AI tool</a>
-        <a href="contact.php">Contact</a>
-        <a href="blog.php">Blog</a>
+        <a href="/submit.php">Submit your AI tool</a>
+        <a href="/contact.php">Contact</a>
+        <a href="/blog.php">Blog</a>
       </div>
 
       <div class="footerCol">
         <h3>COMPANY</h3>
-        <a href="about.php">About AIHubpedia</a>
-        <a href="privacy.php">Privacy policy</a>
-        <a href="terms.php">Terms of service</a>
-        <a href="impressum.php">Impressum</a>
+        <a href="/about.php">About AIHubpedia</a>
+        <a href="/privacy.php">Privacy policy</a>
+        <a href="/terms.php">Terms of service</a>
+        <a href="/impressum.php">Impressum</a>
+        <a href="/disclaimer.php">Disclaimer</a>
         <a href="/sitemap.xml">Sitemap</a>
       </div>
 
@@ -47,7 +49,7 @@
         <div>
           <div class="footerBrand">
   <a href="/" aria-label="AIHubpedia Home">
-    <img src="/logo.png" alt="AIHubpedia logo" class="footerBrandLogo">
+    <img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="119" height="28" alt="AIHubpedia logo" class="footerBrandLogo" loading="lazy">
   </a>
 </div>
           <div class="footerBrandText">
@@ -57,7 +59,7 @@
 
       </div>
 
-      <div class="footerContact">contact@aihubpedia.com</div>
+      <div class="footerContact"><a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a></div>
     </div>
 
     <div class="simpleFooterBottom">
@@ -69,41 +71,8 @@
   </div>
 </footer>
 
-<!-- ✅ Add this CSS (if not already in style.css) -->
-<style>
-.footerBrandBox{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
 
-.footerBrandIcon{
-  width:44px;
-  height:44px;
-  border-radius:10px;
-}
 
-.footerBrandLogo{
-  height:28px;
-  width:auto;
-  display:block;
-    cursor: pointer;
-}
-.footerBrand a {
-  display: inline-block;
-}
-
-.footerBrandText{
-  font-size:14px;
-  color:#6B7280;
-  margin-top:4px;
-}
-
-.footerBrandIcon{
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-</style>
-
-<script src="assets/js/interactions.js"></script>
+<script src="/assets/js/interactions.js?v=<?= h((string)(@filemtime(__DIR__ . '/assets/js/interactions.js') ?: 1)) ?>" defer></script>
 </body>
 </html>

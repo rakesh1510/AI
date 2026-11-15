@@ -1,4 +1,3 @@
-
 <?php require 'layout_top.php'; ?>
 <h1>AI Skill Learning Paths</h1>
 <div class="card">

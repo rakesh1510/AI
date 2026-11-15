@@ -1,5 +1,6 @@
-
 <?php
+require_once __DIR__ . '/seo.php';
+
 // ----------------------
 // JSON helpers
 // ----------------------
@@ -7,16 +8,39 @@ function data_path($name){ return __DIR__ . '/data/' . $name; }
 
 
 function read_json($file, $default){
+  global $AIHUB_JSON_CACHE;
   $p = data_path($file);
+  if(isset($AIHUB_JSON_CACHE[$p])) return $AIHUB_JSON_CACHE[$p] ?? $default;
   if(!file_exists($p)) return $default;
   $raw = file_get_contents($p);
   $data = json_decode($raw, true);
+  $AIHUB_JSON_CACHE[$p] = is_array($data) ? $data : null;
   return is_array($data) ? $data : $default;
 }
 
 function write_json($file, $data){
+  global $AIHUB_JSON_CACHE;
   $p = data_path($file);
+  unset($AIHUB_JSON_CACHE[$p]);
   file_put_contents($p, json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
+}
+
+/** Request-level list of existing DB tables (one SHOW TABLES instead of one per check). */
+function db_table_exists(string $table): bool {
+  static $tables = null;
+  if($tables === null){
+    $tables = [];
+    if(db_connection_available()){
+      try {
+        foreach(db()->query('SHOW TABLES')->fetchAll(PDO::FETCH_NUM) as $row){
+          $tables[strtolower((string)$row[0])] = true;
+        }
+      } catch(Throwable $e){
+        $tables = [];
+      }
+    }
+  }
+  return isset($tables[strtolower($table)]);
 }
 
 // ----------------------
@@ -24,28 +48,27 @@ function write_json($file, $data){
 // ----------------------
 
 function site_cfg(){
-  if(db_connection_available()){
+  // Cached for the request: this was previously re-queried for every tool card (tool_url()).
+  static $cache = null;
+  if($cache !== null) return $cache;
+  if(db_table_exists('site_settings')){
     try {
-      $pdo = db();
-      $stmt = $pdo->query("SHOW TABLES LIKE 'site_settings'");
-      if($stmt->fetchColumn()){
-        $rows = $pdo->query("SELECT setting_key, setting_value FROM site_settings")->fetchAll();
-        if($rows){
-          $cfg = [];
-          foreach($rows as $row){
-            $key = (string)($row['setting_key'] ?? '');
-            $val = (string)($row['setting_value'] ?? '');
-            $decoded = json_decode($val, true);
-            $cfg[$key] = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
-          }
-          return $cfg;
+      $rows = db()->query("SELECT setting_key, setting_value FROM site_settings")->fetchAll();
+      if($rows){
+        $cfg = [];
+        foreach($rows as $row){
+          $key = (string)($row['setting_key'] ?? '');
+          $val = (string)($row['setting_value'] ?? '');
+          $decoded = json_decode($val, true);
+          $cfg[$key] = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
         }
+        return $cache = $cfg;
       }
     } catch(Throwable $e){
       // fallback to JSON
     }
   }
-  return read_json('site.json', []);
+  return $cache = read_json('site.json', []);
 }
 function exclude_categories(){
   $cfg = site_cfg();
@@ -58,18 +81,10 @@ function exclude_categories(){
 function mysql_tables_available_for_content(){
   static $ok = null;
   if($ok !== null) return $ok;
-  if(!db_connection_available()) return $ok = false;
-  try {
-    $pdo = db();
-    $required = ['categories','tools','posts','use_cases'];
-    foreach($required as $table){
-      $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table));
-      if(!$stmt->fetchColumn()) return $ok = false;
-    }
-    return $ok = true;
-  } catch(Throwable $e){
-    return $ok = false;
+  foreach(['categories','tools','posts','use_cases'] as $table){
+    if(!db_table_exists($table)) return $ok = false;
   }
+  return $ok = true;
 }
 
 function decode_json_field($value, $default = []){
@@ -80,6 +95,23 @@ function decode_json_field($value, $default = []){
 }
 
 function load_tools(){
+  // One catalogue load per request; many pages and helpers call this repeatedly.
+  global $AIHUB_TOOLS_CACHE;
+  if(is_array($AIHUB_TOOLS_CACHE)) return $AIHUB_TOOLS_CACHE;
+  return $AIHUB_TOOLS_CACHE = load_tools_uncached();
+}
+
+/** Index of loaded tools by id (built once per request). */
+function tools_by_id(): array {
+  static $index = null;
+  global $AIHUB_TOOLS_CACHE;
+  if($index !== null && is_array($AIHUB_TOOLS_CACHE)) return $index;
+  $index = [];
+  foreach((load_tools()['tools'] ?? []) as $t){ $index[(string)($t['id'] ?? '')] = $t; }
+  return $index;
+}
+
+function load_tools_uncached(){
   if(mysql_tables_available_for_content()){
     try {
       $pdo = db();
@@ -159,6 +191,11 @@ function load_tools(){
 
 function find_tool($id){
   $id = (string)$id;
+  global $AIHUB_TOOLS_CACHE;
+  if(is_array($AIHUB_TOOLS_CACHE)){
+    $index = tools_by_id();
+    if(isset($index[$id])) return $index[$id];
+  }
   if(mysql_tables_available_for_content()){
     try {
       $pdo = db();
@@ -241,17 +278,7 @@ function db_connection_available(){
 function interaction_tables_exist(){
   static $checked = null;
   if($checked !== null) return $checked;
-  if(!db_connection_available()) return $checked = false;
-  try {
-    $pdo = db();
-    $stmt = $pdo->query("SHOW TABLES LIKE 'tool_votes'");
-    $hasVotes = (bool)$stmt->fetchColumn();
-    $stmt2 = $pdo->query("SHOW TABLES LIKE 'tool_clicks'");
-    $hasClicks = (bool)$stmt2->fetchColumn();
-    return $checked = ($hasVotes && $hasClicks);
-  } catch(Throwable $e){
-    return $checked = false;
-  }
+  return $checked = (db_table_exists('tool_votes') && db_table_exists('tool_clicks'));
 }
 
 function client_ip_address(){
@@ -427,24 +454,42 @@ function record_click(string $toolId): int
     ");
     $count->execute([$toolId]);
 
+    interaction_counts_reset();
     return (int)$count->fetchColumn();
 }
 
-function click_count($id){
-  $id = (string)$id;
+/**
+ * Click counts for every tool, loaded with ONE grouped query per request.
+ * Replaces the per-tool COUNT(*) that caused thousands of queries on listing pages.
+ */
+function all_click_counts(): array {
+  global $AIHUB_CLICK_COUNTS;
+  if(is_array($AIHUB_CLICK_COUNTS)) return $AIHUB_CLICK_COUNTS;
   if(interaction_tables_exist()){
     try {
-      $pdo = db();
-      $stmt = $pdo->prepare("SELECT COUNT(*) FROM tool_clicks WHERE tool_slug = ?");
-      $stmt->execute([$id]);
-      return (int)$stmt->fetchColumn();
+      $map = [];
+      foreach(db()->query("SELECT tool_slug, COUNT(*) AS total FROM tool_clicks GROUP BY tool_slug")->fetchAll(PDO::FETCH_ASSOC) as $row){
+        $map[(string)$row['tool_slug']] = (int)$row['total'];
+      }
+      return $AIHUB_CLICK_COUNTS = $map;
     } catch(Throwable $e){
       // Fall back to JSON.
     }
   }
-
   $clicks = read_json('clicks.json', []);
-  return (int)($clicks[$id] ?? 0);
+  return $AIHUB_CLICK_COUNTS = array_map('intval', is_array($clicks) ? $clicks : []);
+}
+
+/** Drop cached counts after a write in the same request (vote, click). */
+function interaction_counts_reset(): void {
+  global $AIHUB_CLICK_COUNTS, $AIHUB_VOTE_COUNTS;
+  $AIHUB_CLICK_COUNTS = null;
+  $AIHUB_VOTE_COUNTS = null;
+}
+
+function click_count($id){
+  $map = all_click_counts();
+  return (int)($map[(string)$id] ?? 0);
 }
 
 
@@ -652,28 +697,32 @@ function tool_comments($toolId){
   }));
 }
 
+/** Up/down vote counts for every tool from ONE grouped query per request (null if DB unavailable). */
+function all_vote_counts(){
+  global $AIHUB_VOTE_COUNTS;
+  if(is_array($AIHUB_VOTE_COUNTS)) return $AIHUB_VOTE_COUNTS;
+  if(!interaction_tables_exist()) return null;
+  try {
+    $map = [];
+    foreach(db()->query("SELECT tool_slug, vote_type, COUNT(*) AS total FROM tool_votes GROUP BY tool_slug, vote_type")->fetchAll(PDO::FETCH_ASSOC) as $row){
+      $type = (string)($row['vote_type'] ?? '');
+      if($type !== 'up' && $type !== 'down') continue;
+      $slug = (string)$row['tool_slug'];
+      if(!isset($map[$slug])) $map[$slug] = ['up'=>0,'down'=>0];
+      $map[$slug][$type] = (int)($row['total'] ?? 0);
+    }
+    return $AIHUB_VOTE_COUNTS = $map;
+  } catch(Throwable $e){
+    return null;
+  }
+}
+
 function tool_vote_breakdown($toolId){
   $toolId = (string)$toolId;
 
-  if(interaction_tables_exist()){
-    try {
-      $pdo = db();
-      $stmt = $pdo->prepare("SELECT vote_type, COUNT(*) AS total FROM tool_votes WHERE tool_slug = ? GROUP BY vote_type");
-      $stmt->execute([$toolId]);
-      $counts = ['up'=>0,'down'=>0];
-
-      foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
-        $type = (string)($row['vote_type'] ?? '');
-
-        if ($type === 'up' || $type === 'down') {
-          $counts[$type] = (int)($row['total'] ?? 0);
-        }
-      }
-
-      return $counts;
-    } catch(Throwable $e){
-      // Fall back to JSON.
-    }
+  $all = all_vote_counts();
+  if(is_array($all)){
+    return $all[$toolId] ?? ['up'=>0,'down'=>0];
   }
 
   $votes = load_tool_votes();
@@ -761,6 +810,7 @@ function vote_tool_action(string $toolId, string $type): bool
             SET vote_type = ?, ip_hash = ?, updated_at = NOW()
             WHERE id = ?
         ");
+        interaction_counts_reset();
         return $update->execute([$type, $ipHash, $existing['id']]);
     }
 
@@ -768,6 +818,7 @@ function vote_tool_action(string $toolId, string $type): bool
         INSERT INTO tool_votes (tool_slug, visitor_id, vote_type, ip_hash, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())
     ");
+    interaction_counts_reset();
     return $insert->execute([$toolId, $visitorId, $type, $ipHash]);
 }
 
@@ -875,17 +926,10 @@ function match_tools_for_use_case($slug, $limit = 8){
 function compare_tables_exist(){
   static $checked = null;
   if($checked !== null) return $checked;
-  if(!db_connection_available()) return $checked = false;
-  try {
-    $pdo = db();
-    foreach(['compare_tool_profiles','compare_tool_points','compare_tool_sources'] as $table){
-      $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table));
-      if(!$stmt->fetchColumn()) return $checked = false;
-    }
-    return $checked = true;
-  } catch(Throwable $e){
-    return $checked = false;
+  foreach(['compare_tool_profiles','compare_tool_points','compare_tool_sources'] as $table){
+    if(!db_table_exists($table)) return $checked = false;
   }
+  return $checked = true;
 }
 
 function compare_json_field($value, $default = []){
@@ -909,15 +953,22 @@ function compare_profile_row(string $toolSlug){
 }
 
 function compare_tool_points(string $toolSlug, string $type): array{
+  // All point types for a tool are fetched in one query and cached for the request.
+  static $cache = [];
   if($toolSlug === '' || !compare_tables_exist()) return [];
-  try {
-    $pdo = db();
-    $stmt = $pdo->prepare("SELECT label, source_url, source_note, evidence_snippet FROM compare_tool_points WHERE tool_slug = ? AND point_type = ? ORDER BY sort_order ASC, id ASC");
-    $stmt->execute([$toolSlug, $type]);
-    return $stmt->fetchAll() ?: [];
-  } catch(Throwable $e){
-    return [];
+  if(!isset($cache[$toolSlug])){
+    $cache[$toolSlug] = [];
+    try {
+      $stmt = db()->prepare("SELECT point_type, label, source_url, source_note, evidence_snippet FROM compare_tool_points WHERE tool_slug = ? ORDER BY sort_order ASC, id ASC");
+      $stmt->execute([$toolSlug]);
+      foreach($stmt->fetchAll() ?: [] as $row){
+        $cache[$toolSlug][(string)$row['point_type']][] = $row;
+      }
+    } catch(Throwable $e){
+      $cache[$toolSlug] = [];
+    }
   }
+  return $cache[$toolSlug][$type] ?? [];
 }
 
 function compare_labels_from_points(array $points): array{

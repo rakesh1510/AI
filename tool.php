@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/helpers.php';
 $id = trim($_GET['id'] ?? '');
@@ -6,40 +5,57 @@ $t = $id ? find_tool($id) : null;
 
 if(!$t){
   http_response_code(404);
-  $title = "Tool not found — AIHubpedia";
+  $title = "AI Tool Not Found";
+  $meta_desc = "The AI tool you requested is not listed on AIHubpedia.";
   require __DIR__ . '/layout_top.php';
-  echo "<h1>Tool not found</h1><p class='small'>The requested tool does not exist.</p>";
+  echo "<h1>Tool not found</h1><p class='small'>The requested tool does not exist or is no longer listed.</p>";
+  echo "<div class='actions'><a class='btn' href='/'>Browse all AI tools</a><a class='btn secondary' href='/categories.php'>Browse categories</a></div>";
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
 
-$title = ($t['seo_title'] ?? ($t['name'] . " — AIHubpedia"));
-$meta_desc = ($t['seo_description'] ?? ($t['short'] ?? ''));
-require __DIR__ . '/layout_top.php';
+$title = tool_seo_title($t);
+$meta_desc = tool_seo_description($t);
+$canonical = tool_page_url($t['id']);
+$og_image = (preg_match('#^https?://#', (string)($t['logo'] ?? '')) && strpos((string)$t['logo'], 'google.com/s2/favicons') === false) ? $t['logo'] : null;
 
 [$avg,$cnt] = rating_avg($t['id']);
 $clicks = click_count($t['id']);
+$genericProfile = tool_has_generic_profile($t);
 
-// alternatives: same category
+// alternatives: same category, tools with richer profiles first
 $data = load_tools();
 $alts = array_values(array_filter($data['tools'], function($x) use ($t){
   return ($x['id'] ?? '') !== ($t['id'] ?? '') && ($x['category'] ?? '') === ($t['category'] ?? '');
 }));
+usort($alts, function($x, $y){ return (int)tool_has_generic_profile($x) <=> (int)tool_has_generic_profile($y); });
 $alts = array_slice($alts, 0, 6);
+
+$catUrl = category_page_url((string)$t['category']);
+$crumbs = [['Home', site_url('/')], [$t['category'] . ' AI tools', $catUrl], [$t['name'], null]];
+$jsonld = [
+  seo_tool_node($t, $canonical, [$avg, $cnt]),
+  seo_breadcrumb_node($crumbs),
+];
+require __DIR__ . '/layout_top.php';
 ?>
+<?= render_breadcrumbs($crumbs) ?>
 
 <div class="card">
   <div style="display:flex;gap:12px;align-items:flex-start">
-    <img class="logo" style="width:64px;height:64px" src="<?= h(tool_logo($t)) ?>" alt="" />
+    <img class="logo" style="width:64px;height:64px" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="64" height="64" decoding="async" />
     <div style="flex:1">
       <h1 style="margin:0 0 6px"><?= h($t['name']) ?></h1>
       <div class="small">
-        Category: <b><?= h($t['category']) ?></b> • Pricing: <b><?= h($t['pricing'] ?? 'Varies') ?></b> • Rating: <?= $cnt?number_format($avg,1):'—' ?> (<?= (int)$cnt ?>) • Clicks: <?= (int)$clicks ?>
+        Category: <a href="<?= h(rel_url($catUrl)) ?>"><b><?= h($t['category']) ?></b></a> • Pricing: <b><?= h($t['pricing'] ?? 'Varies') ?></b> • Rating: <?= $cnt?number_format($avg,1):'—' ?> (<?= (int)$cnt ?>) • Clicks: <?= (int)$clicks ?>
       </div>
-      <p style="margin-top:12px"><?= h($t['description'] ?? $t['short'] ?? '') ?></p>
+      <p style="margin-top:12px"><?= h(($t['description'] ?? '') !== '' ? $t['description'] : ($t['short'] ?? '')) ?></p>
+      <?php if(tool_domain($t['website'] ?? '') !== ''): ?>
+        <p class="small">Official website: <?= h(tool_domain($t['website'])) ?></p>
+      <?php endif; ?>
       <div class="actions">
-        <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open official website</a>
-        <a class="btn secondary" href="compare.php?a=<?= urlencode($t['id']) ?>">Compare</a>
+        <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open official website</a>
+        <a class="btn secondary" href="/compare.php?a=<?= urlencode($t['id']) ?>" rel="nofollow">Compare</a>
       </div>
       <?php $voteBreakdown = tool_vote_breakdown($t['id']); ?>
       <div class="voteSummary">
@@ -62,8 +78,12 @@ $alts = array_slice($alts, 0, 6);
     </div>
   </div>
 
+  <?php if($genericProfile): ?>
+    <div class="noticeBox">Detailed, product-specific features for <?= h($t['name']) ?> have not been verified by AIHubpedia yet. The notes below are general guidance for <?= h(strtolower($t['category'])) ?> tools — check the official website for current features and pricing.</div>
+  <?php endif; ?>
+
   <div class="kv">
-    <div class="small"><b>Features</b></div>
+    <div class="small"><b><?= $genericProfile ? 'General notes' : 'Features' ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['features'] ?? []) as $f): ?><li><?= h($f) ?></li><?php endforeach; ?>
@@ -72,7 +92,7 @@ $alts = array_slice($alts, 0, 6);
   </div>
 
   <div class="kv">
-    <div class="small"><b>Pros</b></div>
+    <div class="small"><b><?= $genericProfile ? 'Typical benefits' : 'Pros' ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['pros'] ?? []) as $p): ?><li><?= h($p) ?></li><?php endforeach; ?>
@@ -81,7 +101,7 @@ $alts = array_slice($alts, 0, 6);
   </div>
 
   <div class="kv">
-    <div class="small"><b>Cons</b></div>
+    <div class="small"><b><?= $genericProfile ? 'Things to check' : 'Cons' ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['cons'] ?? []) as $c): ?><li><?= h($c) ?></li><?php endforeach; ?>
@@ -92,10 +112,10 @@ $alts = array_slice($alts, 0, 6);
   <div class="ad">Ad placeholder (Inside tool page)</div>
 
   <h2>Rate this tool</h2>
-  <form method="post" action="rate.php" class="card" style="background:rgba(255,255,255,.03)">
+  <form method="post" action="/rate.php" class="card" style="background:rgba(255,255,255,.03)">
     <input type="hidden" name="id" value="<?= h($t['id']) ?>">
-    <label class="small">Stars</label>
-    <select name="stars">
+    <label class="small" for="rateStars">Stars</label>
+    <select name="stars" id="rateStars">
       <option value="5">★★★★★ (5)</option>
       <option value="4">★★★★☆ (4)</option>
       <option value="3">★★★☆☆ (3)</option>
@@ -104,31 +124,39 @@ $alts = array_slice($alts, 0, 6);
     </select>
     <div class="actions" style="margin-top:10px">
       <button class="btn" type="submit">Submit rating</button>
-      <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Refresh</a>
+      <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Refresh</a>
     </div>
   </form>
 
+  <?php if(!empty($t['use_cases']) && !tool_field_is_generic($t, 'use_cases')): ?>
+    <h2>Use cases for <?= h($t['name']) ?></h2>
+    <ul>
+      <?php foreach($t['use_cases'] as $u): ?><li><?= h($u) ?></li><?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
+
   <?php if(count($alts)): ?>
-    <h2>Alternatives in <?= h($t['category']) ?></h2>
+    <h2><?= h($t['name']) ?> alternatives in <?= h($t['category']) ?></h2>
     <div class="grid">
       <?php foreach($alts as $a): ?>
         <div class="card">
           <div style="display:flex;gap:10px;align-items:center">
-            <img class="logo" src="<?= h(tool_logo($a)) ?>" alt="" />
+            <img class="logo" src="<?= h(tool_logo($a)) ?>" alt="<?= h($a['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
             <div>
-              <h3 style="margin:0 0 4px"><?= h($a['name']) ?></h3>
+              <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($a['id']) ?>"><?= h($a['name']) ?></a></h3>
               <div class="small"><?= h($a['pricing'] ?? 'Varies') ?></div>
             </div>
           </div>
           <p style="margin-top:10px"><?= h($a['short'] ?? '') ?></p>
           <div class="actions">
-            <a class="btn secondary" href="tool.php?id=<?= urlencode($a['id']) ?>">Details</a>
-            <a class="btn" href="compare.php?a=<?= urlencode($t['id']) ?>&b=<?= urlencode($a['id']) ?>">Compare</a>
+            <a class="btn secondary" href="/tool.php?id=<?= urlencode($a['id']) ?>">Details</a>
+            <a class="btn" href="<?= h(compare_path($t['id'], $a['id'])) ?>"><?= h($t['name']) ?> vs <?= h($a['name']) ?></a>
           </div>
           <?= render_vote_buttons($a['id'], 'tool.php?id=' . urlencode($t['id'])) ?>
         </div>
       <?php endforeach; ?>
     </div>
+    <p class="small" style="margin-top:12px"><a href="<?= h(rel_url($catUrl)) ?>">See all <?= h($t['category']) ?> AI tools →</a></p>
   <?php endif; ?>
 </div>
 
@@ -136,9 +164,9 @@ $alts = array_slice($alts, 0, 6);
 <div class="card" style="margin-top:16px">
   <h2 style="margin-top:0">User actions</h2>
   <div class="actions">
-    <a class="btn secondary" href="toggle-bookmark.php?id=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Save / Remove Bookmark</a>
-    <a class="btn secondary" href="compare-tools.php?a=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Compare this tool</a>
-    <a class="btn secondary" href="login.php">Demo Login</a>
+    <a class="btn secondary" rel="nofollow" href="/toggle-bookmark.php?id=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Save / Remove Bookmark</a>
+    <a class="btn secondary" rel="nofollow" href="/compare-tools.php?a=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Compare this tool</a>
+    <a class="btn secondary" rel="nofollow" href="/login.php">Demo Login</a>
   </div>
   <p class="small" style="margin-top:10px">Average demo rating: <?= number_format(avg_rating_demo($t['id'] ?? ($_GET['id'] ?? '')), 1) ?>/5</p>
 </div>
@@ -165,12 +193,12 @@ $alts = array_slice($alts, 0, 6);
     <div class="noteBox">No comments yet. Start the discussion.</div>
   <?php endif; ?>
 
-  <form method="post" action="submit-comment.php" style="margin-top:14px">
+  <form method="post" action="/submit-comment.php" style="margin-top:14px">
     <input type="hidden" name="tool_id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? '')) ?>">
-    <label>Your name</label>
-    <input class="input" name="name" placeholder="Your name">
-    <label style="margin-top:12px;display:block">Comment</label>
-    <textarea class="input" name="comment" rows="5" placeholder="Share your experience with this tool"></textarea>
+    <label for="commentName">Your name</label>
+    <input class="input" id="commentName" name="name" placeholder="Your name" autocomplete="name">
+    <label for="commentText" style="margin-top:12px;display:block">Comment</label>
+    <textarea class="input" id="commentText" name="comment" rows="5" placeholder="Share your experience with this tool"></textarea>
     <p style="margin-top:12px"><button class="btn">Post comment</button></p>
   </form>
 </div>

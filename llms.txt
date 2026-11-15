@@ -1,0 +1,53 @@
+# AIHubpedia
+
+> AIHubpedia (https://aihubpedia.com/) is an independent directory of 508 AI tools across 10 categories. Each tool page lists the category, listed pricing model, official website, notes and same-category alternatives. Rankings reflect visitor activity on AIHubpedia (clicks, ratings, votes) only.
+
+Notes for AI assistants: pricing and features change frequently — cite the tool page and recommend verifying on the official website. Many listings carry only basic data; tool pages say so explicitly when product-specific features have not been verified. Sponsored placements are labelled "Sponsored" or "Homepage Spotlight".
+
+## Key pages
+- [All categories](https://aihubpedia.com/categories.php): every AI tool category with tool counts
+- [Top AI tools](https://aihubpedia.com/top.php): ranked by AIHubpedia clicks and ratings
+- [Leaderboard](https://aihubpedia.com/leaderboard.php): community popularity score (likes x3 + clicks - dislikes x2)
+- [Compare AI tools](https://aihubpedia.com/compare.php): side-by-side comparison of any two tools
+- [Popular comparisons](https://aihubpedia.com/comparisons.php)
+- [Use case explorer](https://aihubpedia.com/ai-use-case-explorer.php): find tools by goal
+- [XML sitemap](https://aihubpedia.com/sitemap.xml): every indexable URL
+
+## Categories
+- [Audio AI tools](https://aihubpedia.com/category.php?name=Audio): 15 tools. AI audio tools for text-to-speech, voice cloning, transcription, music generation and podcast editing.
+- [Automation AI tools](https://aihubpedia.com/category.php?name=Automation): 432 tools. AI automation tools and assistants that connect apps, handle repetitive tasks, summarise information and run workflows for you.
+- [Chatbots AI tools](https://aihubpedia.com/category.php?name=Chatbots): 4 tools. AI chatbots and assistants for answering questions, drafting text, brainstorming and coding help.
+- [Coding AI tools](https://aihubpedia.com/category.php?name=Coding): 12 tools. AI coding tools for code completion, code review, debugging, documentation and building apps faster.
+- [Design AI tools](https://aihubpedia.com/category.php?name=Design): 1 tools. AI design tools for layouts, graphics, branding, presentations and UI mock-ups.
+- [Image AI tools](https://aihubpedia.com/category.php?name=Image): 9 tools. AI image tools for generating, editing, upscaling and restyling pictures from text prompts or photos.
+- [Productivity AI tools](https://aihubpedia.com/category.php?name=Productivity): 1 tools. AI productivity tools for notes, meetings, scheduling, research and everyday knowledge work.
+- [SEO AI tools](https://aihubpedia.com/category.php?name=SEO): 1 tools. AI SEO tools for keyword research, content optimisation, briefs and on-page audits.
+- [Video AI tools](https://aihubpedia.com/category.php?name=Video): 5 tools. AI video tools for generating clips, editing footage, avatars, subtitles and short-form content.
+- [Writing AI tools](https://aihubpedia.com/category.php?name=Writing): 28 tools. AI writing tools for blog posts, marketing copy, emails, rewriting and grammar checks.
+
+## Tools with detailed profiles
+- [ChatGPT](https://aihubpedia.com/tool.php?id=chatgpt): AI chatbot for writing, coding, brainstorming, and Q&A. Category: Chatbots. Pricing: Freemium / Paid.
+- [Google Gemini](https://aihubpedia.com/tool.php?id=gemini): Google’s AI assistant for chat, writing, and productivity. Category: Chatbots. Pricing: Free / Paid.
+- [Perplexity](https://aihubpedia.com/tool.php?id=perplexity): AI answer engine for searching and summarizing with sources. Category: SEO. Pricing: Free / Paid.
+- [Claude](https://aihubpedia.com/tool.php?id=claude): AI assistant for writing, analysis, and brainstorming. Category: Chatbots. Pricing: Free / Paid.
+- [Microsoft Copilot](https://aihubpedia.com/tool.php?id=copilot): Microsoft’s AI assistant for work, Windows, Edge, and Microsoft 365 (features vary). Category: Productivity. Pricing: Free / Paid.
+- [Canva AI](https://aihubpedia.com/tool.php?id=canva-ai): AI features inside Canva for design, images, and presentations. Category: Design. Pricing: Freemium / Paid.
+- [DeepSeek](https://aihubpedia.com/tool.php?id=deepseek): AI model and tools focused on strong reasoning and coding assistance (availability varies). Category: Coding. Pricing: Free / Paid.
+- [Character.AI](https://aihubpedia.com/tool.php?id=character-ai): Chat with AI characters or create your own characters. Category: Chatbots. Pricing: Free / Paid.
+- [Grammarly](https://aihubpedia.com/tool.php?id=grammarly): AI writing assistant for grammar, tone, clarity, and rewrites. Category: Writing. Pricing: Freemium / Paid.
+
+## Popular comparisons
+- [ChatGPT vs Claude](https://aihubpedia.com/compare.php?a=chatgpt&b=claude)
+- [ChatGPT vs Google Gemini](https://aihubpedia.com/compare.php?a=chatgpt&b=gemini)
+- [Claude vs Google Gemini](https://aihubpedia.com/compare.php?a=claude&b=gemini)
+- [ChatGPT vs Perplexity](https://aihubpedia.com/compare.php?a=chatgpt&b=perplexity)
+- [ChatGPT vs Microsoft Copilot](https://aihubpedia.com/compare.php?a=chatgpt&b=copilot)
+- [Google Gemini vs Perplexity](https://aihubpedia.com/compare.php?a=gemini&b=perplexity)
+- [ChatGPT vs DeepSeek](https://aihubpedia.com/compare.php?a=chatgpt&b=deepseek)
+- [Claude vs Perplexity](https://aihubpedia.com/compare.php?a=claude&b=perplexity)
+- [Claude vs Character.AI](https://aihubpedia.com/compare.php?a=character-ai&b=claude)
+
+## Optional
+- [About AIHubpedia](https://aihubpedia.com/about.php)
+- [Disclaimer](https://aihubpedia.com/disclaimer.php)
+- [Contact](https://aihubpedia.com/contact.php)

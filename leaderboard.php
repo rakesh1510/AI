@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-$title = "Leaderboard — AIHubpedia";
 $data = load_tools();
 $tools = $data['tools'] ?? [];
 
@@ -20,6 +19,7 @@ usort($tools, function($a, $b){
 
 $tools = array_slice($tools, 0, 20);
 $top3 = array_slice($tools, 0, 3);
+$jsonld = [seo_tool_itemlist_node($tools, 'AIHubpedia AI tools leaderboard')];
 
 require __DIR__ . '/layout_top.php';
 ?>
@@ -28,7 +28,7 @@ require __DIR__ . '/layout_top.php';
   <div class="leaderboardHero__content">
     <span class="leaderboardEyebrow">AIHubpedia rankings</span>
     <h1>Leaderboard</h1>
-    <p>Top AI tools ranked by real user activity on AIHubpedia. The popularity score uses clicks, likes, and dislikes so visitors can understand why a tool is ranked high.</p>
+    <p>Top AI tools ranked by visitor activity on AIHubpedia. The popularity score uses clicks, likes, and dislikes so visitors can understand why a tool is ranked high.</p>
     <!--<div class="leaderboardFormula">Popularity score = (Likes × 3) + Clicks − (Dislikes × 2)</div> -->
   </div>
 </section>
@@ -39,9 +39,9 @@ require __DIR__ . '/layout_top.php';
     <article class="leaderPodium leaderPodium--<?= $i+1 ?>">
       <div class="leaderPodium__rank">#<?= $i+1 ?></div>
       <div class="leaderPodium__head">
-        <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+        <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
         <div>
-          <h2><a href="tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h2>
+          <h2><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h2>
           <div class="small"><?= h($t['category'] ?? 'AI Tool') ?></div>
         </div>
       </div>
@@ -56,8 +56,8 @@ require __DIR__ . '/layout_top.php';
         <strong><?= (int)$p['score'] ?></strong>
       </div>
       <div class="actions">
-        <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-        <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+        <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+        <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
       </div>
     </article>
   <?php endforeach; ?>
@@ -87,9 +87,9 @@ require __DIR__ . '/layout_top.php';
         <td><span class="leaderRankBadge"><?= $idx + 1 ?></span></td>
         <td>
           <div class="leaderToolCell">
-            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
             <div>
-              <a class="leaderToolName" href="tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a>
+              <a class="leaderToolName" href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a>
               <div class="small"><?= h($t['category'] ?? 'AI Tool') ?></div>
             </div>
           </div>

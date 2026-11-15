@@ -1,11 +1,12 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-$title = "AIHubpedia — AI Tools Directory";
-$meta_desc = "Browse AI tools by category, compare tools, and discover the best AI apps for your workflow.";
-
 $data = load_tools();
 $tools = $data['tools'] ?? [];
 $cats  = $data['categories'] ?? [];
+
+$__toolCountLabel = count($tools) >= 100 ? (floor(count($tools) / 100) * 100) . '+' : (string)count($tools);
+$title = "AIHubpedia — AI Tools Directory: Discover & Compare {$__toolCountLabel} AI Tools";
+$meta_desc = "Browse {$__toolCountLabel} AI tools for writing, coding, design, audio, video and automation. Compare pricing, features and alternatives, and see community votes.";
 
 $q   = trim($_GET['q'] ?? '');
 $cat = trim($_GET['cat'] ?? '');
@@ -50,21 +51,35 @@ $trend = array_values(array_filter($tools, function($t) use ($manual_trending_id
   return !in_array(($t['id'] ?? ''), $manual_trending_ids, true);
 }));
 
-usort($trend, function($a, $b){
-  $sa = trending_score($a['id'] ?? '');
-  $sb = trending_score($b['id'] ?? '');
-  if($sa == $sb) return 0;
-  return ($sa > $sb) ? -1 : 1;
+$__scores = [];
+foreach($trend as $t){ $__scores[$t['id'] ?? ''] = trending_score($t['id'] ?? ''); }
+usort($trend, function($a, $b) use ($__scores){
+  return ($__scores[$b['id'] ?? ''] ?? 0) <=> ($__scores[$a['id'] ?? ''] ?? 0);
 });
 
 $trend = array_merge($manual_trend, $trend);
 $trend = array_slice($trend, 0, 10);
 
+$__pairs = available_comparison_pairs($tools, 8);
+$__catCounts = array_count_values(array_map(function($t){ return (string)($t['category'] ?? 'Other'); }, $tools));
+if($q !== '' || $cat !== ''){
+  $robots = 'noindex';
+}
+$jsonld = [[
+  '@type' => 'CollectionPage',
+  '@id' => site_url('/#webpage'),
+  'url' => site_url('/'),
+  'name' => $title,
+  'description' => $meta_desc,
+  'isPartOf' => ['@id' => site_url('/#website')],
+  'about' => 'AI tools directory',
+]];
+
 require __DIR__ . '/layout_top.php';
 ?>
 
 <section class="hero">
-  <h1>All AI tools, in one place</h1>
+  <h1>AI tools directory: all AI tools in one place</h1>
   <p class="small">
     Explore a growing library of <?= number_format(count($tools)) ?>+ AI tools across writing, coding, design,
     marketing, productivity, automation and more. Compare alternatives, explore use cases,
@@ -113,16 +128,18 @@ require __DIR__ . '/layout_top.php';
   </div>
 
   <div class="toolbar">
-    <form method="get" class="heroSearch">
-      <input class="input" name="q" value="<?= h($q) ?>" placeholder="Search: chat, image, coding, SEO..." />
-      <select name="cat">
+    <form method="get" action="/" class="heroSearch" role="search">
+      <label for="homeSearch" class="visuallyHidden">Search AI tools</label>
+      <input class="input" id="homeSearch" type="search" name="q" value="<?= h($q) ?>" placeholder="Search: chat, image, coding, SEO..." />
+      <label for="homeCat" class="visuallyHidden">Category</label>
+      <select name="cat" id="homeCat">
         <option value="">All categories</option>
         <?php foreach($cats as $c): ?>
           <option value="<?= h($c) ?>" <?= ($c === $cat) ? 'selected' : '' ?>><?= h($c) ?></option>
         <?php endforeach; ?>
       </select>
       <button class="btn" type="submit">Search</button>
-      <a class="btn secondary" href="index.php">Reset</a>
+      <a class="btn secondary" href="/">Reset</a>
     </form>
   </div>
 </section>
@@ -136,8 +153,8 @@ require __DIR__ . '/layout_top.php';
       </p>
     </div>
     <div class="actions" style="margin-top:0">
-      <a class="btn" href="submit.php">🚀 Get homepage spotlight</a>
-      <a class="btn secondary" href="advertise.php">Pricing</a>
+      <a class="btn" href="/submit.php">🚀 Get homepage spotlight</a>
+      <a class="btn secondary" href="/advertise.php">Pricing</a>
     </div>
   </div>
 
@@ -166,12 +183,12 @@ require __DIR__ . '/layout_top.php';
             <li>Premium top homepage position</li>
             <li>Higher visibility than standard featured listings</li>
             <li>Ideal for launches, deals, and announcements</li>
-            <li>Strong traffic and discovery potential</li>
+            <li>Clearly labelled as a sponsored placement</li>
           </ul>
         </div>
         <div class="actions" style="margin-top:0">
-          <a class="btn" href="advertise.php">View spotlight pricing</a>
-          <a class="btn secondary" href="submit.php">Submit tool</a>
+          <a class="btn" href="/advertise.php">View spotlight pricing</a>
+          <a class="btn secondary" href="/submit.php">Submit tool</a>
         </div>
       </div>
     </div>
@@ -180,10 +197,10 @@ require __DIR__ . '/layout_top.php';
     <div class="card" style="margin-top:16px;background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(236,72,153,.16));border:1px solid rgba(255,255,255,.14)">
       <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap">
         <div style="display:flex;gap:14px;align-items:center;max-width:760px">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
           <div>
             <div class="badge" style="margin-bottom:8px">Homepage Spotlight</div>
-            <h3 style="margin:0 0 6px"><?= h($t['name']) ?></h3>
+            <h3 style="margin:0 0 6px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
             <div class="small">
               Category: <b><?= h($t['category']) ?></b> • Spotlight until: <?= h($t['spotlight_until']) ?>
             </div>
@@ -192,9 +209,9 @@ require __DIR__ . '/layout_top.php';
         </div>
 
         <div class="actions" style="margin-top:0">
-          <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
           <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
           <?php endif; ?>
         </div>
       </div>
@@ -215,8 +232,8 @@ require __DIR__ . '/layout_top.php';
       </p>
     </div>
     <div class="actions" style="margin-top:0">
-      <a class="btn" href="submit.php">🚀 Promote your AI tool</a>
-      <a class="btn secondary" href="advertise.php">Pricing</a>
+      <a class="btn" href="/submit.php">🚀 Promote your AI tool</a>
+      <a class="btn secondary" href="/advertise.php">Pricing</a>
     </div>
   </div>
 
@@ -233,14 +250,14 @@ require __DIR__ . '/layout_top.php';
             </p>
             <ul class="small" style="margin:0;padding-left:18px;line-height:1.8">
               <li>Homepage visibility</li>
-              <li>More clicks and direct traffic</li>
+              <li>Direct link to your tool's page and website</li>
               <li>Premium placement for product discovery</li>
-              <li>Great for launches, promotions, and SEO exposure</li>
+              <li>Clearly labelled as sponsored (results are not guaranteed)</li>
             </ul>
           </div>
           <div class="actions" style="margin-top:0">
-            <a class="btn" href="advertise.php">View pricing</a>
-            <a class="btn secondary" href="submit.php">Submit tool</a>
+            <a class="btn" href="/advertise.php">View pricing</a>
+            <a class="btn secondary" href="/submit.php">Submit tool</a>
           </div>
         </div>
       </div>
@@ -248,10 +265,10 @@ require __DIR__ . '/layout_top.php';
       <?php foreach($featured as $t): ?>
         <div class="card" style="background:rgba(34,197,94,.08)">
           <div style="display:flex;gap:10px;align-items:center">
-            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
             <div>
               <div class="badge" style="margin-bottom:6px">Sponsored</div>
-              <h3 style="margin:0 0 4px"><?= h($t['name']) ?></h3>
+              <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
               <div class="small">
                 Category: <b><?= h($t['category']) ?></b> • Featured until: <?= h($t['featured_until']) ?>
               </div>
@@ -261,9 +278,9 @@ require __DIR__ . '/layout_top.php';
           <p style="margin-top:10px"><?= h($t['short']) ?></p>
 
           <div class="actions">
-            <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+            <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
             <?php if(tool_url($t) !== '#'): ?>
-              <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+              <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
             <?php endif; ?>
           </div>
         </div>
@@ -273,17 +290,17 @@ require __DIR__ . '/layout_top.php';
 </section>
 
 <section class="card">
-  <h2 style="margin-top:0">🔥 Trending AI tools today</h2>
-  <p class="small">Based on clicks, ratings, and user engagement.</p>
+  <h2 style="margin-top:0">🔥 Popular AI tools</h2>
+  <p class="small">Editor picks of widely used tools, followed by tools ranked by AIHubpedia clicks, ratings and votes.</p>
 
   <div class="grid">
     <?php foreach($trend as $t): ?>
       <?php [$avg, $cnt] = rating_avg($t['id']); ?>
       <div class="card" style="background:rgba(255,255,255,.03)">
         <div style="display:flex;gap:10px;align-items:center">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
           <div>
-            <h3 style="margin:0 0 4px"><?= h($t['name']) ?></h3>
+            <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
             <div class="small">Category: <b><?= h($t['category']) ?></b></div>
           </div>
         </div>
@@ -291,9 +308,9 @@ require __DIR__ . '/layout_top.php';
         <p style="margin-top:10px"><?= h($t['short']) ?></p>
 
         <div class="actions">
-          <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
           <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
           <?php endif; ?>
         </div>
 
@@ -311,9 +328,9 @@ require __DIR__ . '/layout_top.php';
     <?php foreach(array_slice($filtered, 0, 48) as $t): ?>
       <div class="card">
         <div style="display:flex;gap:10px;align-items:center">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
           <div>
-            <h3 style="margin:0 0 4px"><?= h($t['name']) ?></h3>
+            <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
             <div class="small"><?= h($t['pricing'] ?? 'Varies') ?></div>
           </div>
         </div>
@@ -321,14 +338,14 @@ require __DIR__ . '/layout_top.php';
         <p style="margin-top:10px"><?= h($t['short']) ?></p>
 
         <div class="badges">
-          <span class="badge"><?= h($t['category']) ?></span>
+          <a class="badge" href="/category.php?name=<?= urlencode($t['category']) ?>"><?= h($t['category']) ?></a>
           <span class="badge gray"><?= h($t['pricing_type'] ?? 'Varies') ?></span>
         </div>
 
         <div class="actions">
-          <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
           <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
           <?php endif; ?>
         </div>
 
@@ -338,9 +355,30 @@ require __DIR__ . '/layout_top.php';
   </div>
 
   <div class="actions">
-    <a class="btn secondary" href="categories.php">Browse categories</a>
-    <a class="btn secondary" href="top.php">See top tools</a>
+    <a class="btn secondary" href="/categories.php">Browse categories</a>
+    <a class="btn secondary" href="/top.php">See top tools</a>
   </div>
 </section>
+
+<section class="card">
+  <h2 style="margin-top:0">Browse AI tools by category</h2>
+  <ul class="linkList">
+    <?php foreach($cats as $c): ?>
+      <li><a href="/category.php?name=<?= urlencode($c) ?>"><?= h($c) ?> AI tools (<?= (int)($__catCounts[$c] ?? 0) ?>)</a></li>
+    <?php endforeach; ?>
+  </ul>
+</section>
+
+<?php if($__pairs): ?>
+<section class="card">
+  <h2 style="margin-top:0">Popular AI tool comparisons</h2>
+  <ul class="linkList">
+    <?php foreach($__pairs as [$pa, $pb]): ?>
+      <li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+  <div class="actions"><a class="btn secondary" href="/comparisons.php">All comparisons</a></div>
+</section>
+<?php endif; ?>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>
