@@ -228,7 +228,7 @@ require __DIR__ . '/layout_top.php';
 
   <section class="compare-final card">
     <h2>Quick buying view</h2>
-    <div class="compare-table-wrap">
+    <div class="compare-table-wrap" tabindex="0" role="region" aria-label="Comparison table, scrollable">
       <table class="compare-table-modern">
         <tr>
           <th>Criteria</th>

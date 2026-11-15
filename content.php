@@ -41,7 +41,7 @@ function profile_key_limit(array $p): string { return (string)(($p['limitations'
 /** Render a responsive comparison table for tool records that carry curated profiles. */
 function render_profile_table(array $tools): string {
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
-  $out = '<div class="tableWrap"><table class="compareTable"><thead><tr><th scope="col">Tool</th><th scope="col">Free option</th><th scope="col">Pricing (as of ' . $h($tools ? ($tools[0]['curated']['pricing']['as_of'] ?? '') : '') . ')</th><th scope="col">Best for</th><th scope="col">Main limitation</th></tr></thead><tbody>';
+  $out = '<div class="tableWrap" tabindex="0" role="region" aria-label="Comparison table, scrollable"><table class="compareTable"><thead><tr><th scope="col">Tool</th><th scope="col">Free option</th><th scope="col">Pricing (as of ' . $h($tools ? ($tools[0]['curated']['pricing']['as_of'] ?? '') : '') . ')</th><th scope="col">Best for</th><th scope="col">Main limitation</th></tr></thead><tbody>';
   foreach ($tools as $t) {
     $p = $t['curated'];
     $out .= '<tr><th scope="row"><a href="' . $h(tool_path($t['id'])) . '">' . $h($t['name']) . '</a></th>'

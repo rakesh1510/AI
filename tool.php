@@ -153,7 +153,6 @@ require __DIR__ . '/layout_top.php';
     </div>
   </div>
 
-  <div class="ad">Ad placeholder (Inside tool page)</div>
 
   <h2>Rate this tool</h2>
   <form method="post" action="/rate.php" class="card" style="background:rgba(255,255,255,.03)">

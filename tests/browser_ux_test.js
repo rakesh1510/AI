@@ -58,6 +58,10 @@ async function run(P, opts) {
   await firstOpt.waitFor({ state: 'visible', timeout: 5000 });
   check(/ChatGPT/.test(await firstOpt.innerText()), `[${P}] suggestions show ChatGPT first for "chatg"`);
   check(await input.getAttribute('aria-expanded') === 'true' && await page.locator('#heroSearch-list').getAttribute('role') === 'listbox', `[${P}] combobox exposes aria-expanded and a listbox`);
+  // Every visible suggestion must really be on top and clickable (not clipped or covered by a later section)
+  const optCount = await page.locator('#heroSearch-list [role="option"]').count();
+  const hitTests = await page.evaluate(() => [...document.querySelectorAll('#heroSearch-list [role="option"]')].map(o => { const r = o.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, Math.min(r.top + r.height / 2, innerHeight - 2)); return { inView: r.bottom <= innerHeight + 1, hit: !!(el && el.closest('[role="option"]') === o) }; }));
+  check(optCount >= 4 && hitTests.filter(h => h.inView).length >= 3 && hitTests.filter(h => h.inView).every(h => h.hit), `[${P}] suggestions are fully visible and not covered or clipped (${hitTests.filter(h => h.hit).length}/${optCount} clickable)`);
   await input.press('ArrowDown');
   check(await firstOpt.getAttribute('aria-selected') === 'true' && !!(await input.getAttribute('aria-activedescendant')), `[${P}] ArrowDown selects the first suggestion (aria-activedescendant set)`);
   await shot(page, 'search-suggestions');

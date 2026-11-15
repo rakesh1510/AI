@@ -62,7 +62,7 @@ async function run(profileName, contextOpts) {
   await shot('category');
 
   // Tool page via card
-  await Promise.all([page.waitForURL(/tool\.php\?id=/), page.locator('.cardGrid .tCard h3 a').first().click()]);
+  await Promise.all([page.waitForURL(/tool\.php\?id=/), page.locator('.cardGrid .tCard h2 a').first().click()]);
   check(/tool\.php\?id=/.test(page.url()), `[${P}] category → tool navigation`);
   check(await page.locator('h1').count() === 1, `[${P}] tool page h1`);
   await noHorizontalScroll('tool');

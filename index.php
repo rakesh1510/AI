@@ -98,7 +98,7 @@ require __DIR__ . '/layout_top.php';
   <div class="wrap">
     <div class="sectionHead"><div><h2 id="journeyTitle">How do you want to start?</h2><p>Three ways in, depending on where you are in your search.</p></div></div>
     <div class="journeys">
-      <div class="journey reveal">
+      <div class="journey">
         <span class="bubble"><?= ui_icon('search') ?></span>
         <h3>Discover</h3>
         <p>Not sure what exists? Browse by goal or category and see reviewed profiles first.</p>
@@ -109,7 +109,7 @@ require __DIR__ . '/layout_top.php';
         </ul>
         <a class="btn" href="/search.php">Search the directory</a>
       </div>
-      <div class="journey reveal">
+      <div class="journey">
         <span class="bubble"><?= ui_icon('compare') ?></span>
         <h3>Compare</h3>
         <p>Already have two or three in mind? Put plans, limits and best-for notes side by side.</p>
@@ -120,7 +120,7 @@ require __DIR__ . '/layout_top.php';
         </ul>
         <a class="btn secondary" href="/guides.php">Read the guides</a>
       </div>
-      <div class="journey journey--business reveal">
+      <div class="journey journey--business">
         <span class="bubble"><?= ui_icon('briefcase') ?></span>
         <h3>For business</h3>
         <p>Choosing tools for a team, want something built, or promoting your own AI product?</p>
@@ -140,7 +140,7 @@ require __DIR__ . '/layout_top.php';
     <div class="sectionHead"><div><h2 id="goalTitle">Start from what you want to do</h2><p>Goal-based shortcuts. Counts come from the live catalogue.</p></div></div>
     <div class="intentGrid">
       <?php foreach ($intents as $i): ?>
-        <a class="intent reveal" href="<?= h($i['url']) ?>"><span class="ico"><?= ui_icon($i['icon']) ?></span><span><strong><?= h($i['label']) ?></strong><span class="n"><?= h(seo_plural($i['count'], 'tool')) ?></span></span></a>
+        <a class="intent" href="<?= h($i['url']) ?>"><span class="ico"><?= ui_icon($i['icon']) ?></span><span><strong><?= h($i['label']) ?></strong><span class="n"><?= h(seo_plural($i['count'], 'tool')) ?></span></span></a>
       <?php endforeach; ?>
     </div>
     <div data-recent-list hidden style="margin-top:22px">

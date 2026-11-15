@@ -55,12 +55,12 @@ require __DIR__ . '/layout_top.php';
 <?php else: ?>
   <div data-search-results="<?= (int)$total ?>" class="sr" aria-live="polite"><?= (int)$total ?> results</div>
   <div class="filterBar" role="group" aria-label="Refine results">
-    <a class="chipBtn" href="<?= h($url(['cat' => '', 'page' => 1])) ?>" aria-pressed="<?= $cat === '' ? 'true' : 'false' ?>">All (<?= (int)$unfiltered ?>)</a>
+    <a class="chipBtn" href="<?= h($url(['cat' => '', 'page' => 1])) ?>" <?= $cat === '' ? 'aria-current="true"' : '' ?>>All (<?= (int)$unfiltered ?>)</a>
     <?php foreach (array_slice($facets, 0, 6, true) as $fc => $n): ?>
-      <a class="chipBtn" href="<?= h($url(['cat' => $fc, 'page' => 1])) ?>" aria-pressed="<?= $cat === $fc ? 'true' : 'false' ?>"><?= h($fc) ?> (<?= (int)$n ?>)</a>
+      <a class="chipBtn" href="<?= h($url(['cat' => $fc, 'page' => 1])) ?>" <?= $cat === $fc ? 'aria-current="true"' : '' ?>><?= h($fc) ?> (<?= (int)$n ?>)</a>
     <?php endforeach; ?>
-    <a class="chipBtn" href="<?= h($url(['price' => $price === 'free' ? '' : 'free', 'page' => 1])) ?>" aria-pressed="<?= $price === 'free' ? 'true' : 'false' ?>">Free</a>
-    <a class="chipBtn" href="<?= h($url(['price' => $price === 'freemium' ? '' : 'freemium', 'page' => 1])) ?>" aria-pressed="<?= $price === 'freemium' ? 'true' : 'false' ?>">Freemium</a>
+    <a class="chipBtn" href="<?= h($url(['price' => $price === 'free' ? '' : 'free', 'page' => 1])) ?>" <?= $price === 'free' ? 'aria-current="true"' : '' ?>>Free</a>
+    <a class="chipBtn" href="<?= h($url(['price' => $price === 'freemium' ? '' : 'freemium', 'page' => 1])) ?>" <?= $price === 'freemium' ? 'aria-current="true"' : '' ?>>Freemium</a>
   </div>
 
   <?php if ($fuzzy): ?><p class="noticeBox">No exact match for “<?= h($q) ?>”. Showing tools with similar names.</p><?php endif; ?>
