@@ -87,7 +87,13 @@ $cases = [
   ['/about.php', 200, true, '/about.php', []],
   ['/contact.php', 200, true, '/contact.php', []],
   ['/submit.php', 200, true, '/submit.php', []],
-  ['/advertise.php', 200, true, '/advertise.php', []],
+  ['/advertise.php', 200, true, '/advertise.php', ['BreadcrumbList']],
+  ['/business.php', 200, true, '/business.php', ['WebPage', 'BreadcrumbList']],
+  ['/disclosure.php', 200, true, '/disclosure.php', ['BreadcrumbList']],
+  ['/search.php', 200, false, null, []],
+  ['/search.php?q=transcribe', 200, false, null, []],
+  ['/favorites.php', 200, false, null, []],
+  ['/inquiry.php?sent=advertiser', 200, false, null, []],
   ['/privacy.php', 200, true, '/privacy.php', []],
   ['/terms.php', 200, true, '/terms.php', []],
   ['/impressum.php', 200, true, '/impressum.php', []],
@@ -202,8 +208,44 @@ foreach (['/data/site.json', '/data/users.json', '/database/full_mysql_schema.sq
   [$code] = fetch($base . $priv);
   check($code === 404, "$priv must not be served (got $code)");
 }
-[$code, , $body] = fetch($base . '/search.php?q=chat');
-check($code === 301, 'legacy search.php redirects (301)');
+// Phase 3: search.php is now the real (noindex) results page; the homepage ?q= filter still works for old links.
+[$code, $headers, $body] = fetch($base . '/search.php?q=chat');
+check($code === 200 && strpos($body, 'data-search-results="') !== false, 'search.php returns server-rendered results');
+check(preg_match('/<meta name="robots" content="noindex/', $body) === 1 && stripos($headers, 'X-Robots-Tag: noindex') !== false, 'search results are noindex (meta and header)');
+check(preg_match('/<link rel="canonical"/', $body) === 0, 'noindex search results carry no canonical');
+[$code, , $body] = fetch($base . '/search.php?q=zzzzqqqq');
+check($code === 200 && strpos($body, 'No tools found') !== false, 'empty search shows a helpful empty state');
+[$code, , $body] = fetch($base . '/search.php?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E');
+check(strpos($body, '<script>alert(1)</script>') === false, 'search echoes queries escaped (no reflected XSS)');
+[$code, $headers, $body] = fetch($base . '/suggest.php?q=chat');
+$j = json_decode($body, true);
+check($code === 200 && stripos($headers, 'application/json') !== false && !empty($j['items']) && $j['items'][0]['type'] === 'tool', 'suggest.php returns JSON suggestions');
+[$code, , $body] = fetch($base . '/suggest.php?ids=chatgpt,does-not-exist,../etc');
+$j = json_decode($body, true);
+check($code === 200 && strpos((string)($j['cards'] ?? ''), 'data-tool-id="chatgpt"') !== false && strpos($j['cards'], 'does-not-exist') === false, 'suggest.php?ids renders only real tools');
+[$code] = fetch($base . '/event.php');
+check($code === 405, 'event.php rejects GET');
+foreach (['/discovery.php', '/ui.php', '/mailer.php', '/conversion.php'] as $lib) { [$code] = fetch($base . $lib); check($code === 404, "$lib must not be served (got $code)"); }
+[$code, $headers, $body] = fetch($base . '/disclosure.php');
+check(preg_match('/<strong>\d+<\/strong> listing/', $body) === 1 && preg_match('/<strong>\d+<\/strong> sponsored placement/', $body) === 1, 'disclosure page reports live affiliate and sponsored counts');
+[$code, , $body] = fetch($base . '/business.php');
+check(strpos($body, 'name="consent"') !== false && strpos($body, 'form_token') !== false && strpos($body, 'testimonial') === false, 'business page has a consent-gated form and no testimonials');
+check(stripos($body, 'guarantee') === false, 'business page makes no guarantees');
+[$code, , $body] = fetch($base . '/advertise.php');
+check(strpos($body, 'does not</h3>') !== false || strpos($body, 'It does not') !== false, 'advertise page states what paid placements do not do');
+check(stripos($body, 'maximum clicks') === false && stripos($body, 'guarantee') !== false && stripos($body, 'do not promise') !== false, 'advertise page promises no traffic or clicks');
+[$code, , $body] = fetch($base . '/');
+check(strpos($body, 'class="tCard tCard--sponsored"') !== false ? strpos($body, 'Sponsored</span>') !== false && strpos($body, '/disclosure.php') !== false : true, 'sponsored cards, when present, are visibly labelled and link to the disclosure');
+check(substr_count($body, '<h1') === 1, 'homepage has exactly one h1');
+check(strpos($body, 'itemtype') === false && strpos($body, 'data-events="1"') !== false || strpos($body, 'data-events') === false, 'events flag only appears when analytics is enabled');
+[$code, , $body] = fetch($base . '/favorites.php');
+check($code === 200 && strpos($body, 'data-favorites-app') !== false, 'favorites page renders its shell server-side');
+[$code] = fetch($base . '/inquiry.php?sent=consultation');
+check($code === 200, 'lead thank-you page renders');
+[$code, $headers] = fetch($base . '/inquiry.php?sent=bogus');
+check($code === 302, 'unknown thank-you state redirects');
+[$code, $headers] = fetch($base . '/subscribe.php');
+check($code === 302, 'subscribe.php GET redirects home');
 
 echo "== Sitemap\n";
 foreach (['/sitemap.xml', '/sitemap.php'] as $sm) {

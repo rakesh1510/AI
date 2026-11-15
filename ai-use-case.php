@@ -23,6 +23,7 @@ $jsonld = [
   seo_breadcrumb_node([['Home', site_url('/')], ['Use cases', site_url('/ai-use-case-explorer.php')], [(string)($case['label'] ?? ''), null]]),
 ];
 
+$theme_lock = 'light';   // this page ships its own light-only styling
 require __DIR__ . '/layout_top.php';
 ?>
 

@@ -4,6 +4,7 @@ $title = "AI Use Case Explorer — Find AI Tools by Goal";
 $meta_desc = "Explore AI tools by real use case such as writing blog posts, creating videos, building websites, automating work, and designing graphics.";
 
 $useCases = load_use_cases();
+$theme_lock = 'light';   // this page ships its own light-only styling
 require __DIR__ . '/layout_top.php';
 ?>
 

@@ -58,7 +58,7 @@ require __DIR__ . '/layout_top.php';
     <h1><?= ($ta && $tb) ? h($ta['name']) . ' vs ' . h($tb['name']) : 'Compare AI tools' ?></h1>
     <p class="small compare-lead">Pick two AI tools and compare category, listed pricing, features, use cases and platforms side by side. Source-backed data is shown where AIHubpedia has collected it.</p>
   </div>
-  <form method="get" action="/compare.php" class="compare-form-grid">
+  <form method="get" action="/compare.php" class="compare-form-grid" data-compare-form>
     <div class="field">
       <label for="toolA">Tool A</label>
       <select id="toolA" name="a">
@@ -79,6 +79,7 @@ require __DIR__ . '/layout_top.php';
     </div>
     <div class="compare-form-actions">
       <button class="btn" type="submit">Compare now</button>
+      <button type="button" class="btn secondary js-only" data-compare-swap>Swap</button>
       <a class="btn secondary" href="/compare.php">Reset</a>
     </div>
   </form>
@@ -124,7 +125,7 @@ require __DIR__ . '/layout_top.php';
           </div>
           <div class="compare-card__actions actions">
             <a class="btn secondary" href="/tool.php?id=<?= urlencode($tool['id']) ?>">Details</a>
-            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($tool['id']) ?>">Open tool</a>
+            <a class="btn" target="_blank" rel="<?= h(outbound_rel($tool)) ?>" href="/redirect.php?id=<?= urlencode($tool['id']) ?>" data-outbound data-affiliate="<?= is_affiliate_link($tool) ? '1' : '0' ?>" data-placement="compare">Open tool</a>
           </div>
         </div>
 
@@ -234,33 +235,34 @@ require __DIR__ . '/layout_top.php';
           <th><?= h($ta['name']) ?></th>
           <th><?= h($tb['name']) ?></th>
         </tr>
-        <tr>
+        <tr<?= ($ta['category'] ?? '') !== ($tb['category'] ?? '') ? ' class="diffRow"' : '' ?>>
           <td>Category</td>
           <td><?= h($ta['category'] ?? '-') ?></td>
           <td><?= h($tb['category'] ?? '-') ?></td>
         </tr>
-        <tr>
+        <tr<?= ($bundleA['pricing'] ?: ($ta['pricing'] ?? '')) !== ($bundleB['pricing'] ?: ($tb['pricing'] ?? '')) ? ' class="diffRow"' : '' ?>>
           <td>Pricing</td>
           <td><?= h($bundleA['pricing'] ?: ($ta['pricing'] ?? '-')) ?></td>
           <td><?= h($bundleB['pricing'] ?: ($tb['pricing'] ?? '-')) ?></td>
         </tr>
-        <tr>
+        <tr class="diffRow">
           <td>Best for</td>
           <td><?= h(($bundleA['use_cases'][0] ?? $ta['short'] ?? '-')) ?></td>
           <td><?= h(($bundleB['use_cases'][0] ?? $tb['short'] ?? '-')) ?></td>
         </tr>
-        <tr>
+        <tr<?= implode(',', array_slice($bundleA['platforms'] ?? [], 0, 4)) !== implode(',', array_slice($bundleB['platforms'] ?? [], 0, 4)) ? ' class="diffRow"' : '' ?>>
           <td>Platforms</td>
           <td><?= h(implode(', ', array_slice($bundleA['platforms'] ?? [], 0, 4)) ?: '-') ?></td>
           <td><?= h(implode(', ', array_slice($bundleB['platforms'] ?? [], 0, 4)) ?: '-') ?></td>
         </tr>
-        <tr>
+        <tr class="diffRow">
           <td>Official site</td>
           <td><?= h(tool_domain($ta['website'] ?? '')) ?></td>
           <td><?= h(tool_domain($tb['website'] ?? '')) ?></td>
         </tr>
       </table>
     </div>
+    <p class="small">Highlighted rows differ between the two tools.</p>
   </section>
 <?php elseif($a || $b): ?>
   <div class="card compare-empty-state">

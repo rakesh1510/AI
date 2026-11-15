@@ -31,6 +31,10 @@ async function run(profileName, contextOpts) {
     check(sw <= cw + 1, `[${P}] ${what}: no horizontal overflow (scrollWidth ${sw} vs ${cw})`);
   };
   const shot = async (name) => page.screenshot({ path: `${shotDir}/${label}-${P}-${name}.png`, fullPage: false });
+  const openNavIfMobile = async () => {
+    const toggle = page.locator('.navToggle');
+    if (await toggle.isVisible()) { if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click(); await page.locator('#primaryNav').waitFor({ state: 'visible' }); }
+  };
 
   // Homepage
   let resp = await page.goto(base + '/', { waitUntil: 'load' });
@@ -39,10 +43,11 @@ async function run(profileName, contextOpts) {
   await noHorizontalScroll('homepage');
   await shot('home');
 
-  // Navigation
+  // Navigation (on small screens the links live in a menu drawer opened by the menu button)
   const navLinks = await page.locator('nav[aria-label="Main navigation"] a').count();
   check(navLinks >= 7, `[${P}] main nav has links (${navLinks})`);
   const catNav = page.locator('nav[aria-label="Main navigation"] a[href="/categories.php"]');
+  await openNavIfMobile();
   await catNav.scrollIntoViewIfNeeded();
   await Promise.all([page.waitForURL(/categories\.php/), catNav.click()]);
   check(/categories\.php/.test(page.url()), `[${P}] nav → categories works`);
@@ -57,24 +62,28 @@ async function run(profileName, contextOpts) {
   await shot('category');
 
   // Tool page via card
-  await Promise.all([page.waitForURL(/tool\.php\?id=/), page.locator('.grid .card h2 a').first().click()]);
+  await Promise.all([page.waitForURL(/tool\.php\?id=/), page.locator('.cardGrid .tCard h3 a').first().click()]);
   check(/tool\.php\?id=/.test(page.url()), `[${P}] category → tool navigation`);
   check(await page.locator('h1').count() === 1, `[${P}] tool page h1`);
   await noHorizontalScroll('tool');
 
-  // Search (homepage form)
+  // Search (hero search → results page)
   await page.goto(base + '/', { waitUntil: 'load' });
-  await page.fill('#homeSearch', 'chat');
-  await Promise.all([page.waitForURL(/\?q=chat/), page.locator('form.heroSearch button[type=submit]').click()]);
-  const resultsText = await page.locator('section.card h2:has-text("Browse tools") + p').innerText();
-  check(/Showing \d+ results/.test(resultsText) && !/Showing 0 results/.test(resultsText), `[${P}] search returns results (${resultsText})`);
+  await page.fill('#heroSearch', 'chat');
+  await Promise.all([page.waitForURL(/search\.php\?q=chat/), page.locator('#heroSearch').press('Enter')]);
+  const resCount = parseInt(await page.locator('[data-search-results]').getAttribute('data-search-results'), 10);
+  check(resCount > 0, `[${P}] search returns results (${resCount})`);
   check(await page.locator('meta[name=robots][content*="noindex"]').count() === 1, `[${P}] search results are noindex`);
-  // Category filter
+  // Legacy homepage filter (?q= / ?cat=) still works for old links
+  await page.goto(base + '/?q=chat', { waitUntil: 'load' });
+  const resultsText = await page.locator('#browseTitle + p').innerText();
+  check(/Showing \d+ results/.test(resultsText) && !/Showing 0 results/.test(resultsText), `[${P}] legacy homepage filter returns results (${resultsText})`);
+  check(await page.locator('meta[name=robots][content*="noindex"]').count() === 1, `[${P}] legacy homepage filter is noindex`);
   await page.goto(base + '/', { waitUntil: 'load' });
-  await page.selectOption('#homeCat', 'Coding');
-  await Promise.all([page.waitForURL(/cat=Coding/), page.locator('form.heroSearch button[type=submit]').click()]);
-  const badges = await page.locator('section.card:has(h2:has-text("Browse tools")) .badges a.badge').allInnerTexts();
-  check(badges.length > 0 && badges.every(b => b === 'Coding'), `[${P}] category filter returns only Coding (${badges.length})`);
+  await page.selectOption('#browseCat', 'Coding');
+  await Promise.all([page.waitForURL(/cat=Coding/), page.locator('#browse form button[type=submit]').click()]);
+  const cardCats = await page.locator('#browse .tCard__meta a').allInnerTexts();
+  check(cardCats.length > 0 && cardCats.every(b => b === 'Coding'), `[${P}] category filter returns only Coding (${cardCats.length})`);
 
   // Tool page: ChatGPT, vote via AJAX
   await page.goto(base + '/tool.php?id=chatgpt', { waitUntil: 'load' });
@@ -122,8 +131,8 @@ async function run(profileName, contextOpts) {
   // Compare
   await page.goto(base + '/compare.php', { waitUntil: 'load' });
   await page.selectOption('#toolA', 'chatgpt');
-  await page.selectOption('#toolB', 'claude');
-  await Promise.all([page.waitForURL(/compare\.php\?a=chatgpt&b=claude/), page.locator('.compare-form-actions button').click()]);
+  // Choosing both tools submits the comparison automatically (progressive enhancement; the button still works without JS)
+  await Promise.all([page.waitForURL(/compare\.php\?a=chatgpt&b=claude/), page.selectOption('#toolB', 'claude')]);
   check((await page.locator('h1').innerText()).includes('ChatGPT vs Claude'), `[${P}] compare shows ChatGPT vs Claude`);
   check(await page.locator('.compare-card').count() === 2, `[${P}] compare renders two cards`);
   check(await page.locator('text=Best overall value').count() === 0, `[${P}] no unsupported "Best overall value" claim`);
@@ -135,6 +144,7 @@ async function run(profileName, contextOpts) {
   const guidesNav = page.locator('nav[aria-label="Main navigation"] a[href="/guides.php"]');
   check(await guidesNav.count() === 1, `[${P}] main nav links to Guides`);
   await page.goto(base + '/', { waitUntil: 'load' });
+  await openNavIfMobile();
   await guidesNav.scrollIntoViewIfNeeded();
   await Promise.all([page.waitForURL(/guides\.php/), guidesNav.click()]);
   check(await page.locator('.grid .card').count() >= 4, `[${P}] guides hub lists at least 4 guides`);
@@ -173,7 +183,7 @@ async function run(profileName, contextOpts) {
   await chip.scrollIntoViewIfNeeded();
   await Promise.all([page.waitForURL(/sub=meetings-transcription/), chip.click()]);
   check((await page.locator('h1').innerText()).startsWith('Meetings & transcription'), `[${P}] subcategory chip opens subcategory page`);
-  check(await page.locator('.grid .card').count() >= 4, `[${P}] subcategory lists tools`);
+  check(await page.locator('.cardGrid .tCard').count() >= 4, `[${P}] subcategory lists tools`);
   await noHorizontalScroll('subcategory');
   await shot('subcategory');
 
@@ -222,12 +232,13 @@ async function run(profileName, contextOpts) {
   // Mobile: nav must remain usable (links reachable)
   if (P === 'mobile') {
     await page.goto(base + '/', { waitUntil: 'load' });
-    const vis = await page.locator('nav[aria-label="Main navigation"]').isVisible();
-    check(vis, `[${P}] main nav visible on mobile`);
-    const headerH = await page.locator('header.nav').evaluate(e => e.getBoundingClientRect().height);
+    const headerH = await page.locator('header.siteHeader').evaluate(e => e.getBoundingClientRect().height);
     check(headerH <= 200, `[${P}] mobile header height ${Math.round(headerH)}px ≤ 200px`);
-    const tapTargets = await page.$$eval('nav[aria-label="Main navigation"] > a, nav[aria-label="Main navigation"] button', els => els.map(e => e.getBoundingClientRect().height));
-    check(tapTargets.every(h => h >= 40), `[${P}] nav tap targets ≥40px (${tapTargets.map(Math.round).join(',')})`);
+    await openNavIfMobile();
+    const vis = await page.locator('nav[aria-label="Main navigation"]').isVisible();
+    check(vis, `[${P}] main nav reachable on mobile through the menu`);
+    const tapTargets = await page.$$eval('nav[aria-label="Main navigation"] a, nav[aria-label="Main navigation"] button', els => els.filter(e => e.getBoundingClientRect().height > 0).map(e => e.getBoundingClientRect().height));
+    check(tapTargets.length >= 7 && tapTargets.every(h => h >= 40), `[${P}] nav tap targets ≥40px (${tapTargets.map(Math.round).join(',')})`);
   }
 
   check(consoleErrors.length === 0, `[${P}] no JS console errors (${consoleErrors.slice(0, 3).join(' | ')})`);

@@ -9,6 +9,7 @@ if(!$t){
 }
 
 record_click($id);
+event_record_server('outbound_click', $id, is_affiliate_link($t) ? 'yes' : 'no', is_featured_tool($t) ? 'sponsored' : 'organic');
 $u = tool_url($t);
 if($u === '#'){ header('Location: tool.php?id=' . urlencode($id)); exit; }
 header('Location: ' . $u);

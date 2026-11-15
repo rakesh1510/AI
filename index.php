@@ -1,384 +1,259 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+
 $data = load_tools();
 $tools = $data['tools'] ?? [];
-$cats  = $data['categories'] ?? [];
+$cats  = array_values(array_filter($data['categories'] ?? [], fn($c) => $c !== CATALOG_UNCLASSIFIED));
+$byId  = tools_by_id();
 
 $__toolCountLabel = count($tools) >= 100 ? (floor(count($tools) / 100) * 100) . '+' : (string)count($tools);
 $title = "AIHubpedia — AI Tools Directory: Discover & Compare {$__toolCountLabel} AI Tools";
 $meta_desc = "Browse {$__toolCountLabel} AI tools for writing, coding, design, audio, video and automation. Compare pricing, features and alternatives, and see community votes.";
 
+// Legacy in-page browse filter (?q= / ?cat=) keeps working but is not indexed.
 $q   = trim($_GET['q'] ?? '');
 $cat = trim($_GET['cat'] ?? '');
-
-// Search + filter
-$filtered = array_filter($tools, function($t) use ($q, $cat){
-  if($cat !== '' && ($t['category'] ?? '') !== $cat) return false;
-  if($q === '') return true;
-
-  $hay = strtolower(
-    ($t['name'] ?? '') . ' ' .
-    ($t['short'] ?? '') . ' ' .
-    ($t['description'] ?? '') . ' ' .
-    implode(' ', ($t['tags'] ?? []))
-  );
-
+$browse = array_values(array_filter($tools, function ($t) use ($q, $cat) {
+  if ($cat !== '' && ($t['category'] ?? '') !== $cat) return false;
+  if ($q === '') return true;
+  $hay = strtolower(($t['name'] ?? '') . ' ' . ($t['short'] ?? '') . ' ' . ($t['description'] ?? '') . ' ' . implode(' ', ($t['tags'] ?? [])));
   return strpos($hay, strtolower($q)) !== false;
-});
-$filtered = array_values($filtered);
-
-// Trending shortlist (manual + algorithm)
-$manual_trending_ids = [
-  'chatgpt','gemini','copilot','claude','perplexity',
-  'canva-ai','deepseek','character-ai','grammarly','notebooklm'
-];
-
-$manual_map = [];
-foreach($tools as $t){
-  $id = $t['id'] ?? '';
-  if($id !== '' && in_array($id, $manual_trending_ids, true)){
-    $manual_map[$id] = $t;
-  }
-}
-
-$manual_trend = [];
-foreach($manual_trending_ids as $id){
-  if(isset($manual_map[$id])) $manual_trend[] = $manual_map[$id];
-}
-
-// Algorithmic fallback (excluding manual)
-$trend = array_values(array_filter($tools, function($t) use ($manual_trending_ids){
-  return !in_array(($t['id'] ?? ''), $manual_trending_ids, true);
 }));
+if ($q !== '' || $cat !== '') $robots = 'noindex';
 
-$__scores = [];
-foreach($trend as $t){ $__scores[$t['id'] ?? ''] = trending_score($t['id'] ?? ''); }
-usort($trend, function($a, $b) use ($__scores){
-  return ($__scores[$b['id'] ?? ''] ?? 0) <=> ($__scores[$a['id'] ?? ''] ?? 0);
-});
+// Popular tools: editor picks first, then ranked by clicks/ratings (scores computed once).
+$manual_ids = ['chatgpt', 'gemini', 'copilot', 'claude', 'perplexity', 'canva-ai', 'deepseek', 'character-ai', 'grammarly', 'notebooklm'];
+$manual = [];
+foreach ($manual_ids as $id) { if (isset($byId[$id])) $manual[] = $byId[$id]; }
+$rest = array_values(array_filter($tools, fn($t) => !in_array($t['id'], $manual_ids, true)));
+$scores = [];
+foreach ($rest as $t) { $scores[$t['id']] = trending_score($t['id']); }
+usort($rest, fn($a, $b) => ($scores[$b['id']] ?? 0) <=> ($scores[$a['id']] ?? 0));
+$popular = array_slice(array_merge($manual, $rest), 0, 8);
 
-$trend = array_merge($manual_trend, $trend);
-$trend = array_slice($trend, 0, 10);
-
-$__pairs = available_comparison_pairs($tools, 8);
-$__catCounts = array_count_values(array_map(function($t){ return (string)($t['category'] ?? 'Other'); }, $tools));
-if($q !== '' || $cat !== ''){
-  $robots = 'noindex';
+// Reviewed profiles (evidence-backed) and guides
+$reviewedIds = ['chatgpt', 'claude', 'perplexity', 'notebooklm', 'otter-ai', 'grammarly'];
+$reviewed = [];
+foreach ($reviewedIds as $id) { if (!empty($byId[$id]['curated'])) $reviewed[] = $byId[$id]; }
+$reviewedCount = count(array_filter($tools, fn($t) => !empty($t['curated'])));
+$guides = guides_all();
+$pairs = available_comparison_pairs($tools, 8);
+$intents = discovery_intents($tools);
+$subCounts = [];
+$catCounts = [];
+foreach ($tools as $t) {
+  $catCounts[$t['category']] = ($catCounts[$t['category']] ?? 0) + 1;
+  if (!empty($t['subcategory'])) $subCounts[$t['category']][$t['subcategory']] = ($subCounts[$t['category']][$t['subcategory']] ?? 0) + 1;
 }
-$jsonld = [[
-  '@type' => 'CollectionPage',
-  '@id' => site_url('/#webpage'),
-  'url' => site_url('/'),
-  'name' => $title,
-  'description' => $meta_desc,
-  'isPartOf' => ['@id' => site_url('/#website')],
-  'about' => 'AI tools directory',
-]];
+$featured = featured_tools($tools, 3);
+$spotlight = array_values(array_filter($tools, fn($t) => !empty($t['spotlight_until']) && strtotime((string)$t['spotlight_until']) >= strtotime(date('Y-m-d'))));
+usort($spotlight, fn($a, $b) => strcmp((string)$b['spotlight_until'], (string)$a['spotlight_until']));
+$spotlight = array_slice($spotlight, 0, 1);
 
+// Hero stack: three real reviewed tools (no invented ratings or counts)
+$stackIds = ['chatgpt', 'claude', 'otter-ai'];
+$stack = [];
+foreach ($stackIds as $id) { if (!empty($byId[$id]['curated'])) $stack[] = $byId[$id]; }
+
+$jsonld = [[
+  '@type' => 'CollectionPage', '@id' => site_url('/#webpage'), 'url' => site_url('/'), 'name' => $title, 'description' => $meta_desc,
+  'isPartOf' => ['@id' => site_url('/#website')], 'about' => 'AI tools directory',
+]];
+$hide_header_search = true;
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
 
-<section class="hero">
-  <h1>AI tools directory: all AI tools in one place</h1>
-  <p class="small">
-    Explore a growing library of <?= number_format(count($tools)) ?>+ AI tools across writing, coding, design,
-    marketing, productivity, automation and more. Compare alternatives, explore use cases,
-    and make AIHubpedia your daily AI discovery hub.
-  </p>
-
-  <div class="stats">
-
-    <div class="stat">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 8V4m0 0h3m-3 0H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <rect x="4" y="8" width="16" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M8.5 13h.01M15.5 13h.01" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-          <path d="M9 17h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="number"><?= number_format(count($tools)) ?>+</div>
-      <div class="label">AI Tools</div>
-    </div>
-
-    <div class="stat">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="4" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-          <rect x="13" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-          <rect x="4" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-          <rect x="13" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      </div>
-      <div class="number"><?= number_format(count($cats)) ?>+</div>
-      <div class="label">Categories</div>
-    </div>
-
-    <div class="stat">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M20 20l-4.2-4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="number"><?= number_format(count($filtered)) ?></div>
-      <div class="label">Results</div>
-    </div>
-
-  </div>
-
-  <div class="toolbar">
-    <form method="get" action="/" class="heroSearch" role="search">
-      <label for="homeSearch" class="visuallyHidden">Search AI tools</label>
-      <input class="input" id="homeSearch" type="search" name="q" value="<?= h($q) ?>" placeholder="Search: chat, image, coding, SEO..." />
-      <label for="homeCat" class="visuallyHidden">Category</label>
-      <select name="cat" id="homeCat">
-        <option value="">All categories</option>
-        <?php foreach($cats as $c): ?>
-          <option value="<?= h($c) ?>" <?= ($c === $cat) ? 'selected' : '' ?>><?= h($c) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <button class="btn" type="submit">Search</button>
-      <a class="btn secondary" href="/">Reset</a>
-    </form>
-  </div>
-</section>
-
-<section class="card">
-  <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+<section class="homeHero" aria-labelledby="heroTitle">
+  <div class="wrap heroGrid">
     <div>
-      <h2 style="margin-top:0">⭐ Homepage Spotlight</h2>
-      <p class="small" style="margin-bottom:0">
-        Premium top placement for AI tools that want maximum homepage visibility.
-      </p>
-    </div>
-    <div class="actions" style="margin-top:0">
-      <a class="btn" href="/submit.php">🚀 Get homepage spotlight</a>
-      <a class="btn secondary" href="/advertise.php">Pricing</a>
-    </div>
-  </div>
-
-  <?php
-    $spotlight = array_values(array_filter($tools, function($t){
-      if(empty($t['spotlight_until'])) return false;
-      return strtotime((string)$t['spotlight_until']) >= strtotime(date('Y-m-d'));
-    }));
-    usort($spotlight, function($a, $b){
-      return strcmp((string)($b['spotlight_until'] ?? ''), (string)($a['spotlight_until'] ?? ''));
-    });
-    $spotlight = array_slice($spotlight, 0, 1);
-  ?>
-
-  <?php if(count($spotlight) === 0): ?>
-    <div class="card" style="margin-top:16px;background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(236,72,153,.16));border:1px dashed rgba(255,255,255,.24)">
-      <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap">
-        <div style="max-width:760px">
-          <div class="badge" style="margin-bottom:10px">Top homepage placement</div>
-          <h3 style="margin:0 0 10px">⭐ Your AI tool can be the first thing visitors see</h3>
-          <p class="small" style="margin:0 0 12px">
-            Homepage Spotlight is the most visible promotional placement on AIHubpedia.
-            Perfect for product launches, new campaigns, and maximum click-through visibility.
-          </p>
-          <ul class="small" style="margin:0;padding-left:18px;line-height:1.8">
-            <li>Premium top homepage position</li>
-            <li>Higher visibility than standard featured listings</li>
-            <li>Ideal for launches, deals, and announcements</li>
-            <li>Clearly labelled as a sponsored placement</li>
-          </ul>
-        </div>
-        <div class="actions" style="margin-top:0">
-          <a class="btn" href="/advertise.php">View spotlight pricing</a>
-          <a class="btn secondary" href="/submit.php">Submit tool</a>
-        </div>
+      <span class="eyebrow"><?= ui_icon('shield') ?> Independent directory · sources and dates on reviewed tools</span>
+      <h1 id="heroTitle">Find the right <span class="gradText">AI tool</span>, with the sources to back it up</h1>
+      <p class="heroLead">Search <?= h(number_format(count($tools))) ?> AI tools, compare plans and limits side by side, and read guides built from vendors' own pages. We say where sources disagree and what we have not tested.</p>
+      <?= render_search_box('heroSearch', ['big' => true, 'source' => 'hero', 'placeholder' => 'Try “transcribe meetings”, “ChatGPT” or “resume”']) ?>
+      <div class="heroTry"><span>Popular goals:</span>
+        <?php foreach (array_slice($intents, 0, 5) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?>
+      </div>
+      <div class="trustStrip" aria-label="What is on AIHubpedia">
+        <span><strong><?= h(number_format(count($tools))) ?></strong>tools listed</span>
+        <span><strong><?= (int)$reviewedCount ?></strong><a href="/methodology.php">reviewed profiles</a> with sources</span>
+        <span><strong><?= count($guides) ?></strong><a href="/guides.php">comparison guides</a></span>
+        <span>Prices carry an “as of” date</span>
       </div>
     </div>
-  <?php else: ?>
-    <?php $t = $spotlight[0]; ?>
-    <div class="card" style="margin-top:16px;background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(236,72,153,.16));border:1px solid rgba(255,255,255,.14)">
-      <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap">
-        <div style="display:flex;gap:14px;align-items:center;max-width:760px">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
-          <div>
-            <div class="badge" style="margin-bottom:8px">Homepage Spotlight</div>
-            <h3 style="margin:0 0 6px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
-            <div class="small">
-              Category: <b><?= h($t['category']) ?></b> • Spotlight until: <?= h($t['spotlight_until']) ?>
-            </div>
-            <p style="margin:10px 0 0"><?= h($t['short']) ?></p>
-          </div>
-        </div>
-
-        <div class="actions" style="margin-top:0">
-          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-          <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <div style="margin-top:14px">
-        <?= render_vote_buttons($t['id'], 'index.php') ?>
-      </div>
-    </div>
-  <?php endif; ?>
-</section>
-
-<section class="card">
-  <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
-    <div>
-      <h2 style="margin-top:0">Featured listings</h2>
-      <p class="small" style="margin-bottom:0">
-        Sponsored placements for AI tools. Want your tool featured on AIHubpedia?
-      </p>
-    </div>
-    <div class="actions" style="margin-top:0">
-      <a class="btn" href="/submit.php">🚀 Promote your AI tool</a>
-      <a class="btn secondary" href="/advertise.php">Pricing</a>
-    </div>
-  </div>
-
-  <div class="grid">
-    <?php $featured = featured_tools($tools, 6); ?>
-    <?php if(count($featured) === 0): ?>
-      <div class="card" style="grid-column:1/-1;background:linear-gradient(135deg, rgba(124,58,237,.18), rgba(34,197,94,.10));border:1px dashed rgba(255,255,255,.22)">
-        <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap">
-          <div style="max-width:720px">
-            <div class="badge" style="margin-bottom:10px">Sponsored placement</div>
-            <h3 style="margin:0 0 10px">🚀 Promote your AI tool here</h3>
-            <p class="small" style="margin:0 0 12px">
-              Get featured on the AIHubpedia homepage and reach users actively searching for the best AI tools.
-            </p>
-            <ul class="small" style="margin:0;padding-left:18px;line-height:1.8">
-              <li>Homepage visibility</li>
-              <li>Direct link to your tool's page and website</li>
-              <li>Premium placement for product discovery</li>
-              <li>Clearly labelled as sponsored (results are not guaranteed)</li>
-            </ul>
-          </div>
-          <div class="actions" style="margin-top:0">
-            <a class="btn" href="/advertise.php">View pricing</a>
-            <a class="btn secondary" href="/submit.php">Submit tool</a>
-          </div>
-        </div>
-      </div>
-    <?php else: ?>
-      <?php foreach($featured as $t): ?>
-        <div class="card" style="background:rgba(34,197,94,.08)">
-          <div style="display:flex;gap:10px;align-items:center">
-            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
-            <div>
-              <div class="badge" style="margin-bottom:6px">Sponsored</div>
-              <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
-              <div class="small">
-                Category: <b><?= h($t['category']) ?></b> • Featured until: <?= h($t['featured_until']) ?>
-              </div>
-            </div>
-          </div>
-
-          <p style="margin-top:10px"><?= h($t['short']) ?></p>
-
-          <div class="actions">
-            <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-            <?php if(tool_url($t) !== '#'): ?>
-              <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
-            <?php endif; ?>
-          </div>
+    <?php if ($stack): ?>
+    <div class="heroStack" aria-hidden="true">
+      <?php foreach ($stack as $t): $cp = $t['curated']; ?>
+        <div class="floatCard">
+          <div class="row"><span class="dot"><?= h(mb_substr($t['name'], 0, 1)) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>
+          <p style="margin-top:10px"><?= h(profile_free_option($cp)) ?> · pricing as of <span class="nw"><?= h($cp['pricing']['as_of']) ?></span></p>
         </div>
       <?php endforeach; ?>
+    </div>
     <?php endif; ?>
   </div>
 </section>
 
-<section class="card">
-  <h2 style="margin-top:0">🔥 Popular AI tools</h2>
-  <p class="small">Editor picks of widely used tools, followed by tools ranked by AIHubpedia clicks, ratings and votes.</p>
-
-  <div class="grid">
-    <?php foreach($trend as $t): ?>
-      <?php [$avg, $cnt] = rating_avg($t['id']); ?>
-      <div class="card" style="background:rgba(255,255,255,.03)">
-        <div style="display:flex;gap:10px;align-items:center">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
-          <div>
-            <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
-            <div class="small">Category: <b><?= h($t['category']) ?></b></div>
-          </div>
-        </div>
-
-        <p style="margin-top:10px"><?= h($t['short']) ?></p>
-
-        <div class="actions">
-          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-          <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
-          <?php endif; ?>
-        </div>
-
-        <?= render_vote_buttons($t['id'], 'index.php') ?>
+<section class="section" aria-labelledby="journeyTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="journeyTitle">How do you want to start?</h2><p>Three ways in, depending on where you are in your search.</p></div></div>
+    <div class="journeys">
+      <div class="journey reveal">
+        <span class="bubble"><?= ui_icon('search') ?></span>
+        <h3>Discover</h3>
+        <p>Not sure what exists? Browse by goal or category and see reviewed profiles first.</p>
+        <ul>
+          <li><a href="/categories.php"><?= ui_icon('layers') ?> Browse all categories</a></li>
+          <li><a href="/ai-use-case-explorer.php"><?= ui_icon('sparkle') ?> Explore by use case</a></li>
+          <li><a href="/top.php"><?= ui_icon('chart') ?> See what visitors click most</a></li>
+        </ul>
+        <a class="btn" href="/search.php">Search the directory</a>
       </div>
-    <?php endforeach; ?>
-  </div>
-</section>
-
-<section class="card">
-  <h2 style="margin-top:0">Browse tools</h2>
-  <p class="small">Showing <?= number_format(count($filtered)) ?> results.</p>
-
-  <div class="grid">
-    <?php foreach(array_slice($filtered, 0, 48) as $t): ?>
-      <div class="card">
-        <div style="display:flex;gap:10px;align-items:center">
-          <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
-          <div>
-            <h3 style="margin:0 0 4px"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h3>
-            <div class="small"><?= h($t['pricing'] ?? 'Varies') ?></div>
-          </div>
-        </div>
-
-        <p style="margin-top:10px"><?= h($t['short']) ?></p>
-
-        <div class="badges">
-          <a class="badge" href="/category.php?name=<?= urlencode($t['category']) ?>"><?= h($t['category']) ?></a>
-          <span class="badge gray"><?= h($t['pricing_type'] ?? 'Varies') ?></span>
-        </div>
-
-        <div class="actions">
-          <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-          <?php if(tool_url($t) !== '#'): ?>
-            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
-          <?php endif; ?>
-        </div>
-
-        <?= render_vote_buttons($t['id'], 'index.php') ?>
+      <div class="journey reveal">
+        <span class="bubble"><?= ui_icon('compare') ?></span>
+        <h3>Compare</h3>
+        <p>Already have two or three in mind? Put plans, limits and best-for notes side by side.</p>
+        <ul>
+          <li><a href="/compare.php"><?= ui_icon('compare') ?> Compare any two tools</a></li>
+          <li><a href="/comparisons.php"><?= ui_icon('book') ?> Popular comparisons</a></li>
+          <li><a href="/alternatives.php?tool=chatgpt"><?= ui_icon('arrow') ?> ChatGPT alternatives</a></li>
+        </ul>
+        <a class="btn secondary" href="/guides.php">Read the guides</a>
       </div>
-    <?php endforeach; ?>
-  </div>
-
-  <div class="actions">
-    <a class="btn secondary" href="/categories.php">Browse categories</a>
-    <a class="btn secondary" href="/top.php">See top tools</a>
+      <div class="journey journey--business reveal">
+        <span class="bubble"><?= ui_icon('briefcase') ?></span>
+        <h3>For business</h3>
+        <p>Choosing tools for a team, want something built, or promoting your own AI product?</p>
+        <ul>
+          <li><a href="/guide.php?slug=best-ai-tools-for-everyday-office-work"><?= ui_icon('book') ?> AI tools for office work</a></li>
+          <li><a href="/business.php"><?= ui_icon('bolt') ?> Custom AI agents &amp; software</a></li>
+          <li><a href="/advertise.php"><?= ui_icon('chart') ?> Advertise your AI tool</a></li>
+        </ul>
+        <a class="btn" href="/business.php">Talk to TrustNova Tech</a>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="card">
-  <h2 style="margin-top:0">Browse AI tools by category</h2>
-  <ul class="linkList">
-    <?php foreach($cats as $c): if($c === CATALOG_UNCLASSIFIED) continue; ?>
-      <li><a href="/category.php?name=<?= urlencode($c) ?>"><?= h($c) ?> AI tools (<?= (int)($__catCounts[$c] ?? 0) ?>)</a></li>
-    <?php endforeach; ?>
-  </ul>
+<section class="section section--tint" aria-labelledby="goalTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="goalTitle">Start from what you want to do</h2><p>Goal-based shortcuts. Counts come from the live catalogue.</p></div></div>
+    <div class="intentGrid">
+      <?php foreach ($intents as $i): ?>
+        <a class="intent reveal" href="<?= h($i['url']) ?>"><span class="ico"><?= ui_icon($i['icon']) ?></span><span><strong><?= h($i['label']) ?></strong><span class="n"><?= h(seo_plural($i['count'], 'tool')) ?></span></span></a>
+      <?php endforeach; ?>
+    </div>
+    <div data-recent-list hidden style="margin-top:22px">
+      <h3 style="margin:0 0 10px;font-size:1rem">Continue where you left off</h3>
+      <ul class="linkList" style="margin:0"></ul>
+    </div>
+  </div>
 </section>
 
-<?php if($__pairs): ?>
-<section class="card">
-  <h2 style="margin-top:0">Popular AI tool comparisons</h2>
-  <ul class="linkList">
-    <?php foreach($__pairs as [$pa, $pb]): ?>
-      <li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li>
-    <?php endforeach; ?>
-  </ul>
-  <div class="actions"><a class="btn secondary" href="/comparisons.php">All comparisons</a></div>
+<section class="section" aria-labelledby="catTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="catTitle">Browse AI tools by category</h2></div><a class="moreLink" href="/categories.php">All categories <?= ui_icon('arrow') ?></a></div>
+    <div class="catGrid">
+      <?php foreach ($cats as $c): $subs = $subCounts[$c] ?? []; arsort($subs); ?>
+        <a class="catCard reveal" href="<?= h(category_path($c)) ?>">
+          <span class="ico"><?= ui_icon(ui_category_icon($c)) ?></span>
+          <h3><?= h($c) ?> AI tools</h3>
+          <p><?= h(seo_plural((int)($catCounts[$c] ?? 0), 'tool')) ?></p>
+          <?php if ($subs): ?><span class="subs"><?php foreach (array_slice($subs, 0, 3, true) as $sn => $n): ?><span><?= h($sn) ?></span><?php endforeach; ?></span><?php endif; ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
+<?php if ($reviewed): ?>
+<section class="section section--tint" aria-labelledby="revTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="revTitle">Reviewed profiles with sources</h2><p>Each shows its vendor sources, retrieval date, limitations and any conflicts between vendor pages. <a href="/methodology.php">How we review</a>.</p></div><a class="moreLink" href="/guides.php">See comparison guides <?= ui_icon('arrow') ?></a></div>
+    <div class="cardGrid">
+      <?php foreach ($reviewed as $t) echo render_tool_card($t, ['placement' => 'home_reviewed']); ?>
+    </div>
+  </div>
 </section>
 <?php endif; ?>
+
+<section class="section" aria-labelledby="guideTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="guideTitle">Guides and comparisons</h2><p>Comparison tables are generated from the same reviewed profiles, so the facts match everywhere.</p></div><a class="moreLink" href="/guides.php">All guides <?= ui_icon('arrow') ?></a></div>
+    <div class="cardGrid">
+      <?php foreach (array_slice($guides, 0, 4, true) as $slug => $g): ?>
+        <article class="tCard reveal">
+          <p class="tCard__meta"><?= ui_icon('book') ?> Guide · updated <?= h($g['updated']) ?></p>
+          <h3 style="margin:0;font-size:1.1rem"><a href="<?= h(guide_path($slug)) ?>" style="color:inherit;text-decoration:none"><?= h($g['h1']) ?></a></h3>
+          <p class="tCard__desc"><?= h($g['description']) ?></p>
+          <div class="tCard__actions"><a class="btn sm" href="<?= h(guide_path($slug)) ?>">Read guide</a></div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <?php if ($pairs): ?>
+      <h3 style="margin:26px 0 10px;font-size:1rem">Popular head-to-head comparisons</h3>
+      <ul class="linkList"><?php foreach ($pairs as [$pa, $pb]): ?><li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li><?php endforeach; ?></ul>
+    <?php endif; ?>
+  </div>
+</section>
+
+<?php if ($spotlight || $featured): ?>
+<section class="section section--tint" aria-labelledby="sponsoredTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="sponsoredTitle">Sponsored listings</h2><p>Paid placements, clearly labelled. They do not change a tool's facts or limitations.</p></div><a class="moreLink" href="/advertise.php">Advertise here <?= ui_icon('arrow') ?></a></div>
+    <div class="cardGrid">
+      <?php foreach (array_merge($spotlight, $featured) as $t) echo render_tool_card($t, ['sponsored' => true, 'placement' => 'home_sponsored']); ?>
+    </div>
+    <?= render_disclosure_inline() ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<section class="section" aria-labelledby="popTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="popTitle">Popular AI tools</h2><p>Editor picks of widely used tools, followed by tools ranked by AIHubpedia clicks, ratings and votes. Rankings reflect activity on this site only.</p></div><a class="moreLink" href="/top.php">Top tools <?= ui_icon('arrow') ?></a></div>
+    <div class="cardGrid">
+      <?php foreach ($popular as $t) echo render_tool_card($t, ['placement' => 'home_popular']); ?>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="bizTitleBand">
+  <div class="wrap">
+    <div class="ctaBand">
+      <div class="col">
+        <h2 id="bizTitleBand">Have an AI tool to promote?</h2>
+        <p>Featured listings and the homepage spotlight are paid, labelled placements. Free listings are reviewed manually. No traffic or revenue results are promised.</p>
+        <div class="actions"><a class="btn" href="/advertise.php">See advertising options</a><a class="btn secondary" href="/disclosure.php">Read the disclosure</a></div>
+      </div>
+      <div class="col">
+        <h2>Need something built with AI?</h2>
+        <p>TrustNova Tech takes on custom AI agent and software projects and AI consultations. Tell us what you want to build.</p>
+        <div class="actions"><a class="btn" href="/business.php">Request a consultation</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="browseTitle" id="browse">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="browseTitle">Browse tools</h2><p>Showing <?= number_format(count($browse)) ?> results.</p></div></div>
+    <form method="get" action="/" class="filterBar" role="search">
+      <label class="sr" for="browseQ">Filter tools</label>
+      <input class="input" id="browseQ" type="search" name="q" value="<?= h($q) ?>" placeholder="Filter: chat, image, coding, SEO…">
+      <label class="sr" for="browseCat">Category</label>
+      <select id="browseCat" name="cat" style="max-width:220px">
+        <option value="">All categories</option>
+        <?php foreach ($cats as $c): ?><option value="<?= h($c) ?>" <?= $c === $cat ? 'selected' : '' ?>><?= h($c) ?></option><?php endforeach; ?>
+      </select>
+      <button class="btn" type="submit">Apply</button>
+      <a class="btn secondary" href="/">Reset</a>
+    </form>
+    <div class="cardGrid">
+      <?php foreach (array_slice($browse, 0, 24) as $t) echo render_tool_card($t, ['placement' => 'home_browse']); ?>
+    </div>
+    <div class="actions" style="margin-top:22px"><a class="btn secondary" href="/categories.php">Browse all categories</a><a class="btn secondary" href="/top.php">See top tools</a><a class="btn secondary" href="/search.php">Search the directory</a></div>
+  </div>
+</section>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>

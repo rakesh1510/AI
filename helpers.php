@@ -3,6 +3,10 @@ require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/catalog.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/analytics.php';
+require_once __DIR__ . '/discovery.php';
+require_once __DIR__ . '/ui.php';
+require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/conversion.php';
 
 // ----------------------
 // JSON helpers

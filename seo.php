@@ -123,6 +123,14 @@ function seo_page_registry(): array {
     'community.php' => ['title' => 'Community — Most Discussed AI Tools', 'desc' => 'See which AI tools the AIHubpedia community votes on and discusses the most.'],
     'gallery.php' => ['title' => 'Gallery', 'desc' => 'Image gallery of visual assets used across the AIHubpedia website.', 'robots' => 'noindex'],
     // Utility, demo and placeholder pages: kept reachable, excluded from the index.
+    'search.php' => ['title' => 'Search AI Tools', 'desc' => 'Search the AIHubpedia directory by tool name, category, use case or goal, with reviewed profiles ranked first.', 'robots' => 'noindex'],
+    'favorites.php' => ['title' => 'Your Saved AI Tools', 'desc' => 'AI tools you saved in this browser. Saved tools are stored on your device only.', 'robots' => 'noindex'],
+    'inquiry.php' => ['title' => 'Request Received', 'desc' => 'Confirmation that your request to AIHubpedia was received. We reply by email if it is a fit.', 'robots' => 'noindex'],
+    'subscribe.php' => ['title' => 'Subscribe to AIHubpedia Updates', 'desc' => 'Confirm your email subscription to AIHubpedia updates.', 'robots' => 'noindex'],
+    'newsletter-confirm.php' => ['title' => 'Confirm Subscription', 'desc' => 'Confirm your AIHubpedia email subscription.', 'robots' => 'noindex'],
+    'unsubscribe.php' => ['title' => 'Unsubscribe', 'desc' => 'Unsubscribe from AIHubpedia emails.', 'robots' => 'noindex'],
+    'business.php' => ['title' => 'AI Consulting & Custom AI Agents by TrustNova Tech', 'desc' => 'Request an AI consultation or a custom AI agent or software project from TrustNova Tech. Tell us what you want to build.'],
+    'disclosure.php' => ['title' => 'Advertising & Affiliate Disclosure', 'desc' => 'How AIHubpedia labels sponsored placements and affiliate links, and why paid placements never change a tool profile.'],
     '404.php' => ['title' => 'Page Not Found', 'desc' => 'The page you requested could not be found.', 'robots' => 'noindex'],
     'admin.php' => ['title' => 'Admin', 'desc' => 'AIHubpedia administration area for managing listings and settings.', 'robots' => 'noindex'],
     'login.php' => ['title' => 'Demo Login', 'desc' => 'Demo login for testing AIHubpedia bookmarks and saved AI tools.', 'robots' => 'noindex'],
@@ -225,7 +233,7 @@ function seo_website_node(): array {
     'publisher' => ['@id' => site_url('/#organization')],
     'potentialAction' => [
       '@type' => 'SearchAction',
-      'target' => ['@type' => 'EntryPoint', 'urlTemplate' => site_url('/index.php?q={search_term_string}')],
+      'target' => ['@type' => 'EntryPoint', 'urlTemplate' => site_url('/search.php?q={search_term_string}')],
       'query-input' => 'required name=search_term_string',
     ],
   ];

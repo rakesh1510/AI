@@ -20,7 +20,7 @@ function sitemap_entries(): array {
     ['/categories.php', 'weekly', '0.9'], ['/guides.php', 'weekly', '0.9'], ['/methodology.php', 'monthly', '0.6'], ['/top.php', 'daily', '0.8'], ['/leaderboard.php', 'daily', '0.7'],
     ['/compare.php', 'weekly', '0.7'], ['/comparisons.php', 'weekly', '0.7'], ['/ai-use-case-explorer.php', 'weekly', '0.7'],
     ['/blog.php', 'weekly', '0.6'], ['/filters.php', 'monthly', '0.4'], ['/community.php', 'weekly', '0.4'],
-    ['/submit.php', 'monthly', '0.5'], ['/advertise.php', 'monthly', '0.4'], ['/about.php', 'yearly', '0.4'],
+    ['/submit.php', 'monthly', '0.5'], ['/business.php', 'monthly', '0.6'], ['/disclosure.php', 'yearly', '0.3'], ['/advertise.php', 'monthly', '0.4'], ['/about.php', 'yearly', '0.4'],
     ['/contact.php', 'yearly', '0.4'], ['/disclaimer.php', 'yearly', '0.2'], ['/privacy.php', 'yearly', '0.2'],
     ['/terms.php', 'yearly', '0.2'], ['/impressum.php', 'yearly', '0.2'],
   ] as [$path, $freq, $prio]) {

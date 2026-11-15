@@ -43,13 +43,19 @@ if (($v = getenv('AIHUB_GOOGLE_SITE_VERIFICATION')) !== false && $v !== '') $__v
 if (($v = getenv('AIHUB_BING_SITE_VERIFICATION')) !== false && $v !== '') $__verify .= '<meta name="msvalidate.01" content="' . h($v) . '">' . "\n";
 
 $__css_ver = @filemtime(__DIR__ . '/assets/css/style.css') ?: '1';
+$__ui_ver = @filemtime(__DIR__ . '/assets/css/ui.css') ?: '1';
 $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
+$__built_css = is_file(__DIR__ . '/assets/css/site.min.css') ? (string)@filemtime(__DIR__ . '/assets/css/site.min.css') : '';   // built by scripts/build_assets.php
+$__hide_header_search = !empty($hide_header_search);
+$__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases']];
+$__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){var d=document.documentElement;d.className='js';if(d.getAttribute('data-theme-lock'))return;try{var t=localStorage.getItem('ah_theme');if(t!=='dark'&&t!=='light'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}d.setAttribute('data-theme',t)}catch(e){}})();</script>
 <title><?= h($title) ?></title>
 <meta name="description" content="<?= h($meta_desc) ?>">
 <meta name="robots" content="<?= h($__robots_meta) ?>">
@@ -60,7 +66,12 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 <meta name="theme-color" content="#4f46e5">
 <link rel="preconnect" href="https://www.google.com" crossorigin>
 <link rel="dns-prefetch" href="https://t0.gstatic.com">
+<?php if ($__built_css): ?>
+<link rel="stylesheet" href="/assets/css/site.min.css?v=<?= h($__built_css) ?>">
+<?php else: ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= h($__css_ver) ?>">
+<link rel="stylesheet" href="/assets/css/ui.css?v=<?= h($__ui_ver) ?>">
+<?php endif; ?>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon-180.png">
@@ -81,44 +92,34 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 <meta name="twitter:image" content="<?= h($og_image) ?>">
 <?= isset($head_extra) ? $head_extra . "\n" : '' ?>
 <?= seo_jsonld($__jsonld) ?>
-
-<style>
-.brand{display:flex;align-items:center;text-decoration:none;flex-shrink:0}
-.brandLogo{height:44px;width:auto;display:block}
-@media (max-width:768px){.brandLogo{height:36px}}
-</style>
 </head>
-<body>
+<body data-page="<?= h(analytics_page_type(seo_current_script())) ?>">
+<?= ui_icon_sprite() ?>
 <a class="skipLink" href="#main">Skip to content</a>
-<header class="nav simpleNav">
-  <div class="wrap navInner">
+<header class="siteHeader">
+  <div class="wrap hdr">
     <a class="brand" href="/" aria-label="AIHubpedia home">
       <img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="187" height="44" alt="AIHubpedia" class="brandLogo" fetchpriority="high">
     </a>
 
-    <nav class="navLinks simpleNavLinks" aria-label="Main navigation">
-      <a href="/categories.php">Categories</a>
-      <a href="/top.php">Top Tools</a>
-      <a href="/compare.php">Compare</a>
-      <a href="/guides.php">Guides</a>
-      <a href="/leaderboard.php">Leaderboard</a>
-      <a href="/ai-use-case-explorer.php">Use Cases</a>
-
-      <div class="simpleDropdown">
-        <button class="simpleDropdownBtn" type="button" aria-haspopup="true" aria-expanded="false">More ▾</button>
-        <div class="simpleDropdownMenu">
-          <a href="/comparisons.php">Comparisons</a>
-          <a href="/filters.php">Filters</a>
-          <a href="/community.php">Community</a>
-          <a href="/blog.php">Blog</a>
-          <a href="/methodology.php">Methodology</a>
-          <a href="/about.php">About</a>
+    <nav class="primaryNav" id="primaryNav" aria-label="Main navigation">
+      <?php foreach ($__nav as [$href, $label]): ?><a href="<?= h($href) ?>"><?= h($label) ?></a><?php endforeach; ?>
+      <div class="moreMenu">
+        <button class="moreMenu__btn" type="button" aria-haspopup="true" aria-expanded="false">More <?= ui_icon('arrow', 'caret') ?></button>
+        <div class="moreMenu__panel">
+          <?php foreach ($__navMore as [$href, $label]): ?><a href="<?= h($href) ?>"><?= h($label) ?></a><?php endforeach; ?>
         </div>
       </div>
-
-      <a href="/submit.php">Submit</a>
-      <a class="contactBtn" href="/contact.php">Contact</a>
     </nav>
+
+    <?php if (!$__hide_header_search): ?><div class="hdrSearch"><?= render_search_box('hdrSearch', ['source' => 'header', 'placeholder' => 'Search AI tools']) ?></div><?php endif; ?>
+
+    <div class="hdrActions">
+      <a class="iconBtn favLink js-only" href="/favorites.php" aria-label="Saved tools"><?= ui_icon('heart') ?><span class="favCount" data-fav-count hidden>0</span></a>
+      <button class="iconBtn js-only" id="themeToggle" type="button" aria-label="Switch color theme" aria-pressed="false"><?= ui_icon('moon', 'ic-moon') ?><?= ui_icon('sun', 'ic-sun') ?></button>
+      <a class="btn sm hdrCta" href="/business.php">For business</a>
+      <button class="iconBtn navToggle js-only" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu"><?= ui_icon('menu', 'ic-open') ?><?= ui_icon('x', 'ic-close') ?></button>
+    </div>
   </div>
 </header>
-<main class="wrap" id="main">
+<main class="<?= h($main_class ?? 'wrap') ?>" id="main">

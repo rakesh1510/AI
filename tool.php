@@ -51,6 +51,7 @@ $jsonld = [
 require __DIR__ . '/layout_top.php';
 ?>
 <?= render_breadcrumbs($crumbs) ?>
+<div hidden data-tool-view data-id="<?= h($t['id']) ?>" data-name="<?= h($t['name']) ?>" data-category="<?= h($t['category']) ?>"></div>
 
 <div class="card">
   <div style="display:flex;gap:12px;align-items:flex-start">
@@ -65,9 +66,13 @@ require __DIR__ . '/layout_top.php';
         <p class="small">Official website: <?= h(tool_domain($t['website'])) ?></p>
       <?php endif; ?>
       <div class="actions">
-        <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open official website</a>
+        <a class="btn" target="_blank" rel="<?= h(outbound_rel($t, is_featured_tool($t))) ?>" href="/redirect.php?id=<?= urlencode($t['id']) ?>" data-outbound data-affiliate="<?= is_affiliate_link($t) ? '1' : '0' ?>" data-sponsored="<?= is_featured_tool($t) ? '1' : '0' ?>" data-placement="profile">Open official website<?= ui_icon('external') ?></a>
+        <button type="button" class="btn secondary js-only" data-fav="<?= h($t['id']) ?>" aria-pressed="false" aria-label="Save <?= h($t['name']) ?> to favorites"><?= ui_icon('heart') ?> Save</button>
+        <button type="button" class="btn secondary js-only" data-compare="<?= h($t['id']) ?>" data-name="<?= h($t['name']) ?>" aria-pressed="false"><?= ui_icon('compare') ?> Add to compare</button>
         <a class="btn secondary" href="/compare.php?a=<?= urlencode($t['id']) ?>" rel="nofollow">Compare</a>
       </div>
+      <?php if(is_affiliate_link($t)): ?><p class="small">Affiliate link: AIHubpedia may earn a commission if you sign up. <a href="/disclosure.php">Details</a></p><?php endif; ?>
+      <?php if(is_featured_tool($t)): ?><p class="adLabel"><span class="adTag">Sponsored</span> This listing is a paid placement. <a href="/disclosure.php">Why am I seeing this?</a></p><?php endif; ?>
       <?php $voteBreakdown = tool_vote_breakdown($t['id']); ?>
       <div class="voteSummary">
         <span class="votePill">👍 Likes: <?= (int)$voteBreakdown['up'] ?></span>
@@ -245,4 +250,8 @@ require __DIR__ . '/layout_top.php';
   </form>
 </div>
 
+<section class="panel" style="margin-top:22px" aria-labelledby="bizHelp">
+  <h2 id="bizHelp" style="margin-top:0">Own this tool, or need something custom?</h2>
+  <p class="small">If you are the vendor, you can <a href="/advertise.php">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php">request a consultation</a> about a custom AI agent.</p>
+</section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

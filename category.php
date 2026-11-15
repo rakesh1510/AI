@@ -132,25 +132,17 @@ require __DIR__ . '/layout_top.php';
 </nav>
 <?php endif; ?>
 
-<div class="grid">
-  <?php foreach ($pageItems as $t): $tier = tool_quality_tier($t); ?>
-    <div class="card">
-      <div style="display:flex;gap:10px;align-items:center">
-        <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
-        <div>
-          <h2 style="margin:0 0 4px;font-size:1.17em"><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></h2>
-          <div class="small"><?= h($t['pricing'] ?? 'Varies') ?><?= !empty($t['subcategory']) && $sub === '' ? ' · ' . h($t['subcategory']) : '' ?></div>
-        </div>
-      </div>
-      <p style="margin-top:10px"><?= h($t['short'] ?? '') ?></p>
-      <?php if ($tier === 'reviewed'): ?><span class="badge">Reviewed profile</span><?php endif; ?>
-      <div class="actions">
-        <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
-        <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
-      </div>
-      <?= render_vote_buttons($t['id'], 'category.php?name=' . urlencode($name)) ?>
-    </div>
-  <?php endforeach; ?>
+<div data-filter-root>
+  <div class="filterBar js-only block" role="search" aria-label="Filter tools on this page">
+    <label class="sr" for="filterInput">Filter tools on this page</label>
+    <input class="input" id="filterInput" type="search" data-filter-input placeholder="Filter this page by name or keyword" autocomplete="off">
+    <button type="button" class="chipBtn" data-filter-chip="free" aria-pressed="false">Free or freemium</button>
+    <button type="button" class="chipBtn" data-filter-chip="reviewed" aria-pressed="false">Reviewed profiles only</button>
+    <span class="filterStatus" data-filter-status aria-live="polite"></span>
+  </div>
+  <div class="cardGrid">
+    <?php foreach ($pageItems as $t): echo str_replace('<article class="tCard', '<article data-filter-item class="tCard', render_tool_card($t, ['placement' => 'category', 'heading' => 2, 'filter' => true, 'votes' => true, 'votes_context' => 'category.php?name=' . urlencode($name)])); endforeach; ?>
+  </div>
 </div>
 
 <?php if ($pages > 1): ?>

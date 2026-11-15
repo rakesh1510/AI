@@ -38,26 +38,26 @@ Notes for AI assistants: pricing and features change frequently — cite the too
 - [Other AI tools](https://aihubpedia.com/category.php?name=Other): 165 tools. AI tools that are not yet classified. These listings are queued for editorial review.
 
 ## Tools with reviewed profiles (sources and dates on each page)
-- [You](https://aihubpedia.com/tool.php?id=you): AI search and answer platform with developer search APIs. Category: Research. Pricing: Free / Paid.
-- [Fireflies.ai](https://aihubpedia.com/tool.php?id=fireflies-ai): AI meeting recorder, transcriber and note taker. Category: Productivity. Pricing: Freemium.
-- [Pi](https://aihubpedia.com/tool.php?id=pi): Personal AI chat assistant focused on conversation, advice and organisation. Category: Chatbots. Pricing: Free.
-- [Otter.ai](https://aihubpedia.com/tool.php?id=otter-ai): AI meeting notes and transcription. Category: Productivity. Pricing: Freemium.
-- [Motion](https://aihubpedia.com/tool.php?id=motion): AI calendar and task scheduler that plans your day automatically. Category: Productivity. Pricing: Free trial / Paid.
-- [Copilot for Microsoft 365](https://aihubpedia.com/tool.php?id=copilot-for-microsoft-365): Paid AI add-on for Microsoft 365 that works inside Word, Excel, PowerPoint, Outlook and Teams. Category: Productivity. Pricing: Paid add-on.
-- [ChatPDF](https://aihubpedia.com/tool.php?id=chatpdf): Ask questions about PDFs and other documents. Category: Productivity. Pricing: Freemium.
-- [NotebookLM](https://aihubpedia.com/tool.php?id=notebooklm): Source-grounded AI notebook that answers questions about documents you add. Category: Productivity. Pricing: Free / Paid.
-- [Sonix](https://aihubpedia.com/tool.php?id=sonix): Pay-as-you-go and subscription transcription with translation and subtitles. Category: Productivity. Pricing: Pay as you go / Paid.
-- [MarketMuse](https://aihubpedia.com/tool.php?id=marketmuse): Content planning and optimisation software for SEO teams. Category: Marketing. Pricing: Freemium.
-- [Trint](https://aihubpedia.com/tool.php?id=trint): Transcription, translation and caption editing for audio and video. Category: Productivity. Pricing: Free trial / Paid.
-- [ChatGPT](https://aihubpedia.com/tool.php?id=chatgpt): General-purpose AI assistant from OpenAI for writing, analysis, coding help and research. Category: Chatbots. Pricing: Freemium / Paid.
-- [Google Gemini](https://aihubpedia.com/tool.php?id=gemini): Google's AI assistant, bundled with Google account and storage plans. Category: Chatbots. Pricing: Free / Paid.
-- [Perplexity](https://aihubpedia.com/tool.php?id=perplexity): AI answer engine that searches the web and cites its sources. Category: Research. Pricing: Free / Paid.
-- [Claude](https://aihubpedia.com/tool.php?id=claude): AI assistant from Anthropic for writing, analysis, coding and long-document work. Category: Chatbots. Pricing: Free / Paid.
-- [Microsoft Copilot](https://aihubpedia.com/tool.php?id=copilot): Microsoft's consumer AI assistant, available on the web, in an app and in Edge. Category: Chatbots. Pricing: Free / Paid.
 - [Canva AI](https://aihubpedia.com/tool.php?id=canva-ai): AI features built into the Canva design editor. Category: Design. Pricing: Freemium / Paid.
-- [DeepSeek](https://aihubpedia.com/tool.php?id=deepseek): Chinese AI lab with a chat app, a pay-per-token API and openly released model weights. Category: Chatbots. Pricing: Free / Paid.
 - [Character.AI](https://aihubpedia.com/tool.php?id=character-ai): Platform for chatting with AI characters, with age assurance requirements. Category: Chatbots. Pricing: Free / Paid.
+- [ChatGPT](https://aihubpedia.com/tool.php?id=chatgpt): General-purpose AI assistant from OpenAI for writing, analysis, coding help and research. Category: Chatbots. Pricing: Freemium / Paid.
+- [ChatPDF](https://aihubpedia.com/tool.php?id=chatpdf): Ask questions about PDFs and other documents. Category: Productivity. Pricing: Freemium.
+- [Claude](https://aihubpedia.com/tool.php?id=claude): AI assistant from Anthropic for writing, analysis, coding and long-document work. Category: Chatbots. Pricing: Free / Paid.
+- [Copilot for Microsoft 365](https://aihubpedia.com/tool.php?id=copilot-for-microsoft-365): Paid AI add-on for Microsoft 365 that works inside Word, Excel, PowerPoint, Outlook and Teams. Category: Productivity. Pricing: Paid add-on.
+- [DeepSeek](https://aihubpedia.com/tool.php?id=deepseek): Chinese AI lab with a chat app, a pay-per-token API and openly released model weights. Category: Chatbots. Pricing: Free / Paid.
+- [Fireflies.ai](https://aihubpedia.com/tool.php?id=fireflies-ai): AI meeting recorder, transcriber and note taker. Category: Productivity. Pricing: Freemium.
+- [Google Gemini](https://aihubpedia.com/tool.php?id=gemini): Google's AI assistant, bundled with Google account and storage plans. Category: Chatbots. Pricing: Free / Paid.
 - [Grammarly](https://aihubpedia.com/tool.php?id=grammarly): Writing assistant for grammar, tone, clarity and rewrites. Category: Writing. Pricing: Freemium.
+- [MarketMuse](https://aihubpedia.com/tool.php?id=marketmuse): Content planning and optimisation software for SEO teams. Category: Marketing. Pricing: Freemium.
+- [Microsoft Copilot](https://aihubpedia.com/tool.php?id=copilot): Microsoft's consumer AI assistant, available on the web, in an app and in Edge. Category: Chatbots. Pricing: Free / Paid.
+- [Motion](https://aihubpedia.com/tool.php?id=motion): AI calendar and task scheduler that plans your day automatically. Category: Productivity. Pricing: Free trial / Paid.
+- [NotebookLM](https://aihubpedia.com/tool.php?id=notebooklm): Source-grounded AI notebook that answers questions about documents you add. Category: Productivity. Pricing: Free / Paid.
+- [Otter.ai](https://aihubpedia.com/tool.php?id=otter-ai): AI meeting notes and transcription. Category: Productivity. Pricing: Freemium.
+- [Perplexity](https://aihubpedia.com/tool.php?id=perplexity): AI answer engine that searches the web and cites its sources. Category: Research. Pricing: Free / Paid.
+- [Pi](https://aihubpedia.com/tool.php?id=pi): Personal AI chat assistant focused on conversation, advice and organisation. Category: Chatbots. Pricing: Free.
+- [Sonix](https://aihubpedia.com/tool.php?id=sonix): Pay-as-you-go and subscription transcription with translation and subtitles. Category: Productivity. Pricing: Pay as you go / Paid.
+- [Trint](https://aihubpedia.com/tool.php?id=trint): Transcription, translation and caption editing for audio and video. Category: Productivity. Pricing: Free trial / Paid.
+- [You](https://aihubpedia.com/tool.php?id=you): AI search and answer platform with developer search APIs. Category: Research. Pricing: Free / Paid.
 
 ## Popular comparisons
 - [ChatGPT vs Claude](https://aihubpedia.com/compare.php?a=chatgpt&b=claude)
@@ -69,9 +69,9 @@ Notes for AI assistants: pricing and features change frequently — cite the too
 - [ChatGPT vs DeepSeek](https://aihubpedia.com/compare.php?a=chatgpt&b=deepseek)
 - [Claude vs Perplexity](https://aihubpedia.com/compare.php?a=claude&b=perplexity)
 - [NotebookLM vs Perplexity](https://aihubpedia.com/compare.php?a=notebooklm&b=perplexity)
-- [You vs Perplexity](https://aihubpedia.com/compare.php?a=perplexity&b=you)
-- [Fireflies.ai vs Otter.ai](https://aihubpedia.com/compare.php?a=fireflies-ai&b=otter-ai)
-- [Motion vs Copilot for Microsoft 365](https://aihubpedia.com/compare.php?a=copilot-for-microsoft-365&b=motion)
+- [Character.AI vs ChatGPT](https://aihubpedia.com/compare.php?a=character-ai&b=chatgpt)
+- [Claude vs DeepSeek](https://aihubpedia.com/compare.php?a=claude&b=deepseek)
+- [Google Gemini vs Microsoft Copilot](https://aihubpedia.com/compare.php?a=copilot&b=gemini)
 
 ## Optional
 - [About AIHubpedia](https://aihubpedia.com/about.php)

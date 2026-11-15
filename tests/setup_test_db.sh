@@ -16,9 +16,12 @@ $M "$AIHUB_DB_NAME" -e "ALTER TABLE use_cases ADD icon VARCHAR(20) NULL, ADD des
 $M "$AIHUB_DB_NAME" < tests/fixtures/interactions_current.sql
 $M "$AIHUB_DB_NAME" < database/install_compare_tables.sql
 $M "$AIHUB_DB_NAME" < database/phase2_analytics.sql
+$M "$AIHUB_DB_NAME" < database/phase3_business.sql
 php import-json-to-mysql.php
 # Replace any credentials copied from data/site.json with test-only values (local SMTP sink, dummy admin password).
 $M "$AIHUB_DB_NAME" -e "UPDATE site_settings SET setting_value='{\"from_email\":\"noreply@example.test\",\"from_name\":\"AIHubpedia Test\",\"to_email\":\"inbox@example.test\",\"smtp_host\":\"127.0.0.1\",\"smtp_port\":2525,\"smtp_secure\":\"\",\"smtp_user\":\"test\",\"smtp_pass\":\"test\"}' WHERE setting_key='mail'; UPDATE site_settings SET setting_value='test-admin-pass' WHERE setting_key='admin_pass';"
+# TEST-ONLY sponsored listings: the real catalogue has none, so seed two in the isolated test DB to exercise disclosure labels
+$M "$AIHUB_DB_NAME" -e "UPDATE tools SET featured_level=1, featured_until=DATE_ADD(CURDATE(), INTERVAL 30 DAY) WHERE slug IN ('otter-ai','sonix');"
 # synthetic engagement data (no real users)
 php -r '
 $pdo=new PDO("mysql:host=".getenv("AIHUB_DB_HOST").";dbname=".getenv("AIHUB_DB_NAME"),getenv("AIHUB_DB_USER"),getenv("AIHUB_DB_PASS"));

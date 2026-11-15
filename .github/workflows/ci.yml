@@ -43,11 +43,17 @@ jobs:
       - name: PHP syntax check
         run: ./tests/php_lint.sh
 
+      - name: Built assets are current (CSS/JS sources match assets/build.json)
+        run: php scripts/build_assets.php --check
+
       - name: Build isolated test database
         run: ./tests/setup_test_db.sh
 
       - name: Data quality tests (taxonomy, classifier accuracy, profiles, analytics logic)
         run: php tests/data_quality_test.php
+
+      - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
+        run: php tests/ux_logic_test.php
 
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
@@ -76,6 +82,19 @@ jobs:
         env:
           NODE_PATH: /tmp/pw/node_modules
         run: node tests/browser_test.js http://127.0.0.1:8002 ./ci-screenshots ci
+
+      - name: Phase 3 UX, conversion and privacy browser tests
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_ux_test.js http://127.0.0.1:8002 ./ci-screenshots ci-ux
+
+      - name: Business report runs against the test database
+        run: php scripts/business_report.php --days=1 > /dev/null
+
+      - name: Capture design screenshots (light/dark, desktop/tablet/mobile)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/capture_screens.js http://127.0.0.1:8002 ./ci-screenshots ci-design
 
       - name: Upload screenshots
         if: always()
