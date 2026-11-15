@@ -1,0 +1,5644 @@
+{
+    "generated": "2026-11-15",
+    "method": "rule-based first pass (scripts/classify_tools.php); entries with method \"editorial\" are manual and preserved",
+    "tools": {
+        "monica": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "copywriting",
+                "copy"
+            ],
+            "needs_review": false
+        },
+        "you": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "jigso": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "mypeas-ai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "job"
+            ],
+            "needs_review": true
+        },
+        "cody": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "timeos": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "watchnow-ai": {
+            "category": "Video",
+            "subcategory": "Video generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "movie"
+            ],
+            "needs_review": true
+        },
+        "socratic-by-google": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "education",
+                "learning"
+            ],
+            "needs_review": false
+        },
+        "microsoft-bing": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "meetgeek": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "suggest-gift": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "gift@name"
+            ],
+            "needs_review": false
+        },
+        "find-your-next-book": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "book@name"
+            ],
+            "needs_review": true
+        },
+        "agentgpt": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "agent@name",
+                "autonomous"
+            ],
+            "needs_review": false
+        },
+        "yoodli-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "rewind": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "transcri"
+            ],
+            "needs_review": false
+        },
+        "resume-worded": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 8,
+            "signals": [
+                "resume@name",
+                "interview",
+                "recruit"
+            ],
+            "needs_review": false
+        },
+        "fireflies-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "transcri",
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "replika": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "ai companion",
+                "persona"
+            ],
+            "needs_review": false
+        },
+        "heyday": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "resumetrick": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "resume@name"
+            ],
+            "needs_review": false
+        },
+        "traivl": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "vacay": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "safebet": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "pathfinder": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "relationship"
+            ],
+            "needs_review": true
+        },
+        "docus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "caktus": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "addy-ai": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "email"
+            ],
+            "needs_review": false
+        },
+        "summit": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "liner-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "code"
+            ],
+            "needs_review": true
+        },
+        "tuliaa": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "writing",
+                "content creation"
+            ],
+            "needs_review": true
+        },
+        "circleback-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "olympia": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "startup"
+            ],
+            "needs_review": true
+        },
+        "torq": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "automation",
+                "integrat"
+            ],
+            "needs_review": false
+        },
+        "pi": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "chatbot"
+            ],
+            "needs_review": false
+        },
+        "talktohim": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "chat with"
+            ],
+            "needs_review": true
+        },
+        "penny-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "noowai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": false
+        },
+        "taiga": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "coding"
+            ],
+            "needs_review": true
+        },
+        "rizemail": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "email",
+                "inbox"
+            ],
+            "needs_review": false
+        },
+        "zoom-iq": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "gptconsole": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "design"
+            ],
+            "needs_review": true
+        },
+        "zipzap": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "otter-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "transcri",
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "typingmind": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatgpt"
+            ],
+            "needs_review": true
+        },
+        "networkai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "job"
+            ],
+            "needs_review": true
+        },
+        "mymind": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organization"
+            ],
+            "needs_review": true
+        },
+        "bluedot": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting",
+                "note taker"
+            ],
+            "needs_review": false
+        },
+        "role-model-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "avatar",
+                "3d"
+            ],
+            "needs_review": true
+        },
+        "glass-it-price-tracker": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "shopping"
+            ],
+            "needs_review": true
+        },
+        "insummary": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights",
+                "reports"
+            ],
+            "needs_review": true
+        },
+        "panda-chat": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "focus"
+            ],
+            "needs_review": true
+        },
+        "shop-guru-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "shopping"
+            ],
+            "needs_review": true
+        },
+        "botly": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "mymemo-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organize"
+            ],
+            "needs_review": true
+        },
+        "travel-plan-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "travel@name"
+            ],
+            "needs_review": false
+        },
+        "aiapply": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "job",
+                "interview"
+            ],
+            "needs_review": false
+        },
+        "tailor": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "gift-matchr": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "gift@name"
+            ],
+            "needs_review": false
+        },
+        "accountabilabuddy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "reminder"
+            ],
+            "needs_review": true
+        },
+        "mailmaestro": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "email"
+            ],
+            "needs_review": true
+        },
+        "call-annie": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "chatbot",
+                "virtual assistant"
+            ],
+            "needs_review": false
+        },
+        "gymbuddy-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "workout"
+            ],
+            "needs_review": true
+        },
+        "taranify": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "desksense": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "content creation"
+            ],
+            "needs_review": true
+        },
+        "plantrips": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": true
+        },
+        "xembly": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "scheduling",
+                "task"
+            ],
+            "needs_review": false
+        },
+        "beedone": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "gifthuntr": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "gift@name"
+            ],
+            "needs_review": false
+        },
+        "travelnaut": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "travel@name"
+            ],
+            "needs_review": false
+        },
+        "eesel-app": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "browse"
+            ],
+            "needs_review": true
+        },
+        "albertbro": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "copilot2trip": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": true
+        },
+        "miri": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 8,
+            "signals": [
+                "health",
+                "fitness",
+                "wellness",
+                "nutrition"
+            ],
+            "needs_review": false
+        },
+        "motion": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "wandergenie": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": true
+        },
+        "ai-phone": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "transcri"
+            ],
+            "needs_review": true
+        },
+        "skoot": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": false
+        },
+        "swifty": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "beforesunset": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "team"
+            ],
+            "needs_review": true
+        },
+        "greynights": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "ai companion",
+                "persona"
+            ],
+            "needs_review": false
+        },
+        "tidalflow": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "fitness",
+                "workout"
+            ],
+            "needs_review": false
+        },
+        "impulse-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "invest"
+            ],
+            "needs_review": false
+        },
+        "iplan-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": true
+        },
+        "vetted": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "jua-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "trading"
+            ],
+            "needs_review": true
+        },
+        "thegist": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "workflow"
+            ],
+            "needs_review": true
+        },
+        "40h": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "scheduling",
+                "task"
+            ],
+            "needs_review": true
+        },
+        "summraiz": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "intellibizzai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "teamsmart-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "promptinterface-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "engineer"
+            ],
+            "needs_review": true
+        },
+        "dream-decoder": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "dream@name"
+            ],
+            "needs_review": true
+        },
+        "rightjoin": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "job",
+                "interview"
+            ],
+            "needs_review": false
+        },
+        "hey-internet": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "personal assistant"
+            ],
+            "needs_review": true
+        },
+        "sidekick": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "scheduling"
+            ],
+            "needs_review": true
+        },
+        "echofox": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "voice"
+            ],
+            "needs_review": true
+        },
+        "ayfie": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "resign-ai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "career"
+            ],
+            "needs_review": true
+        },
+        "guidie": {
+            "category": "Audio",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "audio"
+            ],
+            "needs_review": true
+        },
+        "cheatgpt": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "tutor",
+                "study"
+            ],
+            "needs_review": false
+        },
+        "wanderboat": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "travel",
+                "itinerary"
+            ],
+            "needs_review": false
+        },
+        "dreamgift": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "gift"
+            ],
+            "needs_review": false
+        },
+        "myst-news": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "thinkforce": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "ask-layla": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "travel"
+            ],
+            "needs_review": true
+        },
+        "chaton": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "transcri"
+            ],
+            "needs_review": false
+        },
+        "zoom-ai-companion": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "goheather": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "contract",
+                "lawyer"
+            ],
+            "needs_review": false
+        },
+        "qashboard": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "finance"
+            ],
+            "needs_review": false
+        },
+        "gajix": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "learning"
+            ],
+            "needs_review": true
+        },
+        "squad-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights",
+                "strategy"
+            ],
+            "needs_review": true
+        },
+        "luzia": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "mindy": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "email"
+            ],
+            "needs_review": true
+        },
+        "free-ai-resume-generator": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "resume@name"
+            ],
+            "needs_review": false
+        },
+        "sanctum-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "thunderbit": {
+            "category": "Coding",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 4,
+            "signals": [
+                "code"
+            ],
+            "needs_review": true
+        },
+        "clearword": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "note-taking",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "qoves": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "twin": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "automate",
+                "repetitive"
+            ],
+            "needs_review": true
+        },
+        "essence-app": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "wellness"
+            ],
+            "needs_review": true
+        },
+        "maxai-me": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "whoop": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "health",
+                "fitness",
+                "sleep",
+                "recovery"
+            ],
+            "needs_review": false
+        },
+        "jace": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "workflow",
+                "automate"
+            ],
+            "needs_review": false
+        },
+        "kintext": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "parenting"
+            ],
+            "needs_review": true
+        },
+        "youism-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "eve-legal": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "legal@name"
+            ],
+            "needs_review": false
+        },
+        "mindverse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "evenup-law": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "law@name"
+            ],
+            "needs_review": true
+        },
+        "dressx-me": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "outfit"
+            ],
+            "needs_review": true
+        },
+        "bible-chat": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "bible@name"
+            ],
+            "needs_review": true
+        },
+        "turbo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "conversational"
+            ],
+            "needs_review": true
+        },
+        "copilot-for-microsoft-365": {
+            "category": "Productivity",
+            "subcategory": "Workplace AI suites",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "microsoft 365@name"
+            ],
+            "needs_review": false
+        },
+        "tarot-master": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "read"
+            ],
+            "needs_review": true
+        },
+        "ai-perfect-assistant": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "content creation"
+            ],
+            "needs_review": true
+        },
+        "amie": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "email",
+                "calendar",
+                "task"
+            ],
+            "needs_review": false
+        },
+        "langotalk": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "learning",
+                "language learning"
+            ],
+            "needs_review": false
+        },
+        "mental-models-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "dola": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "calendar"
+            ],
+            "needs_review": true
+        },
+        "ai-credit-repair": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "letter"
+            ],
+            "needs_review": true
+        },
+        "goodfriend-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "topcreator": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "engagement"
+            ],
+            "needs_review": true
+        },
+        "minuteslink": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "transcri",
+                "meeting",
+                "minutes@name"
+            ],
+            "needs_review": false
+        },
+        "sider": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "write"
+            ],
+            "needs_review": true
+        },
+        "whatdo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "ifttt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "intuition-robotics": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai companion"
+            ],
+            "needs_review": true
+        },
+        "parthean": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "finance"
+            ],
+            "needs_review": true
+        },
+        "sagen-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "packpack": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "organize",
+                "bookmark"
+            ],
+            "needs_review": true
+        },
+        "wellpin": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "calendar",
+                "scheduling"
+            ],
+            "needs_review": false
+        },
+        "talknotes": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "voice"
+            ],
+            "needs_review": true
+        },
+        "embra": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "workflow",
+                "automate"
+            ],
+            "needs_review": false
+        },
+        "abby": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "health",
+                "mental health",
+                "therapy"
+            ],
+            "needs_review": false
+        },
+        "gift-ideas-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "gift@name"
+            ],
+            "needs_review": false
+        },
+        "goreply": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "dr-muscle": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "fitness"
+            ],
+            "needs_review": true
+        },
+        "imbue": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "agent"
+            ],
+            "needs_review": true
+        },
+        "flash": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "scheduling",
+                "task"
+            ],
+            "needs_review": false
+        },
+        "tinywow": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "clonedub": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "voice",
+                "audio",
+                "clone@name"
+            ],
+            "needs_review": false
+        },
+        "chatshape": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatbot"
+            ],
+            "needs_review": true
+        },
+        "nextthreebooks": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "book"
+            ],
+            "needs_review": true
+        },
+        "notability-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organization"
+            ],
+            "needs_review": true
+        },
+        "dishgen": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "recipe"
+            ],
+            "needs_review": true
+        },
+        "reclaim-ai": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "scheduling",
+                "task"
+            ],
+            "needs_review": false
+        },
+        "reflect-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "note-taking"
+            ],
+            "needs_review": true
+        },
+        "faqx": {
+            "category": "Business",
+            "subcategory": "Customer support",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "faq@name"
+            ],
+            "needs_review": true
+        },
+        "you-got-cooking": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "recipe",
+                "cooking@name"
+            ],
+            "needs_review": false
+        },
+        "mindguide": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "health",
+                "mental health"
+            ],
+            "needs_review": false
+        },
+        "verbaly": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "speak"
+            ],
+            "needs_review": true
+        },
+        "waverly": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "engagement"
+            ],
+            "needs_review": true
+        },
+        "shako": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "automate"
+            ],
+            "needs_review": true
+        },
+        "be-my-chef": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "recipe",
+                "cooking"
+            ],
+            "needs_review": false
+        },
+        "browsegpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "browse@name"
+            ],
+            "needs_review": true
+        },
+        "godmode": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "insight-journal": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "workflow"
+            ],
+            "needs_review": true
+        },
+        "practicetalking": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "education"
+            ],
+            "needs_review": true
+        },
+        "saveday": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organization"
+            ],
+            "needs_review": true
+        },
+        "magai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatgpt"
+            ],
+            "needs_review": true
+        },
+        "ask-seneca": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "obituary-writer": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "write@name",
+                "writer@name"
+            ],
+            "needs_review": true
+        },
+        "streaming-options": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "nack": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "mayday": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "calendar",
+                "scheduling",
+                "task"
+            ],
+            "needs_review": false
+        },
+        "resumecheck": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "resume@name"
+            ],
+            "needs_review": true
+        },
+        "ai-ls": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "audio-diary": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "audio@name"
+            ],
+            "needs_review": true
+        },
+        "existential": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "career"
+            ],
+            "needs_review": false
+        },
+        "glowup-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "image",
+                "photo",
+                "photoshoot"
+            ],
+            "needs_review": false
+        },
+        "selfgazer": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "findgiftsfor": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "gift"
+            ],
+            "needs_review": true
+        },
+        "sermongpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "lead"
+            ],
+            "needs_review": true
+        },
+        "prototext": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organize"
+            ],
+            "needs_review": true
+        },
+        "aibert": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "aicogni": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "voice"
+            ],
+            "needs_review": true
+        },
+        "we-write-cards": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "6000-thoughts": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "design"
+            ],
+            "needs_review": true
+        },
+        "triv-ai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "education",
+                "learning"
+            ],
+            "needs_review": false
+        },
+        "conversai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "tone"
+            ],
+            "needs_review": true
+        },
+        "myndmap": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "calendar",
+                "task",
+                "focus"
+            ],
+            "needs_review": false
+        },
+        "ayanza": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "hints": {
+            "category": "Audio",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "voice"
+            ],
+            "needs_review": true
+        },
+        "chadview": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "job",
+                "interview"
+            ],
+            "needs_review": true
+        },
+        "todo-is": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "martin": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "email",
+                "calendar"
+            ],
+            "needs_review": false
+        },
+        "slated": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "finance"
+            ],
+            "needs_review": false
+        },
+        "aichatting": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "characters",
+                "talk to"
+            ],
+            "needs_review": false
+        },
+        "plicanta": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "resume"
+            ],
+            "needs_review": false
+        },
+        "hedy": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "ruru": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "care"
+            ],
+            "needs_review": true
+        },
+        "tomorrow-io": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "canyon": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "resume",
+                "interview"
+            ],
+            "needs_review": false
+        },
+        "baseplate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "integrat"
+            ],
+            "needs_review": true
+        },
+        "dewey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organize"
+            ],
+            "needs_review": true
+        },
+        "autoeasy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "auri-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "sona": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "lightpdf-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "vibrato": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "calls"
+            ],
+            "needs_review": true
+        },
+        "insula": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "besty-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "katch": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "seance-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "splitjoin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "assisterr": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "gnbly": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "automation"
+            ],
+            "needs_review": true
+        },
+        "signapse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "amazon-bedrock": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "integrat"
+            ],
+            "needs_review": true
+        },
+        "chandu": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "automation"
+            ],
+            "needs_review": true
+        },
+        "timemaster": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "foodai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "recipe"
+            ],
+            "needs_review": true
+        },
+        "genius-pdf": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "pdf@name"
+            ],
+            "needs_review": true
+        },
+        "marcus-aurelius-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatbot"
+            ],
+            "needs_review": true
+        },
+        "dailybot-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "team"
+            ],
+            "needs_review": true
+        },
+        "ai-diary": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "voice"
+            ],
+            "needs_review": true
+        },
+        "boba": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "bottell": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "clonemyvoice-io": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "voice",
+                "clone@name"
+            ],
+            "needs_review": false
+        },
+        "stellar": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "loti": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "wisetalk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "cronbot-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "empy-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "mobilegpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "nightcap": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "dream"
+            ],
+            "needs_review": true
+        },
+        "magicmate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "beeyond-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "littlecook-io": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "recipe"
+            ],
+            "needs_review": false
+        },
+        "screenapp": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "transcri",
+                "recording"
+            ],
+            "needs_review": false
+        },
+        "moodfood": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "gnothiai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "health",
+                "meditation"
+            ],
+            "needs_review": false
+        },
+        "waitroom": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "spellar-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "meeting"
+            ],
+            "needs_review": false
+        },
+        "clockk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "automate"
+            ],
+            "needs_review": true
+        },
+        "beam": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatgpt"
+            ],
+            "needs_review": true
+        },
+        "dreamt": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "dream@name"
+            ],
+            "needs_review": true
+        },
+        "focusbuddy": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "focus@name"
+            ],
+            "needs_review": true
+        },
+        "imean-ai-builder": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "bottr": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "task"
+            ],
+            "needs_review": true
+        },
+        "antispace": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "email",
+                "calendar"
+            ],
+            "needs_review": false
+        },
+        "sixty": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "email",
+                "inbox",
+                "schedule"
+            ],
+            "needs_review": false
+        },
+        "clara": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "calendar",
+                "scheduling"
+            ],
+            "needs_review": false
+        },
+        "nex": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "supermemory": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "organize"
+            ],
+            "needs_review": true
+        },
+        "memoryplugin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "braudit": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "career"
+            ],
+            "needs_review": false
+        },
+        "timetics": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "scheduling",
+                "appointment"
+            ],
+            "needs_review": false
+        },
+        "kippy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "feedback"
+            ],
+            "needs_review": true
+        },
+        "spatial-touch": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "integrat"
+            ],
+            "needs_review": true
+        },
+        "finding-words": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "emotional",
+                "loss"
+            ],
+            "needs_review": true
+        },
+        "ohai-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "friend": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "automation"
+            ],
+            "needs_review": true
+        },
+        "r1-by-rabbit": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "zivy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "engineer"
+            ],
+            "needs_review": true
+        },
+        "poised": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "screentime": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "alice": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "integrat"
+            ],
+            "needs_review": true
+        },
+        "price-per-token": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "llm"
+            ],
+            "needs_review": true
+        },
+        "gnomi-app": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "consensus": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "research",
+                "papers",
+                "scientific"
+            ],
+            "needs_review": false
+        },
+        "julius-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "scite": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "accio": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "gptgo": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "code"
+            ],
+            "needs_review": true
+        },
+        "browse-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "coding"
+            ],
+            "needs_review": true
+        },
+        "tutorai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "tutor@name",
+                "learning"
+            ],
+            "needs_review": false
+        },
+        "paperbrain": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "research",
+                "academic",
+                "literature"
+            ],
+            "needs_review": false
+        },
+        "wtf-does-this-company-do": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "casper-ai": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "article"
+            ],
+            "needs_review": true
+        },
+        "roamaround": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "upword": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "aidaptive": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "laion": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "dataset"
+            ],
+            "needs_review": true
+        },
+        "perfectessaywriter": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "essay"
+            ],
+            "needs_review": true
+        },
+        "keywordsearch": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "keyword@name"
+            ],
+            "needs_review": true
+        },
+        "scispace": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "pdfgpt": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "pdf"
+            ],
+            "needs_review": false
+        },
+        "lookup": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "search"
+            ],
+            "needs_review": true
+        },
+        "scholarcy": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "research",
+                "scholar@name"
+            ],
+            "needs_review": false
+        },
+        "codegeex": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "code@name",
+                "coding",
+                "debug"
+            ],
+            "needs_review": false
+        },
+        "stratup-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "startup"
+            ],
+            "needs_review": false
+        },
+        "hoopsai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "trading"
+            ],
+            "needs_review": false
+        },
+        "elicit": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "research",
+                "academic"
+            ],
+            "needs_review": false
+        },
+        "mindgrasp-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "ai-lawyer": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "legal",
+                "lawyer@name"
+            ],
+            "needs_review": false
+        },
+        "chatpdf": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "jenni": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "writing"
+            ],
+            "needs_review": true
+        },
+        "neevaai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "fluent": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "automate"
+            ],
+            "needs_review": true
+        },
+        "glimpse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "keywords-everwhere": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "seo",
+                "keyword@name"
+            ],
+            "needs_review": false
+        },
+        "metaforms": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "beebee-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "financial",
+                "invest"
+            ],
+            "needs_review": false
+        },
+        "mapdeduce": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "quantplus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "ads"
+            ],
+            "needs_review": true
+        },
+        "komo-search": {
+            "category": "Research",
+            "subcategory": "AI search & answers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "search@name"
+            ],
+            "needs_review": true
+        },
+        "facecheck-id": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "photo",
+                "face@name"
+            ],
+            "needs_review": false
+        },
+        "rhetorai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "siteexplainer": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "iask-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "writing"
+            ],
+            "needs_review": true
+        },
+        "vizologi": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "market"
+            ],
+            "needs_review": true
+        },
+        "tldr-this": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "orygo-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "search"
+            ],
+            "needs_review": true
+        },
+        "afforai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "recall": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "deepnote": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "automation"
+            ],
+            "needs_review": true
+        },
+        "genei": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "stellaris-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "chartpixel": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "visual"
+            ],
+            "needs_review": true
+        },
+        "schoolai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "education",
+                "school@name"
+            ],
+            "needs_review": false
+        },
+        "casetext": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "legal",
+                "contract"
+            ],
+            "needs_review": false
+        },
+        "block-survey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "superagi-cloud": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "agent",
+                "autonomous"
+            ],
+            "needs_review": true
+        },
+        "pdf-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "pdf@name",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "trendspider": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "trading"
+            ],
+            "needs_review": true
+        },
+        "glean": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "persona"
+            ],
+            "needs_review": true
+        },
+        "keyword-discovery": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "seo",
+                "keyword@name",
+                "content optimization"
+            ],
+            "needs_review": false
+        },
+        "unreal-speech": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "high",
+            "method": "rule",
+            "score": 7,
+            "signals": [
+                "voice",
+                "speech@name",
+                "text-to-speech"
+            ],
+            "needs_review": false
+        },
+        "paperpal": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "research",
+                "academic"
+            ],
+            "needs_review": true
+        },
+        "content-at-scale": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "seo"
+            ],
+            "needs_review": true
+        },
+        "rose-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "analytics",
+                "industry"
+            ],
+            "needs_review": false
+        },
+        "studyable": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "learning",
+                "study@name",
+                "flashcard"
+            ],
+            "needs_review": false
+        },
+        "brainypdf": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "research"
+            ],
+            "needs_review": false
+        },
+        "recapext": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "summar",
+                "read"
+            ],
+            "needs_review": true
+        },
+        "filegpt": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "file@name"
+            ],
+            "needs_review": true
+        },
+        "myreport": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "sobrief": {
+            "category": "Audio",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "beloga": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights",
+                "team"
+            ],
+            "needs_review": false
+        },
+        "cebra": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "danelfin": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "stock",
+                "market"
+            ],
+            "needs_review": false
+        },
+        "documind": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "document",
+                "summar",
+                "organize"
+            ],
+            "needs_review": false
+        },
+        "drugcard": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "blaze-sql": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "sql@name",
+                "query"
+            ],
+            "needs_review": false
+        },
+        "osum": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "notebooklm": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "marketalerts-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "market@name"
+            ],
+            "needs_review": false
+        },
+        "unriddle": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "sonix": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "video to text",
+                "audio/video to text"
+            ],
+            "needs_review": true
+        },
+        "marketmuse": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "fork": {
+            "category": "Marketing",
+            "subcategory": "Sales & lead generation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "sales",
+                "lead"
+            ],
+            "needs_review": false
+        },
+        "deli": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "yobi": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "usertesting-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "upwin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "discovery"
+            ],
+            "needs_review": true
+        },
+        "forefront-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "cxcortex": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "turnitin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "plagiarism"
+            ],
+            "needs_review": true
+        },
+        "knowbase-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "chatgpt"
+            ],
+            "needs_review": true
+        },
+        "shield-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "cm3leon-by-meta": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "writerzen": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "write@name",
+                "writer@name",
+                "writing",
+                "content creation"
+            ],
+            "needs_review": false
+        },
+        "transcript-lol": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "transcri@name",
+                "video to text",
+                "audio/video to text"
+            ],
+            "needs_review": false
+        },
+        "hebbia": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "resoomer": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "spindoc": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "seeker": {
+            "category": "Writing",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "content generation"
+            ],
+            "needs_review": true
+        },
+        "aithor": {
+            "category": "Writing",
+            "subcategory": "Grammar, editing & rewriting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "paraphras",
+                "plagiarism"
+            ],
+            "needs_review": false
+        },
+        "base64-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "code"
+            ],
+            "needs_review": true
+        },
+        "google-cloud-vision-ai": {
+            "category": "Image",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "pdf-pals": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "pdf@name"
+            ],
+            "needs_review": false
+        },
+        "amazon-comprehend": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "dashworks": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "enterprise"
+            ],
+            "needs_review": true
+        },
+        "tensorflow": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "contify-news-api": {
+            "category": "Coding",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "api@name"
+            ],
+            "needs_review": true
+        },
+        "microsoft-knowledge-exploration": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "presto": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "qonqur": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "tenorshare-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "pdf",
+                "summar"
+            ],
+            "needs_review": false
+        },
+        "hippocratic-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "health"
+            ],
+            "needs_review": true
+        },
+        "culturepulse-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "looq-ai": {
+            "category": "Image",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "image"
+            ],
+            "needs_review": true
+        },
+        "bioraptor": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "unstructured-technologies": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "read"
+            ],
+            "needs_review": true
+        },
+        "trint": {
+            "category": "Video",
+            "subcategory": "Video generation & editing",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "video"
+            ],
+            "needs_review": true
+        },
+        "responsiv": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "akela-hub": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "papers-pro": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 8,
+            "signals": [
+                "research",
+                "academic",
+                "papers@name",
+                "literature"
+            ],
+            "needs_review": false
+        },
+        "unlearn-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "clinical"
+            ],
+            "needs_review": true
+        },
+        "immunai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "chatwithpdf": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "youtube"
+            ],
+            "needs_review": true
+        },
+        "otio-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 4,
+            "signals": [
+                "document",
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "outread": {
+            "category": "Audio",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "summar"
+            ],
+            "needs_review": true
+        },
+        "healthsage-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "health@name"
+            ],
+            "needs_review": false
+        },
+        "together-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "fairgen": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "superagent": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "dexa-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "venturekit": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "business plan"
+            ],
+            "needs_review": true
+        },
+        "divedeck-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "corelight": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "oso-ai": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "automation",
+                "workflow"
+            ],
+            "needs_review": false
+        },
+        "chemix": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "engineer"
+            ],
+            "needs_review": true
+        },
+        "studyx": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "learning",
+                "study@name"
+            ],
+            "needs_review": false
+        },
+        "ocient": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "text2sql": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "sql"
+            ],
+            "needs_review": true
+        },
+        "multiverse-computing": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "bioptimus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "book-summaries": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 3,
+            "signals": [
+                "summar@name"
+            ],
+            "needs_review": true
+        },
+        "archive-intel": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "search"
+            ],
+            "needs_review": true
+        },
+        "lancedb": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "nabla-bio": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "design"
+            ],
+            "needs_review": true
+        },
+        "brandwatch": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 3,
+            "signals": [
+                "social media",
+                "brand@name"
+            ],
+            "needs_review": true
+        },
+        "distributional": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "run": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "workflow"
+            ],
+            "needs_review": true
+        },
+        "atlan": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "augurisk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "altindex": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "invest"
+            ],
+            "needs_review": false
+        },
+        "relativity": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "discovery"
+            ],
+            "needs_review": true
+        },
+        "datologyai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "automate"
+            ],
+            "needs_review": true
+        },
+        "perigon": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "bridgewise": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "design"
+            ],
+            "needs_review": true
+        },
+        "preemptive-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "health"
+            ],
+            "needs_review": true
+        },
+        "superagi": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "agent",
+                "autonomous"
+            ],
+            "needs_review": false
+        },
+        "leya-law": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "legal",
+                "law@name"
+            ],
+            "needs_review": false
+        },
+        "qureight": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "juno-research": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "proscia": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "inference-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "picogrid": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "autonomous"
+            ],
+            "needs_review": true
+        },
+        "amlgo-labs": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "mlcode": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "automate"
+            ],
+            "needs_review": true
+        },
+        "definely": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "proofread"
+            ],
+            "needs_review": true
+        },
+        "pdf-flex": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "pdf@name"
+            ],
+            "needs_review": false
+        },
+        "deepl-translator": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "s10-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "medical",
+                "patient",
+                "care"
+            ],
+            "needs_review": false
+        },
+        "letterpal": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "newsletter",
+                "letter@name"
+            ],
+            "needs_review": true
+        },
+        "genspark-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "columbo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "read"
+            ],
+            "needs_review": true
+        },
+        "immersive-translate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "heex-technologies": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "athena": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "latitude-io": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "manifold": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "viableview": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "reshape-biotech": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "lab"
+            ],
+            "needs_review": true
+        },
+        "amply-discovery": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "drug discovery",
+                "discovery@name"
+            ],
+            "needs_review": false
+        },
+        "rebeccai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "business idea"
+            ],
+            "needs_review": true
+        },
+        "pienso": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "coding"
+            ],
+            "needs_review": true
+        },
+        "kira-systems": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "contract"
+            ],
+            "needs_review": true
+        },
+        "tipis-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "lighthearted-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "leash-biosciences": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "drug discovery",
+                "discovery"
+            ],
+            "needs_review": true
+        },
+        "profluent-bio": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "editing"
+            ],
+            "needs_review": true
+        },
+        "theb-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "chatbot"
+            ],
+            "needs_review": true
+        },
+        "corelogic": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "climate-policy-radar": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "policy@name"
+            ],
+            "needs_review": true
+        },
+        "bricklayer-ai": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "workflow",
+                "automate"
+            ],
+            "needs_review": false
+        },
+        "bluewhite": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "autonomous"
+            ],
+            "needs_review": true
+        },
+        "tierra-biosciences": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "protein"
+            ],
+            "needs_review": true
+        },
+        "thema": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "libretto": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "brand24": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "brand@name"
+            ],
+            "needs_review": true
+        },
+        "natix-network": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "integrat"
+            ],
+            "needs_review": true
+        },
+        "woord": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "voice",
+                "speech"
+            ],
+            "needs_review": false
+        },
+        "cyvl-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "harvey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "document"
+            ],
+            "needs_review": true
+        },
+        "genesy-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "operations"
+            ],
+            "needs_review": true
+        },
+        "gptgo-chrome-extension": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "chatgpt",
+                "gpt@name"
+            ],
+            "needs_review": false
+        },
+        "nobleai": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "r&d",
+                "science"
+            ],
+            "needs_review": false
+        },
+        "halcyon": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "lex-machina": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "analytics",
+                "insights"
+            ],
+            "needs_review": false
+        },
+        "quivr": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "search"
+            ],
+            "needs_review": true
+        },
+        "cityswift": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "pearl": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "agent-herbie": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "agent@name"
+            ],
+            "needs_review": true
+        },
+        "prime-intellect": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "aurora": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "insights"
+            ],
+            "needs_review": true
+        },
+        "ipscreener": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "insights",
+                "strategy"
+            ],
+            "needs_review": false
+        },
+        "danti": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "search"
+            ],
+            "needs_review": true
+        },
+        "everlaw": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "legal"
+            ],
+            "needs_review": true
+        },
+        "hume-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 1,
+            "signals": [
+                "emotional"
+            ],
+            "needs_review": true
+        },
+        "endgame": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "cyclops": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "papers-gpt": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "papers@name",
+                "scientific"
+            ],
+            "needs_review": false
+        },
+        "openread": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "research"
+            ],
+            "needs_review": true
+        },
+        "corpora": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "analytics"
+            ],
+            "needs_review": true
+        },
+        "researchrabbit": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 5,
+            "signals": [
+                "research@name",
+                "literature"
+            ],
+            "needs_review": false
+        },
+        "heuristica": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "learning"
+            ],
+            "needs_review": true
+        },
+        "ai-swot-analysis": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "confidence": "low",
+            "method": "source",
+            "score": 0,
+            "signals": [],
+            "needs_review": true
+        },
+        "iris-ai": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "research",
+                "discovery"
+            ],
+            "needs_review": false
+        },
+        "chatgpt": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "high",
+            "method": "rule",
+            "score": 4,
+            "signals": [
+                "chatgpt@name",
+                "chatbot"
+            ],
+            "needs_review": false
+        },
+        "gemini": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "perplexity": {
+            "category": "Research",
+            "subcategory": "AI search & answers",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "answer engine",
+                "search"
+            ],
+            "needs_review": true
+        },
+        "claude": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "copilot": {
+            "category": "Productivity",
+            "subcategory": "",
+            "confidence": "low",
+            "method": "source",
+            "score": 2,
+            "signals": [
+                "ai assistant"
+            ],
+            "needs_review": true
+        },
+        "canva-ai": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "design",
+                "presentation",
+                "canva@name"
+            ],
+            "needs_review": false
+        },
+        "deepseek": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "confidence": "medium",
+            "method": "rule",
+            "score": 2,
+            "signals": [
+                "coding"
+            ],
+            "needs_review": true
+        },
+        "character-ai": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "confidence": "high",
+            "method": "rule",
+            "score": 3,
+            "signals": [
+                "characters"
+            ],
+            "needs_review": false
+        },
+        "grammarly": {
+            "category": "Writing",
+            "subcategory": "Grammar, editing & rewriting",
+            "confidence": "high",
+            "method": "rule",
+            "score": 6,
+            "signals": [
+                "grammar@name",
+                "rewrite",
+                "tone"
+            ],
+            "needs_review": false
+        }
+    }
+}

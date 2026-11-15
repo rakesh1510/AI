@@ -46,10 +46,16 @@ jobs:
       - name: Build isolated test database
         run: ./tests/setup_test_db.sh
 
+      - name: Data quality tests (taxonomy, classifier accuracy, profiles, analytics logic)
+        run: php tests/data_quality_test.php
+
+      - name: Catalogue audit (fails on invalid reviewed profiles)
+        run: php scripts/audit_catalog.php
+
       - name: Start SMTP sink and PHP server
         run: |
           nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
-          nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
+          AIHUB_ANALYTICS=1 AIHUB_ANALYTICS_SALT=ci-test-salt nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
           sleep 2
           curl -fsS -o /dev/null http://127.0.0.1:8002/
 

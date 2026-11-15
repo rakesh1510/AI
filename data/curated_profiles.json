@@ -1,0 +1,1497 @@
+{
+ "schema": 1,
+ "note": "Evidence-backed editorial profiles. Each profile lists the sources used and its review status. 'human_verified' stays false until an editor confirms the facts on the live vendor pages (scripts/review_profile.php).",
+ "profiles": {
+  "chatgpt": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "OpenAI",
+   "tagline": "General-purpose AI assistant from OpenAI for writing, analysis, coding help and research.",
+   "summary": "ChatGPT is OpenAI's conversational AI assistant. It is offered on a free tier and on paid individual and business plans, with usage limits and feature access that depend on the plan.",
+   "key_features": [
+    "Chat-based Q&A, writing and summarisation",
+    "Code assistance",
+    "Image creation, voice and deep research (limited on the free tier)",
+    "Business and enterprise plans with team seats"
+   ],
+   "strengths": [
+    "Free tier available to everyone",
+    "Wide plan range from individual (Go, Plus, Pro) to Business and Enterprise",
+    "Broad capability set covering text, code, voice and images"
+   ],
+   "limitations": [
+    "Free tier limits access to features such as image creation, voice and deep research",
+    "Plan names and prices have been changing quickly, so published figures can be out of date",
+    "Like all AI chatbots it can produce incorrect answers; check important outputs"
+   ],
+   "use_cases": [
+    "Drafting and editing documents",
+    "Summarising long text",
+    "Getting coding help",
+    "Brainstorming and planning"
+   ],
+   "best_for": [
+    "Individuals who want one general assistant",
+    "Teams that want seat-based business plans"
+   ],
+   "pricing": {
+    "label": "Freemium / Paid",
+    "type": "Freemium",
+    "summary": "Free tier plus paid plans. Plus is listed at $20 per month; Go is listed at about $8 per month in the US; Pro tiers start at $100 per month on the newest pricing page; Business seats are listed at $20 (annual) or $25 (monthly) per user per month.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "ChatGPT plans and pricing",
+     "url": "https://chatgpt.com/pricing/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Introducing ChatGPT Go",
+     "url": "https://openai.com/index/introducing-chatgpt-go/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "ChatGPT Business FAQ",
+     "url": "https://help.openai.com/en/articles/8542115-chatgpt-business-general-faq",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "claude",
+    "gemini",
+    "copilot",
+    "deepseek",
+    "pi",
+    "perplexity"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "LLM",
+    "Assistant"
+   ],
+   "seo_title": "ChatGPT: Features, Pricing, Limits & Alternatives",
+   "seo_description": "ChatGPT by OpenAI: what the free and paid plans include, where the limits are, and how it compares with Claude, Gemini and Copilot.",
+   "known_source_conflicts": [
+    "OpenAI's older pricing page shows a single $200 Pro tier; the newest page lists Pro at $100, $200 and $500."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "claude": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "Anthropic",
+   "tagline": "AI assistant from Anthropic for writing, analysis, coding and long-document work.",
+   "summary": "Claude is Anthropic's AI assistant, available on web, desktop and mobile. It has a free plan and paid Pro, Max/Ultra, Team and Enterprise plans that differ mainly in usage limits and included tools.",
+   "key_features": [
+    "Chat on web, desktop and mobile",
+    "Projects for organising work (Pro and above)",
+    "Claude Code access on Pro",
+    "Team plan for 2 to 150 users"
+   ],
+   "strengths": [
+    "Free plan available",
+    "Paid plans scale usage up in clear steps (Pro, Max, Ultra)",
+    "Team and Enterprise plans for organisations"
+   ],
+   "limitations": [
+    "Free plan usage is limited per five-hour window and per week",
+    "Heavy use needs a higher paid tier",
+    "Like all AI assistants it can make mistakes; verify important outputs"
+   ],
+   "use_cases": [
+    "Writing and editing",
+    "Analysing documents",
+    "Coding assistance",
+    "Research and brainstorming"
+   ],
+   "best_for": [
+    "Individuals and teams who want a general assistant with tiered usage plans"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free plan; Pro is listed at $20 per month ($17 per month billed annually); higher Max and Ultra tiers add usage; Team standard seats are listed at $20 (annual) or $25 (monthly) per seat.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Claude plans and pricing",
+     "url": "https://claude.com/pricing",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "What is the Pro plan?",
+     "url": "https://support.claude.com/en/articles/8325606-what-is-the-pro-plan",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "What is the Max plan?",
+     "url": "https://support.claude.com/en/articles/11049741-what-is-the-max-plan",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatgpt",
+    "gemini",
+    "copilot",
+    "deepseek",
+    "pi",
+    "perplexity"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "LLM",
+    "Assistant"
+   ],
+   "seo_title": "Claude: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Claude by Anthropic: free and paid plan structure (Pro, Max, Team), usage limits and how it compares with ChatGPT and Gemini.",
+   "known_source_conflicts": [
+    "An older Max help article describes Max 5x and Max 20x tiers; the current pricing page names the higher tiers Max and Ultra."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "gemini": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "Google",
+   "tagline": "Google's AI assistant, bundled with Google account and storage plans.",
+   "summary": "Gemini is Google's AI assistant. A free tier is available with a Google account, and paid Google AI plans (Plus, Pro, Ultra) raise usage limits, add features and bundle Google storage.",
+   "key_features": [
+    "Free tier with image generation and editing, Deep Research, Gemini Live and Canvas (per Google's plan page)",
+    "Paid Google AI Plus, Pro and Ultra plans",
+    "Plans bundle Google storage (400 GB, 5 TB and 20 TB starting points)"
+   ],
+   "strengths": [
+    "Free tier with a wide feature list",
+    "Paid plans bundle cloud storage",
+    "Integrates with a Google account"
+   ],
+   "limitations": [
+    "Plan limits, model names and feature lists have changed often",
+    "Ultra pricing differs by region",
+    "Third-party reports describe changes to free-tier model access, so check the current plan page"
+   ],
+   "use_cases": [
+    "Everyday questions and drafting",
+    "Deep Research reports",
+    "Working inside the Google ecosystem"
+   ],
+   "best_for": [
+    "Users already invested in Google accounts and storage"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free tier; AI Plus is listed at about $4.99 per month and AI Pro at $19.99 per month in the US; Ultra tiers are priced higher and vary by region.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Google AI Pro and Ultra subscriptions",
+     "url": "https://gemini.google/subscriptions/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Google AI plan benefits (Google One)",
+     "url": "https://one.google.com/intl/en_us/about/articles/google-one-ai-subscription-benefits/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatgpt",
+    "claude",
+    "copilot",
+    "deepseek",
+    "pi",
+    "perplexity"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "LLM",
+    "Assistant"
+   ],
+   "seo_title": "Google Gemini: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Google Gemini app: what the free plan and Google AI Plus, Pro and Ultra plans include, and how it compares with ChatGPT and Claude.",
+   "known_source_conflicts": [
+    "Google's plan pages and a third-party report disagree on which models the free tier can use."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "perplexity": {
+   "category": "Research",
+   "subcategory": "AI search & answers",
+   "company": "Perplexity AI",
+   "tagline": "AI answer engine that searches the web and cites its sources.",
+   "summary": "Perplexity is an AI answer engine: it searches the web and returns answers with citations. There is a free tier, a Pro plan with more advanced searches and model choice, a Max tier and per-seat Enterprise plans.",
+   "key_features": [
+    "Web search with cited answers",
+    "Pro plan adds more advanced searches, file uploads and a choice of models from several providers",
+    "Enterprise plans with admin controls and shared projects"
+   ],
+   "strengths": [
+    "Answers include source citations",
+    "Free tier covers core search",
+    "Enterprise plans state that company data is not used to train models"
+   ],
+   "limitations": [
+    "Free tier caps advanced (Pro) searches",
+    "Max pricing is shown differently across Perplexity's own pages",
+    "Cited answers still need checking against the sources"
+   ],
+   "use_cases": [
+    "Researching a topic with sources",
+    "Fact-finding and quick summaries",
+    "Team research with shared files (Enterprise)"
+   ],
+   "best_for": [
+    "People who want search-style answers with citations rather than open-ended chat"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free tier; Pro is listed at $20 per month or $200 per year; Enterprise Pro is listed at $40 per seat per month.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Perplexity pricing",
+     "url": "https://www.perplexity.ai/hub/pricing",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Which Perplexity subscription is right for you?",
+     "url": "https://www.perplexity.ai/help-center/en/articles/11187416-which-perplexity-subscription-plan-is-right-for-you",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "you",
+    "chatgpt",
+    "gemini",
+    "copilot"
+   ],
+   "tags": [
+    "Research",
+    "AI Search",
+    "Answers",
+    "Citations"
+   ],
+   "seo_title": "Perplexity: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Perplexity AI answer engine: free vs Pro and Enterprise plans, citation-based answers, limits and the best alternatives.",
+   "known_source_conflicts": [
+    "Max is listed at $200 per month in one guide and $167 per month billed annually on the pricing page.",
+    "Free-tier Pro Search allowances differ between sources."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "copilot": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "Microsoft",
+   "tagline": "Microsoft's consumer AI assistant, available on the web, in an app and in Edge.",
+   "summary": "Microsoft Copilot is Microsoft's AI assistant for general questions and web-based answers. A free tier is available with capacity-based limits; Copilot inside Word, Excel and PowerPoint comes with Microsoft 365 plans instead.",
+   "key_features": [
+    "Free general chat and web-grounded answers",
+    "Page summaries in the Edge browser",
+    "Copilot in Office apps through Microsoft 365 Personal, Family or Premium plans"
+   ],
+   "strengths": [
+    "Free tier available",
+    "Built into Edge and Microsoft's apps",
+    "Clear upgrade path through Microsoft 365"
+   ],
+   "limitations": [
+    "The free tier does not include Copilot inside Word, Excel or PowerPoint",
+    "Usage is limited by available capacity",
+    "Plan names and limits have been changing"
+   ],
+   "use_cases": [
+    "General questions with web results",
+    "Summarising web pages in Edge",
+    "Office-app assistance on Microsoft 365 plans"
+   ],
+   "best_for": [
+    "Microsoft and Edge users who want an integrated assistant"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free tier with limits; Office-app features are included in paid Microsoft 365 consumer plans.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Microsoft Copilot (free) vs Copilot in Microsoft 365",
+     "url": "https://support.microsoft.com/en-us/microsoft-365-copilot/what-s-the-difference-between-microsoft-copilot-free-and-copilot-in-microsoft-365",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Copilot plans for individuals",
+     "url": "https://www.microsoft.com/en-us/copilot/pricing/individuals",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatgpt",
+    "claude",
+    "gemini",
+    "deepseek",
+    "pi",
+    "copilot-for-microsoft-365"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "Microsoft",
+    "Assistant"
+   ],
+   "seo_title": "Microsoft Copilot: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Microsoft Copilot: what the free version does, how it differs from Copilot in Microsoft 365, and how it compares with ChatGPT and Gemini.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "deepseek": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "DeepSeek",
+   "tagline": "Chinese AI lab with a chat app, a pay-per-token API and openly released model weights.",
+   "summary": "DeepSeek provides a web and mobile chat app and an API. Its model weights have been released on Hugging Face, and API usage is billed per token on a published price list.",
+   "key_features": [
+    "Web and app chat",
+    "Pay-per-token API",
+    "Open model weights published on Hugging Face",
+    "Separate search and fetch APIs"
+   ],
+   "strengths": [
+    "Open weights allow self-hosting for teams that can run large models",
+    "Published per-token API pricing",
+    "Free chat access"
+   ],
+   "limitations": [
+    "API prices and model names change often (legacy model names were scheduled for retirement in July 2026)",
+    "DeepSeek's own pages list different per-token rates in different places",
+    "Organisations should review the provider's data-handling terms before sending sensitive data"
+   ],
+   "use_cases": [
+    "Developers building on a low-cost API",
+    "Teams that want to self-host open weights",
+    "General chat and reasoning tasks"
+   ],
+   "best_for": [
+    "Developers and researchers comfortable evaluating models and terms themselves"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free chat app; API billed per million tokens with separate rates for cached and uncached input and for output.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "DeepSeek API models and pricing",
+     "url": "https://api-docs.deepseek.com/quick_start/pricing.md",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "DeepSeek platform",
+     "url": "https://www.deepseek.com/en/platform/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatgpt",
+    "claude",
+    "gemini",
+    "copilot",
+    "pi"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "LLM",
+    "API",
+    "Open weights"
+   ],
+   "seo_title": "DeepSeek: Features, API Pricing, Limits & Alternatives",
+   "seo_description": "DeepSeek chat app and API: how pricing works, what open weights mean for self-hosting, limits to check and alternatives.",
+   "known_source_conflicts": [
+    "The homepage and the Models & Pricing documentation list different per-token rates (including peak and off-peak pricing)."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "grammarly": {
+   "category": "Writing",
+   "subcategory": "Grammar, editing & rewriting",
+   "company": "Grammarly",
+   "tagline": "Writing assistant for grammar, tone, clarity and rewrites.",
+   "summary": "Grammarly checks grammar, spelling and punctuation and, on paid plans, rewrites sentences, adjusts tone and detects plagiarism. Free, Pro and Enterprise plans are listed.",
+   "key_features": [
+    "Grammar, spelling and punctuation checks",
+    "Generative AI prompts (100 per month on Free, 2,000 on Pro per Grammarly's plan page)",
+    "Full-sentence rewrites, tone adjustments and plagiarism detection on Pro",
+    "Team plans with style guides and brand tones"
+   ],
+   "strengths": [
+    "Useful free tier for basic checks",
+    "Team features such as style guides",
+    "Works across the writing apps people already use"
+   ],
+   "limitations": [
+    "Many features sit behind the Pro plan",
+    "Prompt allowances have changed (one Grammarly page still cites 1,000 Pro prompts)",
+    "Some older pages still describe a separate Business tier"
+   ],
+   "use_cases": [
+    "Proofreading emails and documents",
+    "Adjusting tone",
+    "Keeping team writing consistent"
+   ],
+   "best_for": [
+    "Individuals and teams who want editing help inside their existing writing tools"
+   ],
+   "pricing": {
+    "label": "Freemium",
+    "type": "Freemium",
+    "summary": "Free plan; Pro is listed at $12 per member per month billed annually or $30 billed monthly; Enterprise is custom-priced.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Grammarly plans",
+     "url": "https://www.grammarly.com/plans",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Learn about Grammarly Pro",
+     "url": "https://support.grammarly.com/hc/en-us/articles/25043801131149-Learn-about-Grammarly-Pro",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [],
+   "tags": [
+    "Writing",
+    "Grammar",
+    "Editing",
+    "Rewriting"
+   ],
+   "seo_title": "Grammarly: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Grammarly Free vs Pro: grammar checks, AI rewrites, plagiarism detection, prompt limits and pricing explained.",
+   "known_source_conflicts": [
+    "Prompt allowance for Pro appears as both 1,000 and 2,000 across Grammarly pages; the plan page says 2,000."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "canva-ai": {
+   "category": "Design",
+   "subcategory": "Graphic & UI design",
+   "company": "Canva",
+   "tagline": "AI features built into the Canva design editor.",
+   "summary": "Canva AI (marketed as Magic Studio) adds AI text, image and design features to the Canva editor. Free and paid plans differ in how much AI usage they include.",
+   "key_features": [
+    "AI tools inside the Canva editor such as Magic Write and AI image generation",
+    "Monthly AI usage allowance on Pro",
+    "Business plan with brand management and higher AI allowance"
+   ],
+   "strengths": [
+    "AI features live inside a widely used design editor",
+    "Free plan includes limited monthly access to premium AI features"
+   ],
+   "limitations": [
+    "AI usage is capped by plan allowances",
+    "Plan names have changed (Teams is no longer sold to new customers; Business is its successor)",
+    "Pro prices differ between Canva pages"
+   ],
+   "use_cases": [
+    "Social graphics and presentations",
+    "Quick image generation inside a layout",
+    "Brand-consistent team design"
+   ],
+   "best_for": [
+    "People who already design in Canva"
+   ],
+   "pricing": {
+    "label": "Freemium / Paid",
+    "type": "Freemium",
+    "summary": "Free plan with limited AI access; Pro and Business add larger AI allowances.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Canva pricing",
+     "url": "https://canva.com/pricing/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Upgrade to Canva Pro or Canva Business",
+     "url": "https://www.canva.com/help/upgrade-to-canva-pro-or-business/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Canva AI",
+     "url": "https://www.canva.com/canva-ai/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [],
+   "tags": [
+    "Design",
+    "Graphics",
+    "Presentations",
+    "Image generation"
+   ],
+   "seo_title": "Canva AI (Magic Studio): Features, Pricing & Limits",
+   "seo_description": "Canva AI and Magic Studio: what is free, what needs Pro or Business, AI usage allowances and who it suits.",
+   "known_source_conflicts": [
+    "Canva pages list Pro at both $120 and $144 per year."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "notebooklm": {
+   "category": "Productivity",
+   "subcategory": "Notes & documents",
+   "company": "Google",
+   "tagline": "Source-grounded AI notebook that answers questions about documents you add.",
+   "summary": "NotebookLM lets you add sources to a notebook and ask questions about them, with features such as Audio Overviews that turn sources into a spoken conversation. Google's support pages now refer to it as Gemini Notebook.",
+   "key_features": [
+    "Notebooks built from your own sources",
+    "Audio Overviews (spoken summaries of sources)",
+    "Tiered limits on Audio Overviews and sources per notebook"
+   ],
+   "strengths": [
+    "Answers are grounded in the sources you add",
+    "Audio Overviews as an alternative to reading",
+    "Free access with upgrade tiers"
+   ],
+   "limitations": [
+    "Usage limits depend on the plan tier and are marked subject to change",
+    "The product name is in transition (NotebookLM / Gemini Notebook)",
+    "Output still needs checking against the original sources"
+   ],
+   "use_cases": [
+    "Studying and summarising documents",
+    "Turning reading material into audio",
+    "Working through a research collection"
+   ],
+   "best_for": [
+    "Students, researchers and professionals working from a defined set of documents"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free access with limits; paid tiers raise Audio Overview and source limits.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Gemini Notebook plans and limits",
+     "url": "https://support.google.com/notebooklm/answer/16213268?hl=en",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "NotebookLM Audio Overviews",
+     "url": "https://blog.google/innovation-and-ai/products/notebooklm-audio-overviews/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatpdf",
+    "perplexity",
+    "you"
+   ],
+   "tags": [
+    "Notes",
+    "Documents",
+    "Research",
+    "Summaries"
+   ],
+   "seo_title": "NotebookLM (Gemini Notebook): Features, Limits & Alternatives",
+   "seo_description": "NotebookLM: how source-grounded notebooks and Audio Overviews work, plan limits, and alternatives like ChatPDF.",
+   "known_source_conflicts": [
+    "Google's limits tables do not label which column is the free plan."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "character-ai": {
+   "category": "Chatbots",
+   "subcategory": "Companions & character chat",
+   "company": "Character.AI",
+   "tagline": "Platform for chatting with AI characters, with age assurance requirements.",
+   "summary": "Character.AI lets users chat with AI characters. The company applies age assurance: users verified as under 18 get a restricted experience in which chat with characters is not available.",
+   "key_features": [
+    "Chat with AI characters",
+    "Character creation",
+    "c.ai+ paid subscription",
+    "Age assurance through a third-party provider"
+   ],
+   "strengths": [
+    "Large range of user-created characters",
+    "Free to start"
+   ],
+   "limitations": [
+    "Under-18 users do not get character chat under the current age-assurance policy",
+    "A paid subscription does not bypass age assurance",
+    "Policies are changing, so check the current support pages"
+   ],
+   "use_cases": [
+    "Entertainment and role-play",
+    "Creative storytelling"
+   ],
+   "best_for": [
+    "Adult users who want character-based chat"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Free tier plus the c.ai+ subscription (price not confirmed in the sources reviewed).",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Age Assurance FAQ",
+     "url": "https://support.character.ai/hc/en-us/articles/52136298705819-Age-Assurance-FAQ",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Important changes for teens",
+     "url": "https://support.character.ai/hc/en-us/articles/42645561782555-Important-Changes-for-Teens-on-Character-ai",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "pi",
+    "chatgpt",
+    "claude"
+   ],
+   "tags": [
+    "Chatbots",
+    "Characters",
+    "Companions",
+    "Role-play"
+   ],
+   "seo_title": "Character.AI: Features, Age Rules, Pricing & Alternatives",
+   "seo_description": "Character.AI: how AI character chat works, the age-assurance rules for under-18 users, the c.ai+ subscription and alternatives.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "copilot-for-microsoft-365": {
+   "category": "Productivity",
+   "subcategory": "Workplace AI suites",
+   "company": "Microsoft",
+   "tagline": "Paid AI add-on for Microsoft 365 that works inside Word, Excel, PowerPoint, Outlook and Teams.",
+   "summary": "Microsoft 365 Copilot is the paid work version of Copilot. It adds AI inside Microsoft 365 apps and grounds answers in an organisation's own work data, while Copilot Chat is included with eligible licences.",
+   "key_features": [
+    "Copilot in Teams, Outlook, Word, PowerPoint and Excel",
+    "Grounding in work data",
+    "Pre-built agents such as Researcher and Analyst",
+    "Copilot Chat included with eligible licences"
+   ],
+   "strengths": [
+    "Works inside the Microsoft 365 apps teams already use",
+    "Uses organisational data for grounding"
+   ],
+   "limitations": [
+    "Requires an eligible Microsoft 365 licence plus a per-user add-on",
+    "Naming and billing of Copilot plans have been changing"
+   ],
+   "use_cases": [
+    "Summarising meetings and email threads",
+    "Drafting documents and slides",
+    "Analysing spreadsheet data"
+   ],
+   "best_for": [
+    "Organisations standardised on Microsoft 365"
+   ],
+   "pricing": {
+    "label": "Paid add-on",
+    "type": "Paid",
+    "summary": "Listed at $30 per user per month, paid yearly, as an add-on to eligible Microsoft 365 licences.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often",
+    "free_option": "No (Copilot Chat is included with eligible licences)"
+   },
+   "sources": [
+    {
+     "label": "Copilot pricing for enterprise",
+     "url": "https://www.microsoft.com/en-us/copilot/pricing/enterprise",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Copilot (free) vs Copilot in Microsoft 365",
+     "url": "https://support.microsoft.com/en-us/microsoft-365-copilot/what-s-the-difference-between-microsoft-copilot-free-and-copilot-in-microsoft-365",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "copilot"
+   ],
+   "tags": [
+    "Productivity",
+    "Microsoft 365",
+    "Office",
+    "Enterprise"
+   ],
+   "seo_title": "Microsoft 365 Copilot: Features, Pricing & Alternatives",
+   "seo_description": "Microsoft 365 Copilot: what the $30 per user add-on includes, how it differs from free Copilot and Copilot Chat, and alternatives.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   },
+   "website": "https://www.microsoft.com/en-us/copilot/pricing/enterprise"
+  },
+  "otter-ai": {
+   "category": "Productivity",
+   "subcategory": "Meetings & transcription",
+   "company": "Otter.ai",
+   "tagline": "AI meeting notes and transcription.",
+   "summary": "Otter.ai records and transcribes meetings and generates notes. A free Basic plan is offered, with Pro, Business and Enterprise plans adding transcription minutes and longer conversations.",
+   "key_features": [
+    "Meeting transcription and notes",
+    "Free Basic plan with 300 minutes per month and a 30-minute cap per conversation",
+    "Pro and Business plans with more minutes and longer conversations",
+    "Enterprise plan with SSO, SOC 2 Type II and HIPAA (per Otter)"
+   ],
+   "strengths": [
+    "Free plan to try it",
+    "Clear minute allowances per plan",
+    "Enterprise compliance options"
+   ],
+   "limitations": [
+    "Free plan caps minutes and conversation length",
+    "Pricing figures here come from Otter's own blog posts rather than the pricing page"
+   ],
+   "use_cases": [
+    "Meeting notes",
+    "Lecture and interview transcription"
+   ],
+   "best_for": [
+    "Individuals and teams who want automatic meeting notes"
+   ],
+   "pricing": {
+    "label": "Freemium",
+    "type": "Freemium",
+    "summary": "Free Basic plan; Pro is listed at about $8.33 per user per month billed annually ($16.99 monthly); Business at about $20 per user per month billed annually.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor blog posts; confirm on Otter's pricing page"
+   },
+   "sources": [
+    {
+     "label": "Otter.ai vs Fathom comparison (Otter blog)",
+     "url": "https://otter.ai/blog/otter-vs-fathom-which-ai-meeting-tool-is-better",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Best automatic transcription tools (Otter blog)",
+     "url": "https://otter.ai/blog/best-automatic-transcription-tools",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "fireflies-ai",
+    "trint",
+    "sonix"
+   ],
+   "tags": [
+    "Meetings",
+    "Transcription",
+    "Notes",
+    "Productivity"
+   ],
+   "seo_title": "Otter.ai: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Otter.ai meeting transcription: free Basic limits, Pro and Business pricing, enterprise compliance and alternatives like Fireflies.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "fireflies-ai": {
+   "category": "Productivity",
+   "subcategory": "Meetings & transcription",
+   "company": "Fireflies.ai",
+   "tagline": "AI meeting recorder, transcriber and note taker.",
+   "summary": "Fireflies.ai records and transcribes meetings and produces summaries. Free, Pro, Business and Enterprise plans are listed, with video recording, storage, analytics and SSO added at higher tiers.",
+   "key_features": [
+    "Meeting transcription and summaries",
+    "Pro adds video recording, downloads and AI Skills",
+    "Business adds unlimited storage and team analytics",
+    "Enterprise adds SSO, private storage and custom retention"
+   ],
+   "strengths": [
+    "Free plan available",
+    "Clear plan ladder up to Enterprise"
+   ],
+   "limitations": [
+    "Fireflies' own pages give different figures for Free-plan storage and AI credits",
+    "Several features require paid tiers"
+   ],
+   "use_cases": [
+    "Meeting notes and action items",
+    "Sales call review"
+   ],
+   "best_for": [
+    "Teams that want recordings plus searchable transcripts"
+   ],
+   "pricing": {
+    "label": "Freemium",
+    "type": "Freemium",
+    "summary": "Free plan; Pro is listed at $10 per seat per month annually ($18 monthly); Business at $19 ($29 monthly); Enterprise at $39 (annual only).",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages; prices and plan names change often"
+   },
+   "sources": [
+    {
+     "label": "Learn about Fireflies pricing plans",
+     "url": "https://guide.fireflies.ai/articles/3734844560-learn-about-the-fireflies-pricing-plans",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Fireflies pricing 2026",
+     "url": "https://fireflies.ai/blog/fireflies-pricing-which-plan-is-right-for-you",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "otter-ai",
+    "trint",
+    "sonix"
+   ],
+   "tags": [
+    "Meetings",
+    "Transcription",
+    "Notes",
+    "Sales"
+   ],
+   "seo_title": "Fireflies.ai: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Fireflies.ai plans from Free to Enterprise: features per tier, AI credits, storage and alternatives such as Otter.ai.",
+   "known_source_conflicts": [
+    "Fireflies blog posts disagree on whether Free includes 400 minutes per team or 800 per seat, and whether AI credits are monthly or one-time."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "pi": {
+   "category": "Chatbots",
+   "subcategory": "General AI assistants",
+   "company": "Inflection AI",
+   "tagline": "Personal AI chat assistant focused on conversation, advice and organisation.",
+   "summary": "Pi is a consumer chatbot from Inflection AI, positioned as a personal intelligence partner. It can remember details about users, which they can view, edit or delete.",
+   "key_features": [
+    "Conversational personal assistant",
+    "Memory that users can view, edit and delete",
+    "Voice input"
+   ],
+   "strengths": [
+    "Conversation-first design",
+    "User-controlled memory"
+   ],
+   "limitations": [
+    "Inflection's privacy policy says inputs may be used to train its models unless users opt out in account settings",
+    "Current ownership and pricing were not confirmed in the sources reviewed"
+   ],
+   "use_cases": [
+    "Talking through ideas",
+    "Light organisation and reminders"
+   ],
+   "best_for": [
+    "Users who want a conversational assistant rather than a work-focused one"
+   ],
+   "pricing": {
+    "label": "Free",
+    "type": "Free",
+    "summary": "Listed as free in the AIHubpedia catalogue; current pricing not confirmed in the sources reviewed.",
+    "as_of": "2026-11-15",
+    "confidence": "catalogue listing; not re-verified"
+   },
+   "sources": [
+    {
+     "label": "Inflection AI",
+     "url": "https://inflection.ai/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Pi's memory",
+     "url": "https://help.pi.ai/en/articles/15425697-pi-s-memory",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Inflection privacy and policy",
+     "url": "https://heypi.com/policy",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "chatgpt",
+    "claude",
+    "gemini",
+    "character-ai"
+   ],
+   "tags": [
+    "Chatbots",
+    "AI",
+    "Assistant",
+    "Personal"
+   ],
+   "seo_title": "Pi by Inflection AI: Features, Privacy & Alternatives",
+   "seo_description": "Pi by Inflection AI: how its memory works, the model-training opt-out, and alternatives like ChatGPT and Claude.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Pricing and ownership unverified; treat as lower confidence than other profiles."
+   }
+  },
+  "chatpdf": {
+   "category": "Productivity",
+   "subcategory": "Notes & documents",
+   "company": "ChatPDF",
+   "tagline": "Ask questions about PDFs and other documents.",
+   "summary": "ChatPDF lets users upload documents and ask questions about them. The free plan caps analysis at two documents per day; Plus removes the cap.",
+   "key_features": [
+    "Question answering over uploaded PDFs",
+    "Free plan: 2 documents per day (per the homepage)",
+    "Plus plan with unlimited document analysis",
+    "Extra tools for slides, flashcards and YouTube chat"
+   ],
+   "strengths": [
+    "Account is optional",
+    "Simple free tier"
+   ],
+   "limitations": [
+    "Free tier is limited to two documents a day",
+    "Plus price and per-page limits were not visible in the sources reviewed",
+    "The main page reviewed was about 15 months old"
+   ],
+   "use_cases": [
+    "Studying papers",
+    "Summarising long reports"
+   ],
+   "best_for": [
+    "Students and professionals who mainly work with PDFs"
+   ],
+   "pricing": {
+    "label": "Freemium",
+    "type": "Freemium",
+    "summary": "Free plan with daily limits; Plus plan removes the document cap.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages, partially dated"
+   },
+   "sources": [
+    {
+     "label": "ChatPDF",
+     "url": "https://www.chatpdf.com/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "notebooklm",
+    "perplexity"
+   ],
+   "tags": [
+    "PDF",
+    "Documents",
+    "Summaries",
+    "Research"
+   ],
+   "seo_title": "ChatPDF: Features, Limits & Alternatives",
+   "seo_description": "ChatPDF: how it answers questions about PDFs, the free daily limit, the Plus plan and alternatives like NotebookLM.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "marketmuse": {
+   "category": "Marketing",
+   "subcategory": "SEO & content strategy",
+   "company": "MarketMuse",
+   "tagline": "Content planning and optimisation software for SEO teams.",
+   "summary": "MarketMuse is content planning and optimisation software. Its pricing page lists a free plan for one user with 10 queries per month and paid Optimize, Research and Strategy tiers.",
+   "key_features": [
+    "Free plan: 1 user, 10 queries per month",
+    "Optimize, Research and Strategy paid tiers",
+    "Tracked topics and monthly content briefs on paid tiers"
+   ],
+   "strengths": [
+    "Free tier lets teams try the product"
+   ],
+   "limitations": [
+    "Free plan has no tracked topics, content briefs or strategy documents",
+    "MarketMuse's pricing page and marketing pages describe different tiers and prices"
+   ],
+   "use_cases": [
+    "Planning topic clusters",
+    "Optimising existing articles"
+   ],
+   "best_for": [
+    "Content and SEO teams planning topic coverage"
+   ],
+   "pricing": {
+    "label": "Freemium",
+    "type": "Freemium",
+    "summary": "Free plan; paid tiers range from entry-level Optimize upward and are priced differently on different MarketMuse pages.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pages disagree"
+   },
+   "sources": [
+    {
+     "label": "MarketMuse pricing",
+     "url": "https://www.marketmuse.com/pricing/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "MarketMuse pricing and packages",
+     "url": "https://marketing.marketmuse.com/pricing/",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [],
+   "tags": [
+    "SEO",
+    "Content",
+    "Marketing",
+    "Planning"
+   ],
+   "seo_title": "MarketMuse: Features, Pricing, Limits & Alternatives",
+   "seo_description": "MarketMuse content planning and optimisation: the free plan, paid tiers, limits and what to check before buying.",
+   "known_source_conflicts": [
+    "marketmuse.com/pricing and marketing.marketmuse.com/pricing show different plan structures and prices."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "trint": {
+   "category": "Productivity",
+   "subcategory": "Meetings & transcription",
+   "company": "Trint",
+   "tagline": "Transcription, translation and caption editing for audio and video.",
+   "summary": "Trint transcribes audio and video, translates transcripts and offers a caption editor. Pro and Team plans include unlimited transcription under a fair-use policy; Business is custom-priced.",
+   "key_features": [
+    "Transcription in 50+ languages and translation in 70+ languages",
+    "AI summaries and a caption editor",
+    "Team plan for 2 to 5 members",
+    "Business plan with SSO, SCIM, APIs and an EU server option"
+   ],
+   "strengths": [
+    "Unlimited transcription under fair use on Pro and Team",
+    "Seven-day free trial with Pro access"
+   ],
+   "limitations": [
+    "Higher per-seat price than many meeting-note tools",
+    "The pricing page reviewed may be dated; older sources show different prices"
+   ],
+   "use_cases": [
+    "Media and journalism transcription",
+    "Subtitles and captions"
+   ],
+   "best_for": [
+    "Teams that need transcripts, captions and translation"
+   ],
+   "pricing": {
+    "label": "Free trial / Paid",
+    "type": "Paid",
+    "summary": "Pro is listed at $79 per seat per month ($948 billed annually); Team at $69 per seat per month; Business is custom. A 7-day free trial covers up to 3 files.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pricing page; metadata suggests it may be dated",
+    "free_option": "7-day trial (up to 3 files)"
+   },
+   "sources": [
+    {
+     "label": "Trint plans",
+     "url": "https://app.trint.com/plans",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Trint sign-up (trial terms)",
+     "url": "https://app.trint.com/signup",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "otter-ai",
+    "fireflies-ai",
+    "sonix"
+   ],
+   "tags": [
+    "Transcription",
+    "Captions",
+    "Translation",
+    "Media"
+   ],
+   "seo_title": "Trint: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Trint transcription: Pro and Team pricing, languages, captions, free trial terms and alternatives like Otter.ai and Sonix.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "sonix": {
+   "category": "Productivity",
+   "subcategory": "Meetings & transcription",
+   "company": "Sonix",
+   "tagline": "Pay-as-you-go and subscription transcription with translation and subtitles.",
+   "summary": "Sonix transcribes audio and video in 54+ languages. Standard transcription can be bought pay-as-you-go, with subscription plans for regular users and 30 free minutes for new accounts.",
+   "key_features": [
+    "Transcription and translation in 54+ languages (per Sonix)",
+    "Pay-as-you-go rate listed at $10 per audio hour",
+    "Subscription plans with included monthly hours",
+    "Real-time transcription"
+   ],
+   "strengths": [
+    "Pay-as-you-go option without a subscription",
+    "Free minutes for new accounts"
+   ],
+   "limitations": [
+    "Figures here come from Sonix marketing pages, not an official pricing table",
+    "Sources disagree on whether translation is billed separately"
+   ],
+   "use_cases": [
+    "Podcast and interview transcripts",
+    "Subtitling video"
+   ],
+   "best_for": [
+    "Occasional users who prefer paying per hour"
+   ],
+   "pricing": {
+    "label": "Pay as you go / Paid",
+    "type": "Paid",
+    "summary": "Pay-as-you-go at $10 per audio hour; Premium listed at $22 per seat per month ($16.50 annually) plus $5 per hour.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor marketing pages; confirm on the pricing page",
+    "free_option": "30 free minutes for new accounts (per Sonix)"
+   },
+   "sources": [
+    {
+     "label": "How much does transcription cost? (Sonix)",
+     "url": "https://sonix.ai/how-much-does-transcription-cost",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Real-time transcription (Sonix)",
+     "url": "https://sonix.ai/real-time-transcription",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "otter-ai",
+    "fireflies-ai",
+    "trint"
+   ],
+   "tags": [
+    "Transcription",
+    "Subtitles",
+    "Translation",
+    "Audio"
+   ],
+   "seo_title": "Sonix: Features, Pricing, Limits & Alternatives",
+   "seo_description": "Sonix transcription: pay-as-you-go and subscription pricing, languages, free minutes and alternatives like Trint and Otter.ai.",
+   "known_source_conflicts": [
+    "One Sonix page says translation is an additional charge on all plans; another says Premium translation drops to $3 per hour."
+   ],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "motion": {
+   "category": "Productivity",
+   "subcategory": "Email & scheduling",
+   "company": "Motion",
+   "tagline": "AI calendar and task scheduler that plans your day automatically.",
+   "summary": "Motion puts tasks onto your calendar automatically and reschedules when plans change. It syncs with Google, iCloud and Outlook calendars and offers booking pages.",
+   "key_features": [
+    "Automatic task scheduling around meetings",
+    "Dynamic rescheduling",
+    "Calendar sync with Google, iCloud and Outlook",
+    "Meeting booking pages",
+    "Team plans"
+   ],
+   "strengths": [
+    "Combines task list and calendar",
+    "Adjusts the schedule when meetings overrun"
+   ],
+   "limitations": [
+    "Pricing comes from Motion's own blog posts that are one to three years old",
+    "Positioned at a higher price than basic to-do apps"
+   ],
+   "use_cases": [
+    "Personal time blocking",
+    "Team project scheduling"
+   ],
+   "best_for": [
+    "People who want tasks scheduled for them"
+   ],
+   "pricing": {
+    "label": "Free trial / Paid",
+    "type": "Paid",
+    "summary": "Individual plans listed at $19 per month annually ($34 monthly); team plans at $12 per user per month annually ($20 monthly); 7-day free trial.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor blog posts, dated; confirm on the pricing page",
+    "free_option": "7-day free trial"
+   },
+   "sources": [
+    {
+     "label": "AI task manager comparison (Motion blog)",
+     "url": "https://www.usemotion.com/blog/ai-task-manager",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "Scheduling tools (Motion blog)",
+     "url": "https://www.usemotion.com/blog/scheduling-tools",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [],
+   "tags": [
+    "Productivity",
+    "Calendar",
+    "Tasks",
+    "Scheduling"
+   ],
+   "seo_title": "Motion: AI Task Scheduler Features, Pricing & Limits",
+   "seo_description": "Motion AI scheduler: how automatic scheduling works, calendar sync, listed pricing and what to verify before you buy.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  },
+  "you": {
+   "category": "Research",
+   "subcategory": "AI search & answers",
+   "company": "You.com",
+   "tagline": "AI search and answer platform with developer search APIs.",
+   "summary": "You.com offers AI search and answers. Its current pricing page focuses on developer APIs, including web search, answer and research APIs priced per thousand calls.",
+   "key_features": [
+    "Web Search API",
+    "Answer API with cited answers",
+    "Research API in several effort tiers",
+    "Free MCP tier of 100 web search queries per day"
+   ],
+   "strengths": [
+    "Free MCP tier needs no API key or card (per You.com)",
+    "Per-call API pricing"
+   ],
+   "limitations": [
+    "Consumer plan pricing found in the sources reviewed looked out of date",
+    "Research API pricing differs between You.com and third-party comparisons"
+   ],
+   "use_cases": [
+    "Adding web search to an AI agent",
+    "Cited answers inside applications"
+   ],
+   "best_for": [
+    "Developers adding search to AI products"
+   ],
+   "pricing": {
+    "label": "Free / Paid",
+    "type": "Freemium",
+    "summary": "Web Search API listed at $5 per 1,000 calls; Answer API at $5 per 1,000 calls; Research API from $12 per 1,000 calls.",
+    "as_of": "2026-11-15",
+    "confidence": "vendor pricing pages; consumer plans not confirmed",
+    "free_option": "Free MCP tier (100 web search queries per day)"
+   },
+   "sources": [
+    {
+     "label": "You.com API pricing",
+     "url": "https://about.you.com/pricing",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    },
+    {
+     "label": "You.com pricing",
+     "url": "https://you.com/pricing",
+     "type": "vendor",
+     "retrieved": "2026-11-15"
+    }
+   ],
+   "alternatives": [
+    "perplexity",
+    "chatgpt",
+    "gemini"
+   ],
+   "tags": [
+    "Research",
+    "AI Search",
+    "API",
+    "Answers"
+   ],
+   "seo_title": "You.com: AI Search, API Pricing, Limits & Alternatives",
+   "seo_description": "You.com AI search and developer APIs: listed per-call pricing, the free MCP tier and alternatives like Perplexity.",
+   "known_source_conflicts": [],
+   "review": {
+    "status": "evidence-collected",
+    "reviewed_on": "2026-11-15",
+    "reviewed_by": "AIHubpedia research workflow (vendor pages via web search)",
+    "human_verified": false,
+    "verified_on": null,
+    "notes": "Facts taken from the vendor pages listed under sources as returned by web search on the review date; not yet confirmed by an editor on the live pages."
+   }
+  }
+ }
+}

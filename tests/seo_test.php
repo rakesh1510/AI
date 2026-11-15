@@ -66,8 +66,8 @@ $cases = [
   ['/tool.php?id=does-not-exist', 404, false, null, []],
   ['/tool.php', 404, false, null, []],
   ['/category.php?name=Writing', 200, true, '/category.php?name=Writing', ['CollectionPage', 'ItemList', 'BreadcrumbList']],
-  ['/category.php?name=Automation&page=2', 200, true, '/category.php?name=Automation&page=2', ['ItemList']],
-  ['/category.php?name=Automation&page=99', 404, false, null, []],
+  ['/category.php?name=Business&page=2', 200, true, '/category.php?name=Business&page=2', ['ItemList']],
+  ['/category.php?name=Business&page=99', 404, false, null, []],
   ['/category.php?name=NoSuchCategory', 404, false, null, []],
   ['/category.php', 404, false, null, []],
   ['/categories.php', 200, true, '/categories.php', ['ItemList', 'BreadcrumbList']],
@@ -99,9 +99,30 @@ $cases = [
   ['/ai-usecase-explorer.php', 200, false, null, []],
   ['/new-features-hub.php', 200, false, null, []],
   ['/this-page-does-not-exist', 404, false, null, []],
+  // ---- Phase 2 ----
+  ['/guides.php', 200, true, '/guides.php', ['CollectionPage', 'ItemList', 'BreadcrumbList']],
+  ['/guide.php?slug=best-ai-chatbots-and-assistants', 200, true, '/guide.php?slug=best-ai-chatbots-and-assistants', ['Article', 'ItemList', 'BreadcrumbList', 'SoftwareApplication']],
+  ['/guide.php?slug=best-ai-meeting-transcription-tools', 200, true, '/guide.php?slug=best-ai-meeting-transcription-tools', ['Article', 'ItemList']],
+  ['/guide.php?slug=best-ai-search-and-research-assistants', 200, true, '/guide.php?slug=best-ai-search-and-research-assistants', ['Article']],
+  ['/guide.php?slug=best-ai-tools-for-everyday-office-work', 200, true, '/guide.php?slug=best-ai-tools-for-everyday-office-work', ['Article']],
+  ['/guide.php?slug=nope', 404, false, null, []],
+  ['/guide.php', 404, false, null, []],
+  ['/alternatives.php?tool=chatgpt', 200, true, '/alternatives.php?tool=chatgpt', ['CollectionPage', 'ItemList', 'BreadcrumbList']],
+  ['/alternatives.php?tool=otter-ai', 200, true, '/alternatives.php?tool=otter-ai', ['CollectionPage']],
+  ['/alternatives.php?tool=grammarly', 404, false, null, []],
+  ['/alternatives.php?tool=monica', 404, false, null, []],
+  ['/methodology.php', 200, true, '/methodology.php', ['AboutPage', 'BreadcrumbList']],
+  ['/tool.php?id=perplexity', 200, true, '/tool.php?id=perplexity', ['SoftwareApplication', 'BreadcrumbList']],
+  ['/tool.php?id=notebooklm', 200, true, '/tool.php?id=notebooklm', ['SoftwareApplication']],
+  ['/category.php?name=Productivity', 200, true, '/category.php?name=Productivity', ['CollectionPage', 'ItemList']],
+  ['/category.php?name=Productivity&sub=meetings-transcription', 200, true, '/category.php?name=Productivity&sub=meetings-transcription', ['CollectionPage', 'BreadcrumbList']],
+  ['/category.php?name=Productivity&sub=Meetings%20%26%20transcription', 200, true, '/category.php?name=Productivity&sub=meetings-transcription', ['CollectionPage']],
+  ['/category.php?name=Productivity&sub=nonsense', 404, false, null, []],
+  ['/category.php?name=Other', 200, false, null, []],
+  ['/category.php?name=Chatbots&sub=general-ai-assistants', 200, true, '/category.php?name=Chatbots&sub=general-ai-assistants', ['CollectionPage']],
 ];
 
-$titles = []; $descs = [];
+$titles = []; $descs = []; $seenCanon = [];
 echo "== Page checks ($base)\n";
 foreach ($cases as [$path, $status, $indexable, $canon, $types]) {
   [$code, $headers, $body] = fetch($base . $path);
@@ -122,7 +143,7 @@ foreach ($cases as [$path, $status, $indexable, $canon, $types]) {
   if ($indexable) {
     check($p['canonicalCount'] === 1, "$path exactly one canonical");
     check($p['canonical'] === PROD . $canon, "$path canonical '{$p['canonical']}' expected '" . PROD . $canon . "'");
-    $titles[$t][] = $path; $descs[(string)$p['desc']][] = $path;
+    if (!isset($seenCanon[$p['canonical']])) { $seenCanon[$p['canonical']] = true; $titles[$t][] = $path; $descs[(string)$p['desc']][] = $path; }
   } else {
     check(stripos($headers, 'X-Robots-Tag: noindex') !== false || $isNoindex, "$path noindex signalled");
   }
@@ -138,6 +159,33 @@ foreach ($cases as [$path, $status, $indexable, $canon, $types]) {
     }
   }
 }
+echo "== Phase 2 behaviours\n";
+// Retired category names redirect permanently; curated tool pages expose their evidence; unreviewed pages stay honest.
+[$code, $headers] = fetch($base . '/category.php?name=SEO');
+check($code === 301 && stripos($headers, 'Location: ') !== false && stripos($headers, 'name=Marketing') !== false, "legacy category SEO redirects 301 to Marketing (got $code)");
+[$code, , $body] = fetch($base . '/tool.php?id=claude');
+check(strpos($body, 'at a glance') !== false && strpos($body, '<details>') !== false && strpos($body, 'pending editor verification') !== false, 'curated tool page shows evidence block, sources and review status');
+check(strpos($body, 'Verified by an AIHubpedia editor') === false, 'no profile claims editor verification');
+check(strpos($body, 'claude.com/pricing') !== false, 'curated tool page links its vendor source');
+[$code, , $body] = fetch($base . '/tool.php?id=monica');
+check(strpos($body, 'Category assigned automatically') !== false || strpos($body, 'have not been verified') !== false, 'unreviewed tool page is labelled honestly');
+[$code, , $body] = fetch($base . '/guide.php?slug=best-ai-chatbots-and-assistants');
+check(strpos($body, 'has not benchmarked') !== false || strpos($body, 'not benchmarked') !== false, 'guide states that quality is not benchmarked');
+check(preg_match('/<table/', $body) === 1 && strpos($body, 'Sources') !== false, 'guide contains a comparison table and sources');
+check(substr_count($body, 'rel="nofollow noopener"') >= 5, 'guide source links are nofollow');
+[$code, , $body] = fetch($base . '/alternatives.php?tool=chatgpt');
+check(stripos($body, ' ai assistants options') === false && strpos($body, 'General AI assistants') !== false, 'alternatives copy keeps the AI acronym intact');
+[$code, , $body] = fetch($base . '/llms.txt');
+check(strpos($body, '## Guides') !== false && strpos($body, 'guide.php?slug=best-ai-chatbots-and-assistants') !== false, 'llms.txt lists the guides');
+[$code, , $body] = fetch($base . '/sitemap.xml');
+check(strpos($body, 'name=Other') === false, 'sitemap omits the unclassified bucket');
+check(strpos($body, '/guide.php?slug=') !== false && strpos($body, '/alternatives.php?tool=chatgpt') !== false && strpos($body, '/methodology.php') !== false, 'sitemap lists guides, alternatives and methodology');
+// Category pages must list tools that actually belong to the category (classification applied consistently).
+[$code, , $body] = fetch($base . '/category.php?name=Research&sub=ai-search-answers');
+check($code === 200 && strpos($body, '>Perplexity<') !== false, 'Perplexity appears under Research / AI search & answers');
+[$code, , $body] = fetch($base . '/category.php?name=SEO&x=1');
+check($code === 301, 'legacy category redirect also applies with extra parameters');
+
 echo "== Duplicate metadata across indexable pages\n";
 foreach ($titles as $t => $paths) check(count($paths) === 1, "duplicate title '$t' on " . implode(', ', $paths));
 foreach ($descs as $d => $paths) check(count($paths) === 1, "duplicate description on " . implode(', ', $paths));
@@ -150,7 +198,7 @@ foreach (['OAI-SearchBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'Bin
 check(preg_match('#^Disallow: /data/$#m', $robots) === 1, 'robots.txt disallows /data/');
 [$code, , $llms] = fetch($base . '/llms.txt');
 check($code === 200 && strpos($llms, '# AIHubpedia') === 0, 'llms.txt served');
-foreach (['/data/site.json', '/data/users.json', '/database/full_mysql_schema.sql', '/composer.json', '/vote_debug.php'] as $priv) {
+foreach (['/data/site.json', '/data/users.json', '/database/full_mysql_schema.sql', '/composer.json', '/vote_debug.php', '/catalog.php', '/analytics.php', '/content.php', '/seo.php', '/helpers.php', '/db.php', '/data/curated_profiles.json', '/data/classification.json', '/scripts/traffic_report.php'] as $priv) {
   [$code] = fetch($base . $priv);
   check($code === 404, "$priv must not be served (got $code)");
 }

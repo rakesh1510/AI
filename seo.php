@@ -73,8 +73,10 @@ function seo_slugify(string $s): string {
 
 /** Root-relative paths for on-page links (work on any host: production, staging, local). */
 function tool_path(string $id): string { return '/tool.php?id=' . rawurlencode($id); }
-function category_path(string $name, int $page = 1): string {
-  return '/category.php?name=' . rawurlencode($name) . ($page > 1 ? '&page=' . $page : '');
+function category_path(string $name, int $page = 1, string $sub = ''): string {
+  $q = '/category.php?name=' . rawurlencode($name);
+  if ($sub !== '') $q .= '&sub=' . rawurlencode(subcategory_slug($sub));
+  return $q . ($page > 1 ? '&page=' . $page : '');
 }
 function post_path(string $slug): string { return '/post.php?slug=' . rawurlencode($slug); }
 function use_case_path(string $slug): string { return '/ai-use-case.php?slug=' . rawurlencode($slug); }
@@ -86,7 +88,7 @@ function compare_path(string $a, string $b): string {
 }
 /** Absolute URLs (canonical, JSON-LD, sitemap). */
 function tool_page_url(string $id): string { return site_url(tool_path($id)); }
-function category_page_url(string $name, int $page = 1): string { return site_url(category_path($name, $page)); }
+function category_page_url(string $name, int $page = 1, string $sub = ''): string { return site_url(category_path($name, $page, $sub)); }
 function post_page_url(string $slug): string { return site_url(post_path($slug)); }
 function use_case_page_url(string $slug): string { return site_url(use_case_path($slug)); }
 function compare_page_url(string $a, string $b): string { return site_url(compare_path($a, $b)); }
@@ -149,7 +151,9 @@ function seo_page_registry(): array {
 function seo_canonical_params(): array {
   return [
     'tool.php' => ['id'],
-    'category.php' => ['name', 'page'],
+    'category.php' => ['name', 'sub', 'page'],
+    'alternatives.php' => ['tool'],
+    'guide.php' => ['slug'],
     'post.php' => ['slug'],
     'ai-use-case.php' => ['slug'],
     'compare.php' => ['a', 'b'],
@@ -284,6 +288,7 @@ function tool_field_is_generic(array $tool, string $field): bool {
 }
 
 function tool_has_generic_profile(array $tool): bool {
+  if (!empty($tool['curated'])) return false;
   return tool_field_is_generic($tool, 'features') && tool_field_is_generic($tool, 'pros');
 }
 
@@ -345,6 +350,11 @@ function seo_tool_node(array $t, string $canonical, array $rating = [0, 0]): arr
     $node['url'] = $site;
     $node['operatingSystem'] = 'Web';
   }
+  if (!empty($t['curated'])) {
+    $cp = $t['curated'];
+    if (!empty($cp['company'])) $node['creator'] = ['@type' => 'Organization', 'name' => (string)$cp['company']];
+    if (!empty($cp['review']['reviewed_on'])) $node['dateModified'] = (string)$cp['review']['reviewed_on'];
+  }
   $logo = trim((string)($t['logo'] ?? ''));
   if ($logo !== '' && preg_match('#^https?://#i', $logo)) $node['image'] = $logo;
   $pricing = strtolower((string)($t['pricing'] ?? '') . ' ' . (string)($t['pricing_type'] ?? ''));
@@ -360,6 +370,7 @@ function seo_tool_node(array $t, string $canonical, array $rating = [0, 0]): arr
 
 /** Short editorial descriptions for each category (used on category pages). */
 function category_intro(string $cat): string {
+  if (function_exists('taxonomy_category_description') && ($d = taxonomy_category_description($cat)) !== '') return $d;
   $map = [
     'Audio' => 'AI audio tools for text-to-speech, voice cloning, transcription, music generation and podcast editing.',
     'Automation' => 'AI automation tools and assistants that connect apps, handle repetitive tasks, summarise information and run workflows for you.',

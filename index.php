@@ -363,7 +363,7 @@ require __DIR__ . '/layout_top.php';
 <section class="card">
   <h2 style="margin-top:0">Browse AI tools by category</h2>
   <ul class="linkList">
-    <?php foreach($cats as $c): ?>
+    <?php foreach($cats as $c): if($c === CATALOG_UNCLASSIFIED) continue; ?>
       <li><a href="/category.php?name=<?= urlencode($c) ?>"><?= h($c) ?> AI tools (<?= (int)($__catCounts[$c] ?? 0) ?>)</a></li>
     <?php endforeach; ?>
   </ul>

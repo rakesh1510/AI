@@ -1,0 +1,230 @@
+{
+ "note": "Hand-labelled by the author from each record's name and one-line description (not independently reviewed). Each value lists acceptable top-level categories. Used to track classifier accuracy; regenerate the sample only if the classifier is retuned against it, to avoid overfitting.",
+ "labels": {
+  "plantrips": [
+   "Lifestyle"
+  ],
+  "ai-swot-analysis": [
+   "Business"
+  ],
+  "paperpal": [
+   "Writing",
+   "Research"
+  ],
+  "theb-ai": [
+   "Chatbots"
+  ],
+  "essence-app": [
+   "Lifestyle",
+   "Productivity"
+  ],
+  "deepnote": [
+   "Coding",
+   "Business"
+  ],
+  "upword": [
+   "Research",
+   "Productivity"
+  ],
+  "studyx": [
+   "Research"
+  ],
+  "codegeex": [
+   "Coding"
+  ],
+  "paperbrain": [
+   "Research"
+  ],
+  "pdf-flex": [
+   "Productivity"
+  ],
+  "fairgen": [
+   "Research",
+   "Business"
+  ],
+  "imean-ai-builder": [
+   "Automation",
+   "Chatbots"
+  ],
+  "neevaai": [
+   "Research"
+  ],
+  "genius-pdf": [
+   "Productivity"
+  ],
+  "evenup-law": [
+   "Business"
+  ],
+  "tldr-this": [
+   "Productivity",
+   "Writing"
+  ],
+  "mymind": [
+   "Productivity"
+  ],
+  "call-annie": [
+   "Chatbots"
+  ],
+  "gift-ideas-ai": [
+   "Lifestyle"
+  ],
+  "travel-plan-ai": [
+   "Lifestyle"
+  ],
+  "bottell": [
+   "Lifestyle",
+   "Chatbots"
+  ],
+  "watchnow-ai": [
+   "Lifestyle"
+  ],
+  "faqx": [
+   "Business",
+   "Writing"
+  ],
+  "mindy": [
+   "Productivity"
+  ],
+  "ruru": [
+   "Lifestyle"
+  ],
+  "amie": [
+   "Productivity"
+  ],
+  "resumecheck": [
+   "Business",
+   "Writing"
+  ],
+  "glowup-ai": [
+   "Image"
+  ],
+  "pdf-ai": [
+   "Productivity"
+  ],
+  "typingmind": [
+   "Chatbots"
+  ],
+  "obituary-writer": [
+   "Writing"
+  ],
+  "insummary": [
+   "Productivity",
+   "Business"
+  ],
+  "scite": [
+   "Research"
+  ],
+  "dr-muscle": [
+   "Lifestyle"
+  ],
+  "swifty": [
+   "Lifestyle",
+   "Business"
+  ],
+  "unreal-speech": [
+   "Audio"
+  ],
+  "writerzen": [
+   "Writing",
+   "Marketing"
+  ],
+  "aithor": [
+   "Writing"
+  ],
+  "hoopsai": [
+   "Business"
+  ],
+  "reclaim-ai": [
+   "Productivity"
+  ],
+  "letterpal": [
+   "Writing",
+   "Marketing"
+  ],
+  "resoomer": [
+   "Productivity",
+   "Writing",
+   "Research"
+  ],
+  "aicogni": [
+   "Audio",
+   "Writing"
+  ],
+  "seance-ai": [
+   "Lifestyle",
+   "Chatbots"
+  ],
+  "jenni": [
+   "Writing"
+  ],
+  "clara": [
+   "Productivity"
+  ],
+  "amply-discovery": [
+   "Research"
+  ],
+  "tomorrow-io": [
+   "Other",
+   "Business",
+   "Lifestyle"
+  ],
+  "bluewhite": [
+   "Other",
+   "Business"
+  ],
+  "deli": [
+   "Business",
+   "Lifestyle"
+  ],
+  "marketalerts-ai": [
+   "Business"
+  ],
+  "aurora": [
+   "Business",
+   "Research"
+  ],
+  "empy-ai": [
+   "Productivity",
+   "Business"
+  ],
+  "supermemory": [
+   "Productivity"
+  ],
+  "spatial-touch": [
+   "Other",
+   "Automation"
+  ],
+  "akela-hub": [
+   "Business",
+   "Research"
+  ],
+  "dexa-ai": [
+   "Business"
+  ],
+  "bioraptor": [
+   "Research",
+   "Other",
+   "Business"
+  ],
+  "conversai": [
+   "Chatbots",
+   "Writing"
+  ],
+  "jigso": [
+   "Automation",
+   "Productivity"
+  ],
+  "aidaptive": [
+   "Business",
+   "Marketing"
+  ],
+  "divedeck-ai": [
+   "Chatbots",
+   "Productivity"
+  ],
+  "microsoft-knowledge-exploration": [
+   "Research",
+   "Business"
+  ]
+ }
+}

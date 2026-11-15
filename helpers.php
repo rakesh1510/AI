@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/seo.php';
+require_once __DIR__ . '/catalog.php';
+require_once __DIR__ . '/content.php';
+require_once __DIR__ . '/analytics.php';
 
 // ----------------------
 // JSON helpers
@@ -98,7 +101,20 @@ function load_tools(){
   // One catalogue load per request; many pages and helpers call this repeatedly.
   global $AIHUB_TOOLS_CACHE;
   if(is_array($AIHUB_TOOLS_CACHE)) return $AIHUB_TOOLS_CACHE;
-  return $AIHUB_TOOLS_CACHE = load_tools_uncached();
+  $raw = load_tools_uncached();
+  $exclude = exclude_categories();
+  $tools = [];
+  foreach(($raw['tools'] ?? []) as $t){
+    $sourceCategory = (string)($t['category'] ?? '');
+    $t = catalog_overlay_tool($t);
+    // Admin-configured exclusions apply to the source category and never hide classified or curated tools.
+    if(empty($t['classification']) && in_array($sourceCategory, $exclude, true)) continue;
+    $tools[] = $t;
+  }
+  $present = array_values(array_unique(array_map(function($t){ return (string)($t['category'] ?? 'Other'); }, $tools)));
+  $order = array_flip(taxonomy_categories());
+  usort($present, function($a, $b) use ($order){ return ($order[$a] ?? 999) <=> ($order[$b] ?? 999) ?: strcmp($a, $b); });
+  return $AIHUB_TOOLS_CACHE = ['tools' => $tools, 'categories' => $present];
 }
 
 /** Index of loaded tools by id (built once per request). */
@@ -141,7 +157,6 @@ function load_tools_uncached(){
               WHERE t.status = 'published'
               ORDER BY t.name ASC";
       $rows = $pdo->query($sql)->fetchAll();
-      $exclude = exclude_categories();
       $tools = [];
       foreach($rows as $row){
         $tool = [
@@ -166,36 +181,22 @@ function load_tools_uncached(){
           'featured_level' => (int)($row['featured_level'] ?? 0),
           'featured_until' => (string)($row['featured_until'] ?? ''),
         ];
-        if(!in_array($tool['category'], $exclude, true)){
-          $tools[] = $tool;
-        }
+        $tools[] = $tool;
       }
-      $cats = array_values(array_unique(array_map(function($t){ return $t['category'] ?? 'Other'; }, $tools)));
-      sort($cats);
-      return ['tools'=>$tools, 'categories'=>$cats];
+      return ['tools'=>$tools, 'categories'=>[]];
     } catch(Throwable $e){
       // fallback to JSON
     }
   }
 
   $data = read_json('tools.json', ['tools'=>[], 'categories'=>[]]);
-  $exclude = exclude_categories();
-  $tools = array_values(array_filter($data['tools'] ?? [], function($t) use ($exclude){
-    $c = $t['category'] ?? '';
-    return !in_array($c, $exclude, true);
-  }));
-  $cats = array_values(array_unique(array_map(function($t){ return $t['category'] ?? 'Other'; }, $tools)));
-  sort($cats);
-  return ['tools'=>$tools, 'categories'=>$cats];
+  return ['tools'=>array_values($data['tools'] ?? []), 'categories'=>[]];
 }
 
 function find_tool($id){
   $id = (string)$id;
-  global $AIHUB_TOOLS_CACHE;
-  if(is_array($AIHUB_TOOLS_CACHE)){
-    $index = tools_by_id();
-    if(isset($index[$id])) return $index[$id];
-  }
+  $index = tools_by_id();
+  if(isset($index[$id])) return $index[$id];
   if(mysql_tables_available_for_content()){
     try {
       $pdo = db();
@@ -228,7 +229,7 @@ function find_tool($id){
       $stmt->execute([$id]);
       $row = $stmt->fetch();
       if($row){
-        return [
+        return catalog_overlay_tool([
           'id' => (string)($row['id'] ?? ''),
           'name' => (string)($row['name'] ?? ''),
           'category' => (string)($row['category'] ?? 'Other'),
@@ -249,16 +250,11 @@ function find_tool($id){
           'seo_description' => (string)($row['seo_description'] ?? ''),
           'featured_level' => (int)($row['featured_level'] ?? 0),
           'featured_until' => (string)($row['featured_until'] ?? ''),
-        ];
+        ]);
       }
     } catch(Throwable $e){
       // fallback
     }
-  }
-
-  $data = load_tools();
-  foreach($data['tools'] as $t){
-    if(($t['id'] ?? '') === $id) return $t;
   }
   return null;
 }

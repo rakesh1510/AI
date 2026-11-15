@@ -35,6 +35,13 @@ $og_type = $og_type ?? 'website';
 $og_image = $og_image ?? site_url('/logo.png');
 $__jsonld = array_merge([seo_org_node(), seo_website_node()], isset($jsonld) && is_array($jsonld) ? $jsonld : []);
 
+analytics_track_request();
+
+// Search-engine ownership verification (set the env vars; nothing is output otherwise).
+$__verify = '';
+if (($v = getenv('AIHUB_GOOGLE_SITE_VERIFICATION')) !== false && $v !== '') $__verify .= '<meta name="google-site-verification" content="' . h($v) . '">' . "\n";
+if (($v = getenv('AIHUB_BING_SITE_VERIFICATION')) !== false && $v !== '') $__verify .= '<meta name="msvalidate.01" content="' . h($v) . '">' . "\n";
+
 $__css_ver = @filemtime(__DIR__ . '/assets/css/style.css') ?: '1';
 $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 ?>
@@ -49,7 +56,7 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 <?php if ($robots !== 'noindex'): ?>
 <link rel="canonical" href="<?= h($canonical) ?>">
 <?php endif; ?>
-<meta name="application-name" content="AIHubpedia">
+<?= $__verify ?><meta name="application-name" content="AIHubpedia">
 <meta name="theme-color" content="#4f46e5">
 <link rel="preconnect" href="https://www.google.com" crossorigin>
 <link rel="dns-prefetch" href="https://t0.gstatic.com">
@@ -93,6 +100,7 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
       <a href="/categories.php">Categories</a>
       <a href="/top.php">Top Tools</a>
       <a href="/compare.php">Compare</a>
+      <a href="/guides.php">Guides</a>
       <a href="/leaderboard.php">Leaderboard</a>
       <a href="/ai-use-case-explorer.php">Use Cases</a>
 
@@ -103,6 +111,7 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
           <a href="/filters.php">Filters</a>
           <a href="/community.php">Community</a>
           <a href="/blog.php">Blog</a>
+          <a href="/methodology.php">Methodology</a>
           <a href="/about.php">About</a>
         </div>
       </div>

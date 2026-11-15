@@ -1,0 +1,693 @@
+{
+ "version": 1,
+ "note": "Keyword rules for the transparent, rule-based classifier (catalog.php). '=word' matches a whole word; other terms match as word prefixes. 'strong' terms score 2, 'kw' terms score 1; name hits count double. Output is a first-pass proposal that needs editorial review.",
+ "legacy_redirects": {
+  "SEO": "Marketing"
+ },
+ "categories": {
+  "Chatbots": {
+   "description": "General-purpose AI chatbots and assistants for answering questions, drafting text, brainstorming and everyday help.",
+   "subcategories": {
+    "General AI assistants": {
+     "strong": [
+      "chatgpt",
+      "llm",
+      "large language model",
+      "chatbot",
+      "ai assistant",
+      "virtual assistant"
+     ],
+     "kw": [
+      "conversational",
+      "chat bot",
+      "chat with",
+      "personal assistant",
+      "gpt"
+     ]
+    },
+    "Companions & character chat": {
+     "strong": [
+      "ai companion",
+      "characters",
+      "roleplay",
+      "role-play"
+     ],
+     "kw": [
+      "persona",
+      "friend",
+      "talk to"
+     ]
+    }
+   }
+  },
+  "Writing": {
+   "description": "AI writing tools for blog posts, marketing copy, emails, rewriting and grammar checks.",
+   "subcategories": {
+    "Copywriting & content creation": {
+     "strong": [
+      "copywriting",
+      "content writer",
+      "blog",
+      "article",
+      "essay"
+     ],
+     "kw": [
+      "write",
+      "writer",
+      "writing",
+      "content creation",
+      "content generation",
+      "newsletter",
+      "caption",
+      "storytelling",
+      "ebook",
+      "letter",
+      "copy"
+     ]
+    },
+    "Grammar, editing & rewriting": {
+     "strong": [
+      "grammar",
+      "proofread",
+      "paraphras",
+      "plagiarism",
+      "humaniz"
+     ],
+     "kw": [
+      "rewrite",
+      "editing",
+      "spelling",
+      "tone",
+      "rephras"
+     ]
+    }
+   }
+  },
+  "Coding": {
+   "description": "AI coding tools for code completion, review, debugging, documentation and building software faster.",
+   "subcategories": {
+    "Code assistants": {
+     "strong": [
+      "code",
+      "coding",
+      "programming",
+      "developer",
+      "debug",
+      "github",
+      "=ide",
+      "devops",
+      "software development"
+     ],
+     "kw": [
+      "=api",
+      "commit",
+      "engineer",
+      "terminal",
+      "repository",
+      "unit test",
+      "sdk"
+     ]
+    },
+    "Data & SQL": {
+     "strong": [
+      "=sql",
+      "database",
+      "dataset",
+      "text-to-sql",
+      "data engineer"
+     ],
+     "kw": [
+      "query",
+      "schema",
+      "data pipeline"
+     ]
+    },
+    "App & website builders": {
+     "strong": [
+      "website builder",
+      "app builder",
+      "landing page",
+      "build apps",
+      "build websites",
+      "no-code app"
+     ],
+     "kw": [
+      "website",
+      "web app",
+      "mobile app",
+      "prototype"
+     ]
+    }
+   }
+  },
+  "Image": {
+   "description": "AI image tools for generating, editing, upscaling and restyling pictures from prompts or photos.",
+   "subcategories": {
+    "Image generation & editing": {
+     "strong": [
+      "image",
+      "photo",
+      "portrait",
+      "headshot",
+      "picture",
+      "illustration",
+      "avatar",
+      "=art",
+      "upscal",
+      "background remov",
+      "photoshoot",
+      "selfie"
+     ],
+     "kw": [
+      "visual",
+      "style",
+      "face",
+      "wallpaper",
+      "3d",
+      "sketch",
+      "tattoo",
+      "interior"
+     ]
+    }
+   }
+  },
+  "Design": {
+   "description": "AI design tools for graphics, branding, presentations and UI mock-ups.",
+   "subcategories": {
+    "Graphic & UI design": {
+     "strong": [
+      "design",
+      "graphic",
+      "ui/ux",
+      "figma",
+      "logo",
+      "branding",
+      "slides",
+      "presentation",
+      "mockup"
+     ],
+     "kw": [
+      "layout",
+      "template",
+      "poster",
+      "brand",
+      "canva"
+     ]
+    }
+   }
+  },
+  "Video": {
+   "description": "AI video tools for generating clips, editing footage, avatars, subtitles and short-form content.",
+   "subcategories": {
+    "Video generation & editing": {
+     "strong": [
+      "video",
+      "film",
+      "animation",
+      "animate",
+      "clips",
+      "reels",
+      "youtube",
+      "tiktok",
+      "movie",
+      "footage"
+     ],
+     "kw": [
+      "short-form",
+      "subtitle",
+      "dubbing",
+      "screen record"
+     ]
+    }
+   }
+  },
+  "Audio": {
+   "description": "AI audio tools for text-to-speech, voice cloning, music generation and podcast production.",
+   "subcategories": {
+    "Voice & speech": {
+     "strong": [
+      "voice",
+      "speech",
+      "text-to-speech",
+      "=tts",
+      "voiceover",
+      "dubbing",
+      "narrat"
+     ],
+     "kw": [
+      "audio",
+      "podcast",
+      "clone",
+      "speak"
+     ]
+    },
+    "Music & sound": {
+     "strong": [
+      "music",
+      "song",
+      "soundtrack",
+      "beats",
+      "lyrics"
+     ],
+     "kw": [
+      "melody",
+      "instrument",
+      "sound"
+     ]
+    }
+   }
+  },
+  "Productivity": {
+   "description": "AI productivity tools for meetings, email, scheduling, notes and everyday knowledge work.",
+   "subcategories": {
+    "Meetings & transcription": {
+     "strong": [
+      "transcri",
+      "meeting",
+      "speech-to-text",
+      "notetaker",
+      "note taker",
+      "audio to text",
+      "video to text",
+      "audio/video to text",
+      "speech to text"
+     ],
+     "kw": [
+      "minutes",
+      "recording",
+      "calls"
+     ]
+    },
+    "Email & scheduling": {
+     "strong": [
+      "email",
+      "inbox",
+      "calendar",
+      "scheduling",
+      "schedule"
+     ],
+     "kw": [
+      "reminder",
+      "to-do",
+      "task",
+      "planner",
+      "time management",
+      "appointment",
+      "focus"
+     ]
+    },
+    "Notes & documents": {
+     "strong": [
+      "=pdf",
+      "document",
+      "notes",
+      "note-taking",
+      "knowledge base",
+      "summar"
+     ],
+     "kw": [
+      "file",
+      "organize",
+      "bookmark",
+      "second brain",
+      "read"
+     ]
+    },
+    "Workplace AI suites": {
+     "strong": [
+      "microsoft 365",
+      "office suite",
+      "google workspace",
+      "workplace"
+     ],
+     "kw": [
+      "word",
+      "excel",
+      "powerpoint",
+      "teams"
+     ]
+    }
+   }
+  },
+  "Research": {
+   "description": "AI tools for finding answers, reading papers, studying and scientific discovery.",
+   "subcategories": {
+    "AI search & answers": {
+     "strong": [
+      "search engine",
+      "answer engine",
+      "ai search",
+      "web search"
+     ],
+     "kw": [
+      "answers",
+      "citations",
+      "browse",
+      "search"
+     ]
+    },
+    "Academic & scientific research": {
+     "strong": [
+      "research",
+      "academic",
+      "papers",
+      "literature",
+      "scientific",
+      "drug discovery",
+      "biology",
+      "chemistry",
+      "protein",
+      "molecule",
+      "genomic",
+      "=r&d",
+      "materials"
+     ],
+     "kw": [
+      "science",
+      "scholar",
+      "lab",
+      "discovery"
+     ]
+    },
+    "Learning & education": {
+     "strong": [
+      "student",
+      "tutor",
+      "education",
+      "course",
+      "exam",
+      "homework",
+      "school",
+      "learning",
+      "study",
+      "teacher",
+      "lesson",
+      "quiz",
+      "flashcard"
+     ],
+     "kw": [
+      "language learning",
+      "teach",
+      "classroom",
+      "curriculum"
+     ]
+    }
+   }
+  },
+  "Marketing": {
+   "description": "AI tools for SEO, social media, advertising, sales outreach and e-commerce growth.",
+   "subcategories": {
+    "SEO & content strategy": {
+     "strong": [
+      "=seo",
+      "keyword",
+      "serp",
+      "backlink",
+      "content optimization"
+     ],
+     "kw": [
+      "traffic",
+      "organic",
+      "ranking"
+     ]
+    },
+    "Social media & advertising": {
+     "strong": [
+      "social media",
+      "instagram",
+      "linkedin",
+      "twitter",
+      "advertising",
+      "=ads",
+      "ad creative",
+      "influencer",
+      "marketing"
+     ],
+     "kw": [
+      "posts",
+      "engagement",
+      "campaign",
+      "brand",
+      "followers"
+     ]
+    },
+    "Sales & lead generation": {
+     "strong": [
+      "sales",
+      "lead",
+      "prospect",
+      "=crm",
+      "outreach",
+      "cold email",
+      "=sdr"
+     ],
+     "kw": [
+      "pipeline",
+      "=b2b",
+      "revenue",
+      "deal",
+      "customer acquisition"
+     ]
+    },
+    "E-commerce & product": {
+     "strong": [
+      "ecommerce",
+      "e-commerce",
+      "shopify",
+      "product listing",
+      "amazon seller",
+      "online store"
+     ],
+     "kw": [
+      "store",
+      "merchant",
+      "product description"
+     ]
+    }
+   }
+  },
+  "Business": {
+   "description": "AI tools for customer support, HR, finance, legal work and business operations.",
+   "subcategories": {
+    "Customer support": {
+     "strong": [
+      "customer support",
+      "customer service",
+      "helpdesk",
+      "support agent",
+      "live chat",
+      "customer experience"
+     ],
+     "kw": [
+      "tickets",
+      "faq",
+      "customers",
+      "feedback"
+     ]
+    },
+    "HR & careers": {
+     "strong": [
+      "resume",
+      "=cv",
+      "=job",
+      "interview",
+      "recruit",
+      "hiring",
+      "candidate",
+      "career",
+      "talent",
+      "applicant"
+     ],
+     "kw": [
+      "linkedin profile",
+      "=hr",
+      "workplace"
+     ]
+    },
+    "Finance & accounting": {
+     "strong": [
+      "finance",
+      "financial",
+      "accounting",
+      "invoice",
+      "invest",
+      "stock",
+      "trading",
+      "=tax",
+      "bookkeeping",
+      "expense",
+      "crypto"
+     ],
+     "kw": [
+      "budget",
+      "payments",
+      "portfolio",
+      "bank",
+      "market"
+     ]
+    },
+    "Legal & compliance": {
+     "strong": [
+      "legal",
+      "contract",
+      "lawyer",
+      "compliance",
+      "=law",
+      "patent",
+      "gdpr"
+     ],
+     "kw": [
+      "regulat",
+      "policy",
+      "audit"
+     ]
+    },
+    "Business intelligence & operations": {
+     "strong": [
+      "business intelligence",
+      "analytics",
+      "insights",
+      "operations",
+      "enterprise",
+      "project management",
+      "business plan",
+      "business idea",
+      "startup"
+     ],
+     "kw": [
+      "=kpi",
+      "reports",
+      "team",
+      "strategy",
+      "industry",
+      "organization"
+     ]
+    }
+   }
+  },
+  "Lifestyle": {
+   "description": "AI tools for health, travel, shopping, creativity and everyday personal use.",
+   "subcategories": {
+    "Health & wellness": {
+     "strong": [
+      "health",
+      "fitness",
+      "sleep",
+      "wellness",
+      "medical",
+      "=diet",
+      "mental health",
+      "therapy",
+      "nutrition",
+      "workout",
+      "meditation",
+      "doctor",
+      "patient",
+      "clinical"
+     ],
+     "kw": [
+      "recovery",
+      "symptom",
+      "care",
+      "emotional",
+      "grief",
+      "loss"
+     ]
+    },
+    "Travel & shopping": {
+     "strong": [
+      "travel",
+      "trip",
+      "itinerary",
+      "flight",
+      "hotel",
+      "gift",
+      "shopping",
+      "recipe",
+      "cooking",
+      "fashion",
+      "real estate"
+     ],
+     "kw": [
+      "vacation",
+      "restaurant",
+      "outfit",
+      "decor",
+      "pets",
+      "=home"
+     ]
+    },
+    "Entertainment & personal": {
+     "strong": [
+      "dating",
+      "astrology",
+      "horoscope",
+      "=game",
+      "gaming",
+      "entertainment",
+      "=book",
+      "names",
+      "joke",
+      "meme",
+      "relationship",
+      "parenting",
+      "religio",
+      "bible",
+      "prayer"
+     ],
+     "kw": [
+      "fun",
+      "story",
+      "kids",
+      "family",
+      "dream"
+     ]
+    }
+   }
+  },
+  "Automation": {
+   "description": "AI automation tools and agents that connect apps, run workflows and complete multi-step tasks.",
+   "subcategories": {
+    "Workflow automation": {
+     "strong": [
+      "automation",
+      "zapier",
+      "workflow",
+      "=rpa",
+      "low-code",
+      "no-code"
+     ],
+     "kw": [
+      "automate",
+      "integrat",
+      "connect apps",
+      "trigger",
+      "webhook",
+      "orchestrat",
+      "repetitive"
+     ]
+    },
+    "AI agents": {
+     "strong": [
+      "agent",
+      "agentic"
+     ],
+     "kw": [
+      "autonomous",
+      "multi-agent",
+      "delegate"
+     ]
+    }
+   }
+  },
+  "Other": {
+   "description": "AI tools that are not yet classified. These listings are queued for editorial review.",
+   "subcategories": {
+    "Unclassified": {
+     "strong": [],
+     "kw": []
+    }
+   }
+  }
+ }
+}
