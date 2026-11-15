@@ -15,6 +15,7 @@ $M "$AIHUB_DB_NAME" < /tmp/aihub_core_schema.sql
 $M "$AIHUB_DB_NAME" -e "ALTER TABLE use_cases ADD icon VARCHAR(20) NULL, ADD description TEXT NULL, ADD hero_text TEXT NULL, ADD audience TEXT NULL, ADD popular_tasks LONGTEXT NULL, ADD example_tools LONGTEXT NULL, ADD benefits LONGTEXT NULL;"
 $M "$AIHUB_DB_NAME" < tests/fixtures/interactions_current.sql
 $M "$AIHUB_DB_NAME" < database/install_compare_tables.sql
+$M "$AIHUB_DB_NAME" < database/phase2_analytics.sql
 php import-json-to-mysql.php
 # Replace any credentials copied from data/site.json with test-only values (local SMTP sink, dummy admin password).
 $M "$AIHUB_DB_NAME" -e "UPDATE site_settings SET setting_value='{\"from_email\":\"noreply@example.test\",\"from_name\":\"AIHubpedia Test\",\"to_email\":\"inbox@example.test\",\"smtp_host\":\"127.0.0.1\",\"smtp_port\":2525,\"smtp_secure\":\"\",\"smtp_user\":\"test\",\"smtp_pass\":\"test\"}' WHERE setting_key='mail'; UPDATE site_settings SET setting_value='test-admin-pass' WHERE setting_key='admin_pass';"

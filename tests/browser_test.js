@@ -130,6 +130,60 @@ async function run(profileName, contextOpts) {
   await noHorizontalScroll('compare');
   await shot('compare');
 
+  // ---- Phase 2 journeys ----
+  // Guides: nav → hub → guide, comparison table readable without page-level horizontal scroll
+  const guidesNav = page.locator('nav[aria-label="Main navigation"] a[href="/guides.php"]');
+  check(await guidesNav.count() === 1, `[${P}] main nav links to Guides`);
+  await page.goto(base + '/', { waitUntil: 'load' });
+  await guidesNav.scrollIntoViewIfNeeded();
+  await Promise.all([page.waitForURL(/guides\.php/), guidesNav.click()]);
+  check(await page.locator('.grid .card').count() >= 4, `[${P}] guides hub lists at least 4 guides`);
+  await noHorizontalScroll('guides hub');
+  await Promise.all([page.waitForURL(/guide\.php\?slug=/), page.locator('.grid .card h2 a').first().click()]);
+  check(await page.locator('h1').count() === 1, `[${P}] guide has one h1`);
+  check(await page.locator('table.compareTable tbody tr').count() >= 3, `[${P}] guide comparison table has rows`);
+  check(await page.locator('.noticeBox:has-text("not benchmarked")').count() === 1, `[${P}] guide discloses that quality is not benchmarked`);
+  await noHorizontalScroll('guide page');
+  await shot('guide');
+  const tableScrolls = await page.locator('.tableWrap').first().evaluate(e => e.scrollWidth >= e.clientWidth);
+  check(tableScrolls, `[${P}] comparison table sits in a scroll container`);
+  await Promise.all([page.waitForURL(/tool\.php\?id=/), page.locator('table.compareTable tbody th a').first().click()]);
+  check(await page.locator('section.profileBox').count() === 1, `[${P}] guide row opens a reviewed tool profile`);
+
+  // Reviewed tool page: evidence block, expandable sources, alternatives link
+  await page.goto(base + '/tool.php?id=chatgpt', { waitUntil: 'load' });
+  check(await page.locator('.profileBox .factList').count() === 1, `[${P}] reviewed tool shows facts list`);
+  await page.locator('.profileBox details summary').click();
+  check(await page.locator('.profileBox details a[href^="https://"]').first().isVisible(), `[${P}] sources expand and show vendor links`);
+  await noHorizontalScroll('reviewed tool');
+  await shot('tool-reviewed');
+  const altLink = page.locator('a:has-text("Full comparison of ChatGPT alternatives")');
+  await altLink.scrollIntoViewIfNeeded();
+  await Promise.all([page.waitForURL(/alternatives\.php\?tool=chatgpt/), altLink.click()]);
+  check((await page.locator('h1').innerText()).includes('ChatGPT alternatives'), `[${P}] tool page → alternatives page`);
+  check(await page.locator('table.compareTable').count() === 1, `[${P}] alternatives page has comparison table`);
+  await noHorizontalScroll('alternatives');
+  await shot('alternatives');
+  await Promise.all([page.waitForURL(/compare\.php\?a=/), page.locator('a:has-text(" vs ")').first().click()]);
+  check(await page.locator('.compare-card').count() === 2, `[${P}] alternatives page → head-to-head comparison`);
+
+  // Subcategory navigation
+  await page.goto(base + '/category.php?name=Productivity', { waitUntil: 'load' });
+  const chip = page.locator('nav[aria-label="Subcategories"] a:has-text("Meetings & transcription")');
+  await chip.scrollIntoViewIfNeeded();
+  await Promise.all([page.waitForURL(/sub=meetings-transcription/), chip.click()]);
+  check((await page.locator('h1').innerText()).startsWith('Meetings & transcription'), `[${P}] subcategory chip opens subcategory page`);
+  check(await page.locator('.grid .card').count() >= 4, `[${P}] subcategory lists tools`);
+  await noHorizontalScroll('subcategory');
+  await shot('subcategory');
+
+  // Methodology + legacy redirect
+  await page.goto(base + '/methodology.php', { waitUntil: 'load' });
+  check((await page.locator('h1').innerText()).includes('reviews AI tools'), `[${P}] methodology page renders`);
+  await noHorizontalScroll('methodology');
+  resp = await page.goto(base + '/category.php?name=SEO', { waitUntil: 'load' });
+  check(/name=Marketing/.test(page.url()), `[${P}] legacy SEO category redirects to Marketing`);
+
   // Comparisons hub links
   await page.goto(base + '/comparisons.php', { waitUntil: 'load' });
   check(await page.locator('.grid .card').count() >= 6, `[${P}] comparisons hub lists matchups`);

@@ -764,3 +764,18 @@ a.badge{text-decoration:none}
   .simpleDropdownMenu{left:0;right:auto}
   .hero h1{font-size:clamp(30px,8.5vw,40px);line-height:1.1}
 }
+
+/* ---- Phase 2: reviewed profiles, guides, comparison tables ---- */
+.profileBox{background:#faf8ff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin:16px 0}
+.factList{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:10px 0}
+.factList dt{font-weight:700;color:var(--muted)}
+.factList dd{margin:0}
+.tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0}
+.compareTable{width:100%;border-collapse:collapse;min-width:640px;font-size:15px}
+.compareTable th,.compareTable td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.compareTable thead th{background:#f4f0ff;white-space:nowrap}
+.guideMeta{color:var(--muted);font-size:14px;margin:6px 0 16px}
+.prose{max-width:860px;line-height:1.7}
+.prose h2{margin-top:28px}
+details summary{cursor:pointer;font-weight:600}
+@media (max-width:760px){.factList{grid-template-columns:1fr}.factList dt{margin-top:6px}}

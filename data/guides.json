@@ -1,0 +1,284 @@
+{
+ "schema": 1,
+ "author": "AIHubpedia Editorial Team",
+ "guides": {
+  "best-ai-chatbots-and-assistants": {
+   "title": "Best AI Chatbots & Assistants Compared: Plans, Limits and Pricing",
+   "h1": "Best AI chatbots and assistants compared",
+   "description": "ChatGPT, Claude, Gemini, Microsoft Copilot, DeepSeek and Pi compared on plan structure, free-tier limits, business options and policy notes, from each vendor's own pages.",
+   "published": "2026-11-15",
+   "updated": "2026-11-15",
+   "category": "Chatbots",
+   "intro": [
+    "General-purpose AI assistants now differ less in what they can do on a good day than in how they are packaged: what the free tier includes, how usage limits work, which plans exist for teams, and what you agree to when you sign up. This guide compares six assistants on those points using each vendor's published pricing and help pages.",
+    "It does not rank output quality. AIHubpedia has not run standardised benchmark tests, and quality depends heavily on the task. Use the comparison to narrow the field, then try two or three on your own work."
+   ],
+   "criteria": [
+    "Is there a free tier, and what does it limit?",
+    "How are paid plans structured (individual, team, enterprise)?",
+    "Are there integrations that matter to you (Google, Microsoft, developer API)?",
+    "Are plan names, limits and prices documented consistently by the vendor?",
+    "What do the vendor's policies say about using your inputs to train models?"
+   ],
+   "tools": [
+    "chatgpt",
+    "claude",
+    "gemini",
+    "copilot",
+    "deepseek",
+    "pi"
+   ],
+   "picks": [
+    {
+     "label": "Widest range of plans",
+     "tool": "chatgpt",
+     "why": "OpenAI lists a free tier plus Go, Plus, Pro, Business and Enterprise plans, so there is a step for most budgets. The trade-off is that plan names and prices have been changing quickly."
+    },
+    {
+     "label": "Clear usage tiers and a coding tool on paid plans",
+     "tool": "claude",
+     "why": "Claude's plans step up in usage (Pro, Max, Ultra), and Pro includes Claude Code and Projects according to Anthropic's pricing page. Free usage is limited per five-hour window and per week."
+    },
+    {
+     "label": "If you already live in a Google account",
+     "tool": "gemini",
+     "why": "Google's AI plans bundle Google storage with the assistant, and the free tier lists features such as Deep Research and Gemini Live. Check the plan page often: model names and limits have changed repeatedly."
+    },
+    {
+     "label": "If you use Edge or Microsoft 365",
+     "tool": "copilot",
+     "why": "Copilot is free to start and built into Edge. Copilot inside Word, Excel and PowerPoint comes through Microsoft 365 plans rather than the free version."
+    },
+    {
+     "label": "If you want open weights or a low-friction API",
+     "tool": "deepseek",
+     "why": "DeepSeek publishes open model weights on Hugging Face and bills API usage per token. Review its data-handling terms before sending sensitive information."
+    },
+    {
+     "label": "If you want a conversation-first assistant",
+     "tool": "pi",
+     "why": "Pi is built around conversation and lets you view, edit and delete what it remembers. Its privacy policy says inputs may be used for training unless you opt out in settings."
+    }
+   ],
+   "checklist": [
+    "Test the free tier with a real task before paying.",
+    "Read the data and training policy, and turn off training use where the vendor offers that setting.",
+    "Check whether the plan you want is billed per person or per team, and monthly or annually.",
+    "Confirm current prices on the vendor's pricing page: figures in this guide are dated."
+   ],
+   "faq": [
+    {
+     "q": "Which AI chatbot is best?",
+     "a": "There is no single winner. The best choice depends on your tasks, your existing tools (Google, Microsoft) and budget. AIHubpedia compares plans, limits and policies; it does not publish an overall quality ranking."
+    },
+    {
+     "q": "Are the free versions enough?",
+     "a": "For occasional questions, often yes. Free tiers cap usage and some features (for example image creation, voice or deep research on ChatGPT's free tier), so frequent users usually need a paid plan."
+    },
+    {
+     "q": "Do these tools train on my conversations?",
+     "a": "It varies by vendor, plan and settings. Business and enterprise plans typically state stronger data commitments than consumer plans, but read each vendor's current policy."
+    },
+    {
+     "q": "How current is the pricing?",
+     "a": "Prices were collected on the date shown in each profile. Vendors change plans often, so treat them as a starting point."
+    }
+   ]
+  },
+  "best-ai-meeting-transcription-tools": {
+   "title": "Best AI Meeting Transcription Tools: Otter, Fireflies, Trint, Sonix",
+   "h1": "Best AI meeting transcription tools compared",
+   "description": "Otter.ai, Fireflies.ai, Trint and Sonix compared on free plans, per-seat or per-hour pricing, languages and enterprise options, with source links and the points where vendor pages disagree.",
+   "published": "2026-11-15",
+   "updated": "2026-11-15",
+   "category": "Productivity",
+   "intro": [
+    "Transcription tools split into two models: subscription tools built around meetings (Otter.ai, Fireflies.ai) and tools built around media files that you pay for by seat or by the hour (Trint, Sonix). Which fits depends on how many hours you transcribe and whether you need captions, translation or compliance features.",
+    "Accuracy claims are made by the vendors and are not verified by AIHubpedia. Several prices below come from vendor blog posts or marketing pages rather than a pricing table; the profiles say which."
+   ],
+   "criteria": [
+    "Free plan or trial, and its minute or file limits",
+    "Subscription versus pay-as-you-go pricing",
+    "Languages, translation and caption editing",
+    "Team, security and compliance options (SSO, SOC 2, HIPAA)",
+    "How consistent the vendor's own pricing information is"
+   ],
+   "tools": [
+    "otter-ai",
+    "fireflies-ai",
+    "trint",
+    "sonix"
+   ],
+   "picks": [
+    {
+     "label": "A free plan to try meeting notes",
+     "tool": "otter-ai",
+     "why": "Otter lists a free Basic plan with 300 minutes per month and a 30-minute cap per conversation; Pro and Business add minutes and longer conversations."
+    },
+    {
+     "label": "A plan ladder with recording and analytics",
+     "tool": "fireflies-ai",
+     "why": "Fireflies lists Free, Pro, Business and Enterprise plans; Pro adds video recording and downloads, Business adds unlimited storage and analytics, Enterprise adds SSO and custom retention."
+    },
+    {
+     "label": "Captions, translation and media workflows",
+     "tool": "trint",
+     "why": "Trint lists transcription in 50+ languages, translation in 70+ languages and a caption editor. It is priced per seat and higher than most meeting-note tools."
+    },
+    {
+     "label": "Paying per hour instead of subscribing",
+     "tool": "sonix",
+     "why": "Sonix lists a pay-as-you-go rate of $10 per audio hour and free minutes for new accounts, with subscription plans for regular use."
+    }
+   ],
+   "checklist": [
+    "Count your monthly hours first: per-hour and per-seat pricing cross over quickly.",
+    "Check whether translation, extra languages or live transcription are billed separately.",
+    "Get consent before recording meetings; rules differ by country and state.",
+    "Check security needs (SSO, data retention, HIPAA) against the plan tier, not the brand."
+   ],
+   "faq": [
+    {
+     "q": "Which tool is the most accurate?",
+     "a": "AIHubpedia has not tested transcription accuracy. Vendors publish their own claims; test each tool on your own audio, especially with accents and background noise."
+    },
+    {
+     "q": "Can I transcribe for free?",
+     "a": "Otter and Fireflies list free plans with limits, Trint lists a 7-day trial, and Sonix lists free minutes for new accounts."
+    },
+    {
+     "q": "Do I need permission to record a meeting?",
+     "a": "Often yes. Consent rules vary by jurisdiction, so tell participants and follow local law and your company policy."
+    }
+   ]
+  },
+  "best-ai-search-and-research-assistants": {
+   "title": "Best AI Search & Research Assistants: Perplexity, You.com, NotebookLM",
+   "h1": "Best AI search and research assistants compared",
+   "description": "Perplexity, You.com, NotebookLM and ChatPDF compared on cited answers, document-grounded Q&A, free limits and pricing, with vendor sources.",
+   "published": "2026-11-15",
+   "updated": "2026-11-15",
+   "category": "Research",
+   "intro": [
+    "AI research tools fall into two groups: answer engines that search the web and cite sources (Perplexity, You.com), and document tools that answer from material you provide (NotebookLM, ChatPDF). Pick by where your information lives.",
+    "Citations make answers easier to check but do not make them correct. Always open the sources for anything that matters."
+   ],
+   "criteria": [
+    "Does it search the web, your documents, or both?",
+    "Are answers cited so you can verify them?",
+    "What does the free tier limit?",
+    "Is there an API or team plan?"
+   ],
+   "tools": [
+    "perplexity",
+    "you",
+    "notebooklm",
+    "chatpdf"
+   ],
+   "picks": [
+    {
+     "label": "Cited web answers",
+     "tool": "perplexity",
+     "why": "Perplexity searches the web and returns answers with citations; the free tier covers core search and Pro adds more advanced searches and model choice."
+    },
+    {
+     "label": "Adding search to your own AI product",
+     "tool": "you",
+     "why": "You.com's current pricing page centres on developer APIs priced per thousand calls, including a free MCP tier."
+    },
+    {
+     "label": "Working only from your own sources",
+     "tool": "notebooklm",
+     "why": "NotebookLM builds notebooks from sources you add and offers Audio Overviews; Google lists tiered limits for Audio Overviews and sources per notebook."
+    },
+    {
+     "label": "Question-and-answer over PDFs",
+     "tool": "chatpdf",
+     "why": "ChatPDF's free plan analyses two documents per day; Plus removes the cap. The main page reviewed was about 15 months old, so verify current limits."
+    }
+   ],
+   "checklist": [
+    "Open the cited sources for every claim you will rely on.",
+    "Match the tool to the material: web questions need web search, private documents need a document tool.",
+    "Check upload and daily-use limits before building a workflow on a free tier."
+   ],
+   "faq": [
+    {
+     "q": "Is Perplexity better than a normal chatbot for research?",
+     "a": "It is designed around cited web answers, which helps verification. A general chatbot may be better for drafting and analysis. Many people use both."
+    },
+    {
+     "q": "Can these tools read my private files?",
+     "a": "NotebookLM and ChatPDF are built for that. Check each vendor's privacy terms before uploading sensitive documents."
+    }
+   ]
+  },
+  "best-ai-tools-for-everyday-office-work": {
+   "title": "Best AI Tools for Everyday Office Work: Copilot, Grammarly, Motion, Canva",
+   "h1": "Best AI tools for everyday office work",
+   "description": "Microsoft 365 Copilot, Grammarly, Motion, Canva AI and Otter.ai compared on what they automate, free options, pricing and limits, using vendor pages.",
+   "published": "2026-11-15",
+   "updated": "2026-11-15",
+   "category": "Productivity",
+   "intro": [
+    "Office AI tools work best when they sit inside the apps you already use. This guide compares five that each take over a different chore: drafting and analysis in Microsoft 365, writing clean-up, calendar planning, design and meeting notes.",
+    "They are not substitutes for each other, so the comparison is about fit rather than a single winner."
+   ],
+   "criteria": [
+    "Which chore does it remove?",
+    "Does it work inside tools you already use?",
+    "Is there a free option?",
+    "Are costs per seat, and what limits apply?"
+   ],
+   "tools": [
+    "copilot-for-microsoft-365",
+    "grammarly",
+    "motion",
+    "canva-ai",
+    "otter-ai"
+   ],
+   "picks": [
+    {
+     "label": "Drafting and analysis inside Microsoft 365",
+     "tool": "copilot-for-microsoft-365",
+     "why": "Microsoft lists it as a per-user add-on that brings Copilot into Teams, Outlook, Word, PowerPoint and Excel, grounded in work data."
+    },
+    {
+     "label": "Cleaner writing",
+     "tool": "grammarly",
+     "why": "Grammarly's free plan covers basic checks; Pro adds rewrites, tone changes and plagiarism detection."
+    },
+    {
+     "label": "Planning your day",
+     "tool": "motion",
+     "why": "Motion schedules tasks onto your calendar and reschedules when meetings overrun. Its listed pricing comes from older vendor blog posts, so confirm it."
+    },
+    {
+     "label": "Fast design work",
+     "tool": "canva-ai",
+     "why": "Canva's AI features live inside its editor; AI usage is capped by plan allowances."
+    },
+    {
+     "label": "Meeting notes",
+     "tool": "otter-ai",
+     "why": "Otter lists a free Basic plan and paid plans with more transcription minutes."
+    }
+   ],
+   "checklist": [
+    "Start with the chore that costs you the most time, not the longest feature list.",
+    "Check per-seat pricing before rolling a tool out to a team.",
+    "Confirm what data the tool can access in your Microsoft, Google or calendar accounts."
+   ],
+   "faq": [
+    {
+     "q": "Do I need all of these?",
+     "a": "No. Most people benefit from one or two that match their daily workload."
+    },
+    {
+     "q": "Is Microsoft 365 Copilot the same as free Copilot?",
+     "a": "No. Free Copilot is a general assistant; Microsoft 365 Copilot is a paid add-on that works inside Office apps with work data."
+    }
+   ]
+  }
+ }
+}

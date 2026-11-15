@@ -12,7 +12,7 @@ unset($list);
 
 $crumbs = [['Home', site_url('/')], ['Categories', null]];
 $catItems = [];
-foreach (array_values($cats) as $i => $c) {
+foreach (array_values(array_filter($cats, fn($c) => $c !== CATALOG_UNCLASSIFIED)) as $i => $c) {
   $catItems[] = ['@type' => 'ListItem', 'position' => $i + 1, 'url' => category_page_url($c), 'name' => $c . ' AI tools'];
 }
 $jsonld = [
@@ -30,10 +30,21 @@ require __DIR__ . '/layout_top.php';
 <div class="grid">
 <?php foreach ($cats as $c): $list = $byCat[$c] ?? []; ?>
   <div class="card">
-    <h2 style="margin:0 0 6px;font-size:1.17em"><a href="<?= h(category_path($c)) ?>"><?= h($c) ?> AI tools</a></h2>
+    <h2 style="margin:0 0 6px;font-size:1.17em"><a href="<?= h(category_path($c)) ?>"><?= h($c === CATALOG_UNCLASSIFIED ? 'Other' : $c) ?> AI tools</a></h2>
     <div class="small"><?= h(seo_plural(count($list), 'tool')) ?></div>
     <p class="small" style="margin-top:8px"><?= h(category_intro($c)) ?></p>
-    <?php if ($list): ?>
+    <?php
+      $subs = [];
+      foreach ($list as $t) { $sname = (string)($t['subcategory'] ?? ''); if ($sname !== '') $subs[$sname] = ($subs[$sname] ?? 0) + 1; }
+      arsort($subs);
+    ?>
+    <?php if (count($subs) > 1 && $c !== CATALOG_UNCLASSIFIED): ?>
+      <ul class="linkList">
+        <?php foreach (array_slice($subs, 0, 4, true) as $sname => $n): ?>
+          <li><a href="<?= h(category_path($c, 1, $sname)) ?>"><?= h($sname) ?> (<?= (int)$n ?>)</a></li>
+        <?php endforeach; ?>
+      </ul>
+    <?php elseif ($list): ?>
       <ul class="linkList">
         <?php foreach (array_slice($list, 0, 3) as $t): ?>
           <li><a href="/tool.php?id=<?= urlencode($t['id']) ?>"><?= h($t['name']) ?></a></li>

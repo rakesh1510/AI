@@ -9,6 +9,7 @@
         <a href="/categories.php">All categories</a>
         <a href="/top.php">Top AI tools</a>
         <a href="/compare.php">Compare tools</a>
+        <a href="/guides.php">AI tool guides</a>
         <a href="/comparisons.php">Popular comparisons</a>
         <a href="/leaderboard.php">Leaderboard</a>
       </div>
@@ -31,6 +32,7 @@
       <div class="footerCol">
         <h3>COMPANY</h3>
         <a href="/about.php">About AIHubpedia</a>
+        <a href="/methodology.php">Methodology</a>
         <a href="/privacy.php">Privacy policy</a>
         <a href="/terms.php">Terms of service</a>
         <a href="/impressum.php">Impressum</a>

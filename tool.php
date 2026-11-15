@@ -29,10 +29,21 @@ $alts = array_values(array_filter($data['tools'], function($x) use ($t){
   return ($x['id'] ?? '') !== ($t['id'] ?? '') && ($x['category'] ?? '') === ($t['category'] ?? '');
 }));
 usort($alts, function($x, $y){ return (int)tool_has_generic_profile($x) <=> (int)tool_has_generic_profile($y); });
-$alts = array_slice($alts, 0, 6);
+$cp = $t['curated'] ?? null;
+$curatedAlts = $cp ? curated_alternatives($t, tools_by_id(), 8) : [];
+if($curatedAlts){
+  $alts = $curatedAlts;
+  $subtitle = ($t['subcategory'] ?? '') !== '' ? $t['subcategory'] : $t['category'];
+} else {
+  $alts = array_slice($alts, 0, 6);
+}
+$hasAltPage = count($curatedAlts) >= 3;
 
 $catUrl = category_page_url((string)$t['category']);
-$crumbs = [['Home', site_url('/')], [$t['category'] . ' AI tools', $catUrl], [$t['name'], null]];
+$crumbs = [['Home', site_url('/')], [$t['category'] . ' AI tools', $catUrl]];
+if(($t['subcategory'] ?? '') !== '' && $t['category'] !== CATALOG_UNCLASSIFIED){ $crumbs[] = [$t['subcategory'], category_page_url((string)$t['category'], 1, (string)$t['subcategory'])]; }
+$crumbs[] = [$t['name'], null];
+if(!tool_is_indexable($t) || $t['category'] === CATALOG_UNCLASSIFIED && tool_quality_tier($t) === 'basic' && thin_tool_policy() === 'noindex'){ $robots = 'noindex'; }
 $jsonld = [
   seo_tool_node($t, $canonical, [$avg, $cnt]),
   seo_breadcrumb_node($crumbs),
@@ -69,6 +80,34 @@ require __DIR__ . '/layout_top.php';
 
   <hr>
 
+  <?php if($cp): ?>
+  <section class="profileBox" aria-labelledby="glance">
+    <h2 id="glance" style="margin-top:0"><?= h($t['name']) ?> at a glance</h2>
+    <dl class="factList">
+      <?php if(!empty($cp['company'])): ?><dt>Company</dt><dd><?= h($cp['company']) ?></dd><?php endif; ?>
+      <dt>Category</dt><dd><a href="<?= h(rel_url($catUrl)) ?>"><?= h($t['category']) ?></a><?php if(!empty($t['subcategory'])): ?> › <a href="<?= h(category_path((string)$t['category'], 1, (string)$t['subcategory'])) ?>"><?= h($t['subcategory']) ?></a><?php endif; ?></dd>
+      <?php if(!empty($cp['best_for'])): ?><dt>Best for</dt><dd><?= h(implode('; ', $cp['best_for'])) ?></dd><?php endif; ?>
+      <dt>Pricing</dt><dd><?= h($cp['pricing']['summary'] ?? '') ?> <span class="small">(as of <?= h($cp['pricing']['as_of'] ?? '') ?>; <?= h($cp['pricing']['confidence'] ?? '') ?>)</span></dd>
+    </dl>
+    <?php if(!empty($cp['known_source_conflicts'])): ?>
+      <div class="noticeBox"><strong>Sources disagree:</strong>
+        <ul style="margin:6px 0 0;padding-left:18px"><?php foreach($cp['known_source_conflicts'] as $c): ?><li><?= h($c) ?></li><?php endforeach; ?></ul>
+      </div>
+    <?php endif; ?>
+    <p class="small"><?= h(profile_review_label($cp)) ?>. <a href="/methodology.php">How AIHubpedia reviews tools</a>.</p>
+    <details>
+      <summary>Sources (<?= count($cp['sources'] ?? []) ?>)</summary>
+      <ul class="small">
+        <?php foreach(($cp['sources'] ?? []) as $src): ?>
+          <li><a href="<?= h($src['url']) ?>" rel="nofollow noopener" target="_blank"><?= h($src['label']) ?></a> · <?= h($src['type']) ?> · retrieved <?= h($src['retrieved']) ?></li>
+        <?php endforeach; ?>
+      </ul>
+    </details>
+  </section>
+  <?php elseif(!empty($t['classification']) && ($t['classification']['method'] ?? '') === 'rule'): ?>
+    <p class="small">Category assigned automatically from the tool's description<?= ($t['classification']['confidence'] ?? '') !== 'high' ? ' (lower confidence, queued for review)' : '' ?>. <a href="/methodology.php">Learn how listings are classified</a>.</p>
+  <?php endif; ?>
+
   <div class="kv">
     <div class="small"><b>Tags</b></div>
     <div>
@@ -83,7 +122,7 @@ require __DIR__ . '/layout_top.php';
   <?php endif; ?>
 
   <div class="kv">
-    <div class="small"><b><?= $genericProfile ? 'General notes' : 'Features' ?></b></div>
+    <div class="small"><b><?= $genericProfile ? 'General notes' : ($cp ? 'Key features' : 'Features') ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['features'] ?? []) as $f): ?><li><?= h($f) ?></li><?php endforeach; ?>
@@ -92,7 +131,7 @@ require __DIR__ . '/layout_top.php';
   </div>
 
   <div class="kv">
-    <div class="small"><b><?= $genericProfile ? 'Typical benefits' : 'Pros' ?></b></div>
+    <div class="small"><b><?= $genericProfile ? 'Typical benefits' : ($cp ? 'Strengths' : 'Pros') ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['pros'] ?? []) as $p): ?><li><?= h($p) ?></li><?php endforeach; ?>
@@ -101,7 +140,7 @@ require __DIR__ . '/layout_top.php';
   </div>
 
   <div class="kv">
-    <div class="small"><b><?= $genericProfile ? 'Things to check' : 'Cons' ?></b></div>
+    <div class="small"><b><?= $genericProfile ? 'Things to check' : ($cp ? 'Limitations' : 'Cons') ?></b></div>
     <div>
       <ul>
         <?php foreach(($t['cons'] ?? []) as $c): ?><li><?= h($c) ?></li><?php endforeach; ?>
@@ -156,7 +195,10 @@ require __DIR__ . '/layout_top.php';
         </div>
       <?php endforeach; ?>
     </div>
-    <p class="small" style="margin-top:12px"><a href="<?= h(rel_url($catUrl)) ?>">See all <?= h($t['category']) ?> AI tools →</a></p>
+    <p class="small" style="margin-top:12px">
+      <?php if($hasAltPage): ?><a href="/alternatives.php?tool=<?= urlencode($t['id']) ?>">Full comparison of <?= h($t['name']) ?> alternatives →</a> · <?php endif; ?>
+      <a href="<?= h(rel_url($catUrl)) ?>">See all <?= h($t['category']) ?> AI tools →</a>
+    </p>
   <?php endif; ?>
 </div>
 
