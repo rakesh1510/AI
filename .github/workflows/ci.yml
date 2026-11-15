@@ -49,7 +49,7 @@ jobs:
       - name: Start SMTP sink and PHP server
         run: |
           nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
-          nohup php -d output_buffering=0 -S 127.0.0.1:8002 -t . tests/router.php > /tmp/php-server.log 2>&1 &
+          nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
           sleep 2
           curl -fsS -o /dev/null http://127.0.0.1:8002/
 
@@ -60,11 +60,16 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Browser tests (Chromium desktop + mobile)
+      - name: Install Playwright + Chromium
         run: |
-          npm install --no-save --no-package-lock playwright@1.56.1
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-          node tests/browser_test.js http://127.0.0.1:8002 ./ci-screenshots ci
+
+      - name: Browser tests (Chromium desktop + mobile)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_test.js http://127.0.0.1:8002 ./ci-screenshots ci
 
       - name: Upload screenshots
         if: always()
@@ -73,6 +78,6 @@ jobs:
           name: browser-screenshots
           path: ci-screenshots/
 
-      - name: Server log
+      - name: PHP error log
         if: failure()
-        run: cat /tmp/php-server.log
+        run: tail -n 100 /tmp/php-errors.log || true
