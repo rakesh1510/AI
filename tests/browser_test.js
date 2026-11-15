@@ -116,7 +116,9 @@ async function run(profileName, contextOpts) {
   const commentText = `Browser test comment ${P} ${Date.now()}`;
   await page.fill('#commentName', 'QA Bot');
   await page.fill('#commentText', commentText);
-  await Promise.all([page.waitForURL(/tool\.php\?id=chatgpt/), page.locator('form[action="/submit-comment.php"] button').click()]);
+  // The page is already on tool.php?id=chatgpt, so wait for the redirect target (#community), not the bare path.
+  await Promise.all([page.waitForURL(/tool\.php\?id=chatgpt#community/), page.locator('form[action="/submit-comment.php"] button').click()]);
+  await page.waitForLoadState('load');
   check(await page.locator(`text=${commentText}`).count() === 1, `[${P}] comment posted and displayed`);
 
   // Outbound "Open tool" link → click tracking + redirect.php (third-party destination blocked)
