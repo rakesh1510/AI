@@ -1,6 +1,6 @@
-
 <?php require 'layout_top.php'; ?>
 <h1>AI Tool Performance Benchmarks</h1>
+<p class="noticeBox">Preview only: the ratings below are illustrative editorial placeholders, not measured benchmark results.</p>
 
 <table class="pretty">
 <tr><th>Tool</th><th>Speed</th><th>Quality</th></tr>

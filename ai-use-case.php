@@ -6,14 +6,22 @@ $useCases = load_use_cases();
 $case = $useCases[$slug] ?? null;
 
 if (!$case) {
-    header('Location: ai-use-case-explorer.php');
+    // Permanent redirect (was a 302) so unknown/legacy slugs consolidate to the explorer.
+    header('Location: /ai-use-case-explorer.php', true, 301);
     exit;
 }
 
-$title = ($case['label'] ?? 'Use Case') . " — AIHubpedia";
-$meta_desc = $case['description'] ?? '';
+$title = 'AI Tools to ' . lcfirst((string)($case['label'] ?? 'Use Case'));
+if (stripos((string)($case['label'] ?? ''), 'ai ') === 0) $title = (string)$case['label'];
+$meta_desc = (string)($case['description'] ?? '') !== '' ? (string)$case['description'] : ('AI tools for ' . ($case['label'] ?? 'this use case') . ' on AIHubpedia.');
+$canonical = use_case_page_url($slug);
 
 $tools = match_tools_for_use_case($slug, 12);
+$jsonld = [
+  ['@type' => 'CollectionPage', '@id' => $canonical . '#webpage', 'url' => $canonical, 'name' => seo_title($title),
+   'isPartOf' => ['@id' => site_url('/#website')], 'mainEntity' => seo_tool_itemlist_node($tools, 'AI tools for ' . ($case['label'] ?? ''))],
+  seo_breadcrumb_node([['Home', site_url('/')], ['Use cases', site_url('/ai-use-case-explorer.php')], [(string)($case['label'] ?? ''), null]]),
+];
 
 require __DIR__ . '/layout_top.php';
 ?>
@@ -125,7 +133,7 @@ require __DIR__ . '/layout_top.php';
       <?php foreach($tools as $t): ?>
         <div class="card">
           <div style="display:flex;gap:10px;align-items:center">
-            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="" />
+            <img class="logo" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="48" height="48" loading="lazy" decoding="async" />
             <div>
               <h3 style="margin:0 0 4px"><?= h($t['name']) ?></h3>
               <div class="small">Category: <b><?= h($t['category']) ?></b></div>
@@ -135,9 +143,9 @@ require __DIR__ . '/layout_top.php';
           <p style="margin-top:12px;line-height:1.75;min-height:72px;"><?= h($t['short'] ?? $t['description'] ?? '') ?></p>
 
           <div class="actions">
-            <a class="btn secondary" href="tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
+            <a class="btn secondary" href="/tool.php?id=<?= urlencode($t['id']) ?>">Details</a>
             <?php if(tool_url($t)!=='#'): ?>
-              <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
+              <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($t['id']) ?>">Open tool</a>
             <?php endif; ?>
           </div>
 

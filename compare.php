@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-$title = "Compare AI Tools — AIHubpedia";
 $data = load_tools();
 $tools = $data['tools'] ?? [];
 
@@ -15,16 +14,51 @@ $bundleB = $tb ? compare_tool_bundle($tb) : null;
 $winnerKey = ($bundleA && $bundleB) ? compare_pick_winner_from_bundles($bundleA, $bundleB) : null;
 $winnerName = $winnerKey === 'a' ? ($ta['name'] ?? null) : ($winnerKey === 'b' ? ($tb['name'] ?? null) : null);
 
+$crumbs = [['Home', site_url('/')], ['Compare AI tools', site_url('/compare.php')]];
+if(($a !== '' && !$ta) || ($b !== '' && !$tb)){
+  // Unknown tool ids: real 404 instead of a thin 200 page.
+  http_response_code(404);
+  $title = 'Comparison Not Found';
+  $meta_desc = 'One of the AI tools in this comparison is not listed on AIHubpedia.';
+} elseif($ta && $tb && $ta['id'] === $tb['id']){
+  $robots = 'noindex';
+  $canonical = tool_page_url($ta['id']);
+} elseif($ta && $tb){
+  $title = $ta['name'] . ' vs ' . $tb['name'] . ': Features, Pricing & Use Cases Compared';
+  $meta_desc = $ta['name'] . ' vs ' . $tb['name'] . ': compare category (' . $ta['category'] . ' / ' . $tb['category'] . '), pricing (' . ($ta['pricing'] ?: 'n/a') . ' / ' . ($tb['pricing'] ?: 'n/a') . '), listed features, use cases and platforms side by side.';
+  $canonical = compare_page_url($ta['id'], $tb['id']);
+  $crumbs[1][1] = site_url('/compare.php');
+  $crumbs[] = [$ta['name'] . ' vs ' . $tb['name'], null];
+  $jsonld = [
+    ['@type' => 'WebPage', '@id' => $canonical . '#webpage', 'url' => $canonical, 'name' => seo_title($title), 'description' => seo_description($meta_desc),
+     'isPartOf' => ['@id' => site_url('/#website')],
+     'about' => [
+       ['@type' => 'SoftwareApplication', 'name' => $ta['name'], 'url' => tool_page_url($ta['id']), 'applicationCategory' => tool_schema_category((string)$ta['category'])],
+       ['@type' => 'SoftwareApplication', 'name' => $tb['name'], 'url' => tool_page_url($tb['id']), 'applicationCategory' => tool_schema_category((string)$tb['category'])],
+     ]],
+    seo_breadcrumb_node($crumbs),
+  ];
+} elseif($ta || $tb){
+  // Half-selected comparison (e.g. linked from a tool page): useful for users, not for the index.
+  $robots = 'noindex';
+  $canonical = site_url('/compare.php');
+} else {
+  $crumbs[1][1] = null;
+  $jsonld = [seo_breadcrumb_node($crumbs)];
+}
+$__pairs = available_comparison_pairs($tools, 12);
+
 require __DIR__ . '/layout_top.php';
 ?>
 
+<?= render_breadcrumbs($crumbs) ?>
 <section class="compare-hero card">
   <div class="compare-hero__copy">
     <span class="eyebrow">Side-by-side comparison</span>
-    <h1>Compare tools</h1>
-    <p class="small compare-lead">Pick two AI tools and compare verified compare data, pricing signals, source-backed features, and practical fit in one clean view.</p>
+    <h1><?= ($ta && $tb) ? h($ta['name']) . ' vs ' . h($tb['name']) : 'Compare AI tools' ?></h1>
+    <p class="small compare-lead">Pick two AI tools and compare category, listed pricing, features, use cases and platforms side by side. Source-backed data is shown where AIHubpedia has collected it.</p>
   </div>
-  <form method="get" class="compare-form-grid">
+  <form method="get" action="/compare.php" class="compare-form-grid">
     <div class="field">
       <label for="toolA">Tool A</label>
       <select id="toolA" name="a">
@@ -45,7 +79,7 @@ require __DIR__ . '/layout_top.php';
     </div>
     <div class="compare-form-actions">
       <button class="btn" type="submit">Compare now</button>
-      <a class="btn secondary" href="compare.php">Reset</a>
+      <a class="btn secondary" href="/compare.php">Reset</a>
     </div>
   </form>
 </section>
@@ -54,15 +88,15 @@ require __DIR__ . '/layout_top.php';
   <div class="compare-sticky-bar card">
     <div class="compare-sticky-bar__tools">
       <span><strong><?= h($ta['name']) ?></strong> vs <strong><?= h($tb['name']) ?></strong></span>
-      <?php if($winnerName): ?><span class="compare-winner-pill">Overall edge: <?= h($winnerName) ?></span><?php else: ?><span class="compare-winner-pill neutral">Very close match</span><?php endif; ?>
+      <?php if($winnerName): ?><span class="compare-winner-pill">More complete profile: <?= h($winnerName) ?></span><?php else: ?><span class="compare-winner-pill neutral">Similar profile depth</span><?php endif; ?>
     </div>
     <div class="compare-sticky-bar__actions">
-      <a class="btn secondary" href="tool.php?id=<?= urlencode($ta['id']) ?>">View <?= h($ta['name']) ?></a>
-      <a class="btn" href="tool.php?id=<?= urlencode($tb['id']) ?>">View <?= h($tb['name']) ?></a>
+      <a class="btn secondary" href="/tool.php?id=<?= urlencode($ta['id']) ?>">View <?= h($ta['name']) ?></a>
+      <a class="btn" href="/tool.php?id=<?= urlencode($tb['id']) ?>">View <?= h($tb['name']) ?></a>
     </div>
   </div>
 
-  <div class="ad compare-ad">Compare pipeline reads from new compare tables only. Existing tools table stays unchanged.</div>
+  <p class="small compare-note">Scores below measure how much information AIHubpedia has on each tool (listed features, use cases, platforms, integrations and free-plan data). They are not a quality rating or a recommendation — always check the official websites.</p>
 
   <section class="compare-grid compare-grid--premium">
     <div class="compare-vs-badge">VS</div>
@@ -75,22 +109,22 @@ require __DIR__ . '/layout_top.php';
         $isWinner = $entry['winner'];
       ?>
       <article class="compare-card card <?= $isWinner ? 'compare-card--winner' : '' ?>">
-        <?php if($isWinner): ?><div class="compare-card__winner">Best overall value</div><?php endif; ?>
+        <?php if($isWinner): ?><div class="compare-card__winner">More complete profile</div><?php endif; ?>
         <div class="compare-card__head">
           <div class="compare-card__brand">
-            <img src="<?= h(tool_logo($tool)) ?>" alt="<?= h($tool['name']) ?> logo" class="tool-logo lg">
+            <img src="<?= h(tool_logo($tool)) ?>" alt="<?= h($tool['name']) ?> logo" class="tool-logo lg" width="64" height="64" decoding="async">
             <div>
-              <h2><?= h($tool['name']) ?></h2>
+              <h2><a href="/tool.php?id=<?= urlencode($tool['id']) ?>"><?= h($tool['name']) ?></a></h2>
               <div class="compare-meta">
                 <span class="chip"><?= h($tool['category'] ?? 'AI Tool') ?></span>
                 <span class="chip soft"><?= h($bundle['pricing'] ?: ($tool['pricing'] ?? 'Unknown')) ?></span>
-                <span class="chip soft"><?= $bundle['real_data'] ? 'Verified compare data' : 'Basic facts only' ?></span>
+                <span class="chip soft"><?= $bundle['real_data'] ? 'Source-backed profile' : 'Basic listing data' ?></span>
               </div>
             </div>
           </div>
           <div class="compare-card__actions actions">
-            <a class="btn secondary" href="tool.php?id=<?= urlencode($tool['id']) ?>">Details</a>
-            <a class="btn" target="_blank" rel="noopener" href="redirect.php?id=<?= urlencode($tool['id']) ?>">Open tool</a>
+            <a class="btn secondary" href="/tool.php?id=<?= urlencode($tool['id']) ?>">Details</a>
+            <a class="btn" target="_blank" rel="nofollow noopener" href="/redirect.php?id=<?= urlencode($tool['id']) ?>">Open tool</a>
           </div>
         </div>
 
@@ -132,7 +166,7 @@ require __DIR__ . '/layout_top.php';
               <?php foreach(array_slice($bundle['features'] ?? [], 0, 4) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['features'])): ?><li>No verified feature data yet.</li><?php endif; ?>
+              <?php if(empty($bundle['features'])): ?><li>No feature data collected yet.</li><?php endif; ?>
             </ul>
           </div>
           <div>
@@ -141,7 +175,7 @@ require __DIR__ . '/layout_top.php';
               <?php foreach(array_slice($bundle['use_cases'] ?? [], 0, 4) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['use_cases'])): ?><li>No verified use-case data yet.</li><?php endif; ?>
+              <?php if(empty($bundle['use_cases'])): ?><li>No use-case data collected yet.</li><?php endif; ?>
             </ul>
           </div>
         </div>
@@ -174,7 +208,7 @@ require __DIR__ . '/layout_top.php';
               <?php foreach(array_slice($bundle['platforms'] ?? [], 0, 6) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['platforms'])): ?><li>No verified platform data yet.</li><?php endif; ?>
+              <?php if(empty($bundle['platforms'])): ?><li>No platform data collected yet.</li><?php endif; ?>
             </ul>
           </div>
           <div>
@@ -183,7 +217,7 @@ require __DIR__ . '/layout_top.php';
               <?php foreach(array_slice($bundle['integrations'] ?? [], 0, 6) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['integrations'])): ?><li>No verified integration data yet.</li><?php endif; ?>
+              <?php if(empty($bundle['integrations'])): ?><li>No integration data collected yet.</li><?php endif; ?>
             </ul>
           </div>
         </div>
@@ -233,6 +267,17 @@ require __DIR__ . '/layout_top.php';
     <h2>Select two valid tools</h2>
     <p class="small">Choose both Tool A and Tool B to unlock the full side-by-side comparison view.</p>
   </div>
+<?php endif; ?>
+
+<?php if($__pairs): ?>
+<section class="card" style="margin-top:18px">
+  <h2 style="margin-top:0">Popular AI tool comparisons</h2>
+  <ul class="linkList">
+    <?php foreach($__pairs as [$pa, $pb]): ?>
+      <li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+</section>
 <?php endif; ?>
 
 <?php require __DIR__ . '/layout_bottom.php'; ?>

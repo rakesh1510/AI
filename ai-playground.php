@@ -1,4 +1,3 @@
-
 <?php require 'layout_top.php'; ?>
 <h1>AI Playground</h1>
 <p>Try simple AI prompts directly.</p>

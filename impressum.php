@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "Impressum — AIHubpedia";
-$meta_desc = "Legal notice for AIHubpedia";
 require __DIR__ . '/layout_top.php';
 ?>
 

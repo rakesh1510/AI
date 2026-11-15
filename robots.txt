@@ -1,3 +1,70 @@
+# AIHubpedia robots.txt
+# Public content is open to search engines and AI search/answer engines.
+# Action endpoints, admin/install scripts and private data are excluded.
+
 User-agent: *
 Allow: /
-Sitemap: sitemap.php
+Disallow: /admin.php
+Disallow: /login.php
+Disallow: /logout.php
+Disallow: /bookmarks.php
+Disallow: /redirect.php
+Disallow: /track-click.php
+Disallow: /toggle-bookmark.php
+Disallow: /vote-tool.php
+Disallow: /vote-tool-ajax.php
+Disallow: /vote_debug.php
+Disallow: /rate.php
+Disallow: /submit-comment.php
+Disallow: /submit-tool.php
+Disallow: /submit_tool_save.php
+Disallow: /subscribe.php
+Disallow: /contact_send.php
+Disallow: /compare-tools.php
+Disallow: /compare_*.php
+Disallow: /generate_compare_pages.php
+Disallow: /import-json-to-mysql.php
+Disallow: /install-database.php
+Disallow: /install-full-mysql.php
+Disallow: /helpers.php
+Disallow: /helpersold.php
+Disallow: /db.php
+Disallow: /data/
+Disallow: /database/
+Disallow: /vendor/
+Disallow: /tests/
+Disallow: /scripts/
+Disallow: /nslookup/
+Disallow: /*?*q=
+Disallow: /*?*cat=
+
+# Search engines
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /redirect.php
+Disallow: /admin.php
+Disallow: /data/
+Disallow: /database/
+
+# AI search and answer engines (ChatGPT Search, Claude, Perplexity, Gemini)
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Disallow: /redirect.php
+Disallow: /admin.php
+Disallow: /data/
+Disallow: /database/
+
+Sitemap: https://aihubpedia.com/sitemap.xml

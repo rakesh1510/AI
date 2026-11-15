@@ -10,8 +10,8 @@
 <a class="card" href="affiliate-dashboard.php"><h3>Affiliate Dashboard</h3><p>Starter commission dashboard.</p></a>
 <a class="card" href="dark-mode-demo.php"><h3>Dark Mode</h3><p>Preview dark mode.</p></a>
 <a class="card" href="multilingual-demo.php"><h3>Multilingual</h3><p>Starter multi-language page.</p></a>
-<a class="card" href="search.php?q=chat"><h3>Search</h3><p>Search tools from your directory.</p></a>
+<a class="card" href="/?q=chat"><h3>Search</h3><p>Search tools from your directory.</p></a>
 <a class="card" href="submit-tool.php"><h3>Submit Tool</h3><p>Community submission flow.</p></a>
-<a class="card" href="marketplace/prompts.php"><h3>Prompt Marketplace</h3><p>Starter prompt sales page.</p></a>
+<a class="card" href="/extensions/prompts-marketplace/index.php"><h3>Prompt Marketplace</h3><p>Starter prompt sales page.</p></a>
 </section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>
