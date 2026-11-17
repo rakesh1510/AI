@@ -14,7 +14,11 @@ const pages = ['/', '/search.php?q=transcribe', '/category.php?name=Productivity
     await ctx.addInitScript(t => { try { localStorage.setItem('ah_theme', t); } catch (e) {} }, theme);
     const page = await ctx.newPage();
     for (const path of pages) {
-      await page.goto(base + path, { waitUntil: 'load' }); await page.waitForTimeout(2700);
+      await page.goto(base + path, { waitUntil: 'load' });
+      // Audit the settled page: scroll-reveal fades are mid-transition on a slow machine (transient, timing-dependent contrast results), so finish them first.
+      await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' });
+      await page.evaluate(() => document.querySelectorAll('.reveal').forEach(e => e.classList.add('in')));
+      await page.waitForTimeout(600);
       await page.addScriptTag({ path: axePath });
       const res = await page.evaluate(async () => (await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice'] }, resultTypes: ['violations'] })).violations.map(v => ({ id: v.id, impact: v.impact, n: v.nodes.length, sample: v.nodes.slice(0, 2).map(n => n.target.join(' ') + ' :: ' + (n.failureSummary || '').split('\n')[1]) })));
       for (const v of res) { if (['color-contrast', 'target-size', 'aria-allowed-attr', 'label', 'button-name', 'link-name', 'image-alt', 'heading-order', 'duplicate-id', 'duplicate-id-aria', 'aria-valid-attr-value', 'aria-required-children', 'list'].includes(v.id) || v.impact === 'critical' || v.impact === 'serious') { total += v.n; byRule[v.id] = (byRule[v.id] || 0) + v.n; console.log(`${theme}/${prof} ${path}: ${v.id} (${v.impact}) x${v.n} ${v.sample.join(' | ')}`); } }

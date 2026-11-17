@@ -1,4 +1,38 @@
-# Test results (Phase 4)
+# Test results (Phase 4 and 4.1)
+
+## Phase 4.1 final results (supersede the Phase 4 counts below)
+Isolated local environment only (MariaDB test database, `php -S`, Apache 2.4 + mod_php, local SMTP sink, synthetic data). The same suites run in GitHub Actions (MySQL 8) on every push; see the pull request for the run on the final commit.
+
+| Suite | `php -S` | Apache 2.4 + gzip | Notes |
+|---|---|---|---|
+| PHP syntax | 190 files, 0 problems | – | |
+| Built-asset freshness | up to date | – | |
+| Data quality (Phase 2) | 281 | – | |
+| Catalogue audit | 0 invalid profiles | – | |
+| Security unit (`security_test.php`) | 147 | – | adds rate-directory safety |
+| **Security inventory + secrets scan** | **338** | – | 106 PHP files classified; 543 tracked files scanned |
+| Phase 4 logic (`phase4_logic_test.php`) | **8,683** (8,657 without a database) | – | adds cache correctness/invalidation, synthetic 2,000-tool catalogue, editorial queue, logo/third-party checks, mail error handling |
+| UX logic (Phase 3) | 138 | – | |
+| **Database compatibility scenarios** | **252** | – | 7 synthetic databases incl. "no database"; migration plans applied to copies |
+| SEO regression incl. every sitemap URL | 3,148 | 3,150 | 618 URLs |
+| Security HTTP (`security_http_test.php`) | 75 | 75 | |
+| **Negative HTTP** (`security_negative_http_test.php`) | **123** | **123** | hostile barrage with state snapshots, forms abuse, spoofed headers, admin brute force |
+| **B2B lead reliability** (mock mail) | **48** | **48** | |
+| SEO/GEO audit gate | 0 issues | – | |
+| Browser regression (desktop + Pixel 7) | 135 | – | |
+| Phase 3 UX/conversion/privacy | 196 | – | +2: newsletter confirmation is now two-step |
+| Phase 4 browser (wizard, problem pages, matrix, advertiser) | 100 | 100 | desktop, mobile, no-JS |
+| axe-core (22 pages × light/dark × desktop/mobile) | **0 violations** | – | audit now waits for scroll-reveal fades to settle (a CI-only timing flake in the previous version) |
+| Business report | runs | – | |
+
+Bugs found *by* the new suites and fixed in this phase: blocked-file gaps, placeholder extension pages, unauthenticated-looking demo login, GET-triggered newsletter confirmation, click inflation, session cookie flags, mail Host poisoning (Apache only), `/redirect.php` HTTP 500 without a database, old-shape interaction tables, silent rate-limit disabling on an unsafe directory (Apache only), invisible notification failures. See SECURITY_VERIFICATION_REPORT.md.
+Two existing expectations changed deliberately: `/login.php` is now 404 (demo disabled), and the Phase 3 browser test follows the two-step newsletter confirmation.
+
+Performance: PERFORMANCE_BENCHMARK.md. Database: DATABASE_COMPATIBILITY_REPORT.md. Lead workflow: B2B_FORM_RELIABILITY_REPORT.md.
+Not verified: real mail delivery, real proxy/CDN, nginx rules, vendor dependency vulnerabilities, load/capacity, assistive technology, the live database.
+
+---
+## Phase 4 results (historical)
 
 All results are from an **isolated local environment**: MariaDB test database (name contains "test"), `php -S` with `tests/router.php`, local SMTP sink, **synthetic data only**. Nothing touched production, staging, hosting or real customers. The same suites run in GitHub Actions on MySQL 8 (see the PR for the run). Counts are checks, not test cases.
 
