@@ -105,6 +105,7 @@
   "ui.php": "lib",
   "unsubscribe.php": "token_write",
   "vote-tool-ajax.php": "write",
-  "vote-tool.php": "redirect"
+  "vote-tool.php": "redirect",
+  "cache.php": "lib"
  }
 }

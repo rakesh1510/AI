@@ -39,6 +39,7 @@ function send_mail(string $to, string $subject, string $html, string $text = '',
     $mail->SMTPSecure = (string)($m['smtp_secure'] ?? '');
     $mail->SMTPAutoTLS = (string)($m['smtp_secure'] ?? '') !== '';
     $mail->Timeout = 8;
+    $mail->Hostname = (string)parse_url(AIHUB_SITE_URL, PHP_URL_HOST);   // Message-ID and HELO must not be built from the (forgeable) request Host header
     $mail->CharSet = 'UTF-8';
     $mail->setFrom((string)$m['from_email'], (string)($m['from_name'] ?? 'AIHubpedia'));
     $mail->addAddress($to);

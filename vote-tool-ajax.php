@@ -10,6 +10,7 @@ try {
     $type = trim((string)($_POST['type'] ?? 'up'));
     if ($toolId === '' || !find_tool($toolId)) { sec_fail(422, 'Unknown tool'); }
     if ($type !== 'up' && $type !== 'down') { sec_fail(422, 'Invalid vote type'); }
+    if (!interactions_writable()) { header('Retry-After: 300'); sec_fail(503, 'Voting is temporarily unavailable.'); }
 
     $ok = vote_tool_action($toolId, $type);
     $counts = tool_vote_breakdown($toolId);

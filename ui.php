@@ -59,9 +59,21 @@ function is_affiliate_link(array $t): bool {
   return trim((string)($site['affiliate_default'] ?? '')) !== '' && trim((string)($t['website'] ?? '')) !== '';
 }
 
-/** rel attribute for outbound links: sponsored placements and affiliate links are marked "sponsored" (Google's guidance). */
+/**
+ * True when the tool's website URL goes through an affiliate or referral-tracking host or carries a referral parameter. AIHubpedia does not
+ * know whether it earns anything from such a link, so it is disclosed as "tracking/referral" and marked rel="sponsored" to be safe.
+ */
+function link_has_tracking(array $t): bool {
+  $url = trim((string)($t['website'] ?? ''));
+  if ($url === '') return false;
+  $host = preg_replace('/^www\./', '', strtolower((string)parse_url($url, PHP_URL_HOST)));
+  if ($host !== '' && preg_match('/(^|\.)(8odi\.net|shareasale\.com|awin1\.com|impact\.com|pxf\.io|sjv\.io|ojrq\.net|partnerstack\.com|rewardful\.com|refersion\.com|linksynergy\.com|tkqlhce\.com|anrdoezrs\.net|dpbolvw\.net|jdoqocy\.com|kqzyfj\.com|clickbank\.net|tidd\.ly|geni\.us)$/i', $host)) return true;
+  return (bool)preg_match('/[?&](aff|affiliate|refcode|fpr|irclickid|clickid|a_aid|tap_a|mbsy|rfsn)=/i', $url);
+}
+
+/** rel attribute for outbound links: sponsored placements, affiliate links and tracking/referral links are marked "sponsored" (Google's guidance). */
 function outbound_rel(array $t, bool $sponsored = false): string {
-  return 'nofollow noopener' . (($sponsored || is_affiliate_link($t)) ? ' sponsored' : '');
+  return 'nofollow noopener' . (($sponsored || is_affiliate_link($t) || link_has_tracking($t)) ? ' sponsored' : '');
 }
 
 // ----------------------------------------------------------------------
@@ -87,7 +99,7 @@ function render_tool_card(array $t, array $opts = []): string {
     . (!empty($opts['filter']) ? ' data-search="' . $h(search_normalize($t['name'] . ' ' . ($t['short'] ?? '') . ' ' . ($t['subcategory'] ?? ''))) . '"' : '') . '>';
   if ($sponsored) $o .= '<p class="adLabel"><span class="adTag">Sponsored</span> <a href="/disclosure.php">Why am I seeing this?</a></p>';
   $o .= '<div class="tCard__top">'
-    . '<img class="tCard__logo" src="' . $h(tool_logo($t)) . '" alt="' . $h($t['name']) . ' logo" width="44" height="44" loading="lazy" decoding="async">'
+    . '<img class="tCard__logo" src="' . $h(tool_logo($t)) . '" alt="' . $h($t['name']) . ' logo" width="44" height="44" loading="lazy" decoding="async" fetchpriority="low">'
     . '<div class="tCard__title"><h' . $lvl . '><a href="' . $h(tool_path($id)) . '">' . $h($t['name']) . '</a></h' . $lvl . '>'
     . '<p class="tCard__meta"><a href="' . $h(category_path($cat)) . '">' . $h($cat) . '</a>' . (!empty($t['subcategory']) ? ' · ' . $h($t['subcategory']) : '') . '</p></div>'
     . '<button type="button" class="iconBtn js-only" data-fav="' . $h($id) . '" aria-pressed="false" aria-label="Save ' . $h($t['name']) . ' to favorites">' . ui_icon('heart') . '</button>'
@@ -108,6 +120,7 @@ function render_tool_card(array $t, array $opts = []): string {
   $o .= '</div>';
   if (!empty($opts['votes'])) $o .= render_vote_buttons($id, (string)($opts['votes_context'] ?? 'index.php'));
   if ($aff) $o .= '<p class="tCard__note">Affiliate link: AIHubpedia may earn a commission. <a href="/disclosure.php">Details</a></p>';
+  elseif (link_has_tracking($t)) $o .= '<p class="tCard__note">This website link uses a referral or tracking address. <a href="/disclosure.php">Details</a></p>';
   return $o . '</article>';
 }
 

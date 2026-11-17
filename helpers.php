@@ -13,6 +13,7 @@ require_once __DIR__ . '/conversion.php';
 require_once __DIR__ . '/leads_admin.php';
 require_once __DIR__ . '/recommend_engine.php';
 require_once __DIR__ . '/editorial.php';
+require_once __DIR__ . '/cache.php';
 
 // ----------------------
 // JSON helpers
@@ -293,10 +294,31 @@ function db_connection_available(){
   return function_exists('db');
 }
 
+/**
+ * Votes and click counts need the CURRENT table shape (visitor_id, ip_hash, up/down votes). A database created from the older install
+ * files has ip_address/user_agent columns and an ENUM('like','dislike'); writing to it would fail on every request, so such a database is
+ * treated as "interactions unavailable" and the JSON fallback is used for reads. See scripts/db_preflight.php.
+ */
 function interaction_tables_exist(){
   static $checked = null;
   if($checked !== null) return $checked;
-  return $checked = (db_table_exists('tool_votes') && db_table_exists('tool_clicks'));
+  if(!(db_table_exists('tool_votes') && db_table_exists('tool_clicks'))) return $checked = false;
+  try {
+    $pdo = db();
+    foreach([['tool_clicks','visitor_id'],['tool_clicks','ip_hash'],['tool_votes','visitor_id'],['tool_votes','ip_hash'],['tool_votes','vote_type']] as [$t,$c]){
+      if(!db_column_exists($pdo, $t, $c)) return $checked = false;
+    }
+    $ty = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tool_votes' AND COLUMN_NAME = 'vote_type'");
+    $ty->execute();
+    $type = strtolower((string)$ty->fetchColumn());
+    if(strpos($type, 'enum') === 0 && strpos($type, "'up'") === false) return $checked = false;   // ENUM('like','dislike') cannot store 'up'/'down'
+    return $checked = true;
+  } catch(Throwable $e){ return $checked = false; }
+}
+
+/** True when writes to the interaction tables can succeed (database configured, reachable and in the current shape). */
+function interactions_writable(): bool {
+  try { return db_connection_available() && function_exists('db') && interaction_tables_exist(); } catch(Throwable $e){ return false; }
 }
 
 function client_ip_address(){
@@ -414,7 +436,15 @@ function compare_tool_total_score($tool){
   return ($features * 2) + ($pros * 2) + ($useCases * 2) + ($hasLong * 2);
 }
 
+/**
+ * Logo URL for a tool. Order: a locally hosted copy (assets/logos/<id>.png|webp, created by scripts/cache_logos.php: no third-party
+ * request, no visitor data sent to Google), then an explicit logo from the catalogue, then Google's favicon service as the last resort.
+ */
 function tool_logo($t){
+  $id = preg_replace('/[^a-z0-9._-]/i', '', (string)($t['id'] ?? ''));
+  if($id !== ''){
+    foreach(['webp', 'png'] as $ext){ if(is_file(__DIR__ . '/assets/logos/' . $id . '.' . $ext)) return '/assets/logos/' . $id . '.' . $ext; }
+  }
   if(!empty($t['logo'])) return $t['logo'];
   $url = $t['website'] ?? '';
   $dom = tool_domain($url);

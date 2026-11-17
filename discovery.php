@@ -9,9 +9,12 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  */
 
 function search_normalize(string $s): string {
-  $s = mb_strtolower($s, 'UTF-8');
-  $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
-  return trim(preg_replace('/\s+/u', ' ', $s));
+  static $memo = [];   // pure function: memoised because the same tool text is normalised for every query
+  if (isset($memo[$s])) return $memo[$s];
+  if (count($memo) > 30000) $memo = [];
+  $o = mb_strtolower($s, 'UTF-8');
+  $o = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $o);
+  return $memo[$s] = trim(preg_replace('/\s+/u', ' ', $o));
 }
 
 /** @return string[] tokens of at least 2 characters (a single 1-character query yields no tokens) */
@@ -86,6 +89,21 @@ function search_field_match(array $f, string $needle): array {
   return $best;
 }
 
+/** Normalised searchable fields of one tool, memoised by content so repeated queries do not re-normalise the whole catalogue. */
+function search_tool_fields(array $t): array {
+  static $memo = [];
+  $key = (string)($t['id'] ?? '') . '|' . crc32(json_encode([$t['name'] ?? '', $t['subcategory'] ?? '', $t['category'] ?? '', $t['tags'] ?? [], $t['short'] ?? '', $t['use_cases'] ?? [], $t['features'] ?? [], $t['description'] ?? '']));
+  if (isset($memo[$key])) return $memo[$key];
+  if (count($memo) > 20000) $memo = [];
+  return $memo[$key] = [
+    'name' => search_normalize((string)($t['name'] ?? '')), 'slug' => search_normalize((string)($t['id'] ?? '')),
+    'sub' => search_normalize((string)($t['subcategory'] ?? '')), 'cat' => search_normalize((string)($t['category'] ?? '')),
+    'tags' => search_normalize(implode(' ', (array)($t['tags'] ?? []))), 'short' => search_normalize((string)($t['short'] ?? '')),
+    'uses' => search_normalize(implode(' ', array_merge((array)($t['use_cases'] ?? []), (array)($t['features'] ?? [])))),
+    'desc' => search_normalize((string)($t['description'] ?? '')),
+  ];
+}
+
 /**
  * Rank tools for a query with transparent rules. Each result carries "reasons": plain-language statements of why it matched.
  * @param array $tools  catalogue records (load_tools()['tools'])
@@ -103,13 +121,7 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
   foreach ($tools as $t) {
     if (!empty($filters['category']) && ($t['category'] ?? '') !== $filters['category']) continue;
     if (!empty($filters['pricing_type']) && strcasecmp((string)($t['pricing_type'] ?? ''), $filters['pricing_type']) !== 0) continue;
-    $f = [
-      'name' => search_normalize((string)($t['name'] ?? '')), 'slug' => search_normalize((string)($t['id'] ?? '')),
-      'sub' => search_normalize((string)($t['subcategory'] ?? '')), 'cat' => search_normalize((string)($t['category'] ?? '')),
-      'tags' => search_normalize(implode(' ', (array)($t['tags'] ?? []))), 'short' => search_normalize((string)($t['short'] ?? '')),
-      'uses' => search_normalize(implode(' ', array_merge((array)($t['use_cases'] ?? []), (array)($t['features'] ?? [])))),
-      'desc' => search_normalize((string)($t['description'] ?? '')),
-    ];
+    $f = search_tool_fields($t);
     $score = 0.0; $reasons = [];
     if ($qn === $f['name'] || $qn === $f['slug']) { $score += 100; $reasons[] = 'Exact name match'; }
     elseif (strpos($f['name'], $qn) === 0) { $score += 70; $reasons[] = 'Name starts with your search'; }
@@ -238,9 +250,45 @@ function solution_reviewed_count(array $results): int {
 }
 function solution_indexable(array $results): bool { return solution_reviewed_count($results) >= 3; }
 
+/** Ranked rows kept in the cache per problem: enough for the hub counts (40) and the page (12). */
+const SOLUTION_CACHE_ROWS = 40;
+
+/**
+ * slug => [['id','score','reasons','partial'], ...] for every problem, computed once per catalogue/code version (see cache.php).
+ * @return array{0:array,1:string} [data, 'hit'|'miss'|'off']
+ */
+function solution_pages_data(): array {
+  static $memo = null;
+  if ($memo !== null) return $memo;
+  return $memo = cache_remember('solutions', function () {
+    $tools = array_values(tools_by_id()); $out = [];
+    foreach (solutions_all() as $slug => $p) {
+      $rows = [];
+      foreach (solution_results($tools, $p, SOLUTION_CACHE_ROWS) as $r) $rows[] = ['id' => (string)$r['tool']['id'], 'score' => round((float)$r['score'], 4), 'reasons' => array_values($r['reasons'] ?? []), 'partial' => !empty($r['partial'])];
+      $out[$slug] = $rows;
+    }
+    return $out;
+  });
+}
+
+/** Same shape as solution_results() for the real catalogue, served from the cache. Tool records are always read fresh. */
+function solution_results_cached(string $slug, int $limit = SOLUTION_PAGE_LIMIT): array {
+  [$data, $state] = solution_pages_data(); $byId = tools_by_id(); $out = [];
+  if ($state === 'off') {   // no usable cache (disabled, unwritable or unsafe directory): compute only what this request needs, never all ten problems
+    static $live = [];
+    if (!isset($live[$slug])) { $p = solution_get($slug); $live[$slug] = $p ? solution_results(array_values($byId), $p, SOLUTION_CACHE_ROWS) : []; }
+    return array_slice($live[$slug], 0, $limit);
+  }
+  foreach (array_slice($data[$slug] ?? [], 0, $limit) as $row) {
+    if (!isset($byId[$row['id']])) continue;
+    $out[] = ['tool' => $byId[$row['id']], 'score' => $row['score'], 'reasons' => $row['reasons']] + ($row['partial'] ? ['partial' => true] : []);
+  }
+  return $out;
+}
+
 /** Slugs of indexable problem pages (used by the sitemap). */
-function solutions_indexable_slugs(array $tools): array {
+function solutions_indexable_slugs(?array $tools = null): array {
   $out = [];
-  foreach (solutions_all() as $slug => $p) { if (solution_indexable(solution_results($tools, $p, SOLUTION_PAGE_LIMIT))) $out[] = $slug; }
+  foreach (array_keys(solutions_all()) as $slug) { if (solution_indexable(solution_results_cached($slug, SOLUTION_PAGE_LIMIT))) $out[] = $slug; }
   return $out;
 }

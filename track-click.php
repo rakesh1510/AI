@@ -8,6 +8,7 @@ sec_guard_write('interact', 120, 600);
 try {
     $toolId = trim((string)($_POST['id'] ?? ''));
     if ($toolId === '' || !find_tool($toolId)) { sec_fail(422, 'Unknown tool'); }
+    if (!interactions_writable()) { header('Retry-After: 300'); sec_fail(503, 'Click statistics are temporarily unavailable.'); }
     echo json_encode(['success' => true, 'clicks' => (int)record_click($toolId)]);
 } catch (Throwable $e) {
     sec_log_exception($e, 'track-click.php');

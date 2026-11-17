@@ -422,6 +422,109 @@ foreach (array_filter($rl, fn($x) => strpos($x['url'], '/solutions.php?problem='
 $plain = tool_related_links(['id' => 'x', 'name' => 'X'], $byId);
 ok(count($plain) === 1 && $plain[0]['url'] === '/recommend.php', 'unreviewed tools get only the generic wizard link (no claims about relevance)');
 
+section('4.1 derived-data cache: correctness and invalidation');
+$cdir = sys_get_temp_dir() . '/aihub_cache_test_' . getmypid(); putenv('AIHUB_CACHE_DIR=' . $cdir); putenv('AIHUB_CACHE');
+@mkdir($cdir, 0700, true);
+$calls = 0; $compute = function () use (&$calls) { $calls++; return ['n' => $calls, 'text' => 'x']; };
+[$v1, $st1] = cache_remember('unit', $compute, 900, 1000, 'catA', 'codeA');
+[$v2, $st2] = cache_remember('unit', $compute, 900, 1100, 'catA', 'codeA');
+ok($st1 === 'miss' && $st2 === 'hit' && $calls === 1 && $v2 === $v1, 'first call computes, second is served from the cache');
+[$v3, $st3] = cache_remember('unit', $compute, 900, 1000 + 901, 'catA', 'codeA');
+ok($st3 === 'miss' && $calls === 2, 'an entry older than the TTL is recomputed (click-popularity drift is bounded)');
+[, $st4] = cache_remember('unit', $compute, 900, 2000, 'catB', 'codeA');
+ok($st4 === 'miss', 'a different catalogue fingerprint never reuses another catalogue\'s entry');
+[, $st5] = cache_remember('unit', $compute, 900, 2000, 'catB', 'codeB');
+ok($st5 === 'miss', 'a different code fingerprint (new deployment) invalidates the entry');
+[, $st6] = cache_remember('unit', $compute, 900, 2010, 'catB', 'codeB');
+ok($st6 === 'hit', 'and the new entry is then reused');
+foreach (glob("$cdir/unit-catB-codeB.json") as $f) file_put_contents($f, '{not json');
+[, $st7] = cache_remember('unit', $compute, 900, 2020, 'catB', 'codeB');
+ok($st7 === 'miss', 'a corrupted cache file is ignored and recomputed');
+foreach (glob("$cdir/unit-catB-codeB.json") as $f) file_put_contents($f, json_encode(['schema' => 999, 'catalog' => 'catB', 'code' => 'codeB', 'at' => 2020, 'value' => ['evil' => 1]]));
+[$vx, $st8] = cache_remember('unit', $compute, 900, 2030, 'catB', 'codeB');
+ok($st8 === 'miss' && !isset($vx['evil']), 'an entry with a foreign schema version is never trusted');
+foreach (glob("$cdir/unit-catB-codeB.json") as $f) file_put_contents($f, json_encode(['schema' => AIHUB_CACHE_SCHEMA, 'catalog' => 'catZ', 'code' => 'codeB', 'at' => 2030, 'value' => ['evil' => 1]]));
+[$vy, $st9] = cache_remember('unit', $compute, 900, 2040, 'catB', 'codeB');
+ok($st9 === 'miss' && !isset($vy['evil']), 'an entry whose embedded fingerprint disagrees with its file name is rejected');
+ok(cache_remember('../evil', $compute, 900, 1, 'a', 'b')[1] === 'off', 'cache names are validated (no path tricks)');
+putenv('AIHUB_CACHE=0'); ok(cache_remember('unit', $compute, 900, 2050, 'catB', 'codeB')[1] === 'off', 'AIHUB_CACHE=0 disables the cache'); putenv('AIHUB_CACHE');
+$tmpd = sys_get_temp_dir() . '/aihub_unsafe_' . getmypid(); @mkdir($tmpd, 0777); @chmod($tmpd, 0777); putenv('AIHUB_CACHE_DIR=' . $tmpd);
+$safe = sec_private_dir($tmpd); ok($safe === $tmpd && (fileperms($tmpd) & 0022) === 0, 'a group/world-writable cache directory is tightened to 0700 before use');
+$link = sys_get_temp_dir() . '/aihub_link_' . getmypid(); @symlink($cdir, $link); ok(sec_private_dir($link) === '', 'a symlinked cache directory is refused (symlink tampering)');
+putenv('AIHUB_CACHE_DIR=' . $cdir); @rmdir($tmpd); @unlink($link);
+$ro = sys_get_temp_dir() . '/aihub_ro_' . getmypid(); @mkdir($ro, 0500); putenv('AIHUB_CACHE_DIR=' . $ro);
+$called = 0; $r = cache_remember('unit', function () use (&$called) { $called++; return [1]; }, 900, 5, 'a', 'b');
+ok($r[0] === [1] && $called === 1, 'an unwritable cache directory never breaks the page (computes live)'); putenv('AIHUB_CACHE_DIR=' . $cdir); @chmod($ro, 0700); @rmdir($ro);
+
+$f1 = tempnam(sys_get_temp_dir(), 'fp'); $f2 = tempnam(sys_get_temp_dir(), 'fp'); file_put_contents($f1, '{"a":1}'); file_put_contents($f2, '{"b":2}');
+$fpA = catalog_fingerprint([$f1, $f2], 'x'); ok($fpA === catalog_fingerprint([$f1, $f2], 'x'), 'fingerprint is stable for unchanged data');
+file_put_contents($f1, '{"a":9}'); touch($f1, filemtime($f1)); ok(catalog_fingerprint([$f1, $f2], 'x') !== $fpA, 'changing file content with identical size and mtime still changes the fingerprint');
+file_put_contents($f1, '{"a":1}'); $fpB = catalog_fingerprint([$f1, $f2], 'x'); touch($f1, time() + 100); ok(catalog_fingerprint([$f1, $f2], 'x') !== $fpB, 'touching a file changes the fingerprint');
+ok(catalog_fingerprint([$f1, $f2], 'x') !== catalog_fingerprint([$f1, $f2], 'y'), 'a different database checksum changes the fingerprint');
+@unlink($f2); ok(catalog_fingerprint([$f1, $f2], 'x') !== $fpB, 'a removed data file changes the fingerprint'); @unlink($f1);
+ok(code_fingerprint() === code_fingerprint() && code_fingerprint([__FILE__]) !== code_fingerprint([__DIR__ . '/../discovery.php']), 'code fingerprint depends on the ranking code files');
+
+section('4.1 cached results equal live results');
+$tools = array_values($byId);
+$sameRows = function (array $a, array $b) { return json_encode(array_map(fn($r) => [$r['tool']['id'], round($r['score'], 4), $r['reasons'], !empty($r['partial'])], $a)) === json_encode(array_map(fn($r) => [$r['tool']['id'], round($r['score'], 4), $r['reasons'], !empty($r['partial'])], $b)); };
+cache_clear();
+foreach (solutions_all() as $slug => $p) {
+  $live = solution_results($tools, $p, SOLUTION_CACHE_ROWS);
+  ok($sameRows($live, solution_results_cached($slug, SOLUTION_CACHE_ROWS)), "problem “{$slug}”: cached ranking, scores and reasons equal a live computation");
+  ok($sameRows(array_slice($live, 0, SOLUTION_PAGE_LIMIT), solution_results_cached($slug, SOLUTION_PAGE_LIMIT)), "problem “{$slug}”: the page slice is the first 12 of the same ordering");
+  ok(solution_indexable(array_slice($live, 0, SOLUTION_PAGE_LIMIT)) === solution_indexable(solution_results_cached($slug)), "problem “{$slug}”: the indexing decision is unchanged by caching");
+}
+ok(solutions_indexable_slugs() === array_values(array_filter(array_keys(solutions_all()), fn($sl) => solution_indexable(solution_results($tools, solution_get($sl), SOLUTION_PAGE_LIMIT)))), 'sitemap problem pages equal the live evidence gate');
+$liveLinks = function (array $t) use ($tools, $byId) {
+  $out = []; if (empty($t['curated'])) return [];
+  foreach (solutions_all() as $slug => $p) { foreach (solution_results($tools, $p) as $r) { if ($r['tool']['id'] === $t['id']) { $out[] = $slug; break; } } if (count($out) >= 3) break; }
+  return $out;
+};
+foreach ($byId as $id => $t) {
+  if (empty($t['curated'])) continue;
+  $cached = array_values(array_map(fn($x) => parse_url($x['url'], PHP_URL_QUERY), array_filter(tool_related_links($t, $byId), fn($x) => strpos($x['url'], '/solutions.php?') === 0)));
+  $expected = array_map(fn($sl) => 'problem=' . rawurlencode($sl), $liveLinks($t));
+  ok($cached === $expected, "related problem links for $id are identical with and without the cache");
+}
+ok(count(tool_related_links($byId['otter-ai'], $byId)) >= 4 && tool_related_links(['id' => 'raw', 'name' => 'Raw'], $byId) === tool_related_links(['id' => 'raw2', 'name' => 'Raw2'], $byId), 'unreviewed tools still get only the generic link');
+[, $stT] = solution_pages_data(); ok(in_array($stT, ['hit', 'miss', 'off'], true), 'cache status is reported');
+$t0 = hrtime(true); for ($i = 0; $i < 20; $i++) tool_related_links($byId['otter-ai'], $byId); $warm = (hrtime(true) - $t0) / 1e6 / 20;
+ok($warm < 25, 'warm related-link lookup is fast (' . round($warm, 3) . ' ms, was ~170 ms before caching)');
+
+$dbName2 = sec_setting('AIHUB_DB_NAME', 'db.name');
+if (stripos($dbName2, 'test') !== false && db_connection_available() && mysql_tables_available_for_content()) {
+  $pdo2 = db();
+  $fpDb1 = catalog_fingerprint(); $row = $pdo2->query("SELECT slug, short_description FROM tools LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+  $pdo2->prepare("UPDATE tools SET short_description = ? WHERE slug = ?")->execute([($row['short_description'] ?? '') . ' (edited)', $row['slug']]);
+  $fpDb2 = catalog_fingerprint();
+  $pdo2->prepare("UPDATE tools SET short_description = ? WHERE slug = ?")->execute([$row['short_description'], $row['slug']]);
+  ok($fpDb1 !== $fpDb2, 'database mode: editing a tool row changes the fingerprint, so the cache invalidates (a restored row may also invalidate: that error is on the safe side)');
+}
+
+section('4.1 synthetic catalogue: scaling and equivalence');
+$syn = $tools; mt_srand(3);
+for ($i = 0; $i < 1500; $i++) $syn[] = ['id' => 'syn-' . $i, 'name' => 'Syn ' . $i, 'category' => 'Productivity', 'subcategory' => 'Meetings & transcription', 'short' => 'AI transcription and meeting notes helper ' . $i, 'description' => 'synthetic', 'tags' => ['transcription'], 'features' => [], 'use_cases' => [], 'pricing' => 'Freemium', 'pricing_type' => 'Freemium'];
+$t0 = hrtime(true); $a = search_tools_ranked($syn, 'transcription meeting', 24); $cold = (hrtime(true) - $t0) / 1e6;
+$t0 = hrtime(true); $b = search_tools_ranked($syn, 'transcription meeting', 24); $warmS = (hrtime(true) - $t0) / 1e6;
+ok(json_encode(array_map(fn($x) => [$x['tool']['id'], $x['reasons']], $a)) === json_encode(array_map(fn($x) => [$x['tool']['id'], $x['reasons']], $b)), 'memoised normalisation gives identical results on repeated queries over 2,000 tools');
+ok($warmS < $cold * 1.2 + 5, 'repeating a query is not slower than the first (normalisation memo works): ' . round($cold, 1) . ' ms then ' . round($warmS, 1) . ' ms');
+$mut = $syn; $mut[count($mut) - 1]['short'] = 'completely different words about video';
+ok(count(array_filter(search_tools_ranked($mut, 'completely different words about video', 600), fn($x) => $x['tool']['id'] === 'syn-1499')) === 1, 'editing a tool\'s text is reflected immediately: the search memo is keyed by content, not by id alone');
+$samples = ['pdf', 'chatgpt', 'perplexty', 'speech to text', 'write blog', 'zzqxv']; $eq = true;
+foreach ($samples as $q) { $x = json_encode(search_tools_ranked($tools, $q, 10)); $y = json_encode(search_tools_ranked($tools, $q, 10)); if ($x !== $y) $eq = false; }
+ok($eq, 'search results are deterministic across repeated calls');
+cache_clear(); foreach (glob("$cdir/*") ?: [] as $f) @unlink($f); @rmdir($cdir); putenv('AIHUB_CACHE_DIR');
+
+section('4.1 logos and third-party requests');
+$layout = (string)file_get_contents(__DIR__ . '/../layout_top.php');
+ok(strpos($layout, 'preconnect') === false && strpos($layout, 'dns-prefetch') === false, 'pages no longer open early connections to third-party hosts');
+$lg = __DIR__ . '/../assets/logos'; @mkdir($lg, 0755, true); $f = $lg . '/zz-unit-test.png'; file_put_contents($f, 'x');
+ok(tool_logo(['id' => 'zz-unit-test', 'website' => 'https://example.com']) === '/assets/logos/zz-unit-test.png', 'a locally hosted logo is preferred over the third-party favicon service');
+@unlink($f); @rmdir($lg);
+ok(strpos(tool_logo(['id' => 'nologo', 'website' => 'https://example.com']), 'google.com/s2/favicons') !== false, 'without a local file the favicon fallback still works');
+ok(strpos(tool_logo(['id' => '../../etc/passwd', 'website' => 'https://example.com']), '/assets/logos/') === false, 'tool ids are sanitised before building a local logo path');
+ok(strpos(render_tool_card($byId['otter-ai']), 'fetchpriority="low"') !== false && strpos(render_tool_card($byId['otter-ai']), 'loading="lazy"') !== false, 'card logos are lazy and low priority so they never compete with CSS and text');
+
 // === P2–P5 sections are appended below ===
 
 echo "\nPASSED: $pass  FAILED: $fail\n";

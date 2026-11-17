@@ -16,6 +16,7 @@ if ($toolId !== '' && !find_tool($toolId)) { $toolId = ''; }   // only known too
 
 try {
     if ($toolId !== '' && in_array($vote, ['up', 'down', 'like', 'dislike'], true)) {
+        if (!interactions_writable()) { header('Retry-After: 300'); sec_fail(503, 'Voting is temporarily unavailable.', $isAjax); }
         $saved = vote_tool_action($toolId, in_array($vote, ['like'], true) ? 'up' : (in_array($vote, ['dislike'], true) ? 'down' : $vote));
         $counts = tool_vote_breakdown($toolId);
         $payload = [

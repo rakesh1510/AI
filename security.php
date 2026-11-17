@@ -239,17 +239,34 @@ function sec_guard_write(string $scope, int $limit = 30, int $window = 600, bool
 // ---------------------------------------------------------------------------
 // Rate limiting (file-backed, per client-network hash)
 // ---------------------------------------------------------------------------
+/**
+ * A directory only this user can write: created 0700, not a symlink, owned by the current user, not group/world writable.
+ * Returns '' when it cannot be made safe (another local user could otherwise pre-create it in /tmp and tamper with its contents).
+ */
+function sec_private_dir(string $dir): string {
+  if (is_link($dir)) return '';
+  if (!is_dir($dir)) @mkdir($dir, 0700, true);
+  if (!is_dir($dir) || is_link($dir)) return '';
+  if (function_exists('posix_geteuid') && @fileowner($dir) !== posix_geteuid()) return '';
+  if ((@fileperms($dir) & 0022) !== 0) { @chmod($dir, 0700); clearstatcache(true, $dir); if ((@fileperms($dir) & 0022) !== 0) return ''; }
+  return $dir;
+}
+
+/** Default private directory name: one per OS user, so a CLI run by one account cannot disable (or poison) the web account's directory. */
+function sec_default_private_dir(string $name): string { return rtrim(sys_get_temp_dir(), '/\\') . '/' . $name . '_' . (function_exists('posix_geteuid') ? posix_geteuid() : get_current_user()); }
+
 function sec_rate_dir(): string {
-  $d = sec_setting('AIHUB_RATE_DIR', 'rate_dir') ?: rtrim(sys_get_temp_dir(), '/\\') . '/aihub_rate';
-  if (!is_dir($d)) @mkdir($d, 0700, true);
-  return $d;
+  $d = sec_setting('AIHUB_RATE_DIR', 'rate_dir') ?: sec_default_private_dir('aihub_rate');
+  return sec_private_dir($d);
 }
 
 /** Records a hit and returns true when the caller exceeded $max hits within $window seconds. */
 function sec_rate_limited(string $bucket, int $max, int $window, ?string $ipHash = null, ?int $now = null): bool {
   $now = $now ?? time();
   $key = hash('sha256', $bucket . '|' . ($ipHash ?? sec_ip_hash('rate')));
-  $path = sec_rate_dir() . '/' . $key;
+  $dir = sec_rate_dir();
+  if ($dir === '') { sec_log('rate_dir_unsafe'); return false; }   // cannot store counters safely: fail open (and log) rather than lock everyone out
+  $path = $dir . '/' . $key;
   $fh = @fopen($path, 'c+');
   if (!$fh) return false;                       // storage problem: do not lock everyone out, but log it
   flock($fh, LOCK_EX);
@@ -264,7 +281,7 @@ function sec_rate_limited(string $bucket, int $max, int $window, ?string $ipHash
 }
 
 function sec_rate_gc(int $maxAge = 86400): void {
-  $dir = sec_rate_dir();
+  $dir = sec_rate_dir(); if ($dir === '') return;
   foreach ((array)@scandir($dir) as $f) {
     if ($f === '.' || $f === '..') continue;
     $p = $dir . '/' . $f;
@@ -304,7 +321,7 @@ function sec_send_headers(): void {
 
 /** The legacy demo login/bookmarks feature exists only for local demos: it is off unless AIHUB_DEMO_LOGIN=1. */
 function demo_login_enabled(): bool { return sec_setting('AIHUB_DEMO_LOGIN', 'demo_login') === '1'; }
-function sec_require_demo(): void { if (!demo_login_enabled()) { http_response_code(404); header('X-Robots-Tag: noindex'); exit; } }
+function sec_require_demo(): void { if (!demo_login_enabled()) { header('X-Robots-Tag: noindex'); http_response_code(404); require __DIR__ . '/404.php'; exit; } }
 
 /** Start the (non-admin) PHP session with safe cookie flags: HttpOnly, SameSite=Lax, Secure on HTTPS. */
 function sec_session_start(): void {

@@ -180,9 +180,8 @@ function posts_indexable(): array { return array_values(array_filter(load_posts(
 function tool_related_links(array $t, array $byId): array {
   $out = [];
   if (!empty($t['curated'])) {
-    $tools = array_values($byId);
-    foreach (solutions_all() as $slug => $p) {
-      foreach (solution_results($tools, $p) as $r) { if ($r['tool']['id'] === $t['id']) { $out[] = ['label' => $p['title'], 'url' => solution_path($slug), 'why' => 'Appears in the shortlist for this problem']; break; } }
+    foreach (solutions_all() as $slug => $p) {       // served from the derived-data cache (cache.php), not from ten catalogue scans per page view
+      foreach (solution_results_cached($slug) as $r) { if ($r['tool']['id'] === $t['id']) { $out[] = ['label' => $p['title'], 'url' => solution_path($slug), 'why' => 'Appears in the shortlist for this problem']; break; } }
       if (count($out) >= 3) break;
     }
     $sub = (string)($t['subcategory'] ?? '');

@@ -19,7 +19,7 @@ if ($slug !== '') {
     require __DIR__ . '/layout_bottom.php';
     exit;
   }
-  $results = solution_results($tools, $problem, SOLUTION_PAGE_LIMIT);
+  $results = solution_results_cached($slug, SOLUTION_PAGE_LIMIT);
   $reviewedN = solution_reviewed_count($results);
   $indexable = solution_indexable($results);
   if (!$indexable) $robots = 'noindex';
@@ -97,7 +97,7 @@ require __DIR__ . '/layout_top.php';
   <p class="lead">Start from the job you need done. Each page explains what to look for, which questions to ask vendors, and shows a ranked shortlist with the reason every tool matched. No AI chatbot is involved: the ranking rules are published in our <a href="/methodology.php#search">methodology</a>.</p>
 </header>
 <div class="cardGrid">
-  <?php foreach ($problems as $s => $p): $res = solution_results($tools, $p, 40); if (!$res) continue; ?>
+  <?php foreach ($problems as $s => $p): $res = solution_results_cached($s, SOLUTION_CACHE_ROWS); if (!$res) continue; ?>
     <article class="tCard">
       <div class="tCard__top"><span class="ico" aria-hidden="true"><?= ui_icon($p['icon'] ?? 'search') ?></span><div class="tCard__title"><h2><a href="<?= h(solution_path($s)) ?>"><?= h($p['title']) ?></a></h2></div></div>
       <p class="tCard__desc"><?= h($p['problem']) ?></p>

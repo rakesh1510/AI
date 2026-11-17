@@ -14,8 +14,11 @@ if(!$t){
 }
 
 // Counting is rate limited per network and tool: a script or a third-party page must not be able to inflate popularity by looping this URL.
-if(!sec_rate_limited('click:' . $id, 20, 600)){ record_click($id); event_record_server(
-'outbound_click', $id, is_affiliate_link($t) ? 'yes' : 'no', is_featured_tool($t) ? 'sponsored' : 'organic'); }
+if(!sec_rate_limited('click:' . $id, 20, 600)){
+  // Click counting is best effort: a missing, unreachable or outdated database must never break the visitor's outbound link.
+  try { if(interactions_writable()) record_click($id); event_record_server('outbound_click', $id, is_affiliate_link($t) ? 'yes' : 'no', is_featured_tool($t) ? 'sponsored' : 'organic'); }
+  catch(Throwable $e){ sec_log_exception($e, 'redirect.php:click'); }
+}
 $u = tool_url($t);
 $safe = ($u === '#') ? null : sec_safe_external_url($u);
 if($safe === null){

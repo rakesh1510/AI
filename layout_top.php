@@ -66,8 +66,6 @@ $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recomme
 <?php endif; ?>
 <?= $__verify ?><meta name="application-name" content="AIHubpedia">
 <meta name="theme-color" content="#4f46e5">
-<link rel="preconnect" href="https://www.google.com" crossorigin>
-<link rel="dns-prefetch" href="https://t0.gstatic.com">
 <?php if ($__built_css): ?>
 <link rel="stylesheet" href="/assets/css/site.min.css?v=<?= h($__built_css) ?>">
 <?php else: ?>

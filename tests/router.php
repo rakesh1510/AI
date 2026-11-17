@@ -4,7 +4,7 @@
 $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $root = $_SERVER['DOCUMENT_ROOT'];
 if (preg_match('#^/(data|database|tests|scripts|extensions|vendor|docs|qa-screenshots-local|nslookup|\.git|\.github)(/|$)#', $path) || preg_match('#(^|/)\.(?!well-known/)#', $path) || preg_match('#\.(md|lock|yml|yaml|dist|template)$#', $path) || preg_match('#^/(README[A-Za-z_]*\.txt|PROJECT_STATUS\.txt|NEW_LAYOUT_README\.txt)$#', $path) || preg_match('#\.(sql|bak|log|ini|sh)$#', $path)
-    || preg_match('#^/(composer\.(json|lock)|helpersold\.php|vote_debug\.php|(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial|layout_top|layout_bottom)\.php|config\.local\.php|(install-database|install-full-mysql|import-json-to-mysql|generate_compare_pages|compare_(install|sync_catalog|refresh_all|fetch_source|enrich_tool))\.php)$#', $path)) {
+    || preg_match('#^/(composer\.(json|lock)|helpersold\.php|vote_debug\.php|(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial|cache|layout_top|layout_bottom)\.php|config\.local\.php|(install-database|install-full-mysql|import-json-to-mysql|generate_compare_pages|compare_(install|sync_catalog|refresh_all|fetch_source|enrich_tool))\.php)$#', $path)) {
   $path = '/__blocked__';
 }
 if ($path === '/sitemap.xml' && is_file($root . '/sitemap.php')) {
