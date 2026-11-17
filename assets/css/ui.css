@@ -376,7 +376,7 @@ table.pretty th{color:var(--muted)}
 .compare-hero .btn{min-height:44px}
 
 /* ---------- Legacy text colours as theme tokens (compare, leaderboard, scores) ---------- */
-:root{--ink-title:#23185f;--ink-body:#4c4680;--ink-soft:#6c6685}
+:root{--ink-title:#23185f;--ink-body:#4c4680;--ink-soft:#5d5776}
 :root[data-theme="dark"]{--ink-title:#eef0ff;--ink-body:#c9cff0;--ink-soft:#a6aed2}
 @media (prefers-color-scheme:dark){:root:not([data-theme]){--ink-title:#eef0ff;--ink-body:#c9cff0;--ink-soft:#a6aed2}}
 .compare-form-grid .field label,.compare-card h2,.compare-card h2 a,.compare-summary h3,.compare-columns h3,.compare-final h2,.score-item__row,.snapshot-box strong,

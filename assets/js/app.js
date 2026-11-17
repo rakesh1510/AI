@@ -263,6 +263,35 @@
     apply();
   })();
 
+
+  /* ---------- Saved shortlists (recommendation wizard): stored only in this browser ---------- */
+  (function () {
+    var KEY = 'ah_shortlists';
+    function read() { var v = store.get(KEY, []); return Array.isArray(v) ? v.filter(function (x) { return x && typeof x.url === 'string' && x.url.indexOf('/recommend.php?') === 0; }) : []; }
+    on(d, 'click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-save-shortlist]'); if (!b) return;
+      var list = read(), url = b.getAttribute('data-url') || '';
+      if (url.indexOf('/recommend.php?') !== 0) return;
+      list = list.filter(function (x) { return x.url !== url; });
+      list.unshift({ url: url, title: (b.getAttribute('data-title') || 'Shortlist').slice(0, 120), tools: (b.getAttribute('data-tools') || '').slice(0, 200), saved: new Date().toISOString().slice(0, 10) });
+      store.set(KEY, list.slice(0, 10));
+      var st = $('[data-save-status]'); if (st) st.textContent = 'Saved in this browser. You can find it on the Saved tools page.';
+    });
+    var box = $('[data-shortlists]'); if (!box) return;
+    function render() {
+      var list = read(), ul = $('[data-shortlists-list]', box); if (!ul) return;
+      ul.textContent = ''; box.hidden = !list.length;
+      list.forEach(function (x) {
+        var li = document.createElement('li'), a = document.createElement('a'), sm = document.createElement('span'), rm = document.createElement('button');
+        a.href = x.url; a.textContent = x.title; sm.className = 'small'; sm.textContent = ' · ' + x.tools + ' · saved ' + x.saved;
+        rm.type = 'button'; rm.className = 'btn sm ghost'; rm.textContent = 'Remove'; rm.setAttribute('aria-label', 'Remove saved shortlist ' + x.title);
+        on(rm, 'click', function () { store.set(KEY, read().filter(function (y) { return y.url !== x.url; })); render(); });
+        li.appendChild(a); li.appendChild(sm); li.appendChild(document.createTextNode(' ')); li.appendChild(rm); ul.appendChild(li);
+      });
+    }
+    render();
+  })();
+
   /* ---------- Outbound click attribution ---------- */
   on(d, 'click', function (e) {
     var a = e.target.closest && e.target.closest('a[href*="redirect.php?id="]'); if (!a) return;

@@ -24,6 +24,7 @@ if(($a !== '' && !$ta) || ($b !== '' && !$tb)){
   $robots = 'noindex';
   $canonical = tool_page_url($ta['id']);
 } elseif($ta && $tb){
+  if(empty($ta['curated']) || empty($tb['curated'])) $robots = 'noindex';   // a comparison is indexable only when both profiles are reviewed and sourced
   $title = $ta['name'] . ' vs ' . $tb['name'] . ': Features, Pricing & Use Cases Compared';
   $meta_desc = $ta['name'] . ' vs ' . $tb['name'] . ': compare category (' . $ta['category'] . ' / ' . $tb['category'] . '), pricing (' . ($ta['pricing'] ?: 'n/a') . ' / ' . ($tb['pricing'] ?: 'n/a') . '), listed features, use cases and platforms side by side.';
   $canonical = compare_page_url($ta['id'], $tb['id']);

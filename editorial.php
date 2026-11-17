@@ -165,3 +165,29 @@ function pricing_groups(array $byId): array {
   ksort($out);
   return $out;
 }
+
+/** Posts under 250 words (excluding markup) are too thin to index: they stay readable but noindex and out of the sitemap. */
+function post_word_count(array $p): int { $t = trim(preg_replace('/\s+/', ' ', strip_tags((string)($p['content'] ?? '')))); return $t === '' ? 0 : count(preg_split('/\s+/u', $t)); }
+function post_is_indexable(array $p): bool { return post_word_count($p) >= 250; }
+function posts_indexable(): array { return array_values(array_filter(load_posts(), 'post_is_indexable')); }
+
+/**
+ * Contextual internal links for a tool page. Problem pages are linked only when the tool really appears on them (reviewed tools only,
+ * to keep page generation cheap); pricing groups only when the group passes the evidence gate.
+ * @return array<int,array{label:string,url:string,why:string}>
+ */
+function tool_related_links(array $t, array $byId): array {
+  $out = [];
+  if (!empty($t['curated'])) {
+    $tools = array_values($byId);
+    foreach (solutions_all() as $slug => $p) {
+      foreach (solution_results($tools, $p) as $r) { if ($r['tool']['id'] === $t['id']) { $out[] = ['label' => $p['title'], 'url' => solution_path($slug), 'why' => 'Appears in the shortlist for this problem']; break; } }
+      if (count($out) >= 3) break;
+    }
+    $sub = (string)($t['subcategory'] ?? '');
+    if ($sub !== '' && isset(($g = pricing_groups($byId))[pricing_group_slug($sub)])) $out[] = ['label' => $sub . ': pricing and capability comparison', 'url' => '/pricing-comparison.php?group=' . rawurlencode(pricing_group_slug($sub)), 'why' => 'Pricing as stated, side by side'];
+    $out[] = ['label' => 'Recently updated profiles and verified changes', 'url' => '/changelog.php', 'why' => 'When this profile was last reviewed'];
+  }
+  $out[] = ['label' => 'Get a personalised shortlist', 'url' => '/recommend.php', 'why' => 'Six questions, no sign-up'];
+  return $out;
+}

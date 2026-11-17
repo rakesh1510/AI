@@ -24,8 +24,10 @@ $jsonld = [
 ];
 
 $theme_lock = 'light';   // this page ships its own light-only styling
+$crumbs = [['Home', site_url('/')], ['Use cases', site_url('/ai-use-case-explorer.php')], [(string)($case['label'] ?? ''), null]];
 require __DIR__ . '/layout_top.php';
 ?>
+<?= render_breadcrumbs($crumbs) ?>
 
 <style>
 .ucDetailHero{position:relative;overflow:hidden;padding:34px;background:linear-gradient(135deg,#f4eeff 0%,#efe9ff 55%,#e9e3ff 100%);}

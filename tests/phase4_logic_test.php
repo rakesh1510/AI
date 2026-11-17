@@ -388,6 +388,40 @@ foreach (guides_all() as $slug => $guide) {
   ok(!preg_match('/\b(we|our team) (tested|benchmarked)\b|\bhands-on\b|\bin our tests\b/i', $text), "existing guide $slug makes no testing claims");
 }
 
+section('P4 SEO/GEO: indexation controls and sitemap honesty');
+$thin = ['content' => '<p>' . str_repeat('word ', 100) . '</p>']; $full = ['content' => '<p>' . str_repeat('word ', 260) . '</p>'];
+ok(post_word_count($thin) === 100 && !post_is_indexable($thin) && post_is_indexable($full), 'posts under 250 words are not indexable');
+ok(posts_indexable() === [], 'both existing posts are thin and therefore excluded (not deleted)');
+require_once __DIR__ . '/../sitemap_lib.php';
+$entries = sitemap_entries(); $locs = array_column($entries, 'loc');
+ok(count(array_filter($locs, fn($l) => strpos($l, 'post.php') !== false || strpos($l, '/blog.php') !== false)) === 0, 'thin posts and the blog index are not in the sitemap');
+$home = array_values(array_filter($entries, fn($e) => $e['loc'] === 'https://aihubpedia.com/'))[0];
+ok(empty($home['lastmod']), 'homepage has no invented lastmod');
+$today = date('Y-m-d');
+ok(count(array_filter($entries, fn($e) => ($e['lastmod'] ?? '') === $today)) === 0, 'no sitemap entry claims it was modified today (lastmod only from real data)');
+ok(count(array_filter($locs, fn($l) => strpos($l, '/solutions.php?problem=') !== false)) === count(solutions_indexable_slugs($tools)), 'sitemap lists exactly the evidence-gated problem pages');
+ok(in_array('https://aihubpedia.com/recommend.php', $locs, true) && in_array('https://aihubpedia.com/changelog.php', $locs, true) && in_array('https://aihubpedia.com/pricing-comparison.php?group=meetings-transcription', $locs, true), 'new evidence-backed pages are in the sitemap');
+ok(!in_array('https://aihubpedia.com/newsletter-archive.php', $locs, true), 'empty newsletter archive is not in the sitemap');
+ok(count($locs) === count(array_unique($locs)), 'sitemap has no duplicate URLs');
+foreach ($entries as $e) { if (!empty($e['lastmod']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $e['lastmod'])) { ok(false, 'bad lastmod ' . $e['loc']); } }
+$cmp = array_filter($locs, fn($l) => strpos($l, '/compare.php?') !== false || preg_match('#/compare/#', $l));
+foreach ($cmp as $l) { if (preg_match('/a=([^&]+)&b=([^&]+)/', $l, $m)) ok(!empty($byId[$m[1]]['curated']) && !empty($byId[$m[2]]['curated']), "sitemap comparison $m[1] vs $m[2] has two reviewed profiles"); }
+$llms = (string)file_get_contents(__DIR__ . '/../llms.txt');
+ok(strpos($llms, '/solutions.php') !== false && strpos($llms, '/recommend.php') !== false && strpos($llms, 'How to cite') !== false, 'llms.txt describes the new pages and how to cite evidence levels');
+ok(preg_match('/(\d+) of (\d+) reviewed profiles have been verified by an editor/', $llms, $m) && (int)$m[1] === count(array_filter($byId, fn($t) => !empty($t['curated']['review']['human_verified']))), 'llms.txt states the true number of editor-verified profiles');
+ok(preg_match('/directory of (\d+) AI tools/', $llms, $m) && (int)$m[1] === count($tools), 'llms.txt tool count matches the catalogue (regenerate with scripts/build-seo-files.php)');
+$xml = (string)file_get_contents(__DIR__ . '/../sitemap.xml');
+$jsonCount = (int)shell_exec('cd ' . escapeshellarg(dirname(__DIR__)) . ' && env -i PATH=' . escapeshellarg(getenv('PATH')) . ' AIHUB_CONFIG_FILE=/nonexistent php -r ' . escapeshellarg('require "sitemap_lib.php"; echo count(sitemap_entries());'));
+ok($jsonCount > 500 && substr_count($xml, '<loc>') === $jsonCount, "committed sitemap.xml fallback is in sync with the generator in JSON mode ($jsonCount)");
+
+section('P4 internal linking');
+$rl = tool_related_links($byId['otter-ai'], $byId);
+ok(count($rl) >= 4 && count(array_filter($rl, fn($x) => strpos($x['url'], '/solutions.php?problem=') === 0)) >= 1, 'reviewed tool pages link to the problem pages that list them');
+foreach ($rl as $x) ok($x['why'] !== '' && $x['url'][0] === '/', 'related link has a reason and a local URL: ' . $x['url']);
+foreach (array_filter($rl, fn($x) => strpos($x['url'], '/solutions.php?problem=') === 0) as $x) { parse_str((string)parse_url($x['url'], PHP_URL_QUERY), $q); ok(in_array('otter-ai', array_map(fn($r) => $r['tool']['id'], solution_results($tools, solution_get($q['problem']))), true), 'linked problem page really lists the tool: ' . $q['problem']); }
+$plain = tool_related_links(['id' => 'x', 'name' => 'X'], $byId);
+ok(count($plain) === 1 && $plain[0]['url'] === '/recommend.php', 'unreviewed tools get only the generic wizard link (no claims about relevance)');
+
 // === P2–P5 sections are appended below ===
 
 echo "\nPASSED: $pass  FAILED: $fail\n";

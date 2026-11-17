@@ -85,6 +85,9 @@ jobs:
       - name: Security tests against the running server (CSRF, origin, GET inertness, blocked files, admin login)
         run: php tests/security_http_test.php http://127.0.0.1:8002
 
+      - name: SEO and GEO audit gate (every sitemap URL, titles, canonicals, JSON-LD, duplicates)
+        run: php scripts/seo_audit.php http://127.0.0.1:8002
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -104,6 +107,11 @@ jobs:
         env:
           NODE_PATH: /tmp/pw/node_modules
         run: node tests/browser_ux_test.js http://127.0.0.1:8002 ./ci-screenshots ci-ux
+
+      - name: Phase 4 browser tests (wizard, problem pages, evidence matrix, advertiser page; desktop, mobile, no-JS)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_phase4_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p4
 
       - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
         env:

@@ -129,6 +129,9 @@ require __DIR__ . '/layout_top.php';
       </section>
     <?php endif; ?>
 
+    <?php if ($result['status'] !== 'none'): $saveUrl = '/recommend.php?' . http_build_query(['go' => 1, 'objective' => $ans['objective'], 'budget' => $ans['budget'], 'role' => $ans['role'], 'experience' => $ans['experience'], 'team' => $ans['team'], 'integrations' => $ans['integrations']]); ?>
+      <p class="js-only" style="margin-top:16px"><button type="button" class="btn secondary" data-save-shortlist data-url="<?= $h($saveUrl) ?>" data-title="<?= $h($cfg['objectives'][$ans['objective']]['label']) ?>" data-tools="<?= $h(implode(', ', array_map(fn($i) => $i['tool']['name'], array_slice($result['items'], 0, 3)))) ?>">Save this shortlist in this browser</button> <span class="small" data-save-status role="status"></span></p>
+    <?php endif; ?>
     <details class="panel" style="margin-top:16px"><summary><strong>How your answers were used</strong></summary>
       <ul><?php foreach ($result['explain'] as $e): ?><li><?= $h($e) ?></li><?php endforeach; ?></ul>
       <p class="small">Points: +3/+2/+1 per documented capability in your goal, +2 for a fitting subcategory, small role/experience/team adjustments, +2 per documented integration you asked for, and +1 or +2 for stronger evidence. Unknown capabilities add nothing and subtract nothing.</p>

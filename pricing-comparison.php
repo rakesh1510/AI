@@ -26,7 +26,9 @@ if ($slug === '') {
   ?>
   <header class="pageHero" style="padding-top:0"><h1>AI tool pricing comparisons</h1><p class="lead">Prices exactly as vendors state them, with the date we retrieved them and how confident we are. We never calculate or estimate prices. Prices change often: always confirm on the vendor's page.</p></header>
   <?php if (!$groups): ?><p class="noticeBox">No group has enough reviewed profiles yet.</p><?php else: ?>
-    <ul class="linkList"><?php foreach ($groups as $s => $g): ?><li><a href="/pricing-comparison.php?group=<?= $h(rawurlencode($s)) ?>"><?= $h($g['label']) ?>: pricing and capabilities (<?= count($g['tools']) ?> reviewed tools)</a></li><?php endforeach; ?></ul>
+    <p>A group is listed only when at least three of its tools have reviewed profiles with at least two vendor sources each. Every comparison shows the price as the vendor states it, the date we retrieved it, a confidence note, the free option, the main limitation and which capabilities our sources document. It does not rank tools or say which is best: use the <a href="/recommend.php">recommendation wizard</a> for a shortlist that fits your situation.</p>
+    <ul class="linkList"><?php foreach ($groups as $s => $g): ?><li><a href="/pricing-comparison.php?group=<?= $h(rawurlencode($s)) ?>"><?= $h($g['label']) ?>: pricing and capabilities (<?= count($g['tools']) ?> reviewed tools: <?= $h(implode(', ', array_map(fn($t) => $t['name'], $g['tools']))) ?>)</a></li><?php endforeach; ?></ul>
+    <p class="small">Why some tools are missing: tools without a reviewed profile are not compared here because we would have nothing sourced to show. See <a href="/methodology.php#evidence">how evidence levels work</a>.</p>
   <?php endif;
   require __DIR__ . '/layout_bottom.php';
   exit;

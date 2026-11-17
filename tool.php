@@ -276,6 +276,12 @@ require __DIR__ . '/layout_top.php';
   </form>
 </div>
 
+<?php $related_links = tool_related_links($t, tools_by_id()); ?>
+<section class="panel" style="margin-top:22px" aria-labelledby="relLinks">
+  <h2 id="relLinks" style="margin-top:0">Explore related pages</h2>
+  <ul class="linkList"><?php foreach($related_links as $rl): ?><li><a href="<?= h($rl['url']) ?>"><?= h($rl['label']) ?></a> <span class="small">· <?= h($rl['why']) ?></span></li><?php endforeach; ?></ul>
+</section>
+
 <section class="panel" style="margin-top:22px" aria-labelledby="bizHelp">
   <h2 id="bizHelp" style="margin-top:0">Own this tool, or need something custom?</h2>
   <p class="small">If you are the vendor, you can <a href="/advertise.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>#request">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>">request a consultation</a> about a custom AI agent.</p>

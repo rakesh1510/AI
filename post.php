@@ -18,6 +18,7 @@ $title = (string)($p['title'] ?? 'Article');
 $meta_desc = (string)($p['excerpt'] ?? '') !== '' ? (string)$p['excerpt'] : seo_truncate((string)($p['content'] ?? ''), 155);
 $canonical = post_page_url((string)$p['slug']);
 $og_type = 'article';
+if(!post_is_indexable($p)) $robots = 'noindex';   // thin posts stay readable but are not indexed
 $date = (string)($p['date'] ?? '');
 $crumbs = [['Home', site_url('/')], ['Blog', site_url('/blog.php')], [$title, null]];
 $article = [
