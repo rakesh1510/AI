@@ -6,6 +6,7 @@
   "admin-leads.php": "admin",
   "admin-editorial.php": "admin",
   "editorial_review.php": "lib",
+  "i18n.php": "lib",
   "admin.php": "admin",
   "admin_auth.php": "lib",
   "advertise.php": "page",

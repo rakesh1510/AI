@@ -1,0 +1,12 @@
+{
+  "note": "Locale registry (Phase 5). Only 'live' locales are routed, linked, put in hreflang or the sitemap. 'planned' locales exist so the architecture is ready; none has reviewed content. A locale becomes live only after a qualified human reviewer approves every page in it (see docs/phase5/INTERNATIONALIZATION_PLAN.md). Machine translation output is a draft input for a reviewer, never publishable on its own.",
+  "default": "en",
+  "url_strategy": "path-prefix: English stays at /…; other locales at /{code}/… (for example /de/tool.php?id=chatgpt). Same domain, so authority is shared and no per-country domains or cookies are needed.",
+  "locales": {
+    "en": {"name": "English",  "native": "English",  "dir": "ltr", "status": "live",    "translation_review": "source language"},
+    "de": {"name": "German",   "native": "Deutsch",  "dir": "ltr", "status": "planned", "translation_review": "not started"},
+    "fr": {"name": "French",   "native": "Français", "dir": "ltr", "status": "planned", "translation_review": "not started"},
+    "es": {"name": "Spanish",  "native": "Español",  "dir": "ltr", "status": "planned", "translation_review": "not started"},
+    "hi": {"name": "Hindi",    "native": "हिन्दी",    "dir": "ltr", "status": "planned", "translation_review": "not started"}
+  }
+}
