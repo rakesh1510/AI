@@ -43,5 +43,5 @@
 * Real mail delivery, real proxy/CDN, nginx/LiteSpeed rules, PHPMailer vulnerability status, load and capacity, assistive-technology testing, the live database, real vendor pages (no profile was researched), competitor sites.
 * Search relevance is judged by taxonomy by the team, not by users.
 
-## Flakiness note
-An early run showed the backlog CSV comparison failing once right after a database rebuild; it passed on every rerun and the generator now computes live (no cache dependency). It is watched in CI.
+## CI finding fixed during this phase
+The first CI run failed the backlog test: the generator's "exists/candidate" state for comparisons depended on tool order, which differs between JSON mode and database mode (and after other tests touch the database). The generator now sorts tools by id, the CSV was regenerated, and the test passes with and without a database and after the Phase 4 logic suite. Reproduced locally before the fix and verified after.

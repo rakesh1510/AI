@@ -8,7 +8,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/../helpers.php';
 $opt = function (string $k, $d = '') use ($argv) { foreach ($argv as $a) if (strpos($a, "--$k=") === 0) return substr($a, strlen($k) + 3); return $d; };
-$byId = tools_by_id(); $tools = array_values($byId);
+$byId = tools_by_id(); ksort($byId, SORT_STRING); $tools = array_values($byId);   // fixed order: output must not depend on database row order
 $rows = []; $n = 0;
 $add = function (array $r) use (&$rows, &$n) { $rows[] = $r + ['id' => sprintf('B%03d', ++$n)]; };
 $vol = 'unmeasured: needs Search Console data after launch';
