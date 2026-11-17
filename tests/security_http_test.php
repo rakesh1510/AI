@@ -166,6 +166,26 @@ if ($r['code'] === 503) {
   ok($r['code'] === 403, 'admin action from a foreign origin rejected');
   $r = http('GET', "$base/admin.php?action=reject&i=0&_csrf=$at", [], [], $jar);
   ok($r['code'] === 200, 'admin actions cannot be triggered via GET');
+  // Lead admin prototype (needs synthetic leads: php scripts/seed_synthetic_leads.php on the test database)
+  $lr = http('GET', "$base/admin-leads.php", [], [], $jar);
+  ok($lr['code'] === 200 && stripos($lr['body'], 'Leads <span') !== false, 'signed-in admin can open the lead admin');
+  ok(stripos($lr['body'], 'Synthetic test data') !== false, 'page warns that the data is synthetic');
+  ok(!preg_match('/synthetic\d+@example\.test/', $lr['body']) && preg_match('/sy\*\*\*@example\.test/', $lr['body']), 'list view masks email addresses');
+  ok(!preg_match('/\bROI\b|\d+(\.\d+)?\s?%|[$€]\s?\d/i', strip_tags($lr['body'])), 'report shows counts only: no percentages, ROI or currency amounts');
+  preg_match('/href="[^"]*[?&;]id=(\d+)"/', $lr['body'], $mm); $leadId = $mm[1] ?? '';
+  $ld = http('GET', "$base/admin-leads.php?id=$leadId", [], [], $jar);
+  ok($leadId !== '' && preg_match('/synthetic\d+@example\.test/', $ld['body']) === 1, 'detail view shows the full address');
+  preg_match('/name="_csrf" value="([^"]+)"/', $ld['body'], $m3); $lt2 = $m3[1] ?? '';
+  $r = http('POST', "$base/admin-leads.php", ['admin_action' => 'set_status', 'id' => $leadId, 'status' => 'contacted'], $own, $jar);
+  ok($r['code'] === 403, 'status change without CSRF token rejected');
+  $r = http('POST', "$base/admin-leads.php", ['admin_action' => 'set_status', 'id' => $leadId, 'status' => 'contacted', '_csrf' => $lt2], ['Origin: https://evil.example'], $jar);
+  ok($r['code'] === 403, 'status change from a foreign origin rejected');
+  $r = http('GET', "$base/admin-leads.php?admin_action=set_status&id=$leadId&status=spam&_csrf=$lt2", [], [], $jar);
+  ok(stripos($r['head'], 'Location:') === false, 'status cannot be changed with GET');
+  $r = http('POST', "$base/admin-leads.php", ['admin_action' => 'set_status', 'id' => $leadId, 'status' => 'bogus', '_csrf' => $lt2], $own, $jar);
+  ok($r['code'] === 303 && strpos($r['loc'], 'error=') !== false, 'invalid status is refused with an error');
+  $anon = http('GET', "$base/admin-leads.php");
+  ok(stripos($anon['body'], 'Admin sign-in') !== false && !preg_match('/example\.test/', $anon['body']), 'anonymous visitors see only the sign-in form and no lead data');
   $r = http('POST', "$base/admin.php", ['admin_action' => 'logout', '_csrf' => $at], $own, $jar);
   $r = http('GET', "$base/admin.php", [], [], $jar);
   ok(stripos($r['body'], 'Sign out') === false, 'logout ends the session');

@@ -134,6 +134,7 @@ function seo_page_registry(): array {
     'disclosure.php' => ['title' => 'Advertising & Affiliate Disclosure', 'desc' => 'How AIHubpedia labels sponsored placements and affiliate links, and why paid placements never change a tool profile.'],
     '404.php' => ['title' => 'Page Not Found', 'desc' => 'The page you requested could not be found.', 'robots' => 'noindex'],
     'admin.php' => ['title' => 'Admin', 'desc' => 'AIHubpedia administration area for managing listings and settings.', 'robots' => 'noindex'],
+    'admin-leads.php' => ['title' => 'Leads', 'desc' => 'AIHubpedia lead status and reporting (admin only).', 'robots' => 'noindex'],
     'login.php' => ['title' => 'Demo Login', 'desc' => 'Demo login for testing AIHubpedia bookmarks and saved AI tools.', 'robots' => 'noindex'],
     'bookmarks.php' => ['title' => 'My Bookmarks', 'desc' => 'Your saved AI tools on AIHubpedia, stored for this demo account.', 'robots' => 'noindex'],
     'affiliate-dashboard.php' => ['title' => 'Affiliate reporting', 'desc' => 'Affiliate link reporting for AIHubpedia (no revenue figures are shown).', 'robots' => 'noindex'],

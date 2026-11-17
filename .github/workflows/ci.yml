@@ -55,6 +55,9 @@ jobs:
       - name: Data quality tests (taxonomy, classifier accuracy, profiles, analytics logic)
         run: php tests/data_quality_test.php
 
+      - name: Phase 4 logic tests (discovery, evidence, B2B funnel, wizard, SEO/GEO, newsletter)
+        run: php tests/phase4_logic_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 
@@ -75,6 +78,9 @@ jobs:
 
       - name: SEO tests (incl. every sitemap URL)
         run: php tests/seo_test.php http://127.0.0.1:8002 --full-sitemap
+
+      - name: Seed synthetic leads (test database only; the logic tests above clear the table)
+        run: php scripts/seed_synthetic_leads.php --count=24
 
       - name: Security tests against the running server (CSRF, origin, GET inertness, blocked files, admin login)
         run: php tests/security_http_test.php http://127.0.0.1:8002

@@ -9,6 +9,7 @@ require_once __DIR__ . '/discovery.php';
 require_once __DIR__ . '/ui.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/conversion.php';
+require_once __DIR__ . '/leads_admin.php';
 
 // ----------------------
 // JSON helpers

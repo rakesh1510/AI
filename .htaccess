@@ -25,14 +25,14 @@ ErrorDocument 404 /404.php
   # Install / import / maintenance scripts are CLI-only (they also refuse non-CLI requests themselves)
   RewriteRule ^(install-database|install-full-mysql|import-json-to-mysql|generate_compare_pages|compare_(install|sync_catalog|refresh_all|fetch_source|enrich_tool))\.php$ - [R=404,L]
   # Library files are include-only
-  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|recommend|compare_data|changelog|newsletter_archive)\.php$ - [R=404,L]
+  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial)\.php$ - [R=404,L]
   RewriteRule \.(sql|bak|log|ini|sh)$ - [R=404,L]
 </IfModule>
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  <FilesMatch "^(admin|login|logout|bookmarks|redirect|event|suggest|inquiry|subscribe|newsletter-confirm|unsubscribe|track-click|toggle-bookmark|vote-tool|vote-tool-ajax|rate|submit-comment|submit-tool|submit_tool_save|subscribe|contact_send|compare-tools|compare_.*|generate_compare_pages|import-json-to-mysql|install-.*)\.php$">
+  <FilesMatch "^(admin|admin-leads|login|logout|bookmarks|redirect|event|suggest|inquiry|subscribe|newsletter-confirm|unsubscribe|track-click|toggle-bookmark|vote-tool|vote-tool-ajax|rate|submit-comment|submit-tool|submit_tool_save|subscribe|contact_send|compare-tools|compare_.*|generate_compare_pages|import-json-to-mysql|install-.*)\.php$">
     Header set X-Robots-Tag "noindex, nofollow"
   </FilesMatch>
   <FilesMatch "\.(css|js|webp|png|jpg|jpeg|gif|svg|ico|woff2?)$">

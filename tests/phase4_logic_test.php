@@ -126,6 +126,97 @@ $slugs = solutions_indexable_slugs($tools);
 ok(in_array('transcribe-meetings-and-interviews', $slugs, true) && !in_array('answer-customer-questions', $slugs, true), 'sitemap list contains only gated pages');
 ok(solution_get('nope') === null && solution_get('transcribe-meetings-and-interviews')['slug'] === 'transcribe-meetings-and-interviews', 'solution_get lookup');
 
+section('P2 packages and public pricing');
+$pk = sponsorship_packages();
+ok(isset($pk['free'], $pk['priority'], $pk['featured'], $pk['homepage'], $pk['featured_monthly'], $pk['newsletter_sponsor']), 'package catalogue has the listed tiers and the two inquiry-only packages');
+foreach (['featured_monthly', 'newsletter_sponsor'] as $k) ok(($pk[$k]['kind'] ?? '') === 'inquiry' && !isset($pk[$k]['price']) && !empty($pk[$k]['status_text']), "$k has no public price and states its status");
+$tiers = pricing_tiers();
+ok((int)$tiers['priority']['price'] === 19 && (int)$tiers['featured']['price'] === 49 && (int)$tiers['homepage']['price'] === 99, 'existing list prices ($19/$49/$99) are unchanged');
+ok(strpos((string)file_get_contents(__DIR__ . '/../data/sponsorship_packages.json'), '€') === false, 'proposed euro prices are not in the public package file');
+$_SERVER['REQUEST_METHOD'] = 'GET'; $_SERVER['SCRIPT_NAME'] = '/advertise.php'; $_GET = [];
+ob_start(); require __DIR__ . '/../advertise.php'; $adv = ob_get_clean();
+ok(strpos($adv, '€') === false && !preg_match('/\b(199|499)\b/', $adv), 'advertise page shows no euro prices and no 199/499 figures');
+ok(strpos($adv, 'Package comparison') !== false && substr_count($adv, 'class="faqItem"') >= 6, 'advertise page has the package comparison and the FAQ');
+ok(!preg_match('/trusted by|testimonial|case stud|guarantee[sd]? (traffic|results|roi)|\d+(,\d{3})*\+? (monthly )?(visitors|subscribers|readers|users)\b/i', $adv), 'advertise page contains no testimonials, audience numbers or guarantees');
+ok(stripos($adv, 'does not publish audience') !== false && stripos($adv, 'not yet') !== false, 'page says audience figures are not published and the newsletter is not available yet');
+$_GET = ['package' => 'newsletter_sponsor']; ob_start(); require __DIR__ . '/../advertise.php'; $adv2 = ob_get_clean(); $_GET = [];
+ok(strpos($adv2, 'value="newsletter_sponsor" selected') !== false, 'deep link preselects the newsletter sponsorship interest');
+$_GET = ['package' => '<script>']; ob_start(); require __DIR__ . '/../advertise.php'; $adv3 = ob_get_clean(); $_GET = [];
+ok(strpos($adv3, 'value="<script>') === false && strpos($adv3, 'package=<script>') === false && strpos($adv3, 'value="" selected') !== false, 'unknown package parameter is ignored safely');
+
+section('P2 lead qualification and attribution');
+$tok = form_token('lead', time() - 5);
+$post = ['lead_type' => 'advertiser', 'name' => 'Pat Example', 'email' => 'pat@example.test', 'message' => 'We would like to talk about a featured placement.', 'consent' => '1', 'form_token' => $tok,
+  'package_interest' => 'featured', 'campaign_goal' => 'signups', 'attr_source' => 'Newsletter', 'attr_medium' => 'email', 'attr_campaign' => 'Spring Launch!!', 'ref_tool' => 'chatgpt'];
+$v = lead_validate($post, ['advertiser', 'affiliate_partner', 'newsletter_sponsor']);
+ok($v['errors'] === [] && $v['clean']['package_interest'] === 'featured' && $v['clean']['campaign_goal'] === 'signups', 'valid qualification answers accepted');
+ok($v['clean']['attr_source'] === 'newsletter' && $v['clean']['attr_campaign'] === '' && $v['clean']['ref_tool'] === 'chatgpt', 'attribution is normalised to slugs and unsafe values are dropped');
+$v = lead_validate(['package_interest' => 'free-money', 'campaign_goal' => 'x'] + $post, ['advertiser']);
+ok($v['clean']['package_interest'] === '' && $v['clean']['campaign_goal'] === '', 'unknown package or goal values are discarded');
+$v = lead_validate(['lead_type' => 'newsletter_sponsor'] + $post, ['advertiser', 'affiliate_partner', 'newsletter_sponsor']);
+ok($v['errors'] === [] && lead_types()['newsletter_sponsor']['group'] === 'advertise', 'newsletter sponsorship inquiry is an advertise-group lead');
+ok(lead_attribution_from_request(['utm_source' => 'A<b>', 'tool' => str_repeat('a', 200)]) === ['attr_source' => '', 'attr_medium' => '', 'attr_campaign' => '', 'ref_tool' => ''], 'attribution rejects markup and over-long values');
+ok(lead_attribution_from_request(['ref' => 'tool-page', 'tool' => 'otter-ai'])['attr_source'] === 'tool-page', 'ref parameter is used as the source when utm_source is absent');
+$form = render_lead_form(['types' => ['advertiser'], 'id' => 'x', 'packages' => true]);
+ok(strpos($form, 'name="package_interest"') !== false && strpos($form, 'name="attr_source"') !== false, 'advertiser form renders the package selector and attribution fields');
+ok(strpos(render_lead_form(['types' => ['consultation'], 'id' => 'y', 'budget' => true]), 'package_interest') === false, 'business form does not show advertiser fields');
+
+$dbName = sec_setting('AIHUB_DB_NAME', 'db.name');
+if (stripos($dbName, 'test') !== false && db_connection_available()) {
+  section('P2 lead storage, status workflow and reporting (isolated test DB)');
+  $pdo = db();
+  $pdo->exec("DELETE FROM lead_status_history"); $pdo->exec("DELETE FROM leads");
+  $c = lead_validate($post, ['advertiser'])['clean'];
+  $id = lead_store($pdo, $c, 'phase4test000000');
+  $row = lead_get($pdo, $id);
+  ok($row && $row['package_interest'] === 'featured' && $row['attr_source'] === 'newsletter' && $row['ref_tool'] === 'chatgpt' && (int)$row['is_synthetic'] === 0, 'qualification and attribution are stored in their own columns');
+  $pdo->exec("DROP TABLE IF EXISTS leads_legacy");
+  $pdo->exec("CREATE TABLE leads_legacy (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, created_at DATETIME NOT NULL, lead_type VARCHAR(32) NOT NULL, name VARCHAR(120) NOT NULL, email VARCHAR(190) NOT NULL, company VARCHAR(190) NOT NULL DEFAULT '', website VARCHAR(255) NOT NULL DEFAULT '', budget VARCHAR(40) NOT NULL DEFAULT '', timeline VARCHAR(40) NOT NULL DEFAULT '', message TEXT NOT NULL, source_page VARCHAR(120) NOT NULL DEFAULT '', consent_at DATETIME NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'new', ip_hash CHAR(16) NOT NULL DEFAULT '', PRIMARY KEY (id))");
+  $lid = lead_store($pdo, $c, 'phase4test000000', false, 'leads_legacy');
+  $m = (string)$pdo->query("SELECT message FROM leads_legacy WHERE id = $lid")->fetchColumn();
+  ok($lid > 0 && strpos($m, '[Package interest: Featured listing]') !== false && strpos($m, '[Source: newsletter]') !== false, 'before the migration, qualification answers are appended to the message instead of being lost or crashing');
+  $pdo->exec("DROP TABLE leads_legacy");
+  $threw = false; try { lead_store($pdo, $c, 'x', false, 'users; DROP TABLE leads'); } catch (InvalidArgumentException $e) { $threw = true; }
+  ok($threw, 'table name parameter is validated');
+
+  ok(lead_can_move('new', 'contacted') && !lead_can_move('new', 'won') && lead_can_move('qualified', 'won') && !lead_can_move('won', 'lost') && lead_can_move('spam', 'new'), 'status transitions follow the workflow');
+  ok(lead_set_status($pdo, $id, 'won') === 'invalid_transition', 'cannot jump from new straight to won');
+  ok(lead_set_status($pdo, $id, 'nonsense') === 'unknown_status' && lead_set_status($pdo, 999999, 'contacted') === 'not_found', 'unknown status or lead is refused');
+  ok(lead_set_status($pdo, $id, 'contacted') === 'ok' && lead_set_status($pdo, $id, 'qualified') === 'ok' && lead_set_status($pdo, $id, 'won') === 'ok', 'new → contacted → qualified → won is accepted');
+  $row = lead_get($pdo, $id);
+  ok($row['status'] === 'won' && count($row['history']) === 3 && $row['history'][2]['new_status'] === 'won' && $row['status_changed_at'] !== null, 'every change is written to the status history');
+
+  ok(lead_mask_email('patricia@example.com') === 'pa***@example.com' && lead_mask_email('a@b.co') === 'a***@b.co' && lead_mask_email('nonsense') === '***', 'email masking for list views');
+
+  $pdo->exec("DELETE FROM lead_status_history"); $pdo->exec("DELETE FROM leads");
+  $mk = function (string $type, string $status, string $pkg = '', int $ageDays = 1, int $syn = 0, string $src = '') use ($pdo, $c) {
+    $cc = ['lead_type' => $type, 'email' => 'q' . mt_rand(1, 99999) . '@example.test', 'package_interest' => $pkg, 'attr_source' => $src] + $c;
+    $i = lead_store($pdo, $cc, 'phase4test000000', (bool)$syn);
+    $pdo->prepare('UPDATE leads SET status = ?, created_at = DATE_SUB(NOW(), INTERVAL ? DAY) WHERE id = ?')->execute([$status, $ageDays, $i]);
+    return $i;
+  };
+  $mk('advertiser', 'new', 'featured'); $mk('advertiser', 'qualified', 'homepage', 2, 0, 'newsletter'); $mk('consultation', 'won', '', 3, 1); $mk('ai_agent', 'lost', '', 4); $mk('software_dev', 'spam', '', 5); $mk('advertiser', 'new', 'featured', 200);
+  $r = leads_report($pdo, 90);
+  ok($r['total'] === 5 && array_sum(array_column($r['by_type'], 'n')) === 5 && array_sum(array_column($r['by_status'], 'n')) === 5, 'report totals add up and respect the period (old lead excluded)');
+  ok($r['synthetic'] === 1, 'synthetic rows are counted so the page can warn');
+  ok($r['stages']['new'] >= $r['stages']['contacted'] && $r['stages']['contacted'] >= $r['stages']['qualified'] && $r['stages']['qualified'] >= $r['stages']['won'], 'stage counts never increase down the funnel');
+  ok(!array_filter(array_keys($r), fn($k) => preg_match('/rate|revenue|roi|conversion/i', $k)), 'report contains raw counts only: no rate, revenue, ROI or conversion fields');
+  $l = leads_list($pdo, ['type' => 'advertiser', 'days' => 90]);
+  ok($l['total'] === 2, 'list filters by type and period');
+  ok(leads_list($pdo, ['status' => 'won', 'days' => 90])['total'] === 1 && leads_list($pdo, ['status' => 'bogus', 'days' => 90])['total'] === 5, 'status filter works and ignores unknown values');
+  ok(leads_list($pdo, ['q' => "%' OR 1=1 --", 'days' => 90])['total'] === 0, 'search text is bound and wildcards are escaped (no injection)');
+  ok(leads_list($pdo, ['days' => 90, 'page' => 99])['rows'] === [], 'out-of-range page is empty');
+  $pdo->exec("DELETE FROM lead_status_history"); $pdo->exec("DELETE FROM leads");
+}
+
+section('P2 editorial independence: payment cannot change ranking');
+$base = search_tools_ranked($tools, 'writing', 20);
+$boosted = array_map(function ($t) { if ($t['id'] === 'grammarly') { $t['featured_level'] = 2; $t['featured_until'] = '2099-01-01'; $t['affiliate'] = 'https://example.com/aff'; } return $t; }, $tools);
+$after = search_tools_ranked($boosted, 'writing', 20);
+ok(array_map(fn($x) => $x['tool']['id'], $base) === array_map(fn($x) => $x['tool']['id'], $after), 'a featured/affiliate tool ranks identically in search');
+$src = (string)file_get_contents(__DIR__ . '/../discovery.php') . (string)file_get_contents(__DIR__ . '/../evidence.php');
+ok(!preg_match('/featured_level|featured_until|affiliate|sponsor/i', $src), 'search, problem pages and alternatives code never read any paid-placement field');
+
 // === P2–P5 sections are appended below ===
 
 echo "\nPASSED: $pass  FAILED: $fail\n";

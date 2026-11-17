@@ -278,6 +278,6 @@ require __DIR__ . '/layout_top.php';
 
 <section class="panel" style="margin-top:22px" aria-labelledby="bizHelp">
   <h2 id="bizHelp" style="margin-top:0">Own this tool, or need something custom?</h2>
-  <p class="small">If you are the vendor, you can <a href="/advertise.php">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php">request a consultation</a> about a custom AI agent.</p>
+  <p class="small">If you are the vendor, you can <a href="/advertise.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>#request">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>">request a consultation</a> about a custom AI agent.</p>
 </section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

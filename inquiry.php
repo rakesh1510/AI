@@ -45,6 +45,6 @@ if ($unavailable) {
   echo '<div class="noticeBox" role="alert"><strong>We could not save your request right now.</strong> Please try again later or email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a>.</div>';
 } else {
   echo '<h1>Please check your request</h1><p class="small">Some details need attention. Nothing was sent yet.</p><div class="panel" style="max-width:720px">'
-     . render_lead_form(['types' => $allowed, 'values' => $_POST, 'errors' => $errors, 'id' => 'lead', 'source' => $clean['source_page'] ?: $page, 'budget' => $group === 'business', 'message_label' => 'Message']) . '</div>';
+     . render_lead_form(['types' => $allowed, 'values' => $_POST, 'errors' => $errors, 'id' => 'lead', 'source' => $clean['source_page'] ?: $page, 'budget' => $group === 'business', 'packages' => $group === 'advertise', 'message_label' => 'Message']) . '</div>';
 }
 require __DIR__ . '/layout_bottom.php';

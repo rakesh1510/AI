@@ -446,3 +446,10 @@ table.matrix tr.differs td,table.matrix tr.differs th[scope=row]{background:colo
 }
 .altWhy{margin:4px 0 0;font-size:.85rem;color:var(--ink-body)}
 .altWhy li{margin:2px 0}
+
+/* ---------- Phase 4: advertiser pages ---------- */
+.faqItem{border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin:0 0 10px;background:var(--surface)}
+.faqItem summary{cursor:pointer;font-weight:600;color:var(--ink-title)}
+.faqItem p{margin:8px 0 0;color:var(--ink-body)}
+table.pkgTable{min-width:720px}
+@media (max-width:640px){table.pkgTable{min-width:0}}

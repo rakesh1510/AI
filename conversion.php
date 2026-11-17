@@ -34,10 +34,25 @@ function lead_types(): array {
   return [
     'advertiser' => ['label' => 'Featured listing or homepage spotlight', 'group' => 'advertise'],
     'affiliate_partner' => ['label' => 'Affiliate or referral partnership', 'group' => 'advertise'],
+    'newsletter_sponsor' => ['label' => 'Newsletter sponsorship (register interest)', 'group' => 'advertise'],
     'consultation' => ['label' => 'AI consultation', 'group' => 'business'],
     'ai_agent' => ['label' => 'Custom AI agent', 'group' => 'business'],
     'software_dev' => ['label' => 'Custom software development', 'group' => 'business'],
   ];
+}
+/** Package catalogue for /advertise.php (data/sponsorship_packages.json). Listed prices come from the site configuration, inquiry packages carry no price. */
+function sponsorship_packages(): array { return catalog_json('sponsorship_packages.json', ['packages' => []])['packages'] ?? []; }
+function lead_goal_options(): array { $g = catalog_json('sponsorship_packages.json', ['goals' => []])['goals'] ?? []; return $g ?: ['' => 'Prefer not to say']; }
+function lead_package_options(): array {
+  $o = ['' => 'Not sure yet'];
+  foreach (sponsorship_packages() as $k => $p) { if (!empty($p['paid'])) $o[$k] = (string)$p['label']; }
+  return $o;
+}
+/** Campaign attribution from the landing URL (utm_* and ref/tool). Values are short slugs; they identify a campaign, never a person. */
+function lead_attribution_from_request(array $get): array {
+  $slug = fn($v, int $max) => (preg_match('/^[a-z0-9_.:-]{1,' . $max . '}$/', $x = strtolower(trim((string)$v))) ? $x : '');
+  return ['attr_source' => $slug($get['utm_source'] ?? ($get['ref'] ?? ''), 40), 'attr_medium' => $slug($get['utm_medium'] ?? '', 40),
+          'attr_campaign' => $slug($get['utm_campaign'] ?? '', 60), 'ref_tool' => $slug($get['tool'] ?? '', 80)];
 }
 function lead_budget_options(): array { return ['' => 'Prefer not to say', 'under-5k' => 'Under $5,000', '5k-20k' => '$5,000 – $20,000', '20k-50k' => '$20,000 – $50,000', 'over-50k' => 'Over $50,000', 'not-sure' => 'Not sure yet']; }
 function lead_timeline_options(): array { return ['' => 'Prefer not to say', 'asap' => 'As soon as possible', '1-3-months' => 'Within 1–3 months', '3-6-months' => 'In 3–6 months', 'exploring' => 'Just exploring']; }
@@ -62,6 +77,11 @@ function lead_validate(array $post, array $allowedTypes, ?int $now = null): arra
   if (!array_key_exists($c['budget'], lead_budget_options())) $c['budget'] = '';
   $c['timeline'] = $g('timeline', 40);
   if (!array_key_exists($c['timeline'], lead_timeline_options())) $c['timeline'] = '';
+  $c['package_interest'] = $g('package_interest', 32);
+  if (!array_key_exists($c['package_interest'], lead_package_options())) $c['package_interest'] = '';
+  $c['campaign_goal'] = $g('campaign_goal', 24);
+  if (!array_key_exists($c['campaign_goal'], lead_goal_options())) $c['campaign_goal'] = '';
+  $c += lead_attribution_from_request(['utm_source' => $post['attr_source'] ?? '', 'utm_medium' => $post['attr_medium'] ?? '', 'utm_campaign' => $post['attr_campaign'] ?? '', 'tool' => $post['ref_tool'] ?? '']);
   $c['message'] = mb_substr(trim((string)($post['message'] ?? '')), 0, 4000);
   if (mb_strlen($c['message']) < 20) $e['message'] = 'Please describe what you need (at least 20 characters).';
   if (empty($post['consent'])) $e['consent'] = 'Please confirm that we may contact you about this request.';
@@ -79,9 +99,33 @@ function lead_rate_limited(PDO $pdo, string $table, string $ipHash, int $max = 5
   return (int)$s->fetchColumn() >= $max;
 }
 
-function lead_store(PDO $pdo, array $clean, string $ipHash): int {
-  $s = $pdo->prepare('INSERT INTO leads (created_at, lead_type, name, email, company, website, budget, timeline, message, source_page, consent_at, ip_hash) VALUES (NOW(), :t, :n, :e, :c, :w, :b, :tl, :m, :s, NOW(), :ip)');
-  $s->execute([':t' => $clean['lead_type'], ':n' => $clean['name'], ':e' => $clean['email'], ':c' => $clean['company'], ':w' => $clean['website'], ':b' => $clean['budget'], ':tl' => $clean['timeline'], ':m' => $clean['message'], ':s' => $clean['source_page'], ':ip' => $ipHash]);
+/** True when a column exists (cached). Lets the code run before the Phase 4 migration is applied. */
+function db_column_exists(PDO $pdo, string $table, string $column): bool {
+  static $cache = [];
+  $k = $table . '.' . $column;
+  if (isset($cache[$k])) return $cache[$k];
+  try { $s = $pdo->prepare('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'); $s->execute([$table, $column]); return $cache[$k] = (bool)$s->fetchColumn(); }
+  catch (Throwable $e) { return $cache[$k] = false; }
+}
+
+function lead_store(PDO $pdo, array $clean, string $ipHash, bool $synthetic = false, string $table = 'leads'): int {
+  if (!preg_match('/^leads(_[a-z]+)?$/', $table)) throw new InvalidArgumentException('bad table');
+  $extended = db_column_exists($pdo, $table, 'package_interest');
+  $message = $clean['message'];
+  if (!$extended) {   // migration not applied yet: keep the qualification answers inside the message instead of losing them
+    $extra = array_filter(['Package interest' => lead_package_options()[$clean['package_interest'] ?? ''] ?? '', 'Goal' => lead_goal_options()[$clean['campaign_goal'] ?? ''] ?? '', 'Source' => $clean['attr_source'] ?? '', 'Campaign' => $clean['attr_campaign'] ?? '']);
+    foreach ($extra as $k => $v) $message .= "\n[$k: $v]";
+  }
+  $cols = 'created_at, lead_type, name, email, company, website, budget, timeline, message, source_page, consent_at, ip_hash';
+  $vals = 'NOW(), :t, :n, :e, :c, :w, :b, :tl, :m, :s, NOW(), :ip';
+  $args = [':t' => $clean['lead_type'], ':n' => $clean['name'], ':e' => $clean['email'], ':c' => $clean['company'], ':w' => $clean['website'], ':b' => $clean['budget'], ':tl' => $clean['timeline'], ':m' => $message, ':s' => $clean['source_page'], ':ip' => $ipHash];
+  if ($extended) {
+    $cols .= ', package_interest, campaign_goal, attr_source, attr_medium, attr_campaign, ref_tool, is_synthetic';
+    $vals .= ', :pi, :cg, :as, :am, :ac, :rt, :sy';
+    $args += [':pi' => $clean['package_interest'] ?? '', ':cg' => $clean['campaign_goal'] ?? '', ':as' => $clean['attr_source'] ?? '', ':am' => $clean['attr_medium'] ?? '', ':ac' => $clean['attr_campaign'] ?? '', ':rt' => $clean['ref_tool'] ?? '', ':sy' => $synthetic ? 1 : 0];
+  }
+  $s = $pdo->prepare("INSERT INTO $table ($cols) VALUES ($vals)");
+  $s->execute($args);
   return (int)$pdo->lastInsertId();
 }
 
@@ -90,7 +134,9 @@ function lead_notify_owner(array $c): bool {
   if ($to === '') return false;
   $label = lead_types()[$c['lead_type']]['label'] ?? $c['lead_type'];
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
-  $rows = ['Type' => $label, 'Name' => $c['name'], 'Email' => $c['email'], 'Company' => $c['company'], 'Website' => $c['website'], 'Budget' => $c['budget'], 'Timeline' => $c['timeline'], 'Page' => $c['source_page']];
+  $rows = ['Type' => $label, 'Name' => $c['name'], 'Email' => $c['email'], 'Company' => $c['company'], 'Website' => $c['website'], 'Budget' => $c['budget'], 'Timeline' => $c['timeline'], 'Page' => $c['source_page'],
+    'Package interest' => lead_package_options()[$c['package_interest'] ?? ''] ?? '', 'Goal' => lead_goal_options()[$c['campaign_goal'] ?? ''] ?? '',
+    'Attribution' => trim(($c['attr_source'] ?? '') . ' ' . ($c['attr_medium'] ?? '') . ' ' . ($c['attr_campaign'] ?? '') . ' ' . (!empty($c['ref_tool']) ? 'tool:' . $c['ref_tool'] : ''))];
   $body = '<h2>New AIHubpedia lead</h2>';
   foreach ($rows as $k => $v) if ($v !== '') $body .= '<p><b>' . $h($k) . ':</b> ' . $h($v) . '</p>';
   $body .= '<p><b>Message:</b><br>' . nl2br($h($c['message'])) . '</p>';
@@ -228,6 +274,8 @@ function render_lead_form(array $opts): string {
   if (!empty($err['_token']) || !empty($err['_bot'])) $o .= '<p class="fieldError" role="alert">' . $h($err['_token'] ?? $err['_bot']) . '</p>';
   $o .= '<input type="hidden" name="form_token" value="' . $h(form_token('lead')) . '"><input type="hidden" name="source_page" value="' . $h($opts['source'] ?? '') . '">';
   $o .= '<div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>';
+  $att = lead_attribution_from_request($_GET);
+  foreach (['attr_source', 'attr_medium', 'attr_campaign', 'ref_tool'] as $ak) $o .= '<input type="hidden" name="' . $ak . '" value="' . $h($v[$ak] ?? $att[$ak]) . '">';
   if (count($types) > 1) {
     $o .= '<div class="field"><label for="' . $idp . '-type">What do you need?</label><select id="' . $idp . '-type" name="lead_type" required' . $aria('lead_type') . '>';
     foreach ($types as $t) $o .= '<option value="' . $h($t) . '"' . (($v['lead_type'] ?? ($opts['default'] ?? '')) === $t ? ' selected' : '') . '>' . $h(lead_types()[$t]['label']) . '</option>';
@@ -244,6 +292,13 @@ function render_lead_form(array $opts): string {
     foreach (lead_budget_options() as $k => $l) $o .= '<option value="' . $h($k) . '"' . (($v['budget'] ?? '') === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
     $o .= '</select></div><div class="field"><label for="' . $idp . '-timeline">Timeline <span class="opt">(optional)</span></label><select id="' . $idp . '-timeline" name="timeline">';
     foreach (lead_timeline_options() as $k => $l) $o .= '<option value="' . $h($k) . '"' . (($v['timeline'] ?? '') === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
+    $o .= '</select></div></div>';
+  }
+  if (!empty($opts['packages'])) {
+    $o .= '<div class="fieldRow"><div class="field"><label for="' . $idp . '-package">Package you are interested in <span class="opt">(optional)</span></label><select id="' . $idp . '-package" name="package_interest">';
+    foreach (lead_package_options() as $k => $l) $o .= '<option value="' . $h($k) . '"' . (($v['package_interest'] ?? ($opts['package'] ?? '')) === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
+    $o .= '</select></div><div class="field"><label for="' . $idp . '-goal">Main goal <span class="opt">(optional)</span></label><select id="' . $idp . '-goal" name="campaign_goal">';
+    foreach (lead_goal_options() as $k => $l) $o .= '<option value="' . $h($k) . '"' . (($v['campaign_goal'] ?? '') === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
     $o .= '</select></div></div>';
   }
   $o .= '<div class="field"><label for="' . $idp . '-message">' . $h($opts['message_label'] ?? 'How can we help?') . '</label><textarea class="input" id="' . $idp . '-message" name="message" rows="5" required' . $aria('message') . '>' . $h($v['message'] ?? '') . '</textarea>' . $fe('message') . '</div>';

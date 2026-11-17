@@ -74,6 +74,7 @@ if ($slug !== '') {
       <ul class="linkList">
         <li><a href="/recommend.php">Answer six questions for a personalised shortlist</a> (no sign-up)</li>
         <li><a href="/compare.php">Compare two tools side by side</a></li>
+        <li>No tool fits? <a href="/business.php?need=ai_agent&amp;ref=solutions&amp;utm_campaign=<?= h(rawurlencode($slug)) ?>">Ask TrustNova Tech about a custom AI agent</a></li>
         <?php foreach (array_slice($guides, 0, 2, true) as $gs => $g): ?><li><a href="<?= h(guide_path($gs)) ?>"><?= h($g['h1']) ?></a></li><?php endforeach; ?>
       </ul>
     </section>
