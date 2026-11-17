@@ -165,10 +165,10 @@ require __DIR__ . '/layout_top.php';
           <div>
             <h3>Top features</h3>
             <ul class="nice-list">
-              <?php foreach(array_slice($bundle['features'] ?? [], 0, 4) as $item): ?>
+              <?php foreach(array_slice(tool_nongeneric_items((array)($bundle['features'] ?? [])), 0, 4) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['features'])): ?><li>No feature data collected yet.</li><?php endif; ?>
+              <?php if(!tool_nongeneric_items((array)($bundle['features'] ?? []))): ?><li>Not documented yet: no sourced feature list.</li><?php endif; ?>
             </ul>
           </div>
           <div>
@@ -186,10 +186,10 @@ require __DIR__ . '/layout_top.php';
           <div>
             <h3>Strengths</h3>
             <ul class="nice-list success">
-              <?php foreach(array_slice($bundle['pros'] ?? [], 0, 4) as $item): ?>
+              <?php foreach(array_slice(tool_nongeneric_items((array)($bundle['pros'] ?? [])), 0, 4) as $item): ?>
                 <li><?= h($item) ?></li>
               <?php endforeach; ?>
-              <?php if(empty($bundle['pros'])): ?><li>No strengths saved yet.</li><?php endif; ?>
+              <?php if(!tool_nongeneric_items((array)($bundle['pros'] ?? []))): ?><li>Not documented yet: no sourced strengths.</li><?php endif; ?>
             </ul>
           </div>
           <div>
@@ -247,6 +247,10 @@ require __DIR__ . '/layout_top.php';
             <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?php if(!$e['curated']): ?><span class="cellState s-not_reviewed">Not reviewed</span><?php elseif($e['human_verified']): ?><?= h($e['verified_on']) ?> (editor verified)<?php else: ?>Sources retrieved <?= h($e['reviewed_on']) ?><span class="cellEv">Not yet verified by an editor</span><?php endif; ?></td><?php endforeach; ?></tr>
           <tr><th scope="row">Pricing (as stated in sources)</th>
             <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?php if($e['pricing_summary'] !== ''): ?><?= h($e['pricing_summary']) ?><span class="cellEv">As of <?= h($e['pricing_as_of']) ?><?= $e['pricing_stale'] ? ' — older than ' . (int)EVIDENCE_STALE_DAYS . ' days' : '' ?>; <?= h($e['pricing_note']) ?></span><?php else: ?><span class="cellState s-unknown">Unknown</span><span class="cellEv">Listing says: <?= h($tt['pricing'] ?: 'not stated') ?> (not reviewed)</span><?php endif; ?></td><?php endforeach; ?></tr>
+          <?php $fst = array_map(fn($tt) => editorial_fact_states($tt), $pair); foreach(['pricing' => 'Pricing status', 'features' => 'Features status'] as $fk => $flabel): ?>
+          <tr data-fact-row="<?= h($fk) ?>" class="<?= $fst[0][$fk]['state'] !== $fst[1][$fk]['state'] ? 'differs' : '' ?>"><th scope="row"><?= h($flabel) ?></th>
+            <?php foreach($pair as $i => $tt): $fs = $fst[$i][$fk]; ?><td data-label="<?= h($tt['name']) ?>"><span class="cellState s-<?= h($fs['state']) ?>"><?= h($fs['state_label']) ?></span><span class="cellEv"><?= h($fs['note']) ?><?= $fs['expires_on'] ? ' Re-check by ' . h($fs['expires_on']) . '.' : '' ?></span></td><?php endforeach; ?></tr>
+          <?php endforeach; ?>
           <tr><th scope="row">Sources listed</th>
             <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?= $e['curated'] ? (int)$e['source_count'] . ' page' . ($e['source_count'] === 1 ? '' : 's') . ($e['conflicts'] ? ' · sources disagree' : '') : '<span class="cellState s-unknown">0 pages</span>' ?></td><?php endforeach; ?></tr>
           <?php foreach($rows as $row): ?>

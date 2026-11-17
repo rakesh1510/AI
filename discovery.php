@@ -99,7 +99,7 @@ function search_tool_fields(array $t): array {
     'name' => search_normalize((string)($t['name'] ?? '')), 'slug' => search_normalize((string)($t['id'] ?? '')),
     'sub' => search_normalize((string)($t['subcategory'] ?? '')), 'cat' => search_normalize((string)($t['category'] ?? '')),
     'tags' => search_normalize(implode(' ', (array)($t['tags'] ?? []))), 'short' => search_normalize((string)($t['short'] ?? '')),
-    'uses' => search_normalize(implode(' ', array_merge((array)($t['use_cases'] ?? []), (array)($t['features'] ?? [])))),
+    'uses' => search_normalize(implode(' ', array_merge(tool_nongeneric_items((array)($t['use_cases'] ?? [])), tool_nongeneric_items((array)($t['features'] ?? []))))),   // template phrases are identical on ~490 tools: not evidence of relevance
     'desc' => search_normalize((string)($t['description'] ?? '')),
   ];
 }
@@ -114,6 +114,9 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
   $tokens = search_tokens($q);
   if ($qn === '' || (!$tokens && mb_strlen($qn) < 2)) return [];
   if (!$tokens) $tokens = [$qn];
+  // Task verbs describe the visitor's action, not the product: "write code" is about code tools. Dropped from ranking only when a more specific word remains.
+  $specific = array_values(array_diff($tokens, ['write', 'make', 'create', 'generate', 'find', 'build', 'get', 'use', 'help', 'need', 'want']));
+  if ($specific) $tokens = $specific;
   $clicks = function_exists('all_click_counts') ? all_click_counts() : [];
   $expansions = search_expansions($qn, $tokens);
   $covered = $expansions['__covered'] ?? []; unset($expansions['__covered']);
@@ -127,12 +130,12 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
     elseif (strpos($f['name'], $qn) === 0) { $score += 70; $reasons[] = 'Name starts with your search'; }
     elseif (search_has_word_prefix($f['name'], $qn)) { $score += 50; $reasons[] = 'A word in the name matches'; }
     elseif (strpos($f['name'], $qn) !== false) { $score += 35; $reasons[] = 'Name contains your search'; }
-    $matchedTokens = 0; $tokenScore = 0.0; $altHit = [];
+    $matchedTokens = 0; $tokenScore = 0.0; $altHit = []; $strong = $score > 0.0;   // strong = matched in name, subcategory, category or tags
     foreach ($tokens as $tok) {
       if (isset($covered[$tok]) && !empty($altHit[$covered[$tok]])) { $matchedTokens++; continue; }   // part of a phrase already matched through a related term
       [$m, $label] = search_field_match($f, $tok);
       if ($m > 0.0) {
-        $matchedTokens++; $tokenScore += $m;
+        $matchedTokens++; $tokenScore += $m; if ($m >= 4) $strong = true;
         if ($label !== 'name' || $score === 0.0) $reasons[] = 'Matched “' . $tok . '” in ' . $label;
         continue;
       }
@@ -146,7 +149,8 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
     }
     if ($matchedTokens === 0) continue;
     $score += $tokenScore;
-    if (!empty($t['curated'])) { $score += 10; $reasons[] = 'Has a reviewed, sourced profile'; }
+    // Reviewed profiles are preferred, but a mention in a feature list must not outrank a tool that is actually in the searched category.
+    if (!empty($t['curated'])) { $score += $strong ? 10 : 3; $reasons[] = 'Has a reviewed, sourced profile'; }
     $boost = min(6.0, log(1 + (int)($clicks[$t['id']] ?? 0)) * 1.5);
     if ($boost >= 1.5) $reasons[] = 'Popular with visitors';
     $score += $boost;

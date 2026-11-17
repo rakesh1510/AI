@@ -434,7 +434,9 @@ table.matrix tr.differs td,table.matrix tr.differs th[scope=row]{background:colo
 .cellState{font-weight:600}
 .cellState.s-documented{color:var(--green-ink)}
 .cellState.s-unknown,.cellState.s-not_reviewed{color:var(--ink-soft)}
-.cellState.s-none_listed,.cellState.s-listing{color:var(--warn-ink)}
+.cellState.s-none_listed,.cellState.s-listing,.cellState.s-conflicting,.cellState.s-stale{color:var(--warn-ink)}
+.cellState.s-editor_verified{color:var(--green-ink)}
+.ledger{width:100%;font-size:.92rem}.ledger th,.ledger td{text-align:left;vertical-align:top;padding:6px 8px;border-top:1px solid var(--border)}
 .cellEv{display:block;font-size:.78rem;font-weight:400;color:var(--ink-body)}
 @media (max-width:640px){
   table.matrix{min-width:0}
