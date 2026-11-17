@@ -1,0 +1,220 @@
+{
+ "note": "Search-quality fixture (Phase 5). Relevance is judged by the catalogue taxonomy: a result is relevant when its category/subcategory is one the query's intent belongs to. These are team-authored expectations, not user data or measured behaviour. Queries are intents a visitor plausibly types. Thresholds are regression floors, not marketing numbers.",
+ "queries": [
+  {
+   "q": "transcribe meetings",
+   "relevant": [
+    "Productivity / Meetings & transcription"
+   ]
+  },
+  {
+   "q": "meeting notes",
+   "relevant": [
+    "Productivity / Meetings & transcription",
+    "Productivity / Notes & documents"
+   ]
+  },
+  {
+   "q": "grammar checker",
+   "relevant": [
+    "Writing / Grammar, editing & rewriting"
+   ]
+  },
+  {
+   "q": "image generator",
+   "relevant": [
+    "Image / Image generation & editing",
+    "Image / "
+   ]
+  },
+  {
+   "q": "ai image generation",
+   "relevant": [
+    "Image / Image generation & editing",
+    "Image / "
+   ]
+  },
+  {
+   "q": "video editing",
+   "relevant": [
+    "Video / Video generation & editing"
+   ]
+  },
+  {
+   "q": "write code",
+   "relevant": [
+    "Coding / Code assistants",
+    "Coding / ",
+    "Coding / Data & SQL"
+   ]
+  },
+  {
+   "q": "coding assistant",
+   "relevant": [
+    "Coding / Code assistants",
+    "Coding / ",
+    "Coding / Data & SQL"
+   ]
+  },
+  {
+   "q": "summarize pdf",
+   "relevant": [
+    "Productivity / Notes & documents"
+   ]
+  },
+  {
+   "q": "research papers",
+   "relevant": [
+    "Research / Academic & scientific research",
+    "Research / AI search & answers"
+   ]
+  },
+  {
+   "q": "text to speech",
+   "relevant": [
+    "Audio / Voice & speech",
+    "Audio / "
+   ]
+  },
+  {
+   "q": "voice cloning",
+   "relevant": [
+    "Audio / Voice & speech",
+    "Audio / "
+   ]
+  },
+  {
+   "q": "seo content",
+   "relevant": [
+    "Marketing / SEO & content strategy",
+    "Writing / Copywriting & content creation"
+   ]
+  },
+  {
+   "q": "note taking",
+   "relevant": [
+    "Productivity / Notes & documents"
+   ]
+  },
+  {
+   "q": "email assistant",
+   "relevant": [
+    "Productivity / Email & scheduling"
+   ]
+  },
+  {
+   "q": "schedule meetings",
+   "relevant": [
+    "Productivity / Email & scheduling",
+    "Productivity / Meetings & transcription"
+   ]
+  },
+  {
+   "q": "workflow automation",
+   "relevant": [
+    "Automation / Workflow automation",
+    "Automation / AI agents"
+   ]
+  },
+  {
+   "q": "ai agents",
+   "relevant": [
+    "Automation / AI agents"
+   ]
+  },
+  {
+   "q": "customer support chatbot",
+   "relevant": [
+    "Business / Customer support",
+    "Chatbots / General AI assistants"
+   ]
+  },
+  {
+   "q": "resume builder",
+   "relevant": [
+    "Business / HR & careers"
+   ]
+  },
+  {
+   "q": "legal contracts",
+   "relevant": [
+    "Business / Legal & compliance"
+   ]
+  },
+  {
+   "q": "accounting software",
+   "relevant": [
+    "Business / Finance & accounting"
+   ]
+  },
+  {
+   "q": "learn a language",
+   "relevant": [
+    "Research / Learning & education"
+   ]
+  },
+  {
+   "q": "fitness and health",
+   "relevant": [
+    "Lifestyle / Health & wellness"
+   ]
+  },
+  {
+   "q": "travel planning",
+   "relevant": [
+    "Lifestyle / Travel & shopping"
+   ]
+  },
+  {
+   "q": "sql queries",
+   "relevant": [
+    "Coding / Data & SQL",
+    "Coding / Code assistants"
+   ]
+  },
+  {
+   "q": "ai search engine",
+   "relevant": [
+    "Research / AI search & answers"
+   ]
+  },
+  {
+   "q": "logo design",
+   "relevant": [
+    "Design / Graphic & UI design",
+    "Image / Image generation & editing"
+   ]
+  }
+ ],
+ "navigational": [
+  {
+   "q": "chatgpt",
+   "first": "chatgpt"
+  },
+  {
+   "q": "claude",
+   "first": "claude"
+  },
+  {
+   "q": "grammarly",
+   "first": "grammarly"
+  },
+  {
+   "q": "notebooklm",
+   "first": "notebooklm"
+  },
+  {
+   "q": "perplexity",
+   "first": "perplexity"
+  }
+ ],
+ "no_result": [
+  "zzqx plorf",
+  "qqqq wwww eeee"
+ ],
+ "thresholds": {
+  "p_at_5_min": 0.0,
+  "success_at_3_min": 0.0,
+  "mrr_min": 0.0
+ }
+}

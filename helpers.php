@@ -4,6 +4,8 @@ require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/catalog.php';
 require_once __DIR__ . '/evidence.php';
+require_once __DIR__ . '/editorial_review.php';
+require_once __DIR__ . '/i18n.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/discovery.php';

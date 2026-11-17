@@ -60,6 +60,18 @@ jobs:
       - name: Phase 4 logic tests (discovery, evidence, B2B funnel, wizard, SEO/GEO, newsletter)
         run: php tests/phase4_logic_test.php
 
+      - name: Phase 5 editorial verification tests (fact states, freshness, review log, nothing verified by default)
+        run: php tests/editorial_review_test.php
+
+      - name: Phase 5 discovery quality tests (search fixtures, editorial independence from sponsorship and clicks)
+        run: php tests/discovery_quality_test.php
+
+      - name: Phase 5 localisation tests (registry, hreflang, canonical, duplicate content)
+        run: php tests/i18n_test.php
+
+      - name: Phase 5 content backlog integrity (evidence gates, no invented figures)
+        run: php tests/content_backlog_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 

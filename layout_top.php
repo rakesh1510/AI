@@ -53,7 +53,7 @@ $__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compa
 $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
 ?>
 <!doctype html>
-<html lang="en" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>
+<html lang="<?= h(locale_split_path((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH))[0]) ?>" dir="<?= h(locale_dir(locale_split_path((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH))[0])) ?>" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -63,6 +63,9 @@ $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recomme
 <meta name="robots" content="<?= h($__robots_meta) ?>">
 <?php if ($robots !== 'noindex'): ?>
 <link rel="canonical" href="<?= h($canonical) ?>">
+<?php foreach (locale_hreflang(locale_split_path((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH))[1], AIHUB_SITE_URL) as $__hl => $__hu): ?>
+<link rel="alternate" hreflang="<?= h($__hl) ?>" href="<?= h($__hu) ?>">
+<?php endforeach; ?>
 <?php endif; ?>
 <?= $__verify ?><meta name="application-name" content="AIHubpedia">
 <meta name="theme-color" content="#4f46e5">

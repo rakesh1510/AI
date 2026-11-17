@@ -306,6 +306,12 @@ function tool_field_is_generic(array $tool, string $field): bool {
   return count(array_diff($items, tool_generic_profile_values())) === 0;
 }
 
+/** Items of a list field with the bulk-generated template phrases removed (they are identical across ~490 tools and carry no information). */
+function tool_nongeneric_items(array $items): array {
+  $g = tool_generic_profile_values();
+  return array_values(array_filter(array_map('trim', array_map('strval', $items)), fn($x) => $x !== '' && !in_array($x, $g, true)));
+}
+
 function tool_has_generic_profile(array $tool): bool {
   if (!empty($tool['curated'])) return false;
   return tool_field_is_generic($tool, 'features') && tool_field_is_generic($tool, 'pros');

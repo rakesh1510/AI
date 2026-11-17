@@ -84,6 +84,10 @@ require __DIR__ . '/layout_top.php';
       <h2>Affiliate partnerships</h2>
       <p class="small">If your product has an affiliate or referral programme, tell us. Affiliate links on AIHubpedia are always marked and never affect a profile's facts. At the moment no listing uses an affiliate link.</p>
     </div>
+    <div class="panel" style="margin-top:18px" id="reporting">
+      <h2>What we report, and what we do not</h2>
+      <p class="small">We do not publish audience, traffic or subscriber figures, because we have not yet measured an audience we could stand behind. If you sponsor, we agree in writing, before it starts, what we can actually measure and how (for example, outbound clicks counted on our own redirect). We report raw counts with the dates they cover. We do not promise rankings, traffic, sign-ups or revenue, and a sponsor cannot change a tool's facts, evidence level or position in editorial recommendations.</p>
+    </div>
     <div class="panel" style="margin-top:18px">
       <h2>How it works</h2>
       <ol class="steps"><li><div>Send your request below (or <a href="/submit.php">submit your tool</a> for a standard listing).</div></li><li><div>We review the tool against our <a href="/methodology.php">methodology</a>; not every tool is accepted.</div></li><li><div>If accepted, we agree the placement and dates by email before anything goes live.</div></li></ol>
