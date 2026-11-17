@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Security primitives shared by every endpoint (Phase 4).
  *
@@ -299,4 +300,16 @@ function sec_send_headers(): void {
   header('X-Frame-Options: SAMEORIGIN');
   header('Referrer-Policy: strict-origin-when-cross-origin');
   header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), interest-cohort=()');
+}
+
+/** The legacy demo login/bookmarks feature exists only for local demos: it is off unless AIHUB_DEMO_LOGIN=1. */
+function demo_login_enabled(): bool { return sec_setting('AIHUB_DEMO_LOGIN', 'demo_login') === '1'; }
+function sec_require_demo(): void { if (!demo_login_enabled()) { http_response_code(404); header('X-Robots-Tag: noindex'); exit; } }
+
+/** Start the (non-admin) PHP session with safe cookie flags: HttpOnly, SameSite=Lax, Secure on HTTPS. */
+function sec_session_start(): void {
+  if (session_status() === PHP_SESSION_ACTIVE) return;
+  ini_set('session.use_strict_mode', '1'); ini_set('session.use_only_cookies', '1');
+  session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => sec_is_https(), 'httponly' => true, 'samesite' => 'Lax']);
+  @session_start();
 }

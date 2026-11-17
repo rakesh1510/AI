@@ -41,6 +41,7 @@ Disallow: /helpers.php
 Disallow: /helpersold.php
 Disallow: /db.php
 Disallow: /data/
+Disallow: /extensions/
 Disallow: /database/
 Disallow: /vendor/
 Disallow: /tests/

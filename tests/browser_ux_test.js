@@ -222,7 +222,9 @@ async function run(P, opts) {
   check(!!m && log.includes(email), `[${P}] confirmation email was sent to the subscriber (sink)`);
   if (m) {
     await page.goto(`${base}/newsletter-confirm.php?token=${m[1]}`, { waitUntil: 'load' });
-    check(/You are subscribed/.test(await page.locator('main').innerText()) && sql(`SELECT status FROM subscribers WHERE email='${email}'`) === 'confirmed', `[${P}] confirmation link confirms the subscription`);
+    check(sql(`SELECT status FROM subscribers WHERE email='${email}'`) === 'pending', `[${P}] opening the confirmation link alone does not subscribe anyone (mail scanners prefetch links)`);
+    await Promise.all([page.waitForLoadState('load'), page.locator('button:has-text("Yes, confirm")').click()]);
+    check(/You are subscribed/.test(await page.locator('main').innerText()) && sql(`SELECT status FROM subscribers WHERE email='${email}'`) === 'confirmed', `[${P}] pressing the confirm button confirms the subscription`);
     await page.goto(`${base}/unsubscribe.php?token=${m[1]}`, { waitUntil: 'load' });
     check(sql(`SELECT status FROM subscribers WHERE email='${email}'`) === 'confirmed', `[${P}] opening the unsubscribe link alone does not unsubscribe (prefetch-safe)`);
     await Promise.all([page.waitForLoadState('load'), page.locator('button:has-text("Yes, unsubscribe")').click()]);

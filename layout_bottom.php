@@ -1,3 +1,6 @@
+<?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+?>
 </main>
 
 <?php $__js_app = @filemtime(__DIR__ . '/assets/js/app.js') ?: '1'; ?>

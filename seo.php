@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Central technical-SEO helpers: canonical URLs, titles, descriptions,
  * robots directives, JSON-LD and per-page defaults.

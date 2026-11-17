@@ -51,7 +51,7 @@ $after = votes_text(http('GET', "$base/tool.php?id=chatgpt")['body']);
 ok($before !== '' && $before === $after, "GET vote link changed nothing ($before -> $after)");
 foreach (['/rate.php', '/vote-tool-ajax.php', '/track-click.php', '/submit-comment.php', '/toggle-bookmark.php'] as $p) {
   $r = http('GET', $base . $p . '?id=chatgpt&vote=up');
-  ok(in_array($r['code'], [405, 303], true), "GET $p does not perform an action (HTTP {$r['code']})");
+  ok(in_array($r['code'], [405, 303, 404], true), "GET $p does not perform an action (HTTP {$r['code']})");
 }
 
 section('CSRF and origin checks');

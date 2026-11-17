@@ -119,7 +119,7 @@ $cases = [
   ['/disclaimer.php', 200, true, '/disclaimer.php', []],
   ['/filters.php', 200, true, '/filters.php', []],
   ['/community.php', 200, true, '/community.php', []],
-  ['/login.php', 200, false, null, []],
+  ['/login.php', 404, false, null, []],
   ['/ai-benchmarks.php', 200, false, null, []],
   ['/ai-usecase-explorer.php', 200, false, null, []],
   ['/new-features-hub.php', 200, false, null, []],

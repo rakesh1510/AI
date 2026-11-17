@@ -235,7 +235,7 @@ require __DIR__ . '/layout_top.php';
 <div class="card" style="margin-top:16px">
   <h2 style="margin-top:0">User actions</h2>
   <div class="actions">
-    <form method="post" action="/toggle-bookmark.php" style="display:inline"><?= sec_csrf_field('bookmark') ?><input type="hidden" name="id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? ''), ENT_QUOTES) ?>"><button class="btn secondary">Save / Remove Bookmark</button></form>
+    <?php if(demo_login_enabled()): ?><form method="post" action="/toggle-bookmark.php" style="display:inline"><?= sec_csrf_field('bookmark') ?><input type="hidden" name="id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? ''), ENT_QUOTES) ?>"><button class="btn secondary">Save / Remove Bookmark</button></form><?php endif; ?>
     <a class="btn secondary" rel="nofollow" href="/compare-tools.php?a=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Compare this tool</a>
     <a class="btn secondary" rel="nofollow" href="/login.php">Demo Login</a>
   </div>

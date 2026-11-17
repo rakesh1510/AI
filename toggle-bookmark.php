@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+sec_require_demo();
 // Demo bookmarks: POST + CSRF (a GET link could be triggered by any third-party page).
-session_start();
+sec_session_start();
 if(!is_logged_in_demo()){ header('Location: /login.php', true, 303); exit; }
 sec_guard_write('bookmark', 30, 600, false);
 $id = trim((string)($_POST['id'] ?? ''));

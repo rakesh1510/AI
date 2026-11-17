@@ -13,8 +13,9 @@ if(!$t){
   exit;
 }
 
-record_click($id);
-event_record_server('outbound_click', $id, is_affiliate_link($t) ? 'yes' : 'no', is_featured_tool($t) ? 'sponsored' : 'organic');
+// Counting is rate limited per network and tool: a script or a third-party page must not be able to inflate popularity by looping this URL.
+if(!sec_rate_limited('click:' . $id, 20, 600)){ record_click($id); event_record_server(
+'outbound_click', $id, is_affiliate_link($t) ? 'yes' : 'no', is_featured_tool($t) ? 'sponsored' : 'organic'); }
 $u = tool_url($t);
 $safe = ($u === '#') ? null : sec_safe_external_url($u);
 if($safe === null){

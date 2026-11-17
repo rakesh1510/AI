@@ -2,7 +2,7 @@
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 
-session_start();
+sec_session_start();
 
 function fail($msg){
   header("Location: contact.php?err=" . urlencode($msg));

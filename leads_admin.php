@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Lead status workflow and aggregate reporting for the admin prototype (Phase 4, P2).
  * Reports show raw counts only. No conversion rates, revenue or benchmarks are computed or invented.

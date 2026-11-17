@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/catalog.php';
@@ -641,7 +642,7 @@ function load_reviews_demo(){ return read_json_file_safe(reviews_demo_file(), []
 function save_reviews_demo($data){ write_json_file_safe(reviews_demo_file(), $data); }
 
 function current_demo_user_id(){
-  if(session_status() === PHP_SESSION_NONE){ @session_start(); }
+  sec_session_start();
   return $_SESSION['demo_user_id'] ?? null;
 }
 function is_logged_in_demo(){ return current_demo_user_id() !== null; }

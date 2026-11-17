@@ -1,6 +1,7 @@
 <?php
 require_once 'helpers.php';
-session_start();
+sec_require_demo();   // demo accounts must not exist in production
+sec_session_start();
 $msg='';
 if($_SERVER['REQUEST_METHOD']==='POST'){
   if(!sec_csrf_ok('login')){ $msg='Please reload the page and try again.'; }
@@ -8,7 +9,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   else {
   $users=load_users_demo();
   foreach(($users['users']??[]) as $u){
-    if(($u['email']??'')===($_POST['email']??'') && ($u['password']??'')===($_POST['password']??'')){
+    if(($u['email']??'')===($_POST['email']??'') && password_verify((string)($_POST['password']??''), (string)($u['password']??''))){
       session_regenerate_id(true);
       $_SESSION['demo_user_id']=$u['id'];
       header('Location: /bookmarks.php', true, 303); exit;
@@ -19,7 +20,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 }
 require __DIR__ . '/layout_top.php';
 ?>
-<section class="hero"><h1>Demo Login</h1><p class="small">Use demo@aihubpedia.com / demo123</p></section>
+<section class="hero"><h1>Demo Login</h1><p class="small">Local demo only: demo@aihubpedia.com / demo123</p></section>
 <section class="card">
 <?php if($msg): ?><div class="noteBox"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
 <form method="post">

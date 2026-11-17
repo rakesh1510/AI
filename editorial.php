@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Editorial workflows (Phase 4, P4/P5): verified tool change log, newsletter issues and roundup drafts, content templates with
  * evidence gates and a content linter. Everything is derived from real data files; nothing is generated without a human gate.

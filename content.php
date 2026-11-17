@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /** Editorial content helpers: guides, alternatives, comparison tables. Data lives in data/guides.json and data/curated_profiles.json. */
 
 function guides_all(): array { return catalog_json('guides.json', ['guides' => []])['guides'] ?? []; }
