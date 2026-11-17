@@ -45,7 +45,7 @@ foreach (array_merge($byKind['lib'], $byKind['cli']) as $f) {
   $g = http('GET', "$base/$f"); $p = http('POST', "$base/$f", ['x' => 1], $own);
   ok($g['code'] === 404 && $p['code'] === 404, "$f is not served (GET {$g['code']}, POST {$p['code']})");
 }
-foreach (['/extensions/community/index.php', '/extensions/analytics/index.php', '/extensions/api/submit.php', '/extensions/core/helpers.php', '/README.txt', '/PROJECT_STATUS.txt', '/composer.json', '/composer.lock', '/.git/config', '/.gitignore', '/data/users.json', '/database/phase4_business.sql', '/tests/security_manifest.json', '/scripts/seed_synthetic_leads.php', '/vendor/autoload.php', '/config.local.php', '/.env'] as $p) {
+foreach (['/editorial_review.php', '/extensions/community/index.php', '/extensions/analytics/index.php', '/extensions/api/submit.php', '/extensions/core/helpers.php', '/README.txt', '/PROJECT_STATUS.txt', '/composer.json', '/composer.lock', '/.git/config', '/.gitignore', '/data/users.json', '/database/phase4_business.sql', '/tests/security_manifest.json', '/scripts/seed_synthetic_leads.php', '/vendor/autoload.php', '/config.local.php', '/.env'] as $p) {
   $g = http('GET', $base . $p); ok(in_array($g['code'], [404, 403], true) && strpos($g['body'], 'smtp') === false && strpos($g['body'], '"password"') === false, "$p is not served (HTTP {$g['code']})");
 }
 foreach ($byKind['demo'] as $f) ok(http('GET', "$base/$f")['code'] === 404 && http('POST', "$base/$f", ['email' => 'demo@aihubpedia.com', 'password' => 'demo123'], $own)['code'] === 404, "demo endpoint $f is disabled by default (cannot log in with the public demo password)");
@@ -150,10 +150,10 @@ $pdo->exec('DELETE FROM subscribers');
 
 section('Admin: access control matrix and brute force');
 $jar = tempnam(sys_get_temp_dir(), 'adm');
-foreach (['/admin.php', '/admin-leads.php'] as $p) {
+foreach (['/admin.php', '/admin-leads.php', '/admin-editorial.php'] as $p) {
   $r = http('GET', $base . $p, null, [], $jar);
-  ok(in_array($r['code'], [200, 503], true) && stripos($r['body'], 'Admin sign-in') !== false && !preg_match('/@example\.test|Total leads|Tool submissions/', $r['body']), "$p shows only the sign-in form to anonymous visitors");
-  foreach (['set_status' => ['id' => 1, 'status' => 'won'], 'approve' => ['i' => 0], 'mark_paid' => ['i' => 0], 'reject' => ['i' => 0]] as $act => $extra) {
+  ok(in_array($r['code'], [200, 503], true) && stripos($r['body'], 'Admin sign-in') !== false && !preg_match('/@example\.test|Total leads|Tool submissions|Review history/', $r['body']), "$p shows only the sign-in form to anonymous visitors");
+  foreach (['set_status' => ['id' => 1, 'status' => 'won'], 'approve' => ['i' => 0], 'mark_paid' => ['i' => 0], 'reject' => ['i' => 0], 'review' => ['tool_id' => 'chatgpt', 'action' => 'verify', 'reviewer' => 'Mallory', 'confirm' => '1', 'sources_checked' => 3, 'checklist' => ['sources_opened' => '1', 'pricing_checked' => '1', 'features_checked' => '1', 'conflicts_handled' => '1', 'no_marketing_claims' => '1']]] as $act => $extra) {
     $b = snapshot(); $r = http('POST', $base . $p, ['admin_action' => $act] + $extra, $own, $jar); $a = snapshot();
     ok(diff($b, $a) === [] && !in_array($r['code'], [500], true), "anonymous $act on $p changes nothing (HTTP {$r['code']})");
   }

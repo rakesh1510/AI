@@ -27,7 +27,7 @@ function cache_dir(): string {   // a configured directory that is not private t
 /** @param string[]|null $files absolute paths (tests pass temporary files) */
 function catalog_fingerprint(?array $files = null, ?string $dbChecksum = null): string {
   $dir = __DIR__ . '/data/';
-  $files = $files ?? array_map(fn($f) => $dir . $f, ['tools.json', 'curated_profiles.json', 'classification.json', 'taxonomy.json', 'search_synonyms.json', 'solutions.json', 'capabilities.json']);
+  $files = $files ?? array_map(fn($f) => $dir . $f, ['tools.json', 'curated_profiles.json', 'classification.json', 'taxonomy.json', 'search_synonyms.json', 'solutions.json', 'capabilities.json', 'editorial_review_log.json']);
   $parts = [];
   foreach ($files as $f) { $parts[] = basename($f) . ':' . (is_file($f) ? filesize($f) . ':' . filemtime($f) . ':' . crc32((string)file_get_contents($f)) : 'missing'); }
   if ($dbChecksum === null && function_exists('mysql_tables_available_for_content') && mysql_tables_available_for_content()) {
@@ -38,7 +38,7 @@ function catalog_fingerprint(?array $files = null, ?string $dbChecksum = null): 
 }
 
 function code_fingerprint(?array $files = null): string {
-  $files = $files ?? array_map(fn($f) => __DIR__ . '/' . $f, ['discovery.php', 'evidence.php', 'editorial.php', 'cache.php', 'catalog.php']);
+  $files = $files ?? array_map(fn($f) => __DIR__ . '/' . $f, ['discovery.php', 'evidence.php', 'editorial.php', 'editorial_review.php', 'cache.php', 'catalog.php']);
   $p = ['schema' . AIHUB_CACHE_SCHEMA];
   foreach ($files as $f) $p[] = basename($f) . ':' . (is_file($f) ? filesize($f) . ':' . filemtime($f) : 'missing');
   return substr(sha1(implode('|', $p)), 0, 12);

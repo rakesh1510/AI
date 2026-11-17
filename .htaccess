@@ -30,7 +30,7 @@ ErrorDocument 404 /404.php
   # Placeholder preview pages with invented figures: never public
   RewriteRule ^extensions(/|$) - [R=404,L]
   # Library files are include-only
-  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial|cache|layout_top|layout_bottom)\.php$ - [R=404,L]
+  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial|editorial_review|cache|layout_top|layout_bottom)\.php$ - [R=404,L]
   RewriteRule \.(sql|bak|log|ini|sh)$ - [R=404,L]
 </IfModule>
 

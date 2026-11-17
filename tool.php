@@ -119,6 +119,16 @@ require __DIR__ . '/layout_top.php';
       <?php if($ev['pricing_as_of']): ?><li>Pricing stated as of <?= h($ev['pricing_as_of']) ?><?= $ev['pricing_stale'] ? ' — <strong>older than ' . (int)EVIDENCE_STALE_DAYS . ' days, check the vendor page</strong>' : '' ?>; <?= h($ev['pricing_note']) ?></li><?php endif; ?>
       <li><?= (int)$ev['source_count'] ?> source page<?= $ev['source_count'] === 1 ? '' : 's' ?> listed below<?= $ev['conflicts'] ? '; sources disagree on some points' : '' ?></li>
     </ul>
+    <?php $ledger = editorial_fact_states($t); ?>
+    <h4 style="margin:12px 0 0">Evidence ledger</h4>
+    <div class="tableWrap"><table class="table ledger"><caption class="small">What we know about each kind of fact, where it comes from, and when it must be re-checked.</caption>
+      <thead><tr><th scope="col">Fact</th><th scope="col">State</th><th scope="col">Source and date</th><th scope="col">Re-check by</th></tr></thead><tbody>
+      <?php foreach($ledger as $lk => $lf): ?><tr data-fact="<?= h($lk) ?>" data-state="<?= h($lf['state']) ?>">
+        <th scope="row"><?= h($lf['label']) ?></th>
+        <td><span class="badge gray"><?= h($lf['state_label']) ?></span><div class="small"><?= h($lf['note']) ?></div></td>
+        <td><?php if($lf['source_url']): ?><a href="<?= h($lf['source_url']) ?>" rel="noopener nofollow" target="_blank"><?= h($lf['source_label'] ?: 'Vendor source') ?></a><?= $lf['source_date'] ? ', ' . h($lf['source_date']) : '' ?><?php else: ?>No source<?php endif; ?></td>
+        <td><?= $lf['expires_on'] ? h($lf['expires_on']) : '—' ?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
     <?php $docCaps = array_filter($caps, fn($c) => in_array($c['state'], ['documented', 'none_listed'], true)); $unkCaps = array_filter($caps, fn($c) => $c['state'] === 'unknown'); ?>
     <h4 style="margin:12px 0 0">Documented capabilities</h4>
     <?php if($docCaps): ?>
@@ -136,6 +146,10 @@ require __DIR__ . '/layout_top.php';
   <?php elseif(!empty($t['classification']) && ($t['classification']['method'] ?? '') === 'rule'): ?>
     <p class="small">Category assigned automatically from the tool's description<?= ($t['classification']['confidence'] ?? '') !== 'high' ? ' (lower confidence, queued for review)' : '' ?>. <a href="/methodology.php">Learn how listings are classified</a>.</p>
   <?php endif; ?>
+  <?php if(empty($t['curated'])): ?>
+    <p class="small" data-ledger-unreviewed>Evidence ledger: <strong>unknown</strong>. Pricing, features and limitations for this listing are not sourced or reviewed yet, so no fact on this page is verified. <a href="/methodology.php">How we review tools</a>.</p>
+  <?php endif; ?>
+
 
   <div class="kv">
     <div class="small"><b>Tags</b></div>

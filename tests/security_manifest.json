@@ -4,6 +4,8 @@
   "404.php": "page",
   "about.php": "page",
   "admin-leads.php": "admin",
+  "admin-editorial.php": "admin",
+  "editorial_review.php": "lib",
   "admin.php": "admin",
   "admin_auth.php": "lib",
   "advertise.php": "page",

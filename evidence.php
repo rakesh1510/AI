@@ -39,7 +39,9 @@ function tool_evidence(array $t, ?int $now = null): array {
   $now = $now ?? time();
   $r = $p['review'] ?? [];
   $human = !empty($r['human_verified']) && !empty($r['verified_on']);
-  $age = profile_age_days($p, $now);
+  $logv = function_exists('editorial_log_verified') ? editorial_log_verified((string)($t['id'] ?? '')) : null;   // recorded by a person (admin session); the committed log is empty
+  if ($logv) { $human = true; $r['verified_on'] = $logv['date']; $r['reviewed_on'] = $r['reviewed_on'] ?? $logv['date']; }
+  $age = $logv ? (int)floor(($now - strtotime($logv['date'])) / 86400) : profile_age_days($p, $now);
   $asOf = $p['pricing']['as_of'] ?? null;
   $pAge = ($asOf && strtotime((string)$asOf)) ? (int)floor(($now - strtotime((string)$asOf)) / 86400) : null;
   $sources = array_values(array_filter((array)($p['sources'] ?? []), fn($s) => !empty($s['url']) && sec_safe_external_url((string)$s['url']) !== null));
