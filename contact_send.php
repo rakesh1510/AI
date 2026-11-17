@@ -19,15 +19,18 @@ if(empty($_POST['csrf']) || empty($_SESSION['csrf']) || !hash_equals($_SESSION['
   fail("Security check failed.");
 }
 
+if(!sec_same_origin()){ sec_log('contact_origin_rejected'); fail("Security check failed."); }
+if(sec_rate_limited('contact', 5, 3600)){ sec_log('rate_limited', ['scope'=>'contact']); fail("Too many messages. Please try again later."); }
+
 /* Honeypot spam protection */
 if(!empty($_POST['company'])){
   fail("Spam detected.");
 }
 
-$name    = trim($_POST['name'] ?? '');
-$email   = trim($_POST['email'] ?? '');
-$subject = trim($_POST['subject'] ?? '');
-$message = trim($_POST['message'] ?? '');
+$name    = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
+$email   = mb_substr(trim($_POST['email'] ?? ''), 0, 190);
+$subject = mb_substr(preg_replace('/[\r\n]+/', ' ', trim($_POST['subject'] ?? '')), 0, 160);
+$message = mb_substr(trim($_POST['message'] ?? ''), 0, 4000);
 
 if($name==='' || $email==='' || $subject==='' || $message===''){
   fail("Please fill in all fields.");
@@ -45,6 +48,7 @@ if(strlen($message) < 10){
    SAVE MESSAGE INTO MYSQL
 -------------------------------- */
 
+try {
 $stmt = db()->prepare("
 INSERT INTO contact_messages
 (name,email,subject,message,ip_address,user_agent)
@@ -57,9 +61,10 @@ $stmt->execute([
   ':email' => $email,
   ':subject' => $subject,
   ':message' => $message,
-  ':ip' => $_SERVER['REMOTE_ADDR'] ?? '',
-  ':ua' => substr($_SERVER['HTTP_USER_AGENT'] ?? '',0,255)
+  ':ip' => sec_ip_hash('contact'),   // salted hash only: no raw IP address or user agent is stored
+  ':ua' => ''
 ]);
+} catch(Throwable $e){ sec_log_exception($e, 'contact_send.php:save'); fail("Sorry, your message could not be saved. Please try again later."); }
 
 /* --------------------------------
    EMAIL SEND (PHPMailer)
@@ -123,7 +128,8 @@ try {
   $mail->send();
 
 } catch (Exception $e) {
-  fail("Mail error: ".$e->getMessage());
+  sec_log_exception($e, 'contact_send.php');
+  fail("Your message was saved, but the notification email could not be sent.");
 }
 
 /* SUCCESS */

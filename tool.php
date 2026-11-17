@@ -156,6 +156,7 @@ require __DIR__ . '/layout_top.php';
 
   <h2>Rate this tool</h2>
   <form method="post" action="/rate.php" class="card" style="background:rgba(255,255,255,.03)">
+    <?= sec_csrf_field('interact') ?>
     <input type="hidden" name="id" value="<?= h($t['id']) ?>">
     <label class="small" for="rateStars">Stars</label>
     <select name="stars" id="rateStars">
@@ -210,7 +211,7 @@ require __DIR__ . '/layout_top.php';
 <div class="card" style="margin-top:16px">
   <h2 style="margin-top:0">User actions</h2>
   <div class="actions">
-    <a class="btn secondary" rel="nofollow" href="/toggle-bookmark.php?id=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Save / Remove Bookmark</a>
+    <form method="post" action="/toggle-bookmark.php" style="display:inline"><?= sec_csrf_field('bookmark') ?><input type="hidden" name="id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? ''), ENT_QUOTES) ?>"><button class="btn secondary">Save / Remove Bookmark</button></form>
     <a class="btn secondary" rel="nofollow" href="/compare-tools.php?a=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Compare this tool</a>
     <a class="btn secondary" rel="nofollow" href="/login.php">Demo Login</a>
   </div>
@@ -240,6 +241,8 @@ require __DIR__ . '/layout_top.php';
   <?php endif; ?>
 
   <form method="post" action="/submit-comment.php" style="margin-top:14px">
+    <?= sec_csrf_field('comment') ?>
+    <input type="text" name="website_url_confirm" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
     <input type="hidden" name="tool_id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? '')) ?>">
     <label for="commentName">Your name</label>
     <input class="input" id="commentName" name="name" placeholder="Your name" autocomplete="name">

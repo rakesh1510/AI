@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/security.php';
 /**
  * Conversion journeys: stateless form tokens, lead capture, newsletter double opt-in, consent-gated events.
  * No cookies are set and no IP address or user-agent string is stored (only a short salted hash used for rate limiting).
@@ -7,17 +8,7 @@
 // ---------------------------------------------------------------------------
 // Stateless form tokens (CSRF + time trap) — no session cookie needed
 // ---------------------------------------------------------------------------
-function form_secret(): string {
-  static $secret = null;
-  if ($secret !== null) return $secret;
-  $env = getenv('AIHUB_FORM_SECRET');
-  if ($env !== false && $env !== '') return $secret = $env;
-  $file = __DIR__ . '/data/.form_secret';
-  if (is_file($file) && ($v = trim((string)@file_get_contents($file))) !== '') return $secret = $v;
-  $v = bin2hex(random_bytes(32));
-  if (@file_put_contents($file, $v) === false) $v = hash('sha256', __DIR__ . php_uname());
-  return $secret = $v;
-}
+function form_secret(): string { return sec_secret(); }
 
 function form_token(string $purpose, ?int $ts = null): string {
   $ts = $ts ?? time();
@@ -34,10 +25,7 @@ function form_token_valid(string $token, string $purpose, int $minAge = 2, ?int 
   return $age >= $minAge && $age <= 86400;
 }
 
-function conversion_ip_hash(): string {
-  $ip = (string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''));
-  return substr(hash('sha256', (getenv('AIHUB_ANALYTICS_SALT') ?: form_secret()) . '|rate|' . $ip), 0, 16);
-}
+function conversion_ip_hash(): string { return sec_ip_hash('rate'); }
 
 // ---------------------------------------------------------------------------
 // Leads

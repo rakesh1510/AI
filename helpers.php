@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/catalog.php';
 require_once __DIR__ . '/content.php';
@@ -69,13 +70,25 @@ function site_cfg(){
           $decoded = json_decode($val, true);
           $cfg[$key] = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
         }
-        return $cache = $cfg;
+        return $cache = site_cfg_harden($cfg);
       }
     } catch(Throwable $e){
       // fallback to JSON
     }
   }
-  return $cache = read_json('site.json', []);
+  return $cache = site_cfg_harden(read_json('site.json', []));
+}
+
+/** Secrets come from the environment / config.local.php when set; the legacy plain-text admin password is never exposed. */
+function site_cfg_harden(array $cfg): array {
+  unset($cfg['admin_pass']);
+  $m = (isset($cfg['mail']) && is_array($cfg['mail'])) ? $cfg['mail'] : [];
+  foreach (['smtp_host' => 'AIHUB_SMTP_HOST', 'smtp_port' => 'AIHUB_SMTP_PORT', 'smtp_secure' => 'AIHUB_SMTP_SECURE', 'smtp_user' => 'AIHUB_SMTP_USER', 'smtp_pass' => 'AIHUB_SMTP_PASS', 'from_email' => 'AIHUB_MAIL_FROM', 'to_email' => 'AIHUB_MAIL_TO'] as $k => $env) {
+    $v = sec_setting($env, 'mail.' . $k);
+    if ($v !== '') $m[$k] = $k === 'smtp_port' ? (int)$v : $v;
+  }
+  if ($m) $cfg['mail'] = $m;
+  return $cfg;
 }
 function exclude_categories(){
   $cfg = site_cfg();
@@ -282,21 +295,8 @@ function interaction_tables_exist(){
 }
 
 function client_ip_address(){
-  foreach(['HTTP_CF_CONNECTING_IP','HTTP_X_REAL_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $key){
-    if(empty($_SERVER[$key])) continue;
-    $value = trim((string)$_SERVER[$key]);
-    if($key === 'HTTP_X_FORWARDED_FOR'){
-      $parts = array_map('trim', explode(',', $value));
-      foreach($parts as $part){
-        if(filter_var($part, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)){
-          return substr($part, 0, 45);
-        }
-      }
-      $value = $parts[0] ?? '';
-    }
-    if($value !== '' && filter_var($value, FILTER_VALIDATE_IP)) return substr($value, 0, 45);
-  }
-  return null;
+  // Forwarded headers are only honoured from configured trusted proxies (see security.php).
+  return sec_client_ip();
 }
 
 function visitor_id(){
@@ -776,9 +776,7 @@ function get_visitor_id(): string
 
 function get_ip_hash(): string
 {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    $secret = 'change-this-to-a-long-random-secret';
-    return hash('sha256', $ip . $secret);
+    return sec_ip_hash('vote');
 }
 
 function vote_tool_action(string $toolId, string $type): bool

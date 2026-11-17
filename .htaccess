@@ -21,9 +21,11 @@ ErrorDocument 404 /404.php
 
   # Never serve private data, SQL dumps, tests, scripts, VCS or dependency metadata
   RewriteRule ^(data|database|tests|scripts|\.git|\.github)(/|$) - [R=404,L]
-  RewriteRule ^(composer\.(json|lock)|helpersold\.php|vote_debug\.php)$ - [R=404,L]
+  RewriteRule ^(composer\.(json|lock)|helpersold\.php|vote_debug\.php|config\.local\.php|NEW_LAYOUT_README\.txt|PROJECT_STATUS\.txt|README[A-Za-z_]*\.txt)$ - [R=404,L]
+  # Install / import / maintenance scripts are CLI-only (they also refuse non-CLI requests themselves)
+  RewriteRule ^(install-database|install-full-mysql|import-json-to-mysql|generate_compare_pages|compare_(install|sync_catalog|refresh_all|fetch_source|enrich_tool))\.php$ - [R=404,L]
   # Library files are include-only
-  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion)\.php$ - [R=404,L]
+  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|recommend|compare_data|changelog|newsletter_archive)\.php$ - [R=404,L]
   RewriteRule \.(sql|bak|log|ini|sh)$ - [R=404,L]
 </IfModule>
 

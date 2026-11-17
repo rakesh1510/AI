@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+sec_send_headers();
 
 /*
  * Page variables (all optional, set before including this file):
@@ -92,6 +93,7 @@ $__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a too
 <meta name="twitter:image" content="<?= h($og_image) ?>">
 <?= isset($head_extra) ? $head_extra . "\n" : '' ?>
 <?= seo_jsonld($__jsonld) ?>
+<meta name="csrf-token" content="<?= htmlspecialchars(sec_csrf_token('interact'), ENT_QUOTES) ?>">
 </head>
 <body data-page="<?= h(analytics_page_type(seo_current_script())) ?>">
 <?= ui_icon_sprite() ?>

@@ -1,3 +1,5 @@
+function csrfToken() { var m = document.querySelector('meta[name="csrf-token"]'); return m ? m.getAttribute('content') : ''; }
+
 document.addEventListener('click', async function (event) {
   const voteBtn = event.target.closest('.js-vote-btn');
   if (voteBtn) {
@@ -18,6 +20,7 @@ document.addEventListener('click', async function (event) {
         method: 'POST',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': csrfToken(),
           'Accept': 'application/json',
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },
@@ -86,6 +89,7 @@ document.addEventListener('click', async function (event) {
         method: 'POST',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': csrfToken(),
           'Accept': 'application/json',
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },

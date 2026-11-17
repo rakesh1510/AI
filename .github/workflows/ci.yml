@@ -31,6 +31,9 @@ jobs:
       AIHUB_DB_NAME: aihub_test
       AIHUB_DB_USER: aihub_test
       AIHUB_DB_PASS: test_only_pw
+      AIHUB_RATE_DIR: /tmp/aihub_rate_ci
+      AIHUB_SECURITY_LOG: /tmp/aihub_security_ci.log
+      AIHUB_TEST_ADMIN_PW: ci-admin-test-pw
     steps:
       - uses: actions/checkout@v4
 
@@ -55,11 +58,16 @@ jobs:
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 
+      - name: Security regression tests (proxy trust, redirects, CSRF, rate limits, secrets, admin)
+        run: php tests/security_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
       - name: Start SMTP sink and PHP server
         run: |
+          mkdir -p "$AIHUB_RATE_DIR"
+          export AIHUB_ADMIN_PASS_HASH="$(php -r 'echo password_hash(getenv("AIHUB_TEST_ADMIN_PW"), PASSWORD_DEFAULT);')"
           nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
           AIHUB_ANALYTICS=1 AIHUB_ANALYTICS_SALT=ci-test-salt nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
           sleep 2
@@ -67,6 +75,9 @@ jobs:
 
       - name: SEO tests (incl. every sitemap URL)
         run: php tests/seo_test.php http://127.0.0.1:8002 --full-sitemap
+
+      - name: Security tests against the running server (CSRF, origin, GET inertness, blocked files, admin login)
+        run: php tests/security_http_test.php http://127.0.0.1:8002
 
       - uses: actions/setup-node@v4
         with:

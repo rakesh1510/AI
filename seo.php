@@ -135,7 +135,7 @@ function seo_page_registry(): array {
     'admin.php' => ['title' => 'Admin', 'desc' => 'AIHubpedia administration area for managing listings and settings.', 'robots' => 'noindex'],
     'login.php' => ['title' => 'Demo Login', 'desc' => 'Demo login for testing AIHubpedia bookmarks and saved AI tools.', 'robots' => 'noindex'],
     'bookmarks.php' => ['title' => 'My Bookmarks', 'desc' => 'Your saved AI tools on AIHubpedia, stored for this demo account.', 'robots' => 'noindex'],
-    'affiliate-dashboard.php' => ['title' => 'Affiliate Dashboard (Demo)', 'desc' => 'Preview of the AIHubpedia affiliate dashboard with demo figures.', 'robots' => 'noindex'],
+    'affiliate-dashboard.php' => ['title' => 'Affiliate reporting', 'desc' => 'Affiliate link reporting for AIHubpedia (no revenue figures are shown).', 'robots' => 'noindex'],
     'analytics-dashboard.php' => ['title' => 'Analytics Dashboard (Demo)', 'desc' => 'Preview of the AIHubpedia analytics dashboard with demo figures.', 'robots' => 'noindex'],
     'dark-mode-demo.php' => ['title' => 'Dark Mode Demo', 'desc' => 'Preview of the experimental AIHubpedia dark mode theme.', 'robots' => 'noindex'],
     'multilingual-demo.php' => ['title' => 'Multilingual Demo', 'desc' => 'Preview of experimental multilingual support on AIHubpedia.', 'robots' => 'noindex'],

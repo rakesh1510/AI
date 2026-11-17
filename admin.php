@@ -1,26 +1,21 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "Admin — AIHubpedia";
-
-$pass = $_GET['pass'] ?? ($_POST['pass'] ?? '');
-$cfg = site_cfg();
-$admin_pass = $cfg['admin_pass'] ?? 'admin123'; // change in data/site.json
-
-if($pass !== $admin_pass){
-  require __DIR__ . '/layout_top.php';
-  echo "<h1>Admin login</h1>";
-  echo "<p class='small'>Add <code>?pass={$admin_pass}</code> (default). Change it in <code>data/site.json</code>.</p>";
-  echo "<div class='card'><b>Example:</b> admin.php?pass={$admin_pass}</div>";
-  require __DIR__ . '/layout_bottom.php';
-  exit;
-}
+require_once __DIR__ . '/admin_auth.php';
+admin_require('Admin');   // exits with a sign-in form (or a "disabled" notice) unless authenticated
 
 $tiers = pricing_tiers();
 $subs = read_json('submissions.json', []);
 
 // Actions: mark_paid, approve, reject
-$action = $_GET['action'] ?? '';
-$idx = isset($_GET['i']) ? (int)$_GET['i'] : -1;
+$action = '';
+$idx = -1;
+if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['admin_action'] ?? '') !== 'login'){
+  if(!admin_csrf_ok()){ sec_log('admin_csrf_rejected'); http_response_code(403); exit('Security check failed.'); }
+  if(($_POST['admin_action'] ?? '') === 'logout'){ admin_logout(); header('Location: /admin.php', true, 303); exit; }
+  $action = (string)($_POST['admin_action'] ?? '');
+  $idx = isset($_POST['i']) ? (int)$_POST['i'] : -1;
+}
 
 function featured_settings_for_plan($plan){
   $today = date('Y-m-d');
@@ -46,12 +41,15 @@ if($action && $idx >= 0 && $idx < count($subs)){
 
   if($action === 'approve'){
     $s = $subs[$idx];
+    $safeSite = sec_safe_external_url((string)($s['website'] ?? ''));
+    if($safeSite === null){ header('Location: /admin.php?msg=bad_url', true, 303); exit; }
+    $s['website'] = $safeSite;
     $plan = $s['plan'] ?? 'free';
     $price = (int)($s['price'] ?? 0);
     $paid_ok = ($price <= 0) || (($s['payment_status'] ?? '') === 'paid');
 
     if(!$paid_ok){
-      header('Location: admin.php?pass=' . urlencode($pass) . '&msg=need_payment');
+      header('Location: /admin.php?msg=need_payment', true, 303);
       exit;
     }
 
@@ -88,18 +86,23 @@ if($action && $idx >= 0 && $idx < count($subs)){
     write_json('submissions.json', $subs);
   }
 
-  header('Location: admin.php?pass=' . urlencode($pass));
+  sec_log('admin_action', ['action' => $action, 'index' => $idx]);
+  header('Location: /admin.php', true, 303);
   exit;
 }
 
 require __DIR__ . '/layout_top.php';
 $msg = $_GET['msg'] ?? '';
+if($msg === 'bad_url'){
+  echo "<div class='card'>❌ The submitted website address is not a valid public http(s) URL, so it was not approved.</div>";
+}
 if($msg === 'need_payment'){
   echo "<div class='card'>❌ This submission requires payment. First click <b>Mark paid</b>, then approve.</div>";
 }
 ?>
 
 <h1>Admin</h1>
+<form method="post" style="float:right"><?= admin_csrf_field() ?><input type="hidden" name="admin_action" value="logout"><button class="btn secondary sm">Sign out</button></form>
 <p class="small">Approve submissions, mark payments, and manage paid placements.</p>
 
 <div class="card" style="background:rgba(255,255,255,.03)">
@@ -135,10 +138,10 @@ if($msg === 'need_payment'){
     <div class="actions">
       <?php if(($s['status'] ?? '') === 'pending'): ?>
         <?php if($price > 0 && $payStatus !== 'paid'): ?>
-          <a class="btn" href="admin.php?pass=<?= urlencode($pass) ?>&action=mark_paid&i=<?= (int)$i ?>">Mark paid</a>
+          <form method="post" style="display:inline"><?= admin_csrf_field() ?><input type="hidden" name="admin_action" value="mark_paid"><input type="hidden" name="i" value="<?= (int)$i ?>"><button class="btn">Mark paid</button></form>
         <?php endif; ?>
-        <a class="btn secondary" href="admin.php?pass=<?= urlencode($pass) ?>&action=approve&i=<?= (int)$i ?>">Approve</a>
-        <a class="btn secondary" href="admin.php?pass=<?= urlencode($pass) ?>&action=reject&i=<?= (int)$i ?>">Reject</a>
+        <form method="post" style="display:inline"><?= admin_csrf_field() ?><input type="hidden" name="admin_action" value="approve"><input type="hidden" name="i" value="<?= (int)$i ?>"><button class="btn secondary">Approve</button></form>
+        <form method="post" style="display:inline"><?= admin_csrf_field() ?><input type="hidden" name="admin_action" value="reject"><input type="hidden" name="i" value="<?= (int)$i ?>"><button class="btn secondary">Reject</button></form>
       <?php endif; ?>
     </div>
   </div>
