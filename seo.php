@@ -108,6 +108,7 @@ function seo_page_registry(): array {
     'top.php' => ['title' => 'Top AI Tools — Ranked by Clicks & Ratings', 'desc' => 'The most-used AI tools on AIHubpedia, ranked by outbound clicks and visitor ratings. Compare categories, pricing and alternatives.'],
     'leaderboard.php' => ['title' => 'AI Tools Leaderboard — Community Popularity Ranking', 'desc' => 'Top 20 AI tools ranked by AIHubpedia visitor activity: outbound clicks, likes and dislikes. See how the popularity score is calculated.'],
     'compare.php' => ['title' => 'Compare AI Tools Side by Side', 'desc' => 'Pick any two AI tools and compare category, pricing, listed features, use cases, platforms and integrations side by side.'],
+    'solutions.php' => ['title' => 'Find AI Tools by Problem or Task', 'desc' => 'Start from the problem you need to solve and get a transparent, ranked shortlist of AI tools with the reasons for each match.'],
     'comparisons.php' => ['title' => 'AI Tool Comparisons — Popular Head-to-Head Matchups', 'desc' => 'Popular AI tool comparisons on AIHubpedia: chatbots, writing assistants, coding tools and more, compared side by side.'],
     'blog.php' => ['title' => 'AI Tools Blog — Guides & Shortlists', 'desc' => 'Guides, shortlists and updates to help you choose the right AI tools for writing, coding, design and productivity.'],
     'about.php' => ['title' => 'About AIHubpedia — Independent AI Tools Directory', 'desc' => 'Learn what AIHubpedia is, how AI tools are listed and organised, and how rankings and comparisons work.'],
@@ -165,6 +166,7 @@ function seo_canonical_params(): array {
     'post.php' => ['slug'],
     'ai-use-case.php' => ['slug'],
     'compare.php' => ['a', 'b'],
+    'solutions.php' => ['problem'],
   ];
 }
 

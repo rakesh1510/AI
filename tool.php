@@ -109,6 +109,30 @@ require __DIR__ . '/layout_top.php';
       </ul>
     </details>
   </section>
+  <?php $ev = tool_evidence($t); $caps = tool_capabilities($t); ?>
+  <section class="evPanel ev-<?= h($ev['tone']) ?>" aria-labelledby="evTitle">
+    <h3 id="evTitle">Evidence and confidence: <?= render_evidence_badge($t, false) ?></h3>
+    <p class="evNote"><?= h($ev['desc']) ?></p>
+    <ul class="evNote" style="padding-left:18px;margin:6px 0">
+      <?php if($ev['reviewed_on']): ?><li>Sources retrieved: <?= h($ev['reviewed_on']) ?><?= $ev['age_days'] !== null ? ' (' . (int)$ev['age_days'] . ' days ago)' : '' ?></li><?php endif; ?>
+      <li><?= $ev['human_verified'] ? 'Editor verified on ' . h($ev['verified_on']) : 'Not yet verified by an editor on the live vendor pages' ?></li>
+      <?php if($ev['pricing_as_of']): ?><li>Pricing stated as of <?= h($ev['pricing_as_of']) ?><?= $ev['pricing_stale'] ? ' — <strong>older than ' . (int)EVIDENCE_STALE_DAYS . ' days, check the vendor page</strong>' : '' ?>; <?= h($ev['pricing_note']) ?></li><?php endif; ?>
+      <li><?= (int)$ev['source_count'] ?> source page<?= $ev['source_count'] === 1 ? '' : 's' ?> listed below<?= $ev['conflicts'] ? '; sources disagree on some points' : '' ?></li>
+    </ul>
+    <?php $docCaps = array_filter($caps, fn($c) => in_array($c['state'], ['documented', 'none_listed'], true)); $unkCaps = array_filter($caps, fn($c) => $c['state'] === 'unknown'); ?>
+    <h4 style="margin:12px 0 0">Documented capabilities</h4>
+    <?php if($docCaps): ?>
+      <ul class="capList">
+        <?php foreach($docCaps as $c): ?><li class="capDoc"><strong><?= h($c['label']) ?></strong><span class="capState"><?= h(capability_state_text($c['state'])) ?></span><span class="capEv"><?= h($c['evidence']) ?> <span class="small">(<?= h($c['field']) ?>)</span></span></li><?php endforeach; ?>
+      </ul>
+    <?php else: ?><p class="evNote">No capabilities are documented for this tool yet.</p><?php endif; ?>
+    <?php if($unkCaps): ?>
+      <details style="margin-top:10px"><summary>Unknown (<?= count($unkCaps) ?>): not documented in our sources</summary>
+        <p class="evNote">These are not statements that the tool lacks them. We have no sourced information, so check the vendor.</p>
+        <ul class="capList"><?php foreach($unkCaps as $c): ?><li><strong><?= h($c['label']) ?></strong><span class="capState">Unknown</span></li><?php endforeach; ?></ul>
+      </details>
+    <?php endif; ?>
+  </section>
   <?php elseif(!empty($t['classification']) && ($t['classification']['method'] ?? '') === 'rule'): ?>
     <p class="small">Category assigned automatically from the tool's description<?= ($t['classification']['confidence'] ?? '') !== 'high' ? ' (lower confidence, queued for review)' : '' ?>. <a href="/methodology.php">Learn how listings are classified</a>.</p>
   <?php endif; ?>

@@ -95,7 +95,9 @@ function render_tool_card(array $t, array $opts = []): string {
   $o .= '<div class="tCard__badges">';
   if (!empty($t['pricing'])) $o .= '<span class="pill' . ($free ? ' pill--free' : '') . '">' . $h($t['pricing']) . '</span>';
   if ($reviewed) $o .= '<span class="pill pill--reviewed" title="Sources, dates and limitations are listed on the profile">' . ui_icon('shield') . ' Reviewed</span>';
+  if ($reviewed && !empty($opts['evidence'])) $o .= '<p class="tCard__evidence">' . render_evidence_badge($t) . '</p>';
   $o .= '</div>';
+  if (!empty($opts['why']) && is_array($opts['why'])) $o .= '<p class="tCard__why"><strong>Why this result:</strong> ' . $h(implode(' · ', array_slice($opts['why'], 0, 4))) . '</p>';
   $o .= '<div class="tCard__actions">'
     . '<a class="btn sm" href="' . $h(tool_path($id)) . '">View profile</a>';
   if (tool_url($t) !== '#') {

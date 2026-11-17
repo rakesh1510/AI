@@ -37,6 +37,13 @@ require __DIR__ . '/layout_top.php';
     <li>We do not accept payment to change a tool's facts, limitations or review status.</li>
   </ul>
 
+  <h2 id="search">How search and recommendations rank tools</h2>
+  <p>Search is rule-based and deterministic; it is not an AI chatbot and uses no external AI service. A tool scores points when your words match its name (most), subcategory, category, tags, one-line description, use cases and description (least). Tools with a reviewed, sourced profile get a small boost, and a capped boost reflects clicks on this site. A short, editorial list of related words (for example "transcribe" and "transcription") lets a search find tools that use a different word; these matches count for less and are always labelled "Related term". Each result lists the reasons it matched.</p>
+  <p><strong>Paid placements never change search ranking or recommendations.</strong> Sponsored items appear only in labelled sponsored slots, separate from editorial results.</p>
+  <h2 id="evidence">Evidence levels and unknown values</h2>
+  <p>Profiles show how well their facts are backed. <em>Verified by an editor</em> means a person checked the vendor's live pages and recorded the date. <em>Sourced, awaiting editor verification</em> means facts come from the vendor sources listed on the page but a person has not yet confirmed them. <em>Limited evidence</em> means few sources, conflicting information or dated pages. <em>Not reviewed</em> is a catalogue listing only. Verified profiles become "due for a re-check" after 90 days.</p>
+  <p>In comparisons, a feature is <strong>Documented</strong> only when our sourced profile mentions it. <strong>Unknown</strong> means we have no sourced statement; it does not mean the tool lacks the feature. We never fill gaps with guesses.</p>
+
   <h2>How categories are assigned</h2>
   <p>Tools are placed in a category and subcategory by a published, rule-based classifier that reads the tool's name and one-line description. High-confidence matches are applied directly, medium-confidence matches are applied and flagged for review, and tools we cannot classify confidently stay in "Other" until an editor reviews them. On a hand-labelled test sample the high-confidence results were correct every time, and the classifier declines to guess rather than force a match. Reviewed profiles are classified by an editor.</p>
 

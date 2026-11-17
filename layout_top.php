@@ -49,7 +49,7 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 $__built_css = is_file(__DIR__ . '/assets/css/site.min.css') ? (string)@filemtime(__DIR__ . '/assets/css/site.min.css') : '';   // built by scripts/build_assets.php
 $__hide_header_search = !empty($hide_header_search);
 $__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases']];
-$__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
+$__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
 ?>
 <!doctype html>
 <html lang="en" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>

@@ -226,6 +226,41 @@ require __DIR__ . '/layout_top.php';
     <?php endforeach; ?>
   </section>
 
+  <?php
+    $pair = [$ta, $tb];
+    $evs = array_map('tool_evidence', $pair);
+    $rows = capability_matrix($pair);
+    $freeRow = null;
+  ?>
+  <section class="compare-final card" aria-labelledby="featMatrix">
+    <h2 id="featMatrix">Feature-by-feature comparison</h2>
+    <p class="small">Built only from AIHubpedia's sourced profiles. <strong>Documented</strong> means the profile mentions the feature; <strong>Unknown</strong> means we have no sourced statement, not that the tool lacks it. <a href="/methodology.php#evidence">How to read this</a>.</p>
+    <div class="matrixWrap" tabindex="0" role="region" aria-label="Feature comparison table, scrollable">
+      <table class="matrix">
+        <caption class="sr">Documented features and evidence for <?= h($ta['name']) ?> and <?= h($tb['name']) ?></caption>
+        <thead><tr><th scope="col">Feature</th><th scope="col"><?= h($ta['name']) ?></th><th scope="col"><?= h($tb['name']) ?></th></tr></thead>
+        <tbody>
+          <tr class="<?= $evs[0]['level'] !== $evs[1]['level'] ? 'differs' : '' ?>"><th scope="row">Evidence level</th>
+            <?php foreach($pair as $i => $tt): ?><td data-label="<?= h($tt['name']) ?>"><?= render_evidence_badge($tt, false) ?></td><?php endforeach; ?></tr>
+          <tr><th scope="row">Last reviewed / verified</th>
+            <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?php if(!$e['curated']): ?><span class="cellState s-not_reviewed">Not reviewed</span><?php elseif($e['human_verified']): ?><?= h($e['verified_on']) ?> (editor verified)<?php else: ?>Sources retrieved <?= h($e['reviewed_on']) ?><span class="cellEv">Not yet verified by an editor</span><?php endif; ?></td><?php endforeach; ?></tr>
+          <tr><th scope="row">Pricing (as stated in sources)</th>
+            <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?php if($e['pricing_summary'] !== ''): ?><?= h($e['pricing_summary']) ?><span class="cellEv">As of <?= h($e['pricing_as_of']) ?><?= $e['pricing_stale'] ? ' — older than ' . (int)EVIDENCE_STALE_DAYS . ' days' : '' ?>; <?= h($e['pricing_note']) ?></span><?php else: ?><span class="cellState s-unknown">Unknown</span><span class="cellEv">Listing says: <?= h($tt['pricing'] ?: 'not stated') ?> (not reviewed)</span><?php endif; ?></td><?php endforeach; ?></tr>
+          <tr><th scope="row">Sources listed</th>
+            <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?= $e['curated'] ? (int)$e['source_count'] . ' page' . ($e['source_count'] === 1 ? '' : 's') . ($e['conflicts'] ? ' · sources disagree' : '') : '<span class="cellState s-unknown">None</span>' ?></td><?php endforeach; ?></tr>
+          <?php foreach($rows as $row): ?>
+            <tr class="<?= $row['differs'] ? 'differs' : '' ?>"><th scope="row"><?= h($row['label']) ?></th>
+              <?php foreach($row['cells'] as $i => $c): ?>
+                <td data-label="<?= h($pair[$i]['name']) ?>"><span class="cellState s-<?= h($c['state']) ?>"><?= h(capability_state_text($c['state'])) ?></span><?php if($c['evidence'] !== ''): ?><span class="cellEv"><?= h($c['evidence']) ?></span><?php else: ?><span class="cellEv"><?= h(capability_state_help($c['state'])) ?></span><?php endif; ?></td>
+              <?php endforeach; ?></tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php if(!$rows): ?><p class="small">Neither tool has documented capabilities yet, so there is nothing to compare feature by feature.</p><?php endif; ?>
+    <p class="small">Shaded rows differ between the two tools.</p>
+  </section>
+
   <section class="compare-final card">
     <h2>Quick buying view</h2>
     <div class="compare-table-wrap" tabindex="0" role="region" aria-label="Comparison table, scrollable">

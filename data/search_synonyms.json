@@ -1,0 +1,26 @@
+{
+  "note": "Editorial synonym groups: every term in a group is treated as related to the others. Related-term matches rank below direct matches and are always labelled in the results (\"Related term\"). Add groups only for genuine equivalences; do not use this file to inject keywords.",
+  "groups": [
+    ["transcribe", "transcription", "transcript", "transcripts", "speech to text", "meeting notes", "captions", "subtitles"],
+    ["summarize", "summarise", "summary", "summaries", "tldr", "digest"],
+    ["write", "writing", "copywriting", "copywriter", "blog", "article", "content creation", "draft"],
+    ["grammar", "proofread", "proofreading", "editing", "rewrite", "rewriting"],
+    ["image", "images", "picture", "pictures", "illustration", "artwork", "text to image"],
+    ["code", "coding", "programming", "developer", "software development", "copilot"],
+    ["chatbot", "chat bot", "assistant", "assistants", "conversational ai", "llm"],
+    ["research", "literature review", "academic", "papers", "citations", "answer engine"],
+    ["video", "videos", "clip", "clips", "video editing"],
+    ["customer support", "helpdesk", "help desk", "customer service", "support tickets"],
+    ["seo", "search engine optimization", "search engine optimisation", "keyword research", "content optimization"],
+    ["automate", "automation", "workflow", "workflows", "no code automation"],
+    ["voice", "speech", "text to speech", "tts", "voiceover", "audio"],
+    ["translate", "translation", "translator", "localization", "localisation", "multilingual"],
+    ["presentation", "presentations", "slides", "slide deck", "deck"],
+    ["spreadsheet", "excel", "sheets", "data analysis", "analytics", "sql"],
+    ["email", "emails", "inbox", "outreach"],
+    ["pdf", "pdfs", "documents", "document", "papers"],
+    ["schedule", "scheduling", "calendar", "planner", "planning", "time blocking"],
+    ["notes", "note taking", "note-taking", "second brain", "knowledge base"],
+    ["meeting", "meetings", "call recording", "calls", "interviews"]
+  ]
+}
