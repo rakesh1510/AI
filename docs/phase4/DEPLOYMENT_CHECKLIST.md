@@ -11,6 +11,13 @@ Do every step on **staging first**. This work was not deployed anywhere; it has 
 - [ ] Legal: update privacy policy (leads, newsletter, browser storage, saved shortlists, optional statistics), confirm the operating entity (Impressum vs TrustNova Tech). Leave `AIHUB_ANALYTICS` unset until signed off.
 - [ ] Back up the production database and `data/`.
 
+## A2. Added in Phase 4.1 (read before deploying)
+- [ ] Run the **read-only** `scripts/db_preflight.php --plan` on a restored copy of the live database (DATABASE_COMPATIBILITY_REPORT.md). The committed install SQL for `tool_clicks`/`tool_votes` does not match the code; without the plan those features return 503.
+- [ ] `AIHUB_DEMO_LOGIN` stays unset; `/extensions/`, `/docs/`, `/vendor/`, dotfiles must return 404 on your server (nginx users: port the rules).
+- [ ] `AIHUB_RATE_DIR`/`AIHUB_CACHE_DIR` private to the web user, or leave unset.
+- [ ] Follow STAGING_DEPLOYMENT_INSTRUCTIONS.md; rotate credentials first (MANUAL_CREDENTIAL_ROTATION_CHECKLIST.md).
+- [ ] Editorial: the 19 P1 profiles in EDITORIAL_VERIFICATION_QUEUE.md are still unverified; do not claim "verified" anywhere until a person has verified them.
+
 ## B. Migrations (owner, in a migration session; never from the web)
 1. `database/phase3_business.sql` if not already applied.
 2. `database/phase4_business.sql` (additive; see ROLLBACK_PLAN.md). The code works before and after it.

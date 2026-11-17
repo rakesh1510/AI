@@ -8,11 +8,12 @@
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 $root = realpath(__DIR__ . '/..');
 $H = getenv('AIHUB_DB_HOST') ?: '127.0.0.1'; $U = getenv('AIHUB_DB_USER') ?: 'aihub_test'; $P = getenv('AIHUB_DB_PASS') ?: 'test_only_pw';
+$RU = getenv('AIHUB_COMPAT_ROOT_USER') ?: $U; $RP = getenv('AIHUB_COMPAT_ROOT_PASS') ?: $P;   // CI: the test user cannot create databases, the throw-away service root can
 $pass = 0; $fail = 0;
 function ok(bool $c, string $m): void { global $pass, $fail; if ($c) $pass++; else { $fail++; echo "  FAIL: $m\n"; } }
 function section(string $t): void { echo "== $t\n"; }
-$mysql = fn(string $sql, string $db = '') => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($U) . ' -p' . escapeshellarg($P) . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
-$mysqlFile = fn(string $file, string $db) => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($U) . ' -p' . escapeshellarg($P) . ' ' . escapeshellarg($db) . ' < ' . escapeshellarg($file) . ' 2>&1');
+$mysql = fn(string $sql, string $db = '') => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
+$mysqlFile = fn(string $file, string $db) => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ' ' . escapeshellarg($db) . ' < ' . escapeshellarg($file) . ' 2>&1');
 function sqlOf(string $file, ?string $from = null, ?string $to = null): string { $s = (string)file_get_contents($file); if ($from !== null) { $i = strpos($s, $from); $s = $i === false ? '' : substr($s, $i); } return $s; }
 $coreSchema = function () use ($root) { $s = (string)file_get_contents("$root/database/full_mysql_schema.sql"); $a = substr($s, 0, strpos($s, 'CREATE TABLE IF NOT EXISTS tool_clicks')); $b = substr($s, strpos($s, 'CREATE TABLE IF NOT EXISTS submissions')); return $a . "\n" . $b; };
 $tmp = sys_get_temp_dir() . '/aihub_compat_' . getmypid(); @mkdir($tmp, 0700, true);
@@ -27,6 +28,10 @@ $scenarios = [
     'expect' => ['tool_clicks' => 'incompatible', 'tool_votes' => 'incompatible', 'leads' => 'missing_table', 'subscribers' => 'missing_table', 'events' => 'missing_table', 'contact_messages' => 'missing_table', 'compare_tool_profiles' => 'missing_table', 'categories' => 'ok', 'tools' => 'ok'], 'broken' => true, 'import' => true],
   's2_phase2_like' => ['label' => 'Plausible Phase 2 state: Phase 1/2 SQL plus the votes migration, old clicks table', 'sql' => fn() => $coreSchema() . "\n" . $useCaseCols . "\nCREATE TABLE IF NOT EXISTS tool_clicks (id INT AUTO_INCREMENT PRIMARY KEY, tool_slug VARCHAR(255) NOT NULL, ip_address VARCHAR(45) DEFAULT NULL, user_agent VARCHAR(1000) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);\n" . (string)file_get_contents("$root/database/aihub_interactions.sql") . "\n" . $files(['install_compare_tables.sql', 'phase2_analytics.sql']) . "\n" . $contactOnly,
     'expect' => ['tool_clicks' => 'incompatible', 'tool_votes' => 'incompatible', 'page_views' => 'ok', 'leads' => 'missing_table', 'contact_messages' => 'ok', 'compare_tool_profiles' => 'ok'], 'broken' => true, 'import' => true],
+  's1p_repo_install_after_plan' => ['label' => 'Scenario 1 after applying the preflight migration plan (synthetic copy)', 'sql_from' => 's1_repo_install_only', 'apply_plan' => true,
+    'expect' => ['tool_clicks' => 'ok', 'tool_votes' => 'ok', 'leads' => 'missing_table'], 'broken' => false, 'import' => true],
+  's2p_phase2_after_plan' => ['label' => 'Scenario 2 after applying the preflight migration plan (synthetic copy)', 'sql_from' => 's2_phase2_like', 'apply_plan' => true,
+    'expect' => ['tool_clicks' => 'ok', 'tool_votes' => 'ok', 'contact_messages' => 'ok'], 'broken' => false, 'import' => true],
   's3_phase3_applied' => ['label' => 'Current shape with Phase 3 SQL, without Phase 4', 'sql' => fn() => $coreSchema() . "\n" . $useCaseCols . "\n" . $fixture . "\n" . $files(['install_compare_tables.sql', 'phase2_analytics.sql', 'phase3_business.sql']),
     'expect' => ['tool_clicks' => 'ok', 'tool_votes' => 'ok', 'leads' => 'needs_phase4_migration', 'lead_status_history' => 'missing_table', 'subscribers' => 'ok', 'events' => 'ok'], 'broken' => false, 'import' => true],
   's4_current_all' => ['label' => 'Current shape with every SQL file (control)', 'sql' => fn() => $coreSchema() . "\n" . $useCaseCols . "\n" . $fixture . "\n" . $files(['install_compare_tables.sql', 'phase2_analytics.sql', 'phase3_business.sql', 'phase4_business.sql']),
@@ -46,10 +51,18 @@ foreach ($scenarios as $key => $sc) {
   $db = 'aihub_compat_' . substr($key, 0, 2) . '_test'; $port++;
   section("{$sc['label']} ($db)");
   $mysql("DROP DATABASE IF EXISTS `$db`; CREATE DATABASE `$db` CHARACTER SET utf8mb4;");
-  $sql = ($sc['sql'])();
+  if ($RU !== $U) $mysql("GRANT ALL ON `$db`.* TO '" . $U . "'@'%'; FLUSH PRIVILEGES;");
+  $sql = isset($sc['sql_from']) ? ($scenarios[$sc['sql_from']]['sql'])() : ($sc['sql'])();
   if ($sql !== '') { $out = (string)$mysqlFile($write("$key.sql", $sql), $db); ok(strpos($out, 'ERROR') === false, "scenario SQL applies cleanly" . ($out ? ": $out" : '')); }
   $env = "AIHUB_DB_HOST=" . escapeshellarg($H) . " AIHUB_DB_NAME=$db AIHUB_DB_USER=" . escapeshellarg($U) . " AIHUB_DB_PASS=" . escapeshellarg($P);
   if ($sc['import']) shell_exec("cd " . escapeshellarg($root) . " && $env php import-json-to-mysql.php 2>&1");
+  if (!empty($sc['apply_plan'])) {
+    $pl = json_decode((string)shell_exec("cd " . escapeshellarg($root) . " && $env php scripts/db_preflight.php --json 2>/dev/null"), true)['plan'] ?? [];
+    $stmts = array_values(array_filter($pl, fn($l) => strpos(ltrim($l), '--') !== 0));
+    if (getenv('AIHUB_COMPAT_PRINT_PLAN')) echo "-- plan for $key:\n" . implode("\n", $pl) . "\n";
+    ok(count($stmts) >= 3, 'the plan contains executable SQL for the interaction tables (' . count($stmts) . ' statements)');
+    $out = (string)$mysqlFile($write("$key-plan.sql", implode("\n", $stmts)), $db); ok(strpos($out, 'ERROR') === false, 'the generated plan applies cleanly to the synthetic copy' . ($out ? ": $out" : ''));
+  }
   $pre = json_decode((string)shell_exec("cd " . escapeshellarg($root) . " && $env php scripts/db_preflight.php --json 2>/dev/null"), true);
   ok(is_array($pre) && ($pre['read_only'] ?? false) === true, 'preflight ran and declares itself read-only');
   $by = $pre ? array_column($pre['rows'], null, 'table') : [];
@@ -72,6 +85,7 @@ foreach ($scenarios as $key => $sc) {
   $r = http('POST', "$b/track-click.php", ['id' => 'chatgpt'], $own); ok(in_array($r['code'], [200, 503], true) && json_decode($r['body'], true) !== null, "click tracking answers 200 or 503, never 500 (HTTP {$r['code']})");
   $r = http('POST', "$b/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], $own); ok(in_array($r['code'], [200, 503], true) && json_decode($r['body'], true) !== null, "voting answers 200 or 503, never 500 (HTTP {$r['code']})");
   $expect503 = in_array($sc['expect']['tool_votes'] ?? 'ok', ['incompatible', 'missing_table'], true) || $key === 's5_empty_database';
+  if (!empty($sc['apply_plan'])) { ok($r['code'] === 200, 'after the plan, voting works again (HTTP ' . $r['code'] . ')'); $rc = http('POST', "$b/track-click.php", ['id' => 'chatgpt'], $own); ok($rc['code'] === 200, 'after the plan, click tracking works again (HTTP ' . $rc['code'] . ')'); $n = (int)trim((string)$mysql('SELECT COUNT(*) FROM tool_votes', $db) . ''); }
   if ($expect503) ok($r['code'] === 503, 'incompatible/missing interaction tables give a clear 503 instead of a failing write');
   $biz = http('GET', "$b/business.php"); preg_match('/name="form_token" value="([^"]+)"/', $biz['body'], $m); sleep(2);
   $r = http('POST', "$b/inquiry.php", ['lead_type' => 'consultation', 'name' => 'Compat Tester', 'email' => 'compat@example.test', 'message' => 'A sufficiently long compatibility test message.', 'consent' => '1', 'form_token' => $m[1] ?? ''], ['Origin: http://127.0.0.1:' . $port]);

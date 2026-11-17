@@ -1,0 +1,43 @@
+ServerRoot "@WORK@"
+ServerName 127.0.0.1
+Listen 127.0.0.1:@PORT@
+PidFile @WORK@/run/apache2.pid
+User www-data
+Group www-data
+ErrorLog @WORK@/logs/error.log
+LogLevel warn
+LoadModule mpm_prefork_module /usr/lib/apache2/modules/mod_mpm_prefork.so
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule mime_module /usr/lib/apache2/modules/mod_mime.so
+LoadModule dir_module /usr/lib/apache2/modules/mod_dir.so
+LoadModule rewrite_module /usr/lib/apache2/modules/mod_rewrite.so
+LoadModule headers_module /usr/lib/apache2/modules/mod_headers.so
+LoadModule deflate_module /usr/lib/apache2/modules/mod_deflate.so
+LoadModule filter_module /usr/lib/apache2/modules/mod_filter.so
+LoadModule expires_module /usr/lib/apache2/modules/mod_expires.so
+LoadModule env_module /usr/lib/apache2/modules/mod_env.so
+LoadModule setenvif_module /usr/lib/apache2/modules/mod_setenvif.so
+LoadModule alias_module /usr/lib/apache2/modules/mod_alias.so
+LoadModule php_module /usr/lib/apache2/modules/libphp8.3.so
+TypesConfig /etc/mime.types
+DocumentRoot "@DOCROOT@"
+DirectoryIndex index.php index.html
+<Directory "@DOCROOT@">
+  Options -Indexes +FollowSymLinks
+  AllowOverride All
+  Require all granted
+</Directory>
+<FilesMatch "\.php$">
+  SetHandler application/x-httpd-php
+</FilesMatch>
+SetEnv AIHUB_DB_HOST 127.0.0.1
+SetEnv AIHUB_DB_NAME aihub_test
+SetEnv AIHUB_DB_USER aihub_test
+SetEnv AIHUB_DB_PASS test_only_pw
+SetEnv AIHUB_RATE_DIR /tmp/aihub_rate_apache
+SetEnv AIHUB_ANALYTICS 1
+SetEnv AIHUB_ANALYTICS_SALT ci-test-salt
+php_admin_value error_log @WORK@/logs/php-errors.log
+php_admin_flag log_errors on
+php_admin_flag display_errors off
+SetEnv AIHUB_CACHE_DIR /tmp/aihub_cache_apache

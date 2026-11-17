@@ -39,6 +39,20 @@ function lead_set_status(PDO $pdo, int $id, string $to): string {
   return 'ok';
 }
 
+/**
+ * Sends the owner notification for a stored lead again (admin action) and records the outcome.
+ * @return string 'sent' | 'failed' | 'not_found' | 'unsupported' (tracking columns missing)
+ */
+function lead_retry_notification(PDO $pdo, int $id): string {
+  if (!db_column_exists($pdo, 'leads', 'notify_status')) return 'unsupported';
+  $row = lead_get($pdo, $id);
+  if (!$row) return 'not_found';
+  $c = array_intersect_key($row, array_flip(['lead_type', 'name', 'email', 'company', 'website', 'budget', 'timeline', 'message', 'source_page', 'package_interest', 'campaign_goal', 'attr_source', 'attr_medium', 'attr_campaign', 'ref_tool']));
+  $sent = false; try { $sent = lead_notify_owner($c); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, 'lead_retry'); }
+  lead_record_notification($pdo, $id, $sent, mail_last_error());
+  return $sent ? 'sent' : 'failed';
+}
+
 /** "ja***@example.com": the list view never shows a full address; the detail view does and is logged. */
 function lead_mask_email(string $email): string {
   $p = strpos($email, '@');
@@ -56,7 +70,7 @@ function leads_list(PDO $pdo, array $f, int $perPage = 25): array {
   $w = $where ? ' WHERE ' . implode(' AND ', $where) : '';
   $c = $pdo->prepare("SELECT COUNT(*) FROM leads$w"); $c->execute($args);
   $page = max(1, (int)($f['page'] ?? 1));
-  $s = $pdo->prepare("SELECT id, created_at, lead_type, name, email, company, status, source_page" . (db_column_exists($pdo, 'leads', 'package_interest') ? ', package_interest, attr_source, attr_campaign, is_synthetic' : ", '' AS package_interest, '' AS attr_source, '' AS attr_campaign, 0 AS is_synthetic") . " FROM leads$w ORDER BY created_at DESC, id DESC LIMIT " . (int)$perPage . ' OFFSET ' . (($page - 1) * (int)$perPage));
+  $s = $pdo->prepare("SELECT id, created_at, lead_type, name, email, company, status, source_page" . (db_column_exists($pdo, 'leads', 'package_interest') ? ', package_interest, attr_source, attr_campaign, is_synthetic' : ", '' AS package_interest, '' AS attr_source, '' AS attr_campaign, 0 AS is_synthetic") . (db_column_exists($pdo, 'leads', 'notify_status') ? ', notify_status, notify_error, notify_attempts' : ", '' AS notify_status, '' AS notify_error, 0 AS notify_attempts") . " FROM leads$w ORDER BY created_at DESC, id DESC LIMIT " . (int)$perPage . ' OFFSET ' . (($page - 1) * (int)$perPage));
   $s->execute($args);
   return ['rows' => $s->fetchAll(PDO::FETCH_ASSOC), 'total' => (int)$c->fetchColumn()];
 }
@@ -84,6 +98,9 @@ function leads_report(PDO $pdo, int $days = 90): array {
     'by_source' => $ext ? $q("SELECT attr_source, attr_campaign, COUNT(*) AS n FROM leads WHERE created_at >= ? AND (attr_source <> '' OR attr_campaign <> '') GROUP BY attr_source, attr_campaign ORDER BY n DESC LIMIT 10") : [],
     'by_package' => $ext ? $q("SELECT package_interest, COUNT(*) AS n FROM leads WHERE created_at >= ? AND package_interest <> '' GROUP BY package_interest ORDER BY n DESC") : [],
     'synthetic' => $ext ? (int)$q('SELECT COUNT(*) AS n FROM leads WHERE created_at >= ? AND is_synthetic = 1')[0]['n'] : 0,
+    'tracks_notifications' => db_column_exists($pdo, 'leads', 'notify_status'),
+    'notify_failed' => db_column_exists($pdo, 'leads', 'notify_status') ? (int)$q("SELECT COUNT(*) AS n FROM leads WHERE created_at >= ? AND notify_status = 'failed'")[0]['n'] : 0,
+    'notify_failed_by_reason' => db_column_exists($pdo, 'leads', 'notify_status') ? $q("SELECT notify_error, COUNT(*) AS n FROM leads WHERE created_at >= ? AND notify_status = 'failed' GROUP BY notify_error ORDER BY n DESC") : [],
   ];
   // Stage counts: how many leads currently sit at or beyond each stage. Raw counts; no rates.
   $order = ['new', 'contacted', 'qualified', 'proposal_sent', 'won'];

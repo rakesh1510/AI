@@ -10,6 +10,10 @@ ALTER TABLE leads
     ADD COLUMN ref_tool VARCHAR(80) NOT NULL DEFAULT '',
     ADD COLUMN status_changed_at DATETIME NULL,
     ADD COLUMN is_synthetic TINYINT(1) NOT NULL DEFAULT 0,
+    ADD COLUMN notify_status VARCHAR(12) NOT NULL DEFAULT '',
+    ADD COLUMN notify_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    ADD COLUMN notify_error VARCHAR(24) NOT NULL DEFAULT '',
+    ADD COLUMN notified_at DATETIME NULL,
     ADD KEY idx_leads_status (status, created_at);
 
 CREATE TABLE IF NOT EXISTS lead_status_history (

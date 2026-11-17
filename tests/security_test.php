@@ -109,6 +109,17 @@ $fakeXff = ['REMOTE_ADDR' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '9.9.9.1']
 $other = ['REMOTE_ADDR' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '9.9.9.2'];
 ok(sec_ip_hash('rate', sec_client_ip($fakeXff)) === sec_ip_hash('rate', sec_client_ip($other)), 'rotating X-Forwarded-For does not change the rate-limit identity');
 
+section('Rate-limit directory safety');
+$real = sys_get_temp_dir() . '/aihub_rl_real_' . getmypid(); @mkdir($real, 0700, true); $lnk = sys_get_temp_dir() . '/aihub_rl_link_' . getmypid(); @symlink($real, $lnk);
+putenv('AIHUB_RATE_DIR=' . $lnk); $d1 = sec_rate_dir();
+ok($d1 !== '' && $d1 !== $lnk && strpos($d1, 'aihub_rate_') !== false, 'a symlinked AIHUB_RATE_DIR is not used; the per-user default directory is (limits stay active)');
+$hits = []; for ($i = 0; $i < 4; $i++) $hits[] = sec_rate_limited('dirsafety', 3, 60, 'hashxxxxxxxxxxxx', 5000 + $i);
+ok($hits === [false, false, false, true], 'rate limiting keeps working after the fallback');
+$open = sys_get_temp_dir() . '/aihub_rl_open_' . getmypid(); @mkdir($open, 0777); @chmod($open, 0777); putenv('AIHUB_RATE_DIR=' . $open);
+$d2 = sec_rate_dir(); ok($d2 === $open && (fileperms($open) & 0022) === 0, 'a world-writable configured directory is tightened to 0700 and then used');
+putenv('AIHUB_RATE_DIR=' . sys_get_temp_dir() . '/aihub_rate_test_' . getmypid()); @unlink($lnk); @rmdir($real); @rmdir($open);
+foreach (glob(sec_default_private_dir('aihub_rate') . '/*') ?: [] as $f) @unlink($f);
+
 section('Security log');
 $logf = getenv('AIHUB_SECURITY_LOG'); @unlink($logf);
 sec_log('unit_event', ['why' => "line1\nline2\r\nforged", 'secret_ok' => 'x', 'arr' => ['nested'], 'n' => 5]);

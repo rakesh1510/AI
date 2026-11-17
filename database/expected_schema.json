@@ -88,6 +88,15 @@
     "benefits": "text",
     "keywords_json": "text",
     "fallback_json": "text"
+   },
+   "ddl": {
+    "icon": "VARCHAR(20) NULL",
+    "description": "TEXT NULL",
+    "hero_text": "TEXT NULL",
+    "audience": "TEXT NULL",
+    "popular_tasks": "LONGTEXT NULL",
+    "example_tools": "LONGTEXT NULL",
+    "benefits": "LONGTEXT NULL"
    }
   },
   "site_settings": {
@@ -116,6 +125,10 @@
     "visitor_id": "varchar",
     "ip_hash": "varchar",
     "created_at": "datetime"
+   },
+   "ddl": {
+    "visitor_id": "VARCHAR(64) NULL",
+    "ip_hash": "CHAR(64) NULL"
    }
   },
   "tool_votes": {
@@ -134,6 +147,10 @@
     "ip_hash": "varchar",
     "created_at": "datetime",
     "updated_at": "datetime"
+   },
+   "ddl": {
+    "visitor_id": "CHAR(32) NULL",
+    "ip_hash": "CHAR(64) NULL"
    }
   },
   "submissions": {

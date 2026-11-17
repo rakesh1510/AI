@@ -2,6 +2,8 @@
 
 **For the site owner. None of these steps were performed by the development work** (no access to Hostinger, DNS, SSL, SSH or the production database was requested or used). Do them on staging first, one at a time, and keep a note of the previous value so each change can be reversed.
 
+> Updated in Phase 4.1. Rotation has its own step-by-step list: [MANUAL_CREDENTIAL_ROTATION_CHECKLIST.md](MANUAL_CREDENTIAL_ROTATION_CHECKLIST.md). Staging steps: [STAGING_DEPLOYMENT_INSTRUCTIONS.md](STAGING_DEPLOYMENT_INSTRUCTIONS.md). **Nothing here was executed by the development work.**
+
 ## 1. Rotate everything that was ever committed
 - [ ] Database password (the old fallback is in git history) – change it in the hosting panel, then store the new one only as `AIHUB_DB_USER`/`AIHUB_DB_PASS` environment variables or in an untracked `config.local.php` (see below).
 - [ ] Gmail/SMTP app password that was in `data/site.json` – revoke it at the mail provider, create a new one, store as `AIHUB_SMTP_USER`/`AIHUB_SMTP_PASS`.
@@ -27,11 +29,18 @@ Set as environment variables, or in `config.local.php` next to `helpers.php` (un
 - [ ] `AIHUB_RATE_DIR`: a writable directory outside the web root (default is the system temp dir).
 - [ ] `AIHUB_SECURITY_LOG`: a file outside the web root (default: PHP error log). Review it weekly.
 
+### 2a. Added in Phase 4.1
+- [ ] `AIHUB_CACHE_DIR` and `AIHUB_RATE_DIR`: directories outside the web root, owned by the web user, mode 0700 (the code refuses directories that are symlinks, owned by another user or group/world-writable, and then runs without the cache / without file rate limiting and logs `rate_dir_unsafe`). If you leave them unset, per-user directories under the system temp dir are used.
+- [ ] `AIHUB_DEMO_LOGIN` must stay **unset** in production: the old demo login/bookmarks (public password) are disabled by default and return 404.
+- [ ] `AIHUB_ANALYTICS` stays unset until legal sign-off.
+- [ ] Enable PHP opcache in production (the Phase 4.1 benchmark assumes it for TTFB).
+- [ ] Mail: after changing SMTP settings, send a test lead and check `/admin-leads.php` shows no "could not be announced" banner.
+
 ## 3. Web server
 - [ ] Confirm `.htaccess` is honoured (`AllowOverride All`) or port the rules to nginx/LiteSpeed config: deny `/data`, `/database`, `/scripts`, `/tests`, `/vendor`, `config.local.php`, `*.sql`, `*.log`, `*.bak`, the install/import/compare maintenance scripts, and the library files listed in `.htaccess`.
 - [ ] Better: move `data/` and `database/` outside the document root.
 - [ ] Delete install/import scripts from the production document root after use.
-- [ ] Verify from outside: `curl -I https://staging…/data/site.json`, `/install-database.php`, `/config.local.php`, `/security.php`, `/.git/config` must all return 404/403.
+- [ ] Verify from outside (all must return 404/403): `/data/site.json`, `/install-database.php`, `/config.local.php`, `/security.php`, `/layout_top.php`, `/vendor/autoload.php`, `/vendor/composer/installed.json`, `/docs/phase4/SECURITY_AUDIT.md`, `/extensions/community/index.php`, `/README.txt`, `/.gitignore`, `/.git/config`, `/tests/router.php`. The rules are verified on Apache 2.4 + mod_php (`tests/apache/run_apache_validation.sh`); on **nginx or LiteSpeed without .htaccess support you must port them** (deny `data`, `database`, `tests`, `scripts`, `vendor`, `docs`, `extensions`, dotfiles, `*.md`, `*.lock`, `config.local.php`, the include-only PHP libraries and the install/import/compare maintenance scripts). The library files also refuse direct execution themselves as a second line of defence.
 - [ ] File permissions: PHP files not writable by the web user; only the specific data/rate/log directories writable; `data/.form_secret` mode 0600.
 - [ ] Disable directory listing and `display_errors` in production PHP settings (`display_errors=0`, `log_errors=1`).
 - [ ] PHP version: use a currently supported release.

@@ -525,6 +525,35 @@ ok(strpos(tool_logo(['id' => 'nologo', 'website' => 'https://example.com']), 'go
 ok(strpos(tool_logo(['id' => '../../etc/passwd', 'website' => 'https://example.com']), '/assets/logos/') === false, 'tool ids are sanitised before building a local logo path');
 ok(strpos(render_tool_card($byId['otter-ai']), 'fetchpriority="low"') !== false && strpos(render_tool_card($byId['otter-ai']), 'loading="lazy"') !== false, 'card logos are lazy and low priority so they never compete with CSS and text');
 
+section('4.1 catalogue quality audit and editorial queue');
+$dataBefore = []; foreach (glob(__DIR__ . '/../data/*.json') as $f) $dataBefore[$f] = md5_file($f);
+$qj = shell_exec('cd ' . escapeshellarg(dirname(__DIR__)) . ' && php scripts/editorial_queue.php --json 2>/dev/null'); $q = json_decode((string)$qj, true);
+$dataAfter = []; foreach (glob(__DIR__ . '/../data/*.json') as $f) $dataAfter[$f] = md5_file($f);
+ok(is_array($q) && $q['summary']['tools'] === count($byId) && count($q['rows']) === count($byId), 'the queue covers every tool in the catalogue (' . count($byId) . ')');
+ok($dataBefore === $dataAfter, 'the audit is read-only: no data file changed');
+ok($q['summary']['editor_verified'] === 0 && count(array_filter($q['rows'], fn($r) => $r['human_verified'])) === 0, 'no tool is reported as editor-verified (none has been verified by a person)');
+$ids = array_column($q['rows'], 'id'); ok(count($ids) === count(array_unique($ids)), 'every tool appears exactly once');
+$scores = array_column($q['rows'], 'score'); $sorted = $scores; rsort($sorted); ok($scores === $sorted, 'the queue is ordered by priority score');
+$q2 = json_decode((string)shell_exec('cd ' . escapeshellarg(dirname(__DIR__)) . ' && php scripts/editorial_queue.php --json 2>/dev/null'), true);
+ok($q2 === $q, 'output is deterministic (two runs are identical)');
+$top = array_slice($q['rows'], 0, 12); ok(count(array_filter($top, fn($r) => $r['tier'] === 'reviewed')) >= 10, 'the most visible, already-reviewed tools come first (they carry the most trust risk)');
+foreach ($q['rows'] as $r) { if ($r['priority'] === 'P1') ok(in_array('reviewed-not-verified', $r['flags'], true) || in_array('possible-affiliate-link-in-website', $r['flags'], true) || $r['visibility'] >= 40, 'P1 item ' . $r['id'] . ' is P1 for a stated reason'); }
+$fc = $q['summary']['flag_counts'];
+ok(($fc['reviewed-not-verified'] ?? 0) === 20 && ($fc['pricing-unsourced'] ?? 0) === count($byId) - 20, 'all 20 reviewed profiles await verification and all other tools have unsourced pricing');
+ok(($fc['template-features-pros-cons'] ?? 0) >= 400, 'template features/pros/cons are detected on unreviewed profiles (' . ($fc['template-features-pros-cons'] ?? 0) . ')');
+ok(($fc['possible-affiliate-link-in-website'] ?? 0) >= 3, 'tracking or referral hosts in website fields are detected (' . ($fc['possible-affiliate-link-in-website'] ?? 0) . ')');
+foreach ($q['rows'] as $r) ok($r['action'] !== '' && preg_match('/^P[123]$/', $r['priority']) === 1, 'queue row ' . $r['id'] . ' has an action and a priority');
+foreach (array_filter($byId, fn($t) => link_has_tracking($t)) as $id => $t) ok(strpos(outbound_rel($t), 'sponsored') !== false && strpos(render_tool_card($t), 'referral or tracking address') !== false, "$id: tracking/referral website link is marked sponsored and disclosed");
+ok(!link_has_tracking($byId['chatgpt']) && !link_has_tracking($byId['otter-ai']), 'ordinary vendor links are not flagged');
+ok(link_has_tracking(['website' => 'https://example.com/?aff=123']) && link_has_tracking(['website' => 'https://go.shareasale.com/x']) && !link_has_tracking(['website' => 'https://example.com/pricing']), 'tracking detection matches referral parameters and network hosts only');
+foreach (curated_profiles() as $id => $p) ok(empty($p['review']['human_verified']) && empty($p['review']['verified_on']), "$id is not marked verified in the data (verification needs real evidence)");
+
+section('4.1 notification error handling');
+ok(mail_error_label('smtp_connect') === 'The mail server could not be reached' && mail_error_label('zzz') === 'Unknown mail error', 'error codes have fixed plain-language labels');
+putenv('AIHUB_MAIL_TRANSPORT=file'); putenv('AIHUB_MAIL_OUTBOX=/dev/null/x'); ok(send_mail('a@example.test', 's', 'b') === false && mail_last_error() === 'outbox_unwritable', 'a mock-outbox failure is reported as a code, not an exception');
+ok(send_mail('not-an-email', 's', 'b') === false && mail_last_error() === 'invalid_recipient', 'an invalid recipient is reported as such');
+putenv('AIHUB_MAIL_TRANSPORT'); putenv('AIHUB_MAIL_OUTBOX');
+
 // === P2–P5 sections are appended below ===
 
 echo "\nPASSED: $pass  FAILED: $fail\n";

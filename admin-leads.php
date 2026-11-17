@@ -13,6 +13,12 @@ try { db_connection_available(); $pdo = db(); $ready = db_table_exists('leads');
 if ($ready && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   if (!admin_csrf_ok()) { sec_log('admin_csrf_rejected', ['page' => 'leads']); http_response_code(403); exit('Security check failed.'); }
   if (($_POST['admin_action'] ?? '') === 'logout') { admin_logout(); header('Location: /admin-leads.php', true, 303); exit; }
+  if (($_POST['admin_action'] ?? '') === 'retry_notify') {
+    $id = (int)($_POST['id'] ?? 0); $res = lead_retry_notification($pdo, $id);
+    sec_log('admin_lead_retry_notify', ['id' => $id, 'result' => $res, 'reason' => $res === 'failed' ? mail_last_error() : '']);
+    header('Location: /admin-leads.php?id=' . $id . '&notify=' . rawurlencode($res), true, 303);
+    exit;
+  }
   if (($_POST['admin_action'] ?? '') === 'set_status') {
     $id = (int)($_POST['id'] ?? 0); $to = (string)($_POST['status'] ?? '');
     $res = lead_set_status($pdo, $id, $to);
@@ -47,6 +53,18 @@ require __DIR__ . '/layout_top.php';
   <?php if (!empty($report['synthetic'])): ?><div class="noticeBox" role="status"><strong>Synthetic test data:</strong> <?= (int)$report['synthetic'] ?> of the leads in this period are generated test records, not real people.</div><?php endif; ?>
   <?php if (isset($_GET['error'])): ?><div class="noticeBox" role="alert">That status change was not applied (<?= $h((string)$_GET['error']) ?>).</div><?php endif; ?>
   <?php if (isset($_GET['updated'])): ?><div class="successBox" role="status">Status updated.</div><?php endif; ?>
+  <?php if (isset($_GET['notify'])): $nres = (string)$_GET['notify']; ?>
+    <?php if ($nres === 'sent'): ?><div class="successBox" role="status">The notification email was sent.</div>
+    <?php elseif ($nres === 'failed'): ?><div class="noticeBox" role="alert">The notification email still could not be sent (<?= $h(mail_error_label((string)($detail['notify_error'] ?? ''))) ?>). The lead is safely stored.</div>
+    <?php else: ?><div class="noticeBox" role="alert">The notification could not be retried (<?= $h($nres) ?>).</div><?php endif; ?>
+  <?php endif; ?>
+  <?php if (!empty($report['notify_failed'])): ?>
+    <div class="noticeBox" role="alert"><strong><?= (int)$report['notify_failed'] ?> lead<?= $report['notify_failed'] === 1 ? '' : 's' ?> in this period could not be announced by email.</strong> They are stored here, but nobody was notified. Reasons:
+      <?php foreach ($report['notify_failed_by_reason'] as $nr): ?><?= $h(mail_error_label($nr['notify_error'])) ?> (<?= (int)$nr['n'] ?>) · <?php endforeach; ?>
+      open a lead and use “Retry notification” after fixing mail settings.</div>
+  <?php elseif (!empty($report) && empty($report['tracks_notifications'])): ?>
+    <div class="noticeBox" role="status">Email delivery is not tracked yet: apply <code>database/phase4_business.sql</code> to see whether notifications were sent.</div>
+  <?php endif; ?>
 
   <?php if ($detail): ?>
     <section class="panel" aria-labelledby="leadTitle">
@@ -63,6 +81,7 @@ require __DIR__ . '/layout_top.php';
         <dt>Source page</dt><dd><?= $h($detail['source_page']) ?: '—' ?></dd>
         <?php if (!empty($detail['attr_source']) || !empty($detail['attr_campaign']) || !empty($detail['ref_tool'])): ?><dt>Attribution</dt><dd><?= $h(trim(($detail['attr_source'] ?? '') . ' ' . ($detail['attr_medium'] ?? '') . ' ' . ($detail['attr_campaign'] ?? ''))) ?><?= !empty($detail['ref_tool']) ? ' · from tool ' . $h($detail['ref_tool']) : '' ?></dd><?php endif; ?>
         <dt>Status</dt><dd><strong><?= $h(lead_statuses()[$detail['status']] ?? $detail['status']) ?></strong></dd>
+        <?php if (array_key_exists('notify_status', $detail)): ?><dt>Owner notification</dt><dd><?= $detail['notify_status'] === 'sent' ? 'Sent' : ($detail['notify_status'] === 'failed' ? '<strong>Not sent</strong>: ' . $h(mail_error_label((string)$detail['notify_error'])) : 'Not recorded') ?> <span class="small">(attempts: <?= (int)$detail['notify_attempts'] ?>)</span></dd><?php endif; ?>
       </dl>
       <h3>Message</h3>
       <p style="white-space:pre-wrap"><?= $h($detail['message']) ?></p>
@@ -73,6 +92,9 @@ require __DIR__ . '/layout_top.php';
             <select id="newStatus" name="status"><?php foreach ($next as $n): ?><option value="<?= $h($n) ?>"><?= $h(lead_statuses()[$n]) ?></option><?php endforeach; ?></select></div>
           <div><button class="btn">Update status</button></div>
         </form>
+      <?php endif; ?>
+      <?php if (($detail['notify_status'] ?? '') === 'failed'): ?>
+        <form method="post" style="margin-top:12px"><?= admin_csrf_field() ?><input type="hidden" name="admin_action" value="retry_notify"><input type="hidden" name="id" value="<?= (int)$detail['id'] ?>"><button class="btn secondary">Retry notification</button></form>
       <?php endif; ?>
       <?php if ($detail['history']): ?>
         <h3>Status history</h3>
@@ -116,12 +138,12 @@ require __DIR__ . '/layout_top.php';
     <div class="matrixWrap" tabindex="0" role="region" aria-label="Leads table, scrollable">
     <table class="matrix">
       <caption class="sr">Leads, newest first</caption>
-      <thead><tr><th scope="col">#</th><th scope="col">Received</th><th scope="col">Type</th><th scope="col">Name</th><th scope="col">Email (masked)</th><th scope="col">Status</th></tr></thead>
+      <thead><tr><th scope="col">#</th><th scope="col">Received</th><th scope="col">Type</th><th scope="col">Name</th><th scope="col">Email (masked)</th><th scope="col">Status</th><th scope="col">Email to owner</th></tr></thead>
       <tbody>
         <?php foreach ($list['rows'] as $r): ?>
-          <tr><th scope="row"><a href="<?= $h($qs(['id' => $r['id']])) ?>">#<?= (int)$r['id'] ?></a></th><td data-label="Received"><?= $h($r['created_at']) ?></td><td data-label="Type"><?= $h($typeLabel($r['lead_type'])) ?></td><td data-label="Name"><?= $h($r['name']) ?><?= !empty($r['is_synthetic']) ? ' <span class="small">(synthetic)</span>' : '' ?></td><td data-label="Email (masked)"><?= $h(lead_mask_email($r['email'])) ?></td><td data-label="Status"><?= $h(lead_statuses()[$r['status']] ?? $r['status']) ?></td></tr>
+          <tr><th scope="row"><a href="<?= $h($qs(['id' => $r['id']])) ?>">#<?= (int)$r['id'] ?></a></th><td data-label="Received"><?= $h($r['created_at']) ?></td><td data-label="Type"><?= $h($typeLabel($r['lead_type'])) ?></td><td data-label="Name"><?= $h($r['name']) ?><?= !empty($r['is_synthetic']) ? ' <span class="small">(synthetic)</span>' : '' ?></td><td data-label="Email (masked)"><?= $h(lead_mask_email($r['email'])) ?></td><td data-label="Status"><?= $h(lead_statuses()[$r['status']] ?? $r['status']) ?></td><td data-label="Email to owner"><?= $r['notify_status'] === 'sent' ? 'Sent' : ($r['notify_status'] === 'failed' ? '<strong>Not sent</strong>' : '—') ?></td></tr>
         <?php endforeach; ?>
-        <?php if (!$list['rows']): ?><tr><td colspan="6">No leads match these filters.</td></tr><?php endif; ?>
+        <?php if (!$list['rows']): ?><tr><td colspan="7">No leads match these filters.</td></tr><?php endif; ?>
       </tbody>
     </table>
     </div>

@@ -19,13 +19,35 @@ function mail_outbox_write(string $to, string $subject, string $html, string $te
   return @file_put_contents($name, json_encode(['to' => $to, 'subject' => $subject, 'html' => $html, 'text' => $text, 'reply_to' => $replyTo, 'headers' => $headers, 'mock' => true], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) !== false;
 }
 
+/**
+ * Why the last send_mail() failed, as a short code (never the SMTP server's text, which can contain host names, user names or addresses).
+ * Codes: '' (no failure), not_configured, invalid_recipient, library_missing, smtp_connect, smtp_auth, smtp_rejected, smtp_other, outbox_unwritable.
+ */
+function mail_last_error(?string $set = null): string { static $code = ''; if ($set !== null) $code = $set; return $code; }
+
+function mail_error_label(string $code): string {
+  return ['' => '', 'not_configured' => 'Mail is not configured', 'invalid_recipient' => 'The notification address is invalid', 'library_missing' => 'The mail library is not installed',
+    'smtp_connect' => 'The mail server could not be reached', 'smtp_auth' => 'The mail server rejected the login', 'smtp_rejected' => 'The mail server rejected the message',
+    'smtp_other' => 'The mail server reported an error', 'outbox_unwritable' => 'The mock outbox is not writable'][$code] ?? 'Unknown mail error';
+}
+
+/** Maps a PHPMailer exception message to a safe code. */
+function mail_classify_error(string $msg): string {
+  $m = strtolower($msg);
+  if (strpos($m, 'connect') !== false || strpos($m, 'timed out') !== false || strpos($m, 'getaddrinfo') !== false) return 'smtp_connect';
+  if (strpos($m, 'authenticate') !== false || strpos($m, 'username') !== false || strpos($m, 'password') !== false) return 'smtp_auth';
+  if (strpos($m, 'recipient') !== false || strpos($m, 'data not accepted') !== false || strpos($m, 'invalid address') !== false) return 'smtp_rejected';
+  return 'smtp_other';
+}
+
 function send_mail(string $to, string $subject, string $html, string $text = '', string $replyTo = '', array $headers = []): bool {
-  if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return false;
+  mail_last_error('');
+  if (!filter_var($to, FILTER_VALIDATE_EMAIL)) { mail_last_error('invalid_recipient'); return false; }
   $subject = preg_replace('/[\r\n]+/', ' ', $subject);
-  if (mail_transport() === 'file') return mail_outbox_write($to, $subject, $html, $text !== '' ? $text : trim(strip_tags($html)), $replyTo, $headers);
-  if (!mail_configured()) return false;
+  if (mail_transport() === 'file') { $ok = mail_outbox_write($to, $subject, $html, $text !== '' ? $text : trim(strip_tags($html)), $replyTo, $headers); if (!$ok) mail_last_error('outbox_unwritable'); return $ok; }
+  if (!mail_configured()) { mail_last_error('not_configured'); return false; }
   $autoload = __DIR__ . '/vendor/autoload.php';
-  if (!is_file($autoload)) return false;
+  if (!is_file($autoload)) { mail_last_error('library_missing'); return false; }
   require_once $autoload;
   $m = site_cfg()['mail'];
   try {
@@ -49,8 +71,11 @@ function send_mail(string $to, string $subject, string $html, string $text = '',
     foreach ($headers as $hk => $hv) { if (preg_match('/^[A-Za-z-]+$/', (string)$hk)) $mail->addCustomHeader((string)$hk, preg_replace('/[\r\n]+/', ' ', (string)$hv)); }
     $mail->Body = $html;
     $mail->AltBody = $text !== '' ? $text : trim(strip_tags($html));
-    return $mail->send();
+    $sent = $mail->send();
+    if (!$sent) mail_last_error(mail_classify_error((string)$mail->ErrorInfo));
+    return $sent;
   } catch (Throwable $e) {
+    mail_last_error(mail_classify_error($e->getMessage()));
     return false;
   }
 }

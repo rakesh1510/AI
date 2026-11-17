@@ -130,9 +130,16 @@ function lead_store(PDO $pdo, array $clean, string $ipHash, bool $synthetic = fa
   return (int)$pdo->lastInsertId();
 }
 
+/** Records the outcome of the owner notification ('sent' or 'failed' + a safe reason code) when the tracking columns exist. */
+function lead_record_notification(PDO $pdo, int $id, bool $sent, string $code): void {
+  if (!db_column_exists($pdo, 'leads', 'notify_status')) return;
+  $pdo->prepare("UPDATE leads SET notify_status = ?, notify_attempts = LEAST(notify_attempts + 1, 250), notify_error = ?, notified_at = " . ($sent ? 'NOW()' : 'notified_at') . ' WHERE id = ?')
+      ->execute([$sent ? 'sent' : 'failed', $sent ? '' : substr($code, 0, 24), $id]);
+}
+
 function lead_notify_owner(array $c): bool {
   $to = site_owner_email();
-  if ($to === '') return false;
+  if ($to === '') { mail_last_error('not_configured'); return false; }
   $label = lead_types()[$c['lead_type']]['label'] ?? $c['lead_type'];
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
   $rows = ['Type' => $label, 'Name' => $c['name'], 'Email' => $c['email'], 'Company' => $c['company'], 'Website' => $c['website'], 'Budget' => $c['budget'], 'Timeline' => $c['timeline'], 'Page' => $c['source_page'],
@@ -141,7 +148,10 @@ function lead_notify_owner(array $c): bool {
   $body = '<h2>New AIHubpedia lead</h2>';
   foreach ($rows as $k => $v) if ($v !== '') $body .= '<p><b>' . $h($k) . ':</b> ' . $h($v) . '</p>';
   $body .= '<p><b>Message:</b><br>' . nl2br($h($c['message'])) . '</p>';
-  return send_mail($to, '[AIHubpedia lead] ' . $label . ' — ' . $c['name'], $body, '', $c['email']);
+  $text = "New AIHubpedia lead\n";
+  foreach ($rows as $k => $v) if ($v !== '') $text .= preg_replace('/[\r\n]+/', ' ', "$k: $v") . "\n";
+  $text .= "\nMessage:\n" . $c['message'] . "\n";
+  return send_mail($to, '[AIHubpedia lead] ' . $label . ' — ' . preg_replace('/[\r\n]+/', ' ', (string)$c['name']), $body, $text, $c['email']);
 }
 
 // ---------------------------------------------------------------------------

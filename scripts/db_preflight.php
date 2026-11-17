@@ -6,12 +6,13 @@
  * close each gap. It executes only SELECTs on information_schema. It never writes, never reads application rows, never runs migrations.
  *
  * Usage (point it at a COPY or a test database, e.g. a restored backup on a staging machine you control):
- *   AIHUB_DB_HOST=... AIHUB_DB_NAME=... AIHUB_DB_USER=<read-only user> AIHUB_DB_PASS=... php scripts/db_preflight.php [--json]
+ *   AIHUB_DB_HOST=... AIHUB_DB_NAME=... AIHUB_DB_USER=<read-only user> AIHUB_DB_PASS=... php scripts/db_preflight.php [--json] [--plan]
+ * --plan prints, as text, the SQL a person would review and run on the COPY to close the gaps (it is never executed by this script).
  * Exit code: 0 = compatible, 1 = something required is missing or incompatible.
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/../helpers.php';
-$json = in_array('--json', $argv, true);
+$json = in_array('--json', $argv, true); $plan = in_array('--plan', $argv, true);
 db_connection_available();
 $pdo = db();
 $dbName = (string)$pdo->query('SELECT DATABASE()')->fetchColumn();
@@ -39,7 +40,7 @@ function parse_sql(string $file): array {
 }
 $exp = json_decode((string)file_get_contents("$root/database/expected_schema.json"), true)['tables'];
 $expected = [];
-foreach ($exp as $t => $d) $expected[$t] = ['feature' => $d['feature'], 'degrade' => $d['if_missing_or_incompatible'], 'required' => $d['required'], 'columns' => $d['columns'], 'notes' => $d['notes'], 'file' => implode('; ', $d['defined_in'])];
+foreach ($exp as $t => $d) $expected[$t] = ['feature' => $d['feature'], 'degrade' => $d['if_missing_or_incompatible'], 'required' => $d['required'], 'columns' => $d['columns'], 'notes' => $d['notes'], 'file' => implode('; ', $d['defined_in']), 'ddl' => $d['ddl'] ?? []];
 $phase = [
   'database/phase2_analytics.sql' => ['page_views' => ['traffic statistics (optional; off unless AIHUB_ANALYTICS=1)', 'no statistics are recorded']],
   'database/phase3_business.sql' => ['leads' => ['lead capture', 'forms show "temporarily unavailable" with an email fallback'], 'subscribers' => ['newsletter double opt-in', 'signup shows "temporarily unavailable"'], 'events' => ['consent-gated events', 'no events are recorded']],
@@ -75,7 +76,20 @@ foreach ($expected as $t => $d) {
   $row['required'] = $d['required'];
   $report[] = $row;
 }
-$out = ['database' => $dbName, 'tables_checked' => count($report), 'broken' => $broken, 'degraded' => $degraded, 'rows' => $report, 'read_only' => true];
+// ---- migration plan (text only) ----------------------------------------------------------------------------------------------------------
+$steps = [];
+$sqlFileFor = ['page_views' => 'phase2_analytics.sql', 'leads' => 'phase3_business.sql', 'subscribers' => 'phase3_business.sql', 'events' => 'phase3_business.sql', 'lead_status_history' => 'phase4_business.sql', 'compare_tool_profiles' => 'install_compare_tables.sql', 'compare_tool_points' => 'install_compare_tables.sql', 'compare_tool_sources' => 'install_compare_tables.sql', 'categories' => 'full_mysql_schema.sql', 'tools' => 'full_mysql_schema.sql', 'posts' => 'full_mysql_schema.sql', 'use_cases' => 'full_mysql_schema.sql', 'site_settings' => 'full_mysql_schema.sql', 'submissions' => 'full_mysql_schema.sql'];
+$idx = []; $q = $pdo->prepare('SELECT TABLE_NAME, INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = ?'); $q->execute([$dbName]); foreach ($q->fetchAll(PDO::FETCH_NUM) as [$t, $i]) $idx[strtolower($t)][$i] = true;
+$voteType = ''; if (isset($have['tool_votes']['vote_type'])) { $q = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tool_votes' AND COLUMN_NAME = 'vote_type'"); $q->execute([$dbName]); $voteType = strtolower((string)$q->fetchColumn()); }
+foreach ($report as $r) {
+  $t = $r['table'];
+  if ($r['status'] === 'missing_table') { if (in_array($t, ['tool_clicks', 'tool_votes'], true)) $steps[] = "-- $t is missing: create it with tests/fixtures/interactions_current.sql (the current shape; the install SQL files are outdated)"; elseif ($t === 'contact_messages') $steps[] = "-- contact_messages is missing: no production SQL file creates it; use the CREATE TABLE in tests/fixtures/interactions_current.sql"; elseif (isset($sqlFileFor[$t])) $steps[] = "-- $t is missing: run database/{$sqlFileFor[$t]} (CREATE TABLE IF NOT EXISTS, safe to repeat)"; continue; }
+  if ($t === 'tool_votes' && strpos($voteType, 'enum') === 0 && strpos($voteType, "'up'") === false) { $steps[] = "ALTER TABLE tool_votes MODIFY vote_type VARCHAR(10) NOT NULL;"; $steps[] = "UPDATE tool_votes SET vote_type = 'up' WHERE vote_type = 'like';"; $steps[] = "UPDATE tool_votes SET vote_type = 'down' WHERE vote_type = 'dislike';"; }
+  foreach ($r['missing_columns'] as $c) { $ddl = $expected[$t]['ddl'][$c] ?? null; if ($ddl) $steps[] = "ALTER TABLE `$t` ADD COLUMN `$c` $ddl;"; elseif ($r['status'] === 'needs_phase4_migration' || $t === 'leads') { $steps[] = "-- `$t`.`$c` belongs to database/phase4_business.sql (run the whole ALTER once; it is additive)"; } else $steps[] = "-- `$t`.`$c` is missing and has no automatic fix: compare with database/expected_schema.json"; }
+  if ($t === 'tool_votes' && in_array('visitor_id', $r['missing_columns'], true)) { $steps[] = "UPDATE tool_votes SET visitor_id = MD5(CONCAT(COALESCE(ip_address, ''), ':', id)) WHERE visitor_id IS NULL OR visitor_id = '';"; if (!empty($idx['tool_votes']['uniq_tool_vote_ip'])) $steps[] = "ALTER TABLE tool_votes DROP INDEX uniq_tool_vote_ip, ADD UNIQUE KEY uniq_tool_vote_visitor (tool_slug, visitor_id);"; }
+}
+$steps = array_values(array_unique($steps));
+$out = ['database' => $dbName, 'tables_checked' => count($report), 'broken' => $broken, 'degraded' => $degraded, 'rows' => $report, 'read_only' => true, 'plan' => $steps];
 if ($json) { echo json_encode($out, JSON_PRETTY_PRINT), "\n"; exit($broken ? 1 : 0); }
 echo "Database compatibility preflight for '$dbName' (read-only)\n";
 printf("%-24s %-22s %s\n", 'table', 'status', 'detail');
@@ -84,5 +98,6 @@ foreach ($report as $r) {
   printf("%-24s %-22s %s%s\n", $r['table'], $r['status'], $r['required'] ? '[required] ' : '', $detail);
 }
 echo "\nRequired features broken: $broken   Optional/degraded: $degraded\n";
+if ($plan) { echo "\n-- Migration plan (NOT executed; review, then run on a COPY after taking a backup)\n" . ($steps ? implode("\n", $steps) : "-- nothing to do") . "\n"; }
 echo "Nothing was changed. See docs/phase4/DATABASE_COMPATIBILITY_REPORT.md for the migration order.\n";
 exit($broken ? 1 : 0);

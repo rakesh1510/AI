@@ -255,9 +255,15 @@ function sec_private_dir(string $dir): string {
 /** Default private directory name: one per OS user, so a CLI run by one account cannot disable (or poison) the web account's directory. */
 function sec_default_private_dir(string $name): string { return rtrim(sys_get_temp_dir(), '/\\') . '/' . $name . '_' . (function_exists('posix_geteuid') ? posix_geteuid() : get_current_user()); }
 
+/**
+ * Directory for rate-limit counters. A configured AIHUB_RATE_DIR that is not private to this user is NOT silently trusted and NOT used to
+ * switch limiting off: the per-user default directory is used instead. Only if that also fails does limiting fail open (and is logged).
+ */
 function sec_rate_dir(): string {
-  $d = sec_setting('AIHUB_RATE_DIR', 'rate_dir') ?: sec_default_private_dir('aihub_rate');
-  return sec_private_dir($d);
+  static $warned = false;
+  $configured = sec_setting('AIHUB_RATE_DIR', 'rate_dir');
+  if ($configured !== '') { $d = sec_private_dir($configured); if ($d !== '') return $d; if (!$warned) { $warned = true; sec_log('rate_dir_configured_unsafe', ['fallback' => 'per-user default']); } }
+  return sec_private_dir(sec_default_private_dir('aihub_rate'));
 }
 
 /** Records a hit and returns true when the caller exceeded $max hits within $window seconds. */

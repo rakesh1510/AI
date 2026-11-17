@@ -18,7 +18,11 @@ const AIHUB_CACHE_SCHEMA = 1;
 const AIHUB_CACHE_TTL = 900;
 
 function cache_enabled(): bool { return sec_setting('AIHUB_CACHE', 'cache', '1') !== '0'; }
-function cache_dir(): string { return sec_private_dir(sec_setting('AIHUB_CACHE_DIR', 'cache_dir') ?: sec_default_private_dir('aihub_cache')); }
+function cache_dir(): string {   // a configured directory that is not private to this user falls back to the per-user default
+  $c = sec_setting('AIHUB_CACHE_DIR', 'cache_dir');
+  if ($c !== '' && ($d = sec_private_dir($c)) !== '') return $d;
+  return sec_private_dir(sec_default_private_dir('aihub_cache'));
+}
 
 /** @param string[]|null $files absolute paths (tests pass temporary files) */
 function catalog_fingerprint(?array $files = null, ?string $dbChecksum = null): string {

@@ -16,10 +16,22 @@ Additive only. To roll back after it was applied (take a backup first):
 ALTER TABLE leads
   DROP COLUMN package_interest, DROP COLUMN campaign_goal, DROP COLUMN attr_source, DROP COLUMN attr_medium,
   DROP COLUMN attr_campaign, DROP COLUMN ref_tool, DROP COLUMN status_changed_at, DROP COLUMN is_synthetic,
+  DROP COLUMN notify_status, DROP COLUMN notify_attempts, DROP COLUMN notify_error, DROP COLUMN notified_at,
   DROP KEY idx_leads_status;
 DROP TABLE IF EXISTS lead_status_history;
 ```
 Rolling the **code** back first is safe: Phase 3 code ignores the extra columns. Rolling the **database** back first is also safe: the Phase 4 code detects missing columns and keeps working (answers go into the message text; status history is skipped).
+
+## Phase 4.1 additions
+| Change | How to undo without a revert |
+|---|---|
+| Derived-data cache | `AIHUB_CACHE=0` (pages compute live), or delete the cache directory; entries are disposable |
+| Local logos | delete `assets/logos/` (pages fall back to the favicon service) |
+| Demo login disabled | set `AIHUB_DEMO_LOGIN=1` (only for a local demo; never in production) |
+| `/extensions/` blocked | remove the rule from `.htaccess` (not recommended: placeholder pages with invented figures) |
+| Notification tracking columns (`notify_*` in `phase4_business.sql`) | included in the DROP COLUMN list below |
+| Newsletter confirmation two-step | revert `newsletter-confirm.php` (the old link-only flow lets mail scanners subscribe people) |
+| Rate/cache directories | unset `AIHUB_RATE_DIR`/`AIHUB_CACHE_DIR` to use per-user defaults |
 
 ## Feature switches without a revert
 - Admin lead page: unset `AIHUB_ADMIN_PASS_HASH` → admin pages show "disabled".
