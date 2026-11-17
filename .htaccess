@@ -25,7 +25,7 @@ ErrorDocument 404 /404.php
   # Install / import / maintenance scripts are CLI-only (they also refuse non-CLI requests themselves)
   RewriteRule ^(install-database|install-full-mysql|import-json-to-mysql|generate_compare_pages|compare_(install|sync_catalog|refresh_all|fetch_source|enrich_tool))\.php$ - [R=404,L]
   # Library files are include-only
-  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial)\.php$ - [R=404,L]
+  RewriteRule ^(seo|catalog|content|analytics|sitemap_lib|helpers|db|discovery|ui|mailer|conversion|security|admin_auth|evidence|leads_admin|recommend_engine|editorial|pricing_data)\.php$ - [R=404,L]
   RewriteRule \.(sql|bak|log|ini|sh)$ - [R=404,L]
 </IfModule>
 

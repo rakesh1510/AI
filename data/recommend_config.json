@@ -1,0 +1,45 @@
+{
+  "note": "Configuration for the deterministic recommendation wizard (recommend_engine.php). Weights are editorial choices published on the page ('How we matched'). Only capabilities that sourced profiles document can add points; unknown capabilities never add or subtract points. Add an objective only when at least two reviewed tools document its primary capability (a test enforces this).",
+  "objectives": {
+    "write_content":  {"label": "Write and edit (emails, documents, copy)", "caps": {"writing_editing": 3, "summarization": 1}, "subcategories": ["Copywriting & content creation", "Grammar, editing & rewriting", "Workplace AI suites"], "workflow": ["Collect 2 or 3 real pieces of writing you need to produce this week (an email, a short report, a page of copy).", "Write a one-paragraph brief for each: audience, goal, tone and length.", "Generate a first draft with {t1}, then edit it yourself. Keep notes on what you had to fix.", "Repeat the same brief with {t2} and compare the drafts side by side.", "Decide who must review AI-assisted text before it is published or sent."]},
+    "research":       {"label": "Research a topic with sources", "caps": {"web_research": 3, "summarization": 1}, "subcategories": ["AI search & answers", "Academic & scientific research"], "workflow": ["Write the question you need answered and what a good answer must include.", "Ask {t1} and open every cited source it gives. Note any claim without a source.", "Ask the same question in {t2} and compare the sources and the conclusions.", "Verify the three most important facts on the original pages before you rely on them."]},
+    "meetings":       {"label": "Transcribe meetings, calls and interviews", "caps": {"transcription": 3, "summarization": 2, "integrations": 1}, "subcategories": ["Meetings & transcription"], "workflow": ["Pick one recent recording of the kind you usually need (include real accents and background noise).", "Upload it to {t1} on a free or trial plan and read the transcript against the audio for accuracy.", "Run the same recording through {t2} and compare accuracy, speaker labels and export formats.", "Check where recordings are stored, whether they are used for training, and who is notified when a bot joins calls."]},
+    "code":           {"label": "Write, explain and review code", "caps": {"code_assistance": 3, "api_access": 1}, "subcategories": ["Code assistants", "General AI assistants"], "workflow": ["Choose a small, real task: a function, a bug, a test you have been avoiding.", "Ask {t1} to solve it and run the result yourself; never paste secrets or private code until you have read the data policy.", "Repeat with {t2} and compare correctness and explanations.", "Check the plan's data-handling terms before using it on a company codebase."]},
+    "images":         {"label": "Create images and graphics", "caps": {"image_generation": 3}, "subcategories": ["Image generation & editing", "Graphic & UI design"], "workflow": ["Write down where the image will be used (web, print, social) and any brand rules.", "Generate a few options with {t1} using the same description.", "Try {t2} with the same description and compare quality, editing tools and export options.", "Read the commercial-use terms before publishing anything generated."]},
+    "summarize_docs": {"label": "Summarise documents and ask questions about them", "caps": {"summarization": 3, "document_qa": 3}, "subcategories": ["Notes & documents", "AI search & answers"], "workflow": ["Pick one long document you actually need to understand.", "Upload it to {t1} and ask for a summary, then ask three specific questions; check each answer against the document.", "Try {t2} with the same document and questions.", "Confirm whether uploaded files are stored and how to delete them."]},
+    "general":        {"label": "A general AI assistant for many everyday tasks", "caps": {"writing_editing": 1, "summarization": 1, "web_research": 1, "code_assistance": 1, "image_generation": 1, "voice": 1}, "subcategories": ["General AI assistants"], "workflow": ["List five different tasks you do in a typical week.", "Try them all in {t1}; note where it helped and where you had to correct it.", "Try the same tasks in {t2}.", "Keep the one that handled most of your tasks, and check the plan limits you would hit in normal use."]},
+    "translate":      {"label": "Transcribe and translate recordings", "caps": {"translation": 3, "transcription": 2}, "subcategories": ["Meetings & transcription"], "workflow": ["Choose a short recording in the language you actually work with.", "Transcribe it with {t1} and have a fluent speaker check the transcript and the translation.", "Repeat with {t2} and compare languages supported and accuracy.", "Check which languages each plan covers before paying."]}
+  },
+  "roles": {
+    "student":    {"label": "Student", "boost": {"free_plan": 1}, "note": "Free plans carry extra weight because budgets are usually tight."},
+    "writer":     {"label": "Writer, marketer or content creator", "boost": {"writing_editing": 1, "seo_content": 1}, "note": "Writing capabilities carry extra weight."},
+    "developer":  {"label": "Developer or engineer", "boost": {"code_assistance": 1, "api_access": 1}, "note": "Code and API capabilities carry extra weight."},
+    "manager":    {"label": "Manager or team lead", "boost": {"team_plans": 1, "integrations": 1}, "note": "Team plans and integrations carry extra weight."},
+    "founder":    {"label": "Founder or small-business owner", "boost": {"free_plan": 1, "team_plans": 1}, "note": "Free plans and team plans carry extra weight."},
+    "researcher": {"label": "Researcher or analyst", "boost": {"web_research": 1, "document_qa": 1}, "note": "Research capabilities carry extra weight."},
+    "other":      {"label": "Something else", "boost": [], "note": "No role adjustment."}
+  },
+  "experience": {
+    "beginner": {"label": "Beginner: I want something simple", "note": "No extra weight; the workflow below starts with the simplest steps."},
+    "intermediate": {"label": "Comfortable with software", "note": "No extra weight."},
+    "advanced": {"label": "Advanced: I use APIs and automation", "boost": {"api_access": 1, "integrations": 1}, "note": "API access and integrations carry extra weight."}
+  },
+  "team": {
+    "solo": {"label": "Just me", "team_weight": 0, "pilot": "yourself"},
+    "small": {"label": "2 to 10 people", "team_weight": 1, "pilot": "two or three teammates"},
+    "medium": {"label": "11 to 50 people", "team_weight": 2, "pilot": "one small team of 3 to 5 people"},
+    "large": {"label": "More than 50 people", "team_weight": 3, "pilot": "a small pilot group before any wider rollout"}
+  },
+  "budget": {
+    "free_only": {"label": "Free only: show tools with a documented free plan", "filter_free": true},
+    "flexible": {"label": "Flexible: a free plan is nice but not required"},
+    "business": {"label": "Business budget: paid or team plans are fine", "team_bonus": 1}
+  },
+  "integrations": {
+    "microsoft365": {"label": "Microsoft 365", "keywords": ["microsoft 365", "office apps", "outlook"]},
+    "google": {"label": "Google account or Workspace", "keywords": ["google account", "google workspace", "gmail", "google docs"]},
+    "slack": {"label": "Slack", "keywords": ["slack"]},
+    "zoom": {"label": "Zoom or Meet calls", "keywords": ["zoom", "google meet", "meet calls"]},
+    "api": {"label": "An API for my own tools", "cap": "api_access"}
+  }
+}

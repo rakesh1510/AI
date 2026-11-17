@@ -453,3 +453,23 @@ table.matrix tr.differs td,table.matrix tr.differs th[scope=row]{background:colo
 .faqItem p{margin:8px 0 0;color:var(--ink-body)}
 table.pkgTable{min-width:720px}
 @media (max-width:640px){table.pkgTable{min-width:0}}
+
+/* ---------- Phase 4: recommendation wizard ---------- */
+.wizard fieldset{border:0;padding:0;margin:0 0 22px}
+.wizard legend{font-weight:700;font-size:1.05rem;margin-bottom:10px;color:var(--ink-title);padding:0}
+.wizard .req,.wizard .opt{font-weight:400;font-size:.85rem;color:var(--ink-soft)}
+.choiceGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.choice{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2);cursor:pointer;min-height:48px}
+.choice input{margin-top:3px;flex:none;width:20px;height:20px}
+.choice:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 9%,var(--surface))}
+.choice:focus-within{outline:3px solid color-mix(in srgb,var(--brand) 55%,transparent);outline-offset:2px}
+.wizardResults{margin-top:28px;scroll-margin-top:84px}
+.recList{list-style:none;margin:16px 0;padding:0;display:grid;gap:16px}
+.recHead{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.recRank{color:var(--brand)}
+.recWhy{padding-left:18px;font-size:.92rem;color:var(--ink-body)}
+.recItem h4{margin:14px 0 4px}
+
+/* ---------- Phase 4: change log / archive ---------- */
+.timeline{list-style:none;margin:12px 0;padding:0;display:grid;gap:12px}
+.timeline li{border-left:3px solid var(--border);padding:2px 0 2px 14px;color:var(--ink-body)}

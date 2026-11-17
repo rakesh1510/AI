@@ -139,6 +139,9 @@ function capability_matrix(array $tools, bool $onlyRelevant = true): array {
   return $rows;
 }
 
+/** Capabilities most tools document (plans, integrations, summaries): too generic to justify calling one tool an alternative to another. */
+function capability_generic_keys(): array { return ['free_plan', 'team_plans', 'integrations', 'api_access', 'summarization']; }
+
 /**
  * Alternatives to a tool, ranked by documented overlap with transparent reasons.
  * Candidates: reviewed tools only (they are the only ones with documented capabilities).
@@ -146,13 +149,14 @@ function capability_matrix(array $tools, bool $onlyRelevant = true): array {
  */
 function tool_alternatives_ranked(array $tool, array $byId, int $limit = 6): array {
   $mine = tool_capabilities($tool);
-  $myDoc = array_keys(array_filter($mine, fn($c) => $c['state'] === 'documented' && ($c['field'] ?? '') !== 'pricing'));
+  $generic = capability_generic_keys();
+  $myDoc = array_keys(array_filter($mine, fn($c, $k) => $c['state'] === 'documented' && ($c['field'] ?? '') !== 'pricing' && !in_array($k, $generic, true), ARRAY_FILTER_USE_BOTH));
   $editor = (array)(($tool['curated'] ?? [])['alternatives'] ?? []);
   $out = [];
   foreach ($byId as $id => $c) {
     if ($id === ($tool['id'] ?? '') || empty($c['curated'])) continue;
     $cc = tool_capabilities($c);
-    $cDoc = array_keys(array_filter($cc, fn($x) => $x['state'] === 'documented' && ($x['field'] ?? '') !== 'pricing'));
+    $cDoc = array_keys(array_filter($cc, fn($x, $k) => $x['state'] === 'documented' && ($x['field'] ?? '') !== 'pricing' && !in_array($k, $generic, true), ARRAY_FILTER_USE_BOTH));
     $shared = array_values(array_intersect($myDoc, $cDoc));
     $only = array_values(array_diff($cDoc, $myDoc));
     $sameSub = !empty($tool['subcategory']) && ($c['subcategory'] ?? '') === $tool['subcategory'];

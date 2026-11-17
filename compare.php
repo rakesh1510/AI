@@ -247,7 +247,7 @@ require __DIR__ . '/layout_top.php';
           <tr><th scope="row">Pricing (as stated in sources)</th>
             <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?php if($e['pricing_summary'] !== ''): ?><?= h($e['pricing_summary']) ?><span class="cellEv">As of <?= h($e['pricing_as_of']) ?><?= $e['pricing_stale'] ? ' — older than ' . (int)EVIDENCE_STALE_DAYS . ' days' : '' ?>; <?= h($e['pricing_note']) ?></span><?php else: ?><span class="cellState s-unknown">Unknown</span><span class="cellEv">Listing says: <?= h($tt['pricing'] ?: 'not stated') ?> (not reviewed)</span><?php endif; ?></td><?php endforeach; ?></tr>
           <tr><th scope="row">Sources listed</th>
-            <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?= $e['curated'] ? (int)$e['source_count'] . ' page' . ($e['source_count'] === 1 ? '' : 's') . ($e['conflicts'] ? ' · sources disagree' : '') : '<span class="cellState s-unknown">None</span>' ?></td><?php endforeach; ?></tr>
+            <?php foreach($pair as $i => $tt): $e = $evs[$i]; ?><td data-label="<?= h($tt['name']) ?>"><?= $e['curated'] ? (int)$e['source_count'] . ' page' . ($e['source_count'] === 1 ? '' : 's') . ($e['conflicts'] ? ' · sources disagree' : '') : '<span class="cellState s-unknown">0 pages</span>' ?></td><?php endforeach; ?></tr>
           <?php foreach($rows as $row): ?>
             <tr class="<?= $row['differs'] ? 'differs' : '' ?>"><th scope="row"><?= h($row['label']) ?></th>
               <?php foreach($row['cells'] as $i => $c): ?>

@@ -11,6 +11,8 @@ require_once __DIR__ . '/../helpers.php';
 $pass = 0; $fail = 0;
 function ok(bool $c, string $m): void { global $pass, $fail; if ($c) $pass++; else { $fail++; echo "  FAIL: $m\n"; } }
 function section(string $t): void { echo "== $t\n"; }
+/** PHP source of a file without comments, docblocks and string literals (so wording in comments or user-facing text does not trip source scans). */
+function code_only(string $file, bool $noStrings = true): string { $o = ''; foreach (token_get_all((string)file_get_contents($file)) as $t) { if (is_array($t) && in_array($t[0], $noStrings ? [T_COMMENT, T_DOC_COMMENT, T_CONSTANT_ENCAPSED_STRING] : [T_COMMENT, T_DOC_COMMENT], true)) continue; $o .= is_array($t) ? $t[1] : $t; } return $o; }
 
 $data = load_tools(); $tools = $data['tools']; $byId = tools_by_id();
 $names = fn(array $r) => array_map(fn($x) => $x['tool']['name'], $r);
@@ -46,7 +48,7 @@ ok($noSyn === [], 'nonsense queries return nothing');
 
 section('P1 evidence levels');
 $now = strtotime('2026-12-01');
-$mk = fn(array $review, array $extra = []) => ['id' => 'x', 'name' => 'X', 'curated' => array_replace_recursive([
+$mk = fn(array $review, array $extra = []) => ['id' => 'x', 'name' => 'X', 'curated' => array_replace([
   'review' => $review, 'sources' => [['label' => 'a', 'url' => 'https://example.com/a', 'type' => 'vendor', 'retrieved' => '2026-11-15'], ['label' => 'b', 'url' => 'https://example.com/b', 'type' => 'vendor', 'retrieved' => '2026-11-15']],
   'pricing' => ['type' => 'Freemium', 'label' => 'Freemium', 'summary' => 'Free plus paid.', 'as_of' => '2026-11-15', 'confidence' => 'vendor pages'], 'key_features' => ['Code assistance'], 'limitations' => ['No image creation on the free tier']], $extra)];
 $e = tool_evidence($mk(['status' => 'evidence-collected', 'reviewed_on' => '2026-11-15', 'human_verified' => false]), $now);
@@ -214,8 +216,177 @@ $base = search_tools_ranked($tools, 'writing', 20);
 $boosted = array_map(function ($t) { if ($t['id'] === 'grammarly') { $t['featured_level'] = 2; $t['featured_until'] = '2099-01-01'; $t['affiliate'] = 'https://example.com/aff'; } return $t; }, $tools);
 $after = search_tools_ranked($boosted, 'writing', 20);
 ok(array_map(fn($x) => $x['tool']['id'], $base) === array_map(fn($x) => $x['tool']['id'], $after), 'a featured/affiliate tool ranks identically in search');
-$src = (string)file_get_contents(__DIR__ . '/../discovery.php') . (string)file_get_contents(__DIR__ . '/../evidence.php');
+$src = code_only(__DIR__ . '/../discovery.php') . code_only(__DIR__ . '/../evidence.php');
 ok(!preg_match('/featured_level|featured_until|affiliate|sponsor/i', $src), 'search, problem pages and alternatives code never read any paid-placement field');
+
+section('P3 recommendation wizard: configuration and inputs');
+$cfg = recommend_config();
+ok(count($cfg['objectives']) >= 6, 'wizard has at least six goals');
+foreach ($cfg['objectives'] as $k => $o) {
+  $w = $o['caps']; arsort($w); $main = array_key_first($w);
+  $n = count(array_filter($byId, fn($t) => !empty($t['curated']) && (tool_capabilities($t)[$main]['state'] ?? '') === 'documented'));
+  ok($n >= 2, "goal “{$k}” is offered only because ≥2 reviewed tools document its main capability ($main: $n)");
+  ok(count($o['workflow']) >= 3 && !empty($o['subcategories']), "goal “{$k}” has a getting-started workflow");
+}
+$a = recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible']);
+ok($a['complete'] && $a['role'] === 'other' && $a['experience'] === 'intermediate' && $a['team'] === 'solo' && $a['integrations'] === [], 'optional answers get neutral defaults');
+$a = recommend_normalize_answers([]);
+ok(!$a['complete'] && count($a['errors']) === 2, 'objective and budget are required');
+$a = recommend_normalize_answers(['objective' => '<script>', 'budget' => "' OR 1=1", 'role' => 'ceo', 'integrations' => ['slack', '<img>', ['x'], 'slack']]);
+ok(!$a['complete'] && $a['objective'] === '' && $a['role'] === 'other' && $a['integrations'] === ['slack'], 'invalid or hostile values are dropped, duplicates removed');
+ok(recommend(recommend_normalize_answers([]), $byId)['status'] === 'incomplete', 'incomplete answers give no recommendation');
+
+section('P3 recommendation wizard: results are deterministic and explained');
+$ans = recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible', 'team' => 'small', 'role' => 'manager', 'integrations' => ['zoom']]);
+$r1 = recommend($ans, $byId); $r2 = recommend($ans, $byId);
+ok(json_encode($r1) === json_encode($r2), 'same answers give identical results');
+ok($r1['status'] === 'ok' && count($r1['items']) >= 3 && count($r1['items']) <= 5, 'three to five tools are recommended when enough are documented (' . count($r1['items']) . ')');
+$ids = array_map(fn($i) => $i['tool']['id'], $r1['items']);
+ok(count(array_intersect($ids, ['otter-ai', 'fireflies-ai', 'trint', 'sonix'])) >= 3, 'transcription goal returns transcription tools');
+foreach ($r1['items'] as $it) {
+  ok(!empty($it['tool']['curated']), $it['tool']['id'] . ' is a reviewed tool');
+  ok(count($it['reasons']) >= 2 && preg_match('/^\+\d/', $it['reasons'][0]) === 1, $it['tool']['id'] . ' has itemised reasons with points');
+  ok($it['pricing']['summary'] !== '' && !empty($it['pricing']['as_of']) && $it['evidence']['source_count'] >= 1, $it['tool']['id'] . ' shows sourced pricing with its date');
+  ok(strpos(implode(' ', $it['reasons']), '“') !== false, $it['tool']['id'] . ' reasons quote the documented evidence');
+}
+$scores = array_map(fn($i) => $i['score'], $r1['items']); $sorted = $scores; rsort($sorted);
+ok($scores === $sorted, 'results are ordered by score');
+ok(count($r1['workflow']) >= 5 && strpos(implode(' ', $r1['workflow']), $r1['items'][0]['tool']['name']) !== false, 'getting-started workflow names the recommended tools');
+ok(strpos(implode(' ', $r1['workflow']), 'Pilot with two or three teammates') !== false, 'team size changes the workflow');
+ok(strpos(end($r1['workflow']), 'pricing page and data policy yourself') !== false, 'workflow ends by sending the reader to the vendor for current prices');
+ok(count($r1['explain']) >= 6, 'the page can explain how each answer was used');
+$beg = recommend(recommend_normalize_answers(['objective' => 'code', 'budget' => 'flexible', 'experience' => 'beginner']), $byId);
+ok(strpos($beg['workflow'][0], '30 minutes') !== false, 'beginner experience adds a simple first step');
+$adv = recommend(recommend_normalize_answers(['objective' => 'code', 'budget' => 'flexible', 'experience' => 'advanced']), $byId);
+ok(strpos(implode(' ', $adv['workflow']), 'API documentation') !== false, 'advanced experience adds an API step');
+foreach ($r1['combos'] as $cb) ok($cb['a_for'] !== [] && $cb['b_for'] !== [], 'a combination exists only when each tool adds something the other does not documents');
+
+section('P3 recommendation wizard: honesty rules');
+$mkT = function (string $id, array $over = []) { return ['id' => $id, 'name' => strtoupper($id), 'category' => 'Productivity', 'subcategory' => 'Meetings & transcription', 'pricing_type' => 'Paid', 'website' => 'https://example.com', 'curated' => array_replace([
+  'review' => ['reviewed_on' => '2026-11-15', 'human_verified' => false], 'sources' => [['label' => 'a', 'url' => 'https://example.com/a'], ['label' => 'b', 'url' => 'https://example.com/b']],
+  'pricing' => ['type' => 'Paid', 'label' => 'Paid', 'summary' => 'Paid plans.', 'as_of' => '2026-11-15', 'confidence' => 'vendor pages'],
+  'key_features' => ['Meeting transcription and notes', 'Works with Slack'], 'use_cases' => [], 'limitations' => ['Needs a paid plan'], 'best_for' => [], 'strengths' => [], 'summary' => 'A paid tool.', 'alternatives' => []], $over)]; };
+$synthetic = ['paid' => $mkT('paid'), 'free' => $mkT('free', ['pricing' => ['type' => 'Freemium', 'label' => 'Freemium']]), 'unk' => $mkT('unk', ['key_features' => ['Meeting transcription and notes']])];
+$free = recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'free_only']), $synthetic);
+ok(array_map(fn($i) => $i['tool']['id'], $free['items']) !== [] && !in_array('paid', array_map(fn($i) => $i['tool']['id'], $free['items']), true), 'free-only budget excludes tools with no documented free plan');
+ok($free['excluded_free'] === 2 && count($free['notes']) === 1, 'tools left out because of the budget are counted and disclosed');
+$flex = recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible']), $synthetic);
+ok(count($flex['items']) === 3, 'flexible budget keeps tools without a free plan');
+$withInt = recommend(recommend_normalize_answers(['objective' => 'translate', 'budget' => 'flexible', 'integrations' => ['slack']]), $synthetic);
+$sc = []; foreach ($withInt['items'] as $it) $sc[$it['tool']['id']] = $it;
+ok($sc['paid']['score'] - $sc['unk']['score'] === 2.0, 'a documented integration adds exactly 2 points; the undocumented tool is not penalised');
+ok(strpos(implode(' ', $sc['paid']['reasons']), 'Slack is mentioned') !== false && strpos(implode(' ', $sc['unk']['unknown']), 'Slack integration is not documented') !== false, 'documented integration quotes the source text; missing one is listed as not documented');
+$solo = recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible', 'team' => 'solo']), ['t' => $mkT('team', ['key_features' => ['Meeting transcription and notes', 'Team plans']])]);
+$big = recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible', 'team' => 'large']), ['t' => $mkT('team', ['key_features' => ['Meeting transcription and notes', 'Team plans']])]);
+ok($big['items'][0]['score'] - $solo['items'][0]['score'] === 3.0, 'larger teams add points only for documented team plans');
+ok(recommend(recommend_normalize_answers(['objective' => 'images', 'budget' => 'flexible']), $synthetic)['status'] === 'none', 'when nothing documents the goal the answer is "none", not a guess');
+ok(recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible']), ['plain' => ['id' => 'plain', 'name' => 'Plain', 'category' => 'X']])['items'] === [], 'unreviewed tools are never recommended');
+$feat = $synthetic; $feat['paid']['featured_level'] = 2; $feat['paid']['affiliate'] = 'https://example.com/aff'; $feat['paid']['curated']['clicks'] = 999999;
+ok(json_encode(array_map(fn($i) => [$i['tool']['id'], $i['score']], recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible']), $synthetic)['items'])) === json_encode(array_map(fn($i) => [$i['tool']['id'], $i['score']], recommend(recommend_normalize_answers(['objective' => 'meetings', 'budget' => 'flexible']), $feat)['items'])), 'sponsorship, affiliate links and click counts do not change the recommendation');
+ok(!preg_match('/featured|affiliate|sponsor|click|vote|rating|popular/i', code_only(__DIR__ . '/../recommend_engine.php')), 'recommendation code never reads paid or popularity fields');
+ok(!preg_match('/curl|file_get_contents\(\s*[\'"]http|openai|anthropic|api\.|fetch\(/i', code_only(__DIR__ . '/../recommend_engine.php')), 'recommendation code makes no external calls and uses no AI API');
+
+section('P3 recommendation wizard: page');
+$_SERVER['REQUEST_METHOD'] = 'GET'; $_SERVER['SCRIPT_NAME'] = '/recommend.php';
+$_GET = []; $robots = null; ob_start(); require __DIR__ . '/../recommend.php'; $pg0 = ob_get_clean();
+ok(substr_count($pg0, '<fieldset>') === 6 && substr_count($pg0, 'type="radio"') >= 17 && strpos($pg0, 'id="results"') === false, 'empty form: six fieldsets, no results, no fabricated defaults');
+ok(preg_match('/<legend>[^<]*(role|do|budget|technical|use it|integrations)/i', $pg0) === 1 && strpos($pg0, 'for="role"') !== false, 'questions have legends and labels');
+$_GET = ['go' => '1', 'objective' => 'meetings', 'budget' => 'free_only', 'integrations' => ['zoom'], 'role' => '<b>x</b>'];
+$robots = null; ob_start(); require __DIR__ . '/../recommend.php'; $pg1 = ob_get_clean();
+ok(strpos($pg1, 'Why it matches') !== false && strpos($pg1, 'Not documented in our sources') !== false && strpos($pg1, 'Pricing, as stated in sources') !== false, 'result page shows reasons, unknowns and pricing sources');
+ok(strpos($pg1, 'content="noindex, follow"') !== false, 'result URLs are noindex');
+ok(strpos($pg1, '<b>x</b>') === false, 'request values are never echoed unescaped');
+ok(strpos($pg1, 'Nothing you choose here is stored') !== false || strpos($pg0, 'Nothing you choose here is stored') !== false, 'privacy statement is on the page');
+$_GET = ['go' => '1']; $robots = null; ob_start(); require __DIR__ . '/../recommend.php'; $pg2 = ob_get_clean();
+ok(strpos($pg2, 'Choose what you want to do.') !== false && strpos($pg2, 'Why it matches') === false, 'missing required answers produce an error, not a shortlist');
+$_GET = [];
+
+section('P5 change log: verified entries only');
+$good = ['tool' => 'otter-ai', 'kind' => 'pricing', 'date' => '2026-11-10', 'summary' => 'Pro plan price changed on the vendor page.', 'evidence' => ['https://otter.ai/pricing'], 'verified_by' => 'A. Editor', 'verified_on' => '2026-11-11'];
+$now = strtotime('2026-11-17');
+ok(changelog_entry_errors($good, $byId, $now) === [], 'a complete entry validates');
+foreach ([['tool', 'nope'], ['kind', 'rumour'], ['date', '2026-13-40'], ['date', '2027-01-01'], ['summary', ''], ['summary', '<b>x</b>'], ['evidence', []], ['evidence', ['javascript:alert(1)']], ['verified_by', ''], ['verified_on', 'yesterday']] as [$f, $v]) {
+  ok(changelog_entry_errors([$f => $v] + $good, $byId, $now) !== [], "invalid $f is rejected (" . json_encode($v) . ')');
+}
+$entries = changelog_entries($byId, $now);
+ok(count($entries) >= 20 && count(array_filter($entries, fn($e) => !empty($e['verified']))) === 0, 'with no manual entries, the log has only derived markers and none is called verified');
+ok(count(array_filter($entries, fn($e) => !empty($e['derived']) && strpos($e['summary'], 'not yet verified by an editor') !== false)) >= 15, 'derived entries say plainly that no editor has verified them');
+$dates = array_column($entries, 'date'); $sortedD = $dates; rsort($sortedD);
+ok($dates === $sortedD, 'entries are newest first');
+ok(changelog_for_tool('otter-ai', $byId) !== [] && count(array_filter(changelog_for_tool('otter-ai', $byId), fn($e) => $e['tool'] !== 'otter-ai')) === 0, 'per-tool change log filters by tool');
+$_SERVER['REQUEST_METHOD'] = 'GET'; $_SERVER['SCRIPT_NAME'] = '/changelog.php'; $_GET = [];
+ob_start(); require __DIR__ . '/../changelog.php'; $cl = ob_get_clean();
+ok(strpos($cl, 'No editor-verified changes have been recorded yet') !== false && strpos($cl, 'Profile reviews') !== false, 'change log page states honestly that nothing is verified yet');
+
+section('P5 newsletter archive, roundup and mock delivery');
+ok(newsletter_issues_public() === [], 'no published issues exist: the archive is empty (newsletter has not launched)');
+$issue = ['slug' => 'roundup-test', 'title' => 'Test roundup', 'status' => 'published', 'published_on' => '2026-11-17', 'editor' => 'A. Editor', 'summary' => 'Notes for the week.', 'items' => [['tool' => 'otter-ai', 'note' => 'Otter.ai pricing page updated.', 'source' => 'https://otter.ai/pricing']]];
+ok(newsletter_issue_errors($issue) === [], 'a complete issue validates');
+foreach ([['editor', ''], ['published_on', ''], ['items', []], ['items', [['note' => 'x', 'source' => 'javascript:1']]], ['items', [['note' => '', 'source' => 'https://example.com']]], ['sponsor', ['text' => 'x']], ['slug', 'Bad Slug!'], ['summary', 'We tested every tool in our tests show it wins.']] as [$f, $v]) {
+  ok(newsletter_issue_errors([$f => $v] + $issue) !== [], "issue with invalid $f is blocked from publishing");
+}
+$draft = newsletter_roundup_draft($byId, '2026-W47', 30, $now);
+ok($draft['status'] === 'draft' && $draft['editor'] === '' && $draft['published_on'] === '' && count($draft['items']) >= 10 && count($draft['checklist']) >= 4, 'roundup is always a draft with an editorial checklist');
+ok(newsletter_issue_errors($draft) !== [], 'a fresh draft cannot be published until an editor, date and review are added');
+foreach ($draft['items'] as $it) ok($it['source'] !== '' && sec_safe_external_url($it['source']) !== null, 'draft item for ' . $it['tool'] . ' carries a valid source');
+$txt = newsletter_render_text($issue, 'https://aihubpedia.com/unsubscribe.php?token=' . str_repeat('a', 32));
+ok(strpos($txt, 'Unsubscribe: https://aihubpedia.com/unsubscribe.php?token=') !== false && strpos($txt, 'Source: https://otter.ai/pricing') !== false, 'rendered text has sources and an unsubscribe link');
+$withSponsor = newsletter_render_text($issue + ['sponsor' => ['label' => 'Acme', 'text' => 'Try Acme.']], 'https://x/u');
+ok(strpos($withSponsor, '[Sponsored: Acme]') !== false, 'sponsor content is labelled in the email text');
+$_SERVER['SCRIPT_NAME'] = '/newsletter-archive.php'; $robots = null;
+ob_start(); require __DIR__ . '/../newsletter-archive.php'; $arch = ob_get_clean();
+ok(strpos($arch, 'No issues published yet') !== false && strpos($arch, 'noindex') !== false, 'empty archive is honest and noindex (thin page)');
+
+if (stripos($dbName, 'test') !== false && db_connection_available()) {
+  $pdo = db();
+  $pdo->exec("DELETE FROM subscribers");
+  $ins = $pdo->prepare("INSERT INTO subscribers (email, status, token, created_at, consent_text) VALUES (?, ?, ?, NOW(), 'test')");
+  foreach ([['ok1@example.test', 'confirmed'], ['ok2@example.test', 'confirmed'], ['pend@example.test', 'pending'], ['gone@example.test', 'unsubscribed']] as $i => [$em, $st]) $ins->execute([$em, $st, str_pad((string)$i, 32, 'a')]);
+  $outbox = sys_get_temp_dir() . '/aihub_outbox_' . getmypid(); @mkdir($outbox, 0700, true); foreach (glob("$outbox/*") ?: [] as $f) @unlink($f);
+  $issueFile = sys_get_temp_dir() . '/aihub_issue_' . getmypid() . '.json'; file_put_contents($issueFile, json_encode($issue));
+  $env = 'AIHUB_MAIL_TRANSPORT=file AIHUB_MAIL_OUTBOX=' . escapeshellarg($outbox) . ' AIHUB_DB_HOST=' . escapeshellarg(getenv('AIHUB_DB_HOST') ?: '127.0.0.1') . ' AIHUB_DB_NAME=' . escapeshellarg(getenv('AIHUB_DB_NAME') ?: '') . ' AIHUB_DB_USER=' . escapeshellarg(getenv('AIHUB_DB_USER') ?: '') . ' AIHUB_DB_PASS=' . escapeshellarg(getenv('AIHUB_DB_PASS') ?: '');
+  $out = (string)shell_exec("cd " . escapeshellarg(dirname(__DIR__)) . " && $env php scripts/newsletter_send_mock.php --file=" . escapeshellarg($issueFile) . " 2>&1");
+  $files = glob("$outbox/*.json") ?: [];
+  ok(count($files) === 2 && strpos($out, 'Nothing was sent') !== false, 'mock delivery writes one message per CONFIRMED subscriber only (' . count($files) . ')');
+  $msgs = array_map(fn($f) => json_decode((string)file_get_contents($f), true), $files); $to = array_column($msgs, 'to'); sort($to);
+  ok($to === ['ok1@example.test', 'ok2@example.test'], 'pending and unsubscribed addresses are skipped');
+  ok(count(array_filter($msgs, fn($m) => !empty($m['mock']) && strpos($m['text'], 'Unsubscribe:') !== false && isset($m['headers']['List-Unsubscribe']))) === 2, 'every message has an unsubscribe link and a List-Unsubscribe header');
+  $refuse = (string)shell_exec("cd " . escapeshellarg(dirname(__DIR__)) . " && AIHUB_MAIL_TRANSPORT=smtp php scripts/newsletter_send_mock.php --file=" . escapeshellarg($issueFile) . " 2>&1; echo EXIT=\$?");
+  ok(strpos($refuse, 'Real newsletter sending is not enabled') !== false && strpos($refuse, 'EXIT=1') !== false, 'the script refuses to run with a real transport');
+  putenv('AIHUB_MAIL_TRANSPORT=file'); putenv('AIHUB_MAIL_OUTBOX=' . $outbox);
+  ok(mail_transport() === 'file' && send_mail('x@example.test', "Sub\r\nBcc: evil@example.test", '<p>x</p>') === true, 'file transport accepts a message');
+  $last = json_decode((string)file_get_contents(array_values(array_diff(glob("$outbox/*.json"), $files))[0]), true);
+  ok(strpos($last['subject'], "\n") === false && strpos($last['subject'], "\r") === false, 'header injection in the subject is neutralised');
+  putenv('AIHUB_MAIL_TRANSPORT'); putenv('AIHUB_MAIL_OUTBOX');
+  foreach (glob("$outbox/*") ?: [] as $f) @unlink($f); @rmdir($outbox); @unlink($issueFile);
+  $pdo->exec("DELETE FROM subscribers");
+}
+
+section('P4 content templates, evidence gates and linter');
+$tpls = content_templates();
+ok(count($tpls) === 6 && isset($tpls['best-for-task'], $tpls['a-vs-b'], $tpls['alternatives'], $tpls['industry-workflow'], $tpls['agent-implementation'], $tpls['pricing-comparison']), 'all six required templates exist');
+foreach ($tpls as $k => $t) ok(!empty($t['sections']) && !empty($t['never']) && isset($t['min_reviewed'], $t['min_sources_per_tool']), "template $k lists sections, forbidden claims and evidence minimums");
+ok(editorial_gate('industry-workflow', ['tools' => array_values(array_filter($byId, fn($t) => !empty($t['curated'])))])['pass'] === false, 'industry workflows cannot be published without recorded hands-on testing and editor approval');
+ok(editorial_gate('agent-implementation', ['tools' => array_values(array_filter($byId, fn($t) => !empty($t['curated']))), 'human_approved' => true])['pass'] === false, 'agent guides stay blocked without test evidence even when approved');
+$three = array_values(array_filter($byId, fn($t) => in_array($t['id'], ['otter-ai', 'trint', 'sonix'], true)));
+ok(editorial_gate('pricing-comparison', ['tools' => $three])['pass'] === true, 'pricing comparison passes for three reviewed, sourced tools');
+ok(editorial_gate('pricing-comparison', ['tools' => array_slice($three, 0, 2)])['pass'] === false, 'pricing comparison is blocked with only two tools');
+ok(editorial_gate('pricing-comparison', ['tools' => [$byId['otter-ai'], $byId['trint'], ['id' => 'raw', 'name' => 'Raw']]])['pass'] === false, 'an unreviewed tool does not count toward the minimum');
+ok(editorial_gate('nope', [])['pass'] === false, 'unknown templates never pass');
+$g = pricing_groups($byId);
+ok(isset($g['meetings-transcription']) && isset($g['general-ai-assistants']) && !isset($g['image-generation-editing']), 'pricing groups exist only where three reviewed tools have sources');
+ok(editorial_lint('We tested all of them and our tests show Acme wins.')['problems'] !== [], 'lint: unsupported testing claims');
+ok(editorial_lint('We tested it.', ['acme'])['problems'] === [], 'lint: testing claims allowed when an evidence record exists');
+ok(editorial_lint('The best AI writing tool, the number one choice.')['problems'] !== [], 'lint: superlatives without a methodology link');
+ok(editorial_lint('The best-ranked tool, see our methodology for how we rank.')['problems'] === [], 'lint: superlatives allowed with a methodology reference');
+ok(editorial_lint('Guaranteed results, 100% accurate and risk-free.')['problems'] !== [], 'lint: guaranteed/absolute claims');
+ok(editorial_lint(str_repeat('transcription software transcription tools transcription app ', 12))['problems'] !== [], 'lint: keyword stuffing');
+ok(editorial_lint('Short note about a tool and its plans.')['problems'] === [], 'lint: ordinary factual text passes');
+ok(editorial_lint('<p>Plain <b>text</b> only</p>')['words'] === 3, 'lint: counts words without markup');
+foreach (guides_all() as $slug => $guide) {
+  $text = strip_tags(json_encode($guide));
+  ok(!preg_match('/\b(we|our team) (tested|benchmarked)\b|\bhands-on\b|\bin our tests\b/i', $text), "existing guide $slug makes no testing claims");
+}
 
 // === P2–P5 sections are appended below ===
 

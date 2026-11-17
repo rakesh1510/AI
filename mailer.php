@@ -5,8 +5,24 @@ function mail_configured(): bool {
   return is_array($m) && !empty($m['smtp_host']) && !empty($m['from_email']);
 }
 
-function send_mail(string $to, string $subject, string $html, string $text = '', string $replyTo = ''): bool {
-  if (!mail_configured() || !filter_var($to, FILTER_VALIDATE_EMAIL)) return false;
+/**
+ * Mail transport. Default is SMTP via PHPMailer. With AIHUB_MAIL_TRANSPORT=file every message is written as a JSON file into
+ * AIHUB_MAIL_OUTBOX instead of being sent (mock delivery for tests and rehearsals; nothing leaves the machine).
+ */
+function mail_transport(): string { return strtolower(sec_setting('AIHUB_MAIL_TRANSPORT', 'mail_transport', 'smtp')) === 'file' ? 'file' : 'smtp'; }
+
+function mail_outbox_write(string $to, string $subject, string $html, string $text, string $replyTo, array $headers): bool {
+  $dir = sec_setting('AIHUB_MAIL_OUTBOX', 'mail_outbox');
+  if ($dir === '' || (!is_dir($dir) && !@mkdir($dir, 0700, true))) return false;
+  $name = rtrim($dir, '/') . '/' . date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.json';
+  return @file_put_contents($name, json_encode(['to' => $to, 'subject' => $subject, 'html' => $html, 'text' => $text, 'reply_to' => $replyTo, 'headers' => $headers, 'mock' => true], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) !== false;
+}
+
+function send_mail(string $to, string $subject, string $html, string $text = '', string $replyTo = '', array $headers = []): bool {
+  if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return false;
+  $subject = preg_replace('/[\r\n]+/', ' ', $subject);
+  if (mail_transport() === 'file') return mail_outbox_write($to, $subject, $html, $text !== '' ? $text : trim(strip_tags($html)), $replyTo, $headers);
+  if (!mail_configured()) return false;
   $autoload = __DIR__ . '/vendor/autoload.php';
   if (!is_file($autoload)) return false;
   require_once $autoload;
@@ -27,7 +43,8 @@ function send_mail(string $to, string $subject, string $html, string $text = '',
     $mail->addAddress($to);
     if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) $mail->addReplyTo($replyTo);
     $mail->isHTML(true);
-    $mail->Subject = preg_replace('/[\r\n]+/', ' ', $subject);
+    $mail->Subject = $subject;
+    foreach ($headers as $hk => $hv) { if (preg_match('/^[A-Za-z-]+$/', (string)$hk)) $mail->addCustomHeader((string)$hk, preg_replace('/[\r\n]+/', ' ', (string)$hv)); }
     $mail->Body = $html;
     $mail->AltBody = $text !== '' ? $text : trim(strip_tags($html));
     return $mail->send();

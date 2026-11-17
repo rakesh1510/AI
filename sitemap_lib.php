@@ -18,7 +18,7 @@ function sitemap_entries(): array {
   $add(site_url('/'), $today, 'daily', '1.0');
   foreach ([
     ['/categories.php', 'weekly', '0.9'], ['/guides.php', 'weekly', '0.9'], ['/methodology.php', 'monthly', '0.6'], ['/top.php', 'daily', '0.8'], ['/leaderboard.php', 'daily', '0.7'],
-    ['/compare.php', 'weekly', '0.7'], ['/solutions.php', 'weekly', '0.8'], ['/comparisons.php', 'weekly', '0.7'], ['/ai-use-case-explorer.php', 'weekly', '0.7'],
+    ['/compare.php', 'weekly', '0.7'], ['/solutions.php', 'weekly', '0.8'], ['/recommend.php', 'monthly', '0.8'], ['/changelog.php', 'weekly', '0.6'], ['/comparisons.php', 'weekly', '0.7'], ['/ai-use-case-explorer.php', 'weekly', '0.7'],
     ['/blog.php', 'weekly', '0.6'], ['/filters.php', 'monthly', '0.4'], ['/community.php', 'weekly', '0.4'],
     ['/submit.php', 'monthly', '0.5'], ['/business.php', 'monthly', '0.6'], ['/disclosure.php', 'yearly', '0.3'], ['/advertise.php', 'monthly', '0.4'], ['/about.php', 'yearly', '0.4'],
     ['/contact.php', 'yearly', '0.4'], ['/disclaimer.php', 'yearly', '0.2'], ['/privacy.php', 'yearly', '0.2'],
@@ -45,6 +45,16 @@ function sitemap_entries(): array {
   foreach (alternatives_eligible($byId) as $altId) $add(alternatives_url($altId), (string)($byId[$altId]['curated']['review']['reviewed_on'] ?? '') ?: null, 'monthly', '0.7');
 
   foreach (solutions_indexable_slugs($tools) as $slug) $add(solution_url($slug), null, 'weekly', '0.7');   // evidence-gated: >= 3 reviewed tools
+
+  if ($pg = pricing_groups($byId)) {   // evidence-gated: >= 3 reviewed tools with >= 2 sources each
+    $add(site_url('/pricing-comparison.php'), null, 'weekly', '0.7');
+    foreach (array_keys($pg) as $gs) $add(site_url('/pricing-comparison.php?group=' . rawurlencode($gs)), null, 'weekly', '0.7');
+  }
+
+  if (newsletter_issues_public()) {
+    $add(site_url('/newsletter-archive.php'), null, 'weekly', '0.5');
+    foreach (newsletter_issues_public() as $slug => $i) $add(newsletter_issue_url($slug), (string)$i['published_on'], 'yearly', '0.4');
+  }
 
   foreach (load_use_cases() as $slug => $case) $add(use_case_page_url((string)$slug), null, 'weekly', '0.6');
 

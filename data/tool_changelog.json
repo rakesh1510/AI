@@ -1,0 +1,4 @@
+{
+  "note": "Editor-verified changes to tools. An entry counts as verified only when it has a kind, a date that is not in the future, a one-sentence summary, at least one evidence URL (a vendor page), a verifier name and a verified_on date. Use scripts/add_changelog_entry.php to add entries; it applies the same validation. Entries are never generated or guessed. The public change log also lists, separately labelled, when each profile's sources were retrieved (derived from the review data).",
+  "entries": []
+}

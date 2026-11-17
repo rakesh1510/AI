@@ -213,6 +213,7 @@ function event_schema(): array {
     'newsletter_signup' => ['source'],               // server-side, after a valid request
     'newsletter_confirmed' => [],
     'lead_submit' => [],                             // ref = lead type (server-side)
+    'wizard_complete' => ['budget'],                 // server-side; ref = objective key (no personal data)
   ];
 }
 
