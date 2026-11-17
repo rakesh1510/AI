@@ -17,13 +17,13 @@ $verifiedAny = fn(array $set) => (bool)array_filter($set, fn($t) => tool_evidenc
 
 // 1. Existing problem pages (live behind the evidence gate): keep them correct
 foreach (solutions_all() as $slug => $p) {
-  $set = array_map(fn($r) => $r['tool'], solution_results_cached($slug, 12)); [$st, $why] = $gateText('best-for-task', $set);
+  $res = solution_results($tools, $p, 12); $set = array_map(fn($r) => $r['tool'], $res); /* live computation: the backlog must not depend on a cache */ [$st, $why] = $gateText('best-for-task', $set);
   $rev = count(array_filter($set, fn($t) => !empty($t['curated'])));
   $add(['type' => 'task', 'working_title' => $p['title'], 'search_intent' => 'A person has a job to do and wants a shortlist with reasons', 'audience' => 'Individuals and small teams',
     'proof_needed' => 'Each listed tool: vendor pricing and feature pages (2+ sources), editor verification; hands-on test for any "best for" claim',
     'differentiation' => 'Shows documented vs unknown per tool, reasons per result, no paid placement influence', 'internal_links' => 'tools in results; /compare.php; /recommend.php',
     'conversion_goal' => 'Wizard start or newsletter sign-up', 'publication_gate' => 'best-for-task: 3+ tools, 3+ reviewed, 2+ sources each', 'gate_now' => $st . ($rev < 3 ? ' (only ' . $rev . ' reviewed)' : ''), 'blocked_by' => $why,
-    'state' => 'exists (' . (solution_indexable(solution_results_cached($slug, 12)) ? 'indexable' : 'noindex') . ')', 'verification_state' => $verifiedAny($set) ? 'partly verified' : 'no tool verified by an editor', 'priority_score' => 60 + $rev * 3, 'volume' => $vol]);
+    'state' => 'exists (' . (solution_indexable($res) ? 'indexable' : 'noindex') . ')', 'verification_state' => $verifiedAny($set) ? 'partly verified' : 'no tool verified by an editor', 'priority_score' => 60 + $rev * 3, 'volume' => $vol]);
 }
 // 2. Proposed task pages from well-populated subcategories (only where reviewed tools could exist)
 $bySub = []; foreach ($tools as $t) { $s = ($t['subcategory'] ?? '') ?: ''; if ($s !== '' && $s !== 'Unclassified') $bySub[$s][] = $t; }
