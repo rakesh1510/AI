@@ -3,7 +3,7 @@ require_once __DIR__ . '/helpers.php';
 $title = "Contact — AIHubpedia";
 $meta_desc = "Contact AIHubpedia for partnerships, tool updates, paid listings, or feedback.";
 
-session_start();
+sec_session_start();
 if (empty($_SESSION['csrf'])) {
   $_SESSION['csrf'] = bin2hex(random_bytes(16));
 }

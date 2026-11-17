@@ -1,12 +1,19 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/seo.php';
 require_once __DIR__ . '/catalog.php';
+require_once __DIR__ . '/evidence.php';
 require_once __DIR__ . '/content.php';
 require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/discovery.php';
 require_once __DIR__ . '/ui.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/conversion.php';
+require_once __DIR__ . '/leads_admin.php';
+require_once __DIR__ . '/recommend_engine.php';
+require_once __DIR__ . '/editorial.php';
+require_once __DIR__ . '/cache.php';
 
 // ----------------------
 // JSON helpers
@@ -69,13 +76,25 @@ function site_cfg(){
           $decoded = json_decode($val, true);
           $cfg[$key] = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
         }
-        return $cache = $cfg;
+        return $cache = site_cfg_harden($cfg);
       }
     } catch(Throwable $e){
       // fallback to JSON
     }
   }
-  return $cache = read_json('site.json', []);
+  return $cache = site_cfg_harden(read_json('site.json', []));
+}
+
+/** Secrets come from the environment / config.local.php when set; the legacy plain-text admin password is never exposed. */
+function site_cfg_harden(array $cfg): array {
+  unset($cfg['admin_pass']);
+  $m = (isset($cfg['mail']) && is_array($cfg['mail'])) ? $cfg['mail'] : [];
+  foreach (['smtp_host' => 'AIHUB_SMTP_HOST', 'smtp_port' => 'AIHUB_SMTP_PORT', 'smtp_secure' => 'AIHUB_SMTP_SECURE', 'smtp_user' => 'AIHUB_SMTP_USER', 'smtp_pass' => 'AIHUB_SMTP_PASS', 'from_email' => 'AIHUB_MAIL_FROM', 'to_email' => 'AIHUB_MAIL_TO'] as $k => $env) {
+    $v = sec_setting($env, 'mail.' . $k);
+    if ($v !== '') $m[$k] = $k === 'smtp_port' ? (int)$v : $v;
+  }
+  if ($m) $cfg['mail'] = $m;
+  return $cfg;
 }
 function exclude_categories(){
   $cfg = site_cfg();
@@ -275,28 +294,36 @@ function db_connection_available(){
   return function_exists('db');
 }
 
+/**
+ * Votes and click counts need the CURRENT table shape (visitor_id, ip_hash, up/down votes). A database created from the older install
+ * files has ip_address/user_agent columns and an ENUM('like','dislike'); writing to it would fail on every request, so such a database is
+ * treated as "interactions unavailable" and the JSON fallback is used for reads. See scripts/db_preflight.php.
+ */
 function interaction_tables_exist(){
   static $checked = null;
   if($checked !== null) return $checked;
-  return $checked = (db_table_exists('tool_votes') && db_table_exists('tool_clicks'));
+  if(!(db_table_exists('tool_votes') && db_table_exists('tool_clicks'))) return $checked = false;
+  try {
+    $pdo = db();
+    foreach([['tool_clicks','visitor_id'],['tool_clicks','ip_hash'],['tool_votes','visitor_id'],['tool_votes','ip_hash'],['tool_votes','vote_type']] as [$t,$c]){
+      if(!db_column_exists($pdo, $t, $c)) return $checked = false;
+    }
+    $ty = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tool_votes' AND COLUMN_NAME = 'vote_type'");
+    $ty->execute();
+    $type = strtolower((string)$ty->fetchColumn());
+    if(strpos($type, 'enum') === 0 && strpos($type, "'up'") === false) return $checked = false;   // ENUM('like','dislike') cannot store 'up'/'down'
+    return $checked = true;
+  } catch(Throwable $e){ return $checked = false; }
+}
+
+/** True when writes to the interaction tables can succeed (database configured, reachable and in the current shape). */
+function interactions_writable(): bool {
+  try { return db_connection_available() && function_exists('db') && interaction_tables_exist(); } catch(Throwable $e){ return false; }
 }
 
 function client_ip_address(){
-  foreach(['HTTP_CF_CONNECTING_IP','HTTP_X_REAL_IP','HTTP_X_FORWARDED_FOR','REMOTE_ADDR'] as $key){
-    if(empty($_SERVER[$key])) continue;
-    $value = trim((string)$_SERVER[$key]);
-    if($key === 'HTTP_X_FORWARDED_FOR'){
-      $parts = array_map('trim', explode(',', $value));
-      foreach($parts as $part){
-        if(filter_var($part, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)){
-          return substr($part, 0, 45);
-        }
-      }
-      $value = $parts[0] ?? '';
-    }
-    if($value !== '' && filter_var($value, FILTER_VALIDATE_IP)) return substr($value, 0, 45);
-  }
-  return null;
+  // Forwarded headers are only honoured from configured trusted proxies (see security.php).
+  return sec_client_ip();
 }
 
 function visitor_id(){
@@ -409,7 +436,15 @@ function compare_tool_total_score($tool){
   return ($features * 2) + ($pros * 2) + ($useCases * 2) + ($hasLong * 2);
 }
 
+/**
+ * Logo URL for a tool. Order: a locally hosted copy (assets/logos/<id>.png|webp, created by scripts/cache_logos.php: no third-party
+ * request, no visitor data sent to Google), then an explicit logo from the catalogue, then Google's favicon service as the last resort.
+ */
 function tool_logo($t){
+  $id = preg_replace('/[^a-z0-9._-]/i', '', (string)($t['id'] ?? ''));
+  if($id !== ''){
+    foreach(['webp', 'png'] as $ext){ if(is_file(__DIR__ . '/assets/logos/' . $id . '.' . $ext)) return '/assets/logos/' . $id . '.' . $ext; }
+  }
   if(!empty($t['logo'])) return $t['logo'];
   $url = $t['website'] ?? '';
   $dom = tool_domain($url);
@@ -637,7 +672,7 @@ function load_reviews_demo(){ return read_json_file_safe(reviews_demo_file(), []
 function save_reviews_demo($data){ write_json_file_safe(reviews_demo_file(), $data); }
 
 function current_demo_user_id(){
-  if(session_status() === PHP_SESSION_NONE){ @session_start(); }
+  sec_session_start();
   return $_SESSION['demo_user_id'] ?? null;
 }
 function is_logged_in_demo(){ return current_demo_user_id() !== null; }
@@ -776,9 +811,7 @@ function get_visitor_id(): string
 
 function get_ip_hash(): string
 {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    $secret = 'change-this-to-a-long-random-secret';
-    return hash('sha256', $ip . $secret);
+    return sec_ip_hash('vote');
 }
 
 function vote_tool_action(string $toolId, string $type): bool

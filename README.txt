@@ -12,7 +12,7 @@ Install:
 3) Open index.php
 
 Admin:
-admin.php?pass=admin123  (change in data/site.json)
+admin.php (disabled until AIHUB_ADMIN_PASS_HASH is set; see docs/phase4/DEPLOYMENT_CHECKLIST.md)
 
 Generate comparison SEO pages:
 php generate_compare_pages.php 200
@@ -33,6 +33,6 @@ Paid listings (monetization)
    - $99 Homepage Spotlight (14 days)
 
 3) Admin flow:
-   - Open: admin.php?pass=admin123
+   - Open: admin.php and sign in (the old ?pass= URL login was removed)
    - For paid submissions: click "Mark paid", then "Approve"
    - Featured tools will appear on the homepage in "Featured listings"

@@ -29,8 +29,11 @@ if ($ok) {
     $pdo = db();
     if (lead_rate_limited($pdo, 'leads', $ipHash, 5)) { http_response_code(429); $errors['_bot'] = 'Too many requests from your network. Please try again later or email contact@aihubpedia.com.'; $ok = false; }
     else {
-      lead_store($pdo, $clean, $ipHash);
-      lead_notify_owner($clean);                      // best effort: the lead is stored even if email is unavailable
+      $leadId = lead_store($pdo, $clean, $ipHash);
+      // Best effort: the lead is stored even if email is unavailable. The outcome is recorded (as a safe code) so the admin can see failures.
+      $sent = false; try { $sent = lead_notify_owner($clean); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, 'inquiry:notify'); }
+      try { lead_record_notification($pdo, $leadId, $sent, mail_last_error()); } catch (Throwable $e) { sec_log_exception($e, 'inquiry:notify-record'); }
+      if (!$sent) sec_log('lead_notification_failed', ['lead' => $leadId, 'reason' => mail_last_error()]);
       event_record_server('lead_submit', $clean['lead_type']);
       header('Location: /inquiry.php?sent=' . rawurlencode($clean['lead_type']), true, 303);
       exit;
@@ -45,6 +48,6 @@ if ($unavailable) {
   echo '<div class="noticeBox" role="alert"><strong>We could not save your request right now.</strong> Please try again later or email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a>.</div>';
 } else {
   echo '<h1>Please check your request</h1><p class="small">Some details need attention. Nothing was sent yet.</p><div class="panel" style="max-width:720px">'
-     . render_lead_form(['types' => $allowed, 'values' => $_POST, 'errors' => $errors, 'id' => 'lead', 'source' => $clean['source_page'] ?: $page, 'budget' => $group === 'business', 'message_label' => 'Message']) . '</div>';
+     . render_lead_form(['types' => $allowed, 'values' => $_POST, 'errors' => $errors, 'id' => 'lead', 'source' => $clean['source_page'] ?: $page, 'budget' => $group === 'business', 'packages' => $group === 'advertise', 'message_label' => 'Message']) . '</div>';
 }
 require __DIR__ . '/layout_bottom.php';

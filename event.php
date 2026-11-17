@@ -21,7 +21,7 @@ $row = event_normalize($in, true);
 if ($row === null) { http_response_code(400); exit; }
 try {
   if (!db_table_exists('events')) { http_response_code(204); exit; }
-  $ip = (string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''));
+  $ip = sec_client_ip();
   event_insert(db(), $row, analytics_visitor_hash($ip, $ua, analytics_hash_period(time())), !empty($in['returning']));
 } catch (Throwable $e) { /* never surface errors to visitors */ }
 http_response_code(204);

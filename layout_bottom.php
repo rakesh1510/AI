@@ -1,3 +1,6 @@
+<?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+?>
 </main>
 
 <?php $__js_app = @filemtime(__DIR__ . '/assets/js/app.js') ?: '1'; ?>
@@ -86,7 +89,7 @@
 <dialog class="privacyDialog" data-privacy-dialog aria-labelledby="privTitle">
   <form method="dialog">
     <h2 id="privTitle">Privacy choices</h2>
-    <p class="small">AIHubpedia works without cookies or trackers. Your theme, saved tools and recently viewed tools are stored only in this browser. If you allow it, we also record anonymous usage events (searches, clicks, comparisons) to improve the site; no name, email or IP address is attached.</p>
+    <p class="small">AIHubpedia works without cookies or trackers. Your theme, saved tools, saved shortlists and recently viewed tools are stored only in this browser. If you allow it, we also record anonymous usage events (searches, clicks, comparisons) to improve the site; no name, email or IP address is attached.</p>
     <label class="check"><input type="checkbox" data-consent-toggle> Allow anonymous usage statistics</label>
     <div class="actions"><button class="btn" value="close">Done</button></div>
   </form>

@@ -109,6 +109,30 @@ require __DIR__ . '/layout_top.php';
       </ul>
     </details>
   </section>
+  <?php $ev = tool_evidence($t); $caps = tool_capabilities($t); ?>
+  <section class="evPanel ev-<?= h($ev['tone']) ?>" aria-labelledby="evTitle">
+    <h3 id="evTitle">Evidence and confidence: <?= render_evidence_badge($t, false) ?></h3>
+    <p class="evNote"><?= h($ev['desc']) ?></p>
+    <ul class="evNote" style="padding-left:18px;margin:6px 0">
+      <?php if($ev['reviewed_on']): ?><li>Sources retrieved: <?= h($ev['reviewed_on']) ?><?= $ev['age_days'] !== null ? ' (' . (int)$ev['age_days'] . ' days ago)' : '' ?></li><?php endif; ?>
+      <li><?= $ev['human_verified'] ? 'Editor verified on ' . h($ev['verified_on']) : 'Not yet verified by an editor on the live vendor pages' ?></li>
+      <?php if($ev['pricing_as_of']): ?><li>Pricing stated as of <?= h($ev['pricing_as_of']) ?><?= $ev['pricing_stale'] ? ' — <strong>older than ' . (int)EVIDENCE_STALE_DAYS . ' days, check the vendor page</strong>' : '' ?>; <?= h($ev['pricing_note']) ?></li><?php endif; ?>
+      <li><?= (int)$ev['source_count'] ?> source page<?= $ev['source_count'] === 1 ? '' : 's' ?> listed below<?= $ev['conflicts'] ? '; sources disagree on some points' : '' ?></li>
+    </ul>
+    <?php $docCaps = array_filter($caps, fn($c) => in_array($c['state'], ['documented', 'none_listed'], true)); $unkCaps = array_filter($caps, fn($c) => $c['state'] === 'unknown'); ?>
+    <h4 style="margin:12px 0 0">Documented capabilities</h4>
+    <?php if($docCaps): ?>
+      <ul class="capList">
+        <?php foreach($docCaps as $c): ?><li class="capDoc"><strong><?= h($c['label']) ?></strong><span class="capState"><?= h(capability_state_text($c['state'])) ?></span><span class="capEv"><?= h($c['evidence']) ?> <span class="small">(<?= h($c['field']) ?>)</span></span></li><?php endforeach; ?>
+      </ul>
+    <?php else: ?><p class="evNote">No capabilities are documented for this tool yet.</p><?php endif; ?>
+    <?php if($unkCaps): ?>
+      <details style="margin-top:10px"><summary>Unknown (<?= count($unkCaps) ?>): not documented in our sources</summary>
+        <p class="evNote">These are not statements that the tool lacks them. We have no sourced information, so check the vendor.</p>
+        <ul class="capList"><?php foreach($unkCaps as $c): ?><li><strong><?= h($c['label']) ?></strong><span class="capState">Unknown</span></li><?php endforeach; ?></ul>
+      </details>
+    <?php endif; ?>
+  </section>
   <?php elseif(!empty($t['classification']) && ($t['classification']['method'] ?? '') === 'rule'): ?>
     <p class="small">Category assigned automatically from the tool's description<?= ($t['classification']['confidence'] ?? '') !== 'high' ? ' (lower confidence, queued for review)' : '' ?>. <a href="/methodology.php">Learn how listings are classified</a>.</p>
   <?php endif; ?>
@@ -156,6 +180,7 @@ require __DIR__ . '/layout_top.php';
 
   <h2>Rate this tool</h2>
   <form method="post" action="/rate.php" class="card" style="background:rgba(255,255,255,.03)">
+    <?= sec_csrf_field('interact') ?>
     <input type="hidden" name="id" value="<?= h($t['id']) ?>">
     <label class="small" for="rateStars">Stars</label>
     <select name="stars" id="rateStars">
@@ -210,7 +235,7 @@ require __DIR__ . '/layout_top.php';
 <div class="card" style="margin-top:16px">
   <h2 style="margin-top:0">User actions</h2>
   <div class="actions">
-    <a class="btn secondary" rel="nofollow" href="/toggle-bookmark.php?id=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Save / Remove Bookmark</a>
+    <?php if(demo_login_enabled()): ?><form method="post" action="/toggle-bookmark.php" style="display:inline"><?= sec_csrf_field('bookmark') ?><input type="hidden" name="id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? ''), ENT_QUOTES) ?>"><button class="btn secondary">Save / Remove Bookmark</button></form><?php endif; ?>
     <a class="btn secondary" rel="nofollow" href="/compare-tools.php?a=<?= urlencode($t['id'] ?? ($_GET['id'] ?? '')) ?>">Compare this tool</a>
     <a class="btn secondary" rel="nofollow" href="/login.php">Demo Login</a>
   </div>
@@ -240,6 +265,8 @@ require __DIR__ . '/layout_top.php';
   <?php endif; ?>
 
   <form method="post" action="/submit-comment.php" style="margin-top:14px">
+    <?= sec_csrf_field('comment') ?>
+    <input type="text" name="website_url_confirm" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
     <input type="hidden" name="tool_id" value="<?= htmlspecialchars($t['id'] ?? ($_GET['id'] ?? '')) ?>">
     <label for="commentName">Your name</label>
     <input class="input" id="commentName" name="name" placeholder="Your name" autocomplete="name">
@@ -249,8 +276,14 @@ require __DIR__ . '/layout_top.php';
   </form>
 </div>
 
+<?php $related_links = tool_related_links($t, tools_by_id()); ?>
+<section class="panel" style="margin-top:22px" aria-labelledby="relLinks">
+  <h2 id="relLinks" style="margin-top:0">Explore related pages</h2>
+  <ul class="linkList"><?php foreach($related_links as $rl): ?><li><a href="<?= h($rl['url']) ?>"><?= h($rl['label']) ?></a> <span class="small">· <?= h($rl['why']) ?></span></li><?php endforeach; ?></ul>
+</section>
+
 <section class="panel" style="margin-top:22px" aria-labelledby="bizHelp">
   <h2 id="bizHelp" style="margin-top:0">Own this tool, or need something custom?</h2>
-  <p class="small">If you are the vendor, you can <a href="/advertise.php">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php">request a consultation</a> about a custom AI agent.</p>
+  <p class="small">If you are the vendor, you can <a href="/advertise.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>#request">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>">request a consultation</a> about a custom AI agent.</p>
 </section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

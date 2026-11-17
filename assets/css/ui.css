@@ -376,7 +376,7 @@ table.pretty th{color:var(--muted)}
 .compare-hero .btn{min-height:44px}
 
 /* ---------- Legacy text colours as theme tokens (compare, leaderboard, scores) ---------- */
-:root{--ink-title:#23185f;--ink-body:#4c4680;--ink-soft:#6c6685}
+:root{--ink-title:#23185f;--ink-body:#4c4680;--ink-soft:#5d5776}
 :root[data-theme="dark"]{--ink-title:#eef0ff;--ink-body:#c9cff0;--ink-soft:#a6aed2}
 @media (prefers-color-scheme:dark){:root:not([data-theme]){--ink-title:#eef0ff;--ink-body:#c9cff0;--ink-soft:#a6aed2}}
 .compare-form-grid .field label,.compare-card h2,.compare-card h2 a,.compare-summary h3,.compare-columns h3,.compare-final h2,.score-item__row,.snapshot-box strong,
@@ -404,3 +404,72 @@ table.pretty th{color:var(--muted)}
 .nw{white-space:nowrap}
 .floatCard:nth-child(2) .dot{background:linear-gradient(135deg,#0891b2,#2563eb)}
 .floatCard:nth-child(3) .dot{background:linear-gradient(135deg,#7c3aed,#db2777)}
+
+/* ---------- Phase 4: evidence, explanations, feature matrix ---------- */
+:root{--warn-ink:#7a4a00;--info-ink:#3730a3}
+:root[data-theme="dark"]{--warn-ink:#fcd34d;--info-ink:#c7d2fe}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--warn-ink:#fcd34d;--info-ink:#c7d2fe}}
+.evBadge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:.78rem;line-height:1.5}
+.evBadge .evDot{width:8px;height:8px;border-radius:50%;background:var(--muted,#8b8aa5);flex:none}
+.evBadge.ev-ok .evDot{background:var(--green-ink)}
+.evBadge.ev-info .evDot{background:var(--brand)}
+.evBadge.ev-warn .evDot{background:#d97706}
+.evBadge .evDate{opacity:.85}
+.tCard__evidence{margin:6px 0 0}
+.tCard__why{margin:8px 0 0;font-size:.82rem;color:var(--ink-body)}
+.evPanel{border:1px solid var(--border);border-radius:18px;padding:16px 18px;background:var(--surface);margin:14px 0}
+.evPanel h3{margin:0 0 6px}
+.evPanel .evNote{font-size:.9rem;color:var(--ink-body);margin:6px 0}
+.evPanel.ev-warn{border-color:#d97706}
+.capList{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.capList li{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:var(--surface-2);font-size:.88rem}
+.capList .capState{display:block;font-size:.75rem;font-weight:600;color:var(--ink-soft)}
+.capList .capDoc .capState{color:var(--green-ink)}
+.capList .capEv{display:block;font-size:.78rem;color:var(--ink-body);margin-top:2px}
+.matrixWrap{overflow-x:auto;margin:14px 0}
+table.matrix{width:100%;border-collapse:collapse;min-width:420px}
+table.matrix th,table.matrix td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.matrix thead th{background:var(--surface-2);color:var(--text)}
+table.matrix tr.differs td,table.matrix tr.differs th[scope=row]{background:color-mix(in srgb,var(--brand) 7%,transparent)}
+.cellState{font-weight:600}
+.cellState.s-documented{color:var(--green-ink)}
+.cellState.s-unknown,.cellState.s-not_reviewed{color:var(--ink-soft)}
+.cellState.s-none_listed,.cellState.s-listing{color:var(--warn-ink)}
+.cellEv{display:block;font-size:.78rem;font-weight:400;color:var(--ink-body)}
+@media (max-width:640px){
+  table.matrix{min-width:0}
+  table.matrix thead{position:absolute;left:-9999px}
+  table.matrix tr{display:block;border:1px solid var(--border);border-radius:14px;margin:0 0 12px;overflow:hidden}
+  table.matrix th[scope=row]{display:block;background:var(--surface-2)}
+  table.matrix td{display:block;border-bottom:1px solid var(--border)}
+  table.matrix td::before{content:attr(data-label);display:block;font-size:.75rem;color:var(--ink-soft);font-weight:600}
+}
+.altWhy{margin:4px 0 0;font-size:.85rem;color:var(--ink-body)}
+.altWhy li{margin:2px 0}
+
+/* ---------- Phase 4: advertiser pages ---------- */
+.faqItem{border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin:0 0 10px;background:var(--surface)}
+.faqItem summary{cursor:pointer;font-weight:600;color:var(--ink-title)}
+.faqItem p{margin:8px 0 0;color:var(--ink-body)}
+table.pkgTable{min-width:720px}
+@media (max-width:640px){table.pkgTable{min-width:0}}
+
+/* ---------- Phase 4: recommendation wizard ---------- */
+.wizard fieldset{border:0;padding:0;margin:0 0 22px}
+.wizard legend{font-weight:700;font-size:1.05rem;margin-bottom:10px;color:var(--ink-title);padding:0}
+.wizard .req,.wizard .opt{font-weight:400;font-size:.85rem;color:var(--ink-soft)}
+.choiceGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.choice{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2);cursor:pointer;min-height:48px}
+.choice input{margin-top:3px;flex:none;width:20px;height:20px}
+.choice:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 9%,var(--surface))}
+.choice:focus-within{outline:3px solid color-mix(in srgb,var(--brand) 55%,transparent);outline-offset:2px}
+.wizardResults{margin-top:28px;scroll-margin-top:84px}
+.recList{list-style:none;margin:16px 0;padding:0;display:grid;gap:16px}
+.recHead{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.recRank{color:var(--brand)}
+.recWhy{padding-left:18px;font-size:.92rem;color:var(--ink-body)}
+.recItem h4{margin:14px 0 4px}
+
+/* ---------- Phase 4: change log / archive ---------- */
+.timeline{list-style:none;margin:12px 0;padding:0;display:grid;gap:12px}
+.timeline li{border-left:3px solid var(--border);padding:2px 0 2px 14px;color:var(--ink-body)}

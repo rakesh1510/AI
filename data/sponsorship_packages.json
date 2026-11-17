@@ -1,0 +1,18 @@
+{
+  "note": "Package catalogue for /advertise.php. 'listed' packages are the existing configured list prices (data/site.json payment.pricing, USD, one-off). 'inquiry' packages are NOT priced publicly: the proposed monthly featured placement and newsletter sponsorship are documented in docs/phase4/B2B_REVENUE_STRATEGY.md and stay inquiry-only until the owner approves the structure. No audience, traffic, subscriber or conversion figures may be added here unless measured and approved.",
+  "packages": {
+    "free":      {"kind": "listed",  "label": "Free listing",               "duration": "Standard listing",     "placement": "Your tool profile and category page",                    "paid": false, "review": "Manual review; may take several days"},
+    "priority":  {"kind": "listed",  "label": "Priority approval",          "duration": "One-off",              "placement": "Same as a free listing, reviewed faster",                 "paid": true,  "review": "Reviewed within 24 hours of a complete submission"},
+    "featured":  {"kind": "listed",  "label": "Featured listing",           "duration": "7 days",               "placement": "Labelled “Sponsored” section on the homepage",            "paid": true,  "review": "Reviewed against the methodology first"},
+    "homepage":  {"kind": "listed",  "label": "Homepage spotlight",         "duration": "14 days",              "placement": "Top labelled “Sponsored” homepage spotlight",             "paid": true,  "review": "Reviewed against the methodology first"},
+    "featured_monthly": {"kind": "inquiry", "label": "Monthly featured placement", "duration": "Monthly (to be agreed)", "placement": "Labelled “Sponsored” slots, dates agreed in writing", "paid": true, "review": "Reviewed against the methodology first", "status_text": "Price on request. We are still defining monthly packages, so tell us what you would like."},
+    "newsletter_sponsor": {"kind": "inquiry", "label": "Newsletter sponsorship", "duration": "Per issue (to be agreed)", "placement": "A labelled sponsor slot in an AIHubpedia email", "paid": true, "review": "Reviewed against the methodology first", "status_text": "Not available yet: the AIHubpedia newsletter has not launched, so there is no audience figure to quote. Register interest and we will contact you if sponsor slots exist."}
+  },
+  "goals": {
+    "": "Prefer not to say",
+    "awareness": "Be discovered by people comparing tools",
+    "signups": "Get more sign-ups or trials",
+    "partnership": "Explore a partnership or affiliate programme",
+    "other": "Something else"
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "note": "Capability keywords used to read documented facts out of curated profiles (key_features, use_cases, summary, best_for, strengths). A capability is 'documented' only when the sourced profile mentions it. Not being documented never means a tool lacks the capability: it means AIHubpedia has no sourced statement about it.",
+  "capabilities": {
+    "free_plan": {
+      "label": "Free plan or free tier",
+      "special": "pricing"
+    },
+    "code_assistance": {
+      "label": "Code assistance",
+      "keywords": [
+        "code assistance",
+        "coding help",
+        "coding",
+        "programming",
+        "code generation",
+        "writing code"
+      ]
+    },
+    "image_generation": {
+      "label": "Image creation",
+      "keywords": [
+        "image creation",
+        "image generation",
+        "generate image",
+        "create image",
+        "text-to-image",
+        "text to image",
+        "ai image"
+      ]
+    },
+    "voice": {
+      "label": "Voice input or output",
+      "keywords": [
+        "voice",
+        "speech",
+        "text to speech",
+        "text-to-speech",
+        "dictation"
+      ]
+    },
+    "web_research": {
+      "label": "Research with web sources",
+      "keywords": [
+        "deep research",
+        "web search",
+        "search the web",
+        "citations",
+        "cited sources",
+        "answer engine",
+        "web research",
+        "live web"
+      ]
+    },
+    "document_qa": {
+      "label": "Questions about your own documents",
+      "keywords": [
+        "pdf",
+        "your documents",
+        "uploaded",
+        "upload files",
+        "upload documents",
+        "source documents",
+        "your own documents"
+      ]
+    },
+    "transcription": {
+      "label": "Transcription or meeting notes",
+      "keywords": [
+        "transcri",
+        "meeting notes",
+        "meeting summar",
+        "captions",
+        "speech-to-text",
+        "speech to text"
+      ]
+    },
+    "writing_editing": {
+      "label": "Writing and editing",
+      "keywords": [
+        "writing",
+        "drafting",
+        "editing",
+        "grammar",
+        "rewrite",
+        "proofread",
+        "copywriting"
+      ]
+    },
+    "summarization": {
+      "label": "Summarisation",
+      "keywords": [
+        "summaris",
+        "summariz",
+        "summary of",
+        "summaries"
+      ]
+    },
+    "team_plans": {
+      "label": "Team or business plans",
+      "keywords": [
+        "team plan",
+        "business plan",
+        "business and enterprise",
+        "enterprise",
+        "seats",
+        "seat-based",
+        "per user",
+        "team workspace",
+        "team collaboration"
+      ]
+    },
+    "integrations": {
+      "label": "Integrations with other tools",
+      "keywords": [
+        "integration",
+        "integrates",
+        "plugin",
+        "microsoft 365",
+        "slack",
+        "zoom",
+        "google workspace",
+        "connects to",
+        "connectors"
+      ]
+    },
+    "translation": {
+      "label": "Translation or many languages",
+      "keywords": [
+        "translat",
+        "multilingual",
+        "languages",
+        "localis",
+        "localiz"
+      ]
+    },
+    "api_access": {
+      "label": "API access",
+      "keywords": [
+        "api",
+        "developer platform"
+      ]
+    },
+    "scheduling": {
+      "label": "Scheduling and planning",
+      "keywords": [
+        "schedul",
+        "calendar",
+        "task management",
+        "time blocking"
+      ]
+    },
+    "seo_content": {
+      "label": "SEO and content optimisation",
+      "keywords": [
+        "seo",
+        "content optim",
+        "content strategy",
+        "keyword"
+      ]
+    }
+  }
+}

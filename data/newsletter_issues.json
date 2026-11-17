@@ -1,0 +1,4 @@
+{
+  "note": "Newsletter issues. Only issues with status 'published' appear on the public archive. The newsletter has not launched, so there are none yet. Drafts are created by scripts/newsletter_roundup.php, reviewed by a person, and published by changing status and adding 'published_on'. Nothing in this repository sends email to real subscribers.",
+  "issues": {}
+}

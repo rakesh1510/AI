@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Builds the list of indexable URLs for the XML sitemap and llms.txt.
  * Only canonical, indexable (HTTP 200, no noindex) URLs are included.
@@ -9,17 +10,16 @@ function sitemap_entries(): array {
   $data = load_tools();
   $tools = $data['tools'] ?? [];
   $cats = $data['categories'] ?? [];
-  $today = date('Y-m-d');
   $entries = [];
   $add = function (string $loc, ?string $lastmod = null, string $freq = 'weekly', string $prio = '0.5') use (&$entries) {
     $entries[$loc] = ['loc' => $loc, 'lastmod' => $lastmod, 'changefreq' => $freq, 'priority' => $prio];
   };
 
-  $add(site_url('/'), $today, 'daily', '1.0');
+  $add(site_url('/'), null, 'daily', '1.0');   // no lastmod: the homepage changes with the catalogue, and an invented date would be inaccurate
   foreach ([
     ['/categories.php', 'weekly', '0.9'], ['/guides.php', 'weekly', '0.9'], ['/methodology.php', 'monthly', '0.6'], ['/top.php', 'daily', '0.8'], ['/leaderboard.php', 'daily', '0.7'],
-    ['/compare.php', 'weekly', '0.7'], ['/comparisons.php', 'weekly', '0.7'], ['/ai-use-case-explorer.php', 'weekly', '0.7'],
-    ['/blog.php', 'weekly', '0.6'], ['/filters.php', 'monthly', '0.4'], ['/community.php', 'weekly', '0.4'],
+    ['/compare.php', 'weekly', '0.7'], ['/solutions.php', 'weekly', '0.8'], ['/recommend.php', 'monthly', '0.8'], ['/changelog.php', 'weekly', '0.6'], ['/comparisons.php', 'weekly', '0.7'], ['/ai-use-case-explorer.php', 'weekly', '0.7'],
+    ['/filters.php', 'monthly', '0.4'], ['/community.php', 'weekly', '0.4'],
     ['/submit.php', 'monthly', '0.5'], ['/business.php', 'monthly', '0.6'], ['/disclosure.php', 'yearly', '0.3'], ['/advertise.php', 'monthly', '0.4'], ['/about.php', 'yearly', '0.4'],
     ['/contact.php', 'yearly', '0.4'], ['/disclaimer.php', 'yearly', '0.2'], ['/privacy.php', 'yearly', '0.2'],
     ['/terms.php', 'yearly', '0.2'], ['/impressum.php', 'yearly', '0.2'],
@@ -31,18 +31,32 @@ function sitemap_entries(): array {
   foreach ($cats as $c) {
     $n = (int)($counts[$c] ?? 0);
     if ($n === 0 || $c === CATALOG_UNCLASSIFIED) continue;   // the catch-all bucket is noindex
-    $add(category_page_url($c), $today, 'weekly', '0.8');
-    for ($p = 2, $pages = (int)ceil($n / 48); $p <= $pages; $p++) $add(category_page_url($c, $p), $today, 'weekly', '0.4');
+    $catAdded = array_filter(array_map(fn($t) => ($t['category'] ?? '') === $c && !empty($t['added']) && strtotime((string)$t['added']) ? date('Y-m-d', strtotime((string)$t['added'])) : null, $tools));
+    $catMod = $catAdded ? max($catAdded) : null;   // newest listing date in the category (real data), otherwise omitted
+    $add(category_page_url($c), $catMod, 'weekly', '0.8');
+    for ($p = 2, $pages = (int)ceil($n / 48); $p <= $pages; $p++) $add(category_page_url($c, $p), $catMod, 'weekly', '0.4');
     // Subcategory landing pages with at least three tools.
     $subCounts = [];
     foreach ($tools as $t) { if (($t['category'] ?? '') === $c && ($t['subcategory'] ?? '') !== '') $subCounts[$t['subcategory']] = ($subCounts[$t['subcategory']] ?? 0) + 1; }
-    foreach ($subCounts as $sub => $sn) { if ($sn >= 3) $add(category_page_url($c, 1, $sub), $today, 'weekly', '0.6'); }
+    foreach ($subCounts as $sub => $sn) { if ($sn >= 3) $add(category_page_url($c, 1, $sub), $catMod, 'weekly', '0.6'); }
   }
 
   foreach (guides_all() as $slug => $g) $add(guide_url($slug), (string)($g['updated'] ?? null) ?: null, 'monthly', '0.8');
   $byId = [];
   foreach ($tools as $t) $byId[(string)$t['id']] = $t;
   foreach (alternatives_eligible($byId) as $altId) $add(alternatives_url($altId), (string)($byId[$altId]['curated']['review']['reviewed_on'] ?? '') ?: null, 'monthly', '0.7');
+
+  foreach (solutions_indexable_slugs($tools) as $slug) $add(solution_url($slug), null, 'weekly', '0.7');   // evidence-gated: >= 3 reviewed tools
+
+  if ($pg = pricing_groups($byId)) {   // evidence-gated: >= 3 reviewed tools with >= 2 sources each
+    $add(site_url('/pricing-comparison.php'), null, 'weekly', '0.7');
+    foreach (array_keys($pg) as $gs) $add(site_url('/pricing-comparison.php?group=' . rawurlencode($gs)), null, 'weekly', '0.7');
+  }
+
+  if (newsletter_issues_public()) {
+    $add(site_url('/newsletter-archive.php'), null, 'weekly', '0.5');
+    foreach (newsletter_issues_public() as $slug => $i) $add(newsletter_issue_url($slug), (string)$i['published_on'], 'yearly', '0.4');
+  }
 
   foreach (load_use_cases() as $slug => $case) $add(use_case_page_url((string)$slug), null, 'weekly', '0.6');
 
@@ -57,7 +71,8 @@ function sitemap_entries(): array {
 
   foreach (available_comparison_pairs($tools, 24) as [$a, $b]) $add(compare_page_url($a['id'], $b['id']), null, 'monthly', '0.5');
 
-  foreach (load_posts() as $p) {
+  if (posts_indexable()) $add(site_url('/blog.php'), null, 'weekly', '0.6');
+  foreach (posts_indexable() as $p) {
     $slug = (string)($p['slug'] ?? '');
     if ($slug === '') continue;
     $d = (string)($p['date'] ?? '');

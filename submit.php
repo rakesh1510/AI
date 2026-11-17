@@ -16,8 +16,18 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
   $short = trim($_POST['short'] ?? '');
   $plan = trim($_POST['plan'] ?? 'free');
 
-  if($name==='' || $category==='' || $website==='' || $short===''){
+  $name = mb_substr($name, 0, 120); $category = mb_substr($category, 0, 80); $short = mb_substr($short, 0, 600);
+  $safeSite = sec_safe_external_url((preg_match('#^https?://#i', $website) ? $website : 'https://' . $website));
+  if(!sec_csrf_ok('submit') || !empty($_POST['website_url_confirm'])){
+    sec_log('submit_rejected', ['why' => empty($_POST['website_url_confirm']) ? 'csrf' : 'honeypot']);
+    $err = "Your form expired. Please reload the page and try again.";
+  } elseif(sec_rate_limited('submit_tool', 5, 3600)){
+    sec_log('rate_limited', ['scope' => 'submit_tool']);
+    $err = "Too many submissions from your network. Please try again later.";
+  } elseif($name==='' || $category==='' || $website==='' || $short===''){
     $err = "Please fill in all fields.";
+  } elseif($safeSite === null){
+    $err = "Please enter a valid public website address (http or https).";
   } elseif(!isset($tiers[$plan])){
     $err = "Invalid plan.";
   } else {
@@ -25,7 +35,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $price = (int)($tier['price'] ?? 0);
 
     require_once __DIR__ . '/db.php';
-
+try {
 $stmt = db()->prepare("
 INSERT INTO submissions
 (name, category, website, short_desc, plan, price, currency, status, payment_status)
@@ -36,7 +46,7 @@ VALUES
 $stmt->execute([
   ':name' => $name,
   ':category' => $category,
-  ':website' => $website,
+  ':website' => $safeSite,
   ':short_desc' => $short,
   ':plan' => $plan,
   ':price' => $price,
@@ -45,6 +55,7 @@ $stmt->execute([
 ]);
     $ok = true;
     $selected = $plan;
+    } catch(Throwable $e){ sec_log_exception($e, 'submit.php'); $err = "Sorry, your submission could not be saved. Please try again later."; }
   }
 }
 
@@ -195,6 +206,8 @@ require __DIR__ . '/layout_top.php';
       <p class="small">We review all submissions before publishing.</p>
 
       <form method="post">
+        <?= sec_csrf_field('submit') ?>
+        <input type="text" name="website_url_confirm" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
         <div class="fieldRow">
           <div>
             <label class="small">Tool name</label>

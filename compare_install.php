@@ -1,4 +1,6 @@
 <?php
+// Maintenance script: command line only. Never reachable over HTTP.
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/db.php';
 
 $sqlFile = __DIR__ . '/database/install_compare_tables.sql';

@@ -39,7 +39,7 @@ require __DIR__ . '/layout_top.php';
 ?>
 <div class="pageHero" style="padding-top:0">
   <h1><?= $q !== '' ? 'Results for “' . h($q) . '”' : 'Search AI tools' ?></h1>
-  <p class="lead">Ranked from the AIHubpedia database by name, category, tags and description. Tools with reviewed, sourced profiles rank higher.</p>
+  <p class="lead">Ranked from the AIHubpedia database by name, category, tags and description. Tools with reviewed, sourced profiles rank higher, and each result says why it matched. Related words (for example “transcribe” and “transcription”) are labelled. <a href="/methodology.php#search">How ranking works</a>.</p>
 </div>
 <div style="max-width:760px;margin:6px 0 22px"><?= render_search_box('pageSearch', ['big' => true, 'source' => 'results', 'value' => $q]) ?></div>
 
@@ -79,7 +79,7 @@ require __DIR__ . '/layout_top.php';
   <?php else: ?>
     <p class="small"><?= (int)$total ?> <?= $total === 1 ? 'result' : 'results' ?><?= $pages > 1 ? ' · page ' . (int)$page . ' of ' . (int)$pages : '' ?></p>
     <div class="cardGrid">
-      <?php foreach ($slice as $r) echo render_tool_card($r['tool'], ['placement' => 'search', 'heading' => 2]); ?>
+      <?php foreach ($slice as $r) echo render_tool_card($r['tool'], ['placement' => 'search', 'heading' => 2, 'why' => $r['reasons'] ?? [], 'evidence' => true]); ?>
     </div>
     <?php if ($pages > 1): ?>
       <nav class="pager" aria-label="Pagination">

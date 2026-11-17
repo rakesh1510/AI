@@ -1,0 +1,171 @@
+{
+  "note": "Task and business-problem entry points. Text here is editorial guidance written for AIHubpedia (what to look for, questions to ask), not product claims. Tools are ranked live from the catalogue with the transparent search rules in discovery.php. A problem page is indexable only when at least three tools with reviewed, sourced profiles match; otherwise it is noindex.",
+  "problems": {
+    "transcribe-meetings-and-interviews": {
+      "title": "Transcribe meetings, calls and interviews",
+      "problem": "Teams lose decisions and action items because nobody has time to write good notes, and journalists, researchers and podcasters need searchable transcripts.",
+      "query": "transcription",
+      "icon": "mic",
+      "look_for": [
+        "Accuracy on your accents, audio quality and vocabulary (test with your own recordings)",
+        "Languages supported",
+        "Whether a recording bot joins your calls and who gets notified",
+        "Export formats and where recordings and transcripts are stored",
+        "Price per seat versus per hour of audio"
+      ],
+      "ask_vendors": [
+        "Is audio used to train your models, and can we opt out?",
+        "Where is data stored and for how long?",
+        "What happens to a transcript if we cancel?"
+      ]
+    },
+    "summarize-long-documents-and-pdfs": {
+      "title": "Summarise long documents and PDFs",
+      "problem": "Reports, contracts and papers are too long to read in full, and you need answers with a pointer to where in the document they came from.",
+      "query": "summarize pdf documents",
+      "icon": "search",
+      "look_for": [
+        "Whether answers cite the passage they came from",
+        "Upload size and page limits on the plan you would use",
+        "Whether documents are kept or used for training",
+        "Support for scanned documents",
+        "Team sharing"
+      ],
+      "ask_vendors": [
+        "Are uploaded files stored, and can they be deleted?",
+        "Which file types and sizes are supported on each plan?"
+      ]
+    },
+    "research-a-topic-with-sources": {
+      "title": "Research a topic and keep the sources",
+      "problem": "You need a quick, well-sourced overview of a market, technology or question and must be able to check every claim.",
+      "query": "research answer engine citations",
+      "icon": "search",
+      "look_for": [
+        "Visible, clickable citations for each claim",
+        "Ability to restrict or choose sources",
+        "How it handles topics with little reliable material",
+        "Free-tier limits on deep research"
+      ],
+      "ask_vendors": [
+        "How are sources selected and ranked?",
+        "Can we export answers with their citations?"
+      ]
+    },
+    "draft-and-edit-business-writing": {
+      "title": "Draft and polish business writing",
+      "problem": "Emails, proposals and web copy take too long to write, and consistent tone and grammar are hard to keep across a team.",
+      "query": "writing editing grammar",
+      "icon": "pen",
+      "look_for": [
+        "Style and tone controls that match your brand",
+        "Where it works (browser, Word, Google Docs, mobile)",
+        "Plagiarism and originality checks if you publish",
+        "Team style guides and admin controls",
+        "What text the vendor stores or learns from"
+      ],
+      "ask_vendors": [
+        "Is our text used to improve your models?",
+        "Can an admin set shared style rules?"
+      ]
+    },
+    "answer-customer-questions": {
+      "title": "Answer customer questions faster",
+      "problem": "Support teams face repetitive questions, and customers expect quick answers outside office hours.",
+      "query": "customer support chatbot",
+      "icon": "chat",
+      "look_for": [
+        "Can it answer only from your own help content?",
+        "Hand-over to a human with the full conversation",
+        "Languages and channels (web, email, chat apps)",
+        "Reporting on unresolved questions",
+        "Pricing per resolution versus per seat"
+      ],
+      "ask_vendors": [
+        "How do you prevent made-up answers?",
+        "Where are conversations stored?"
+      ]
+    },
+    "automate-repetitive-work": {
+      "title": "Automate repetitive work",
+      "problem": "Copying data between apps, routing requests and sending routine updates consume hours every week.",
+      "query": "automation workflow",
+      "icon": "bolt",
+      "look_for": [
+        "Connectors for the apps you already use",
+        "Error handling and run history",
+        "Whether non-developers can build and maintain flows",
+        "Limits on runs or tasks per plan",
+        "Human approval steps for risky actions"
+      ],
+      "ask_vendors": [
+        "What happens when a step fails?",
+        "Can we restrict who may connect accounts?"
+      ]
+    },
+    "write-and-review-code": {
+      "title": "Write, explain and review code",
+      "problem": "Developers want help with boilerplate, explanations, tests and reviews without leaking private code.",
+      "query": "code assistant programming",
+      "icon": "code",
+      "look_for": [
+        "Supported editors and languages",
+        "Whether private code is retained or used for training",
+        "Context awareness of your repository",
+        "Licence and attribution handling for generated code",
+        "Seat pricing and usage limits"
+      ],
+      "ask_vendors": [
+        "Is our code used to train models?",
+        "Is there an enterprise data-protection mode?"
+      ]
+    },
+    "create-images-and-graphics": {
+      "title": "Create images and graphics for marketing",
+      "problem": "Small teams need on-brand visuals quickly, without a design agency for every post.",
+      "query": "image generation design",
+      "icon": "image",
+      "look_for": [
+        "Commercial-use terms for generated images",
+        "Brand kit, fonts and template support",
+        "Editing tools beyond generation",
+        "Export formats and resolution on each plan"
+      ],
+      "ask_vendors": [
+        "Who owns the output and what are the commercial terms?",
+        "How do you handle people and trademarks in generated images?"
+      ]
+    },
+    "plan-and-schedule-work": {
+      "title": "Plan your day and schedule work",
+      "problem": "Calendars fill with meetings and tasks pile up, so deadlines slip and focus time disappears.",
+      "query": "scheduling calendar planner",
+      "icon": "bolt",
+      "look_for": [
+        "Calendar and task integrations you rely on",
+        "How much control you keep over automatic scheduling",
+        "Team scheduling and time zones",
+        "Price per user"
+      ],
+      "ask_vendors": [
+        "Which calendars are supported and what permissions do you request?"
+      ]
+    },
+    "improve-seo-content": {
+      "title": "Improve SEO content",
+      "problem": "Content teams need to cover a topic fully, match search intent and keep pages up to date.",
+      "query": "seo content optimization",
+      "icon": "chart",
+      "look_for": [
+        "Where its keyword and competitor data comes from",
+        "Briefs versus automatic drafting",
+        "Integration with your CMS and analytics",
+        "Editorial review steps so published content is accurate"
+      ],
+      "ask_vendors": [
+        "What data sources are used for scoring?",
+        "How often is the data refreshed?"
+      ]
+    }
+  }
+}

@@ -1,4 +1,6 @@
 <?php
+// Maintenance script: command line only. Never reachable over HTTP.
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/helpers.php';
 
 if(!compare_tables_exist()){

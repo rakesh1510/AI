@@ -26,7 +26,7 @@ $first = $r[0]['tool'];
 ok(!empty($first['curated']), 'a reviewed profile outranks unreviewed matches');
 $r = search_tools_ranked($tools, 'perplexty', 3);
 ok(($names($r)[0] ?? '') === 'Perplexity' && !empty($r[0]['fuzzy']), 'typo tolerance finds Perplexity from "perplexty"');
-$r = search_tools_ranked($tools, 'write blog', 5);
+$r = search_tools_ranked($tools, 'chat zebrafish', 5);
 ok(count($r) > 0 && !empty($r[0]['partial']), 'multi-word queries fall back to partial matches');
 ok(search_tools_ranked($tools, 'xqzvwk', 5) === [], 'nonsense query returns nothing');
 ok(search_tools_ranked($tools, '', 5) === [] && search_tools_ranked($tools, 'a', 5) === [], 'empty and 1-char queries return nothing');

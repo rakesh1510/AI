@@ -1,0 +1,194 @@
+{
+ "note": "Authoritative list of the database objects the PHP code reads or writes, derived from the code (grep of every SQL statement). Phase 2/3/4 and compare tables are read from their SQL files by scripts/db_preflight.php. Used only for read-only comparison; nothing here changes a database.",
+ "tables": {
+  "categories": {
+   "feature": "database-backed catalogue",
+   "if_missing_or_incompatible": "whole catalogue falls back to the JSON files",
+   "required": true,
+   "defined_in": [
+    "database/full_mysql_schema.sql"
+   ],
+   "notes": "",
+   "columns": {
+    "id": "int",
+    "slug": "varchar",
+    "name": "varchar",
+    "description": "text"
+   }
+  },
+  "tools": {
+   "feature": "database-backed catalogue",
+   "if_missing_or_incompatible": "catalogue falls back to the JSON files (different data if the two diverge)",
+   "required": true,
+   "defined_in": [
+    "database/full_mysql_schema.sql"
+   ],
+   "notes": "",
+   "columns": {
+    "id": "int",
+    "slug": "varchar",
+    "name": "varchar",
+    "category_id": "int",
+    "short_description": "text",
+    "description": "text",
+    "features": "text",
+    "pros": "text",
+    "cons": "text",
+    "use_cases": "text",
+    "pricing": "varchar",
+    "website": "varchar",
+    "affiliate": "varchar",
+    "added": "varchar",
+    "tags": "text",
+    "logo": "varchar",
+    "pricing_type": "varchar",
+    "seo_title": "varchar",
+    "seo_description": "text",
+    "featured_level": "int",
+    "featured_until": "date",
+    "status": "varchar"
+   }
+  },
+  "posts": {
+   "feature": "blog posts from the database",
+   "if_missing_or_incompatible": "posts fall back to data/posts.json",
+   "required": false,
+   "defined_in": [
+    "database/full_mysql_schema.sql"
+   ],
+   "notes": "",
+   "columns": {
+    "id": "int",
+    "slug": "varchar",
+    "title": "varchar",
+    "excerpt": "text",
+    "content": "text",
+    "published_at": "date",
+    "status": "varchar"
+   }
+  },
+  "use_cases": {
+   "feature": "use-case pages from the database",
+   "if_missing_or_incompatible": "use cases fall back to data/use_cases.json",
+   "required": false,
+   "defined_in": [
+    "database/full_mysql_schema.sql (columns icon..benefits are NOT in the file: added by hand in the live database or by tests/setup_test_db.sh)"
+   ],
+   "notes": "Schema drift: the committed file lacks icon, description, hero_text, audience, popular_tasks, example_tools, benefits",
+   "columns": {
+    "id": "int",
+    "slug": "varchar",
+    "label": "varchar",
+    "icon": "varchar",
+    "description": "text",
+    "hero_text": "text",
+    "audience": "text",
+    "popular_tasks": "text",
+    "example_tools": "text",
+    "benefits": "text",
+    "keywords_json": "text",
+    "fallback_json": "text"
+   },
+   "ddl": {
+    "icon": "VARCHAR(20) NULL",
+    "description": "TEXT NULL",
+    "hero_text": "TEXT NULL",
+    "audience": "TEXT NULL",
+    "popular_tasks": "LONGTEXT NULL",
+    "example_tools": "LONGTEXT NULL",
+    "benefits": "LONGTEXT NULL"
+   }
+  },
+  "site_settings": {
+   "feature": "site configuration from the database (mail, pricing tiers)",
+   "if_missing_or_incompatible": "configuration falls back to data/site.json (credentials must then come from environment variables)",
+   "required": false,
+   "defined_in": [
+    "database/full_mysql_schema.sql"
+   ],
+   "notes": "",
+   "columns": {
+    "setting_key": "varchar",
+    "setting_value": "text"
+   }
+  },
+  "tool_clicks": {
+   "feature": "outbound click counts and popularity",
+   "if_missing_or_incompatible": "click counts fall back to data/clicks.json (seeded values, see catalogue audit)",
+   "required": true,
+   "defined_in": [
+    "tests/fixtures/interactions_current.sql (the committed install SQL defines ip_address/user_agent instead and is OUTDATED)"
+   ],
+   "notes": "Code writes visitor_id and ip_hash; database/aihub_interactions.sql and full_mysql_schema.sql create ip_address/user_agent. No committed migration covers tool_clicks",
+   "columns": {
+    "tool_slug": "varchar",
+    "visitor_id": "varchar",
+    "ip_hash": "varchar",
+    "created_at": "datetime"
+   },
+   "ddl": {
+    "visitor_id": "VARCHAR(64) NULL",
+    "ip_hash": "CHAR(64) NULL"
+   }
+  },
+  "tool_votes": {
+   "feature": "likes and dislikes",
+   "if_missing_or_incompatible": "votes fall back to data/tool_votes.json",
+   "required": true,
+   "defined_in": [
+    "tests/fixtures/interactions_current.sql; database/migrate_tool_votes_to_visitor_id.sql (partial: adds visitor_id only)"
+   ],
+   "notes": "Code stores vote_type up/down and ip_hash; the install SQL has ENUM(like,dislike) and ip_address with UNIQUE(tool_slug, ip_address)",
+   "columns": {
+    "id": "int",
+    "tool_slug": "varchar",
+    "visitor_id": "varchar",
+    "vote_type": "varchar",
+    "ip_hash": "varchar",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+   },
+   "ddl": {
+    "visitor_id": "CHAR(32) NULL",
+    "ip_hash": "CHAR(64) NULL"
+   }
+  },
+  "submissions": {
+   "feature": "tool submissions form",
+   "if_missing_or_incompatible": "the form shows an error and stores nothing",
+   "required": false,
+   "defined_in": [
+    "database/full_mysql_schema.sql (verify column names: the file uses a different shape in some versions)"
+   ],
+   "notes": "",
+   "columns": {
+    "name": "varchar",
+    "category": "varchar",
+    "website": "varchar",
+    "short_desc": "text",
+    "plan": "varchar",
+    "price": "int",
+    "currency": "varchar",
+    "status": "varchar",
+    "payment_status": "varchar"
+   }
+  },
+  "contact_messages": {
+   "feature": "contact form storage",
+   "if_missing_or_incompatible": "the form reports that the message could not be saved",
+   "required": false,
+   "defined_in": [
+    "tests/fixtures/interactions_current.sql only: NO production SQL file creates this table"
+   ],
+   "notes": "ip_address now receives a salted hash and user_agent stays empty (privacy)",
+   "columns": {
+    "name": "varchar",
+    "email": "varchar",
+    "subject": "varchar",
+    "message": "text",
+    "ip_address": "varchar",
+    "user_agent": "varchar"
+   }
+  }
+ }
+}

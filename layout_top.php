@@ -1,5 +1,7 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 require_once __DIR__ . '/helpers.php';
+sec_send_headers();
 
 /*
  * Page variables (all optional, set before including this file):
@@ -48,7 +50,7 @@ $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 $__built_css = is_file(__DIR__ . '/assets/css/site.min.css') ? (string)@filemtime(__DIR__ . '/assets/css/site.min.css') : '';   // built by scripts/build_assets.php
 $__hide_header_search = !empty($hide_header_search);
 $__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases']];
-$__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
+$__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
 ?>
 <!doctype html>
 <html lang="en" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>
@@ -64,8 +66,6 @@ $__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a too
 <?php endif; ?>
 <?= $__verify ?><meta name="application-name" content="AIHubpedia">
 <meta name="theme-color" content="#4f46e5">
-<link rel="preconnect" href="https://www.google.com" crossorigin>
-<link rel="dns-prefetch" href="https://t0.gstatic.com">
 <?php if ($__built_css): ?>
 <link rel="stylesheet" href="/assets/css/site.min.css?v=<?= h($__built_css) ?>">
 <?php else: ?>
@@ -92,6 +92,7 @@ $__navMore = [['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a too
 <meta name="twitter:image" content="<?= h($og_image) ?>">
 <?= isset($head_extra) ? $head_extra . "\n" : '' ?>
 <?= seo_jsonld($__jsonld) ?>
+<meta name="csrf-token" content="<?= htmlspecialchars(sec_csrf_token('interact'), ENT_QUOTES) ?>">
 </head>
 <body data-page="<?= h(analytics_page_type(seo_current_script())) ?>">
 <?= ui_icon_sprite() ?>

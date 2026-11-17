@@ -1,6 +1,7 @@
 <?php
 require_once 'helpers.php';
-session_start();
+sec_require_demo();
+sec_session_start();
 if(!is_logged_in_demo()){ header('Location: login.php'); exit; }
 $list = load_bookmarks_demo()[(string)current_demo_user_id()] ?? [];
 require __DIR__ . '/layout_top.php';

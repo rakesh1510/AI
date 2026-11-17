@@ -31,6 +31,11 @@ jobs:
       AIHUB_DB_NAME: aihub_test
       AIHUB_DB_USER: aihub_test
       AIHUB_DB_PASS: test_only_pw
+      AIHUB_RATE_DIR: /tmp/aihub_rate_ci
+      AIHUB_SECURITY_LOG: /tmp/aihub_security_ci.log
+      AIHUB_TEST_ADMIN_PW: ci-admin-test-pw
+      AIHUB_COMPAT_ROOT_USER: root
+      AIHUB_COMPAT_ROOT_PASS: root_test_only
     steps:
       - uses: actions/checkout@v4
 
@@ -52,14 +57,28 @@ jobs:
       - name: Data quality tests (taxonomy, classifier accuracy, profiles, analytics logic)
         run: php tests/data_quality_test.php
 
+      - name: Phase 4 logic tests (discovery, evidence, B2B funnel, wizard, SEO/GEO, newsletter)
+        run: php tests/phase4_logic_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
+
+      - name: Security regression tests (proxy trust, redirects, CSRF, rate limits, secrets, admin)
+        run: php tests/security_test.php
+
+      - name: Security inventory and secrets scan (every PHP file classified, no secrets in tracked files)
+        run: php tests/security_inventory_test.php
+
+      - name: Database compatibility scenarios (synthetic databases built from the repository SQL)
+        run: php tests/db_compat_test.php
 
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
       - name: Start SMTP sink and PHP server
         run: |
+          mkdir -p "$AIHUB_RATE_DIR"
+          export AIHUB_ADMIN_PASS_HASH="$(php -r 'echo password_hash(getenv("AIHUB_TEST_ADMIN_PW"), PASSWORD_DEFAULT);')"
           nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
           AIHUB_ANALYTICS=1 AIHUB_ANALYTICS_SALT=ci-test-salt nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
           sleep 2
@@ -67,6 +86,24 @@ jobs:
 
       - name: SEO tests (incl. every sitemap URL)
         run: php tests/seo_test.php http://127.0.0.1:8002 --full-sitemap
+
+      - name: Seed synthetic leads (test database only; the logic tests above clear the table)
+        run: php scripts/seed_synthetic_leads.php --count=24
+
+      - name: Security tests against the running server (CSRF, origin, GET inertness, blocked files, admin login)
+        run: php tests/security_http_test.php http://127.0.0.1:8002
+
+      - name: Negative security tests (hostile barrage, forms abuse, spoofed headers, admin brute force)
+        run: php tests/security_negative_http_test.php http://127.0.0.1:8002
+
+      - name: B2B lead reliability with mock mail (failure visibility, retry, status workflow)
+        run: php tests/lead_reliability_test.php http://127.0.0.1:8002
+
+      - name: Editorial verification queue (read-only audit of all tools)
+        run: php scripts/editorial_queue.php --top=5
+
+      - name: SEO and GEO audit gate (every sitemap URL, titles, canonicals, JSON-LD, duplicates)
+        run: php scripts/seo_audit.php http://127.0.0.1:8002
 
       - uses: actions/setup-node@v4
         with:
@@ -87,6 +124,11 @@ jobs:
         env:
           NODE_PATH: /tmp/pw/node_modules
         run: node tests/browser_ux_test.js http://127.0.0.1:8002 ./ci-screenshots ci-ux
+
+      - name: Phase 4 browser tests (wizard, problem pages, evidence matrix, advertiser page; desktop, mobile, no-JS)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_phase4_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p4
 
       - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
         env:

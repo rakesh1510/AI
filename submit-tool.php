@@ -1,1 +1,5 @@
-<form method="post" action="submit_tool_save.php"><h2>Submit AI Tool</h2><input name="name" placeholder="Tool name"><br><textarea name="description"></textarea><br><input name="url" placeholder="Website URL"><br><button>Submit</button></form>
+<?php
+// Retired legacy form (posted to an unauthenticated catalogue writer). Use /submit.php.
+header('X-Robots-Tag: noindex');
+header('Location: /submit.php', true, 301);
+exit;

@@ -1,4 +1,6 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+require_once __DIR__ . '/security.php';
 /**
  * First-party, privacy-preserving traffic measurement.
  *
@@ -81,7 +83,7 @@ function analytics_build_row(array $server, array $get, int $status, int $ts, st
   $optOut = (($server['HTTP_DNT'] ?? '') === '1') || (($server['HTTP_SEC_GPC'] ?? '') === '1');
   $country = strtoupper(substr((string)($server['HTTP_CF_IPCOUNTRY'] ?? ($server['HTTP_X_COUNTRY_CODE'] ?? '')), 0, 2));
   if (!preg_match('/^[A-Z]{2}$/', $country)) $country = 'XX';
-  $ip = (string)($server['HTTP_CF_CONNECTING_IP'] ?? ($server['REMOTE_ADDR'] ?? ''));
+  $ip = sec_client_ip($server);
   return [
     'viewed_at' => date('Y-m-d H:i:s', $ts), 'day' => date('Y-m-d', $ts), 'path' => substr($path, 0, 190),
     'page_type' => analytics_page_type((string)($server['SCRIPT_NAME'] ?? '')), 'status' => $status,

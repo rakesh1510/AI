@@ -1,24 +1,8 @@
 <?php
-require_once 'helpers.php';
-session_start();
-$toolId = trim($_GET['id'] ?? '');
-$type = $_GET['type'] ?? 'up';
-$return = trim($_GET['return'] ?? '');
-if($toolId !== ''){
-  vote_tool_action($toolId, $type);
-}
-
-$allowedPages = [
-  'index.php','top.php','categories.php','category.php','community.php','leaderboard.php',
-  'tool.php','compare.php','compare-tools.php','filters.php','ai-use-case-explorer.php'
-];
-$target = 'tool.php?id=' . urlencode($toolId) . '#community';
-if($return !== ''){
-  $returnPath = parse_url($return, PHP_URL_PATH) ?: $return;
-  $baseName = basename($returnPath);
-  if(in_array($baseName, $allowedPages, true)){
-    $target = $return;
-  }
-}
-header('Location: ' . $target);
+// Legacy GET voting link. State-changing GET requests are CSRF-prone and prefetchable, so this no longer records anything:
+// it just sends the visitor back to the tool page. Voting uses POST /rate.php or /vote-tool-ajax.php with a CSRF token.
+require_once __DIR__ . '/helpers.php';
+$toolId = trim((string)($_GET['id'] ?? ''));
+sec_log('legacy_get_vote_ignored');
+header('Location: ' . ($toolId !== '' ? '/tool.php?id=' . urlencode($toolId) . '#community' : '/index.php'), true, 303);
 exit;

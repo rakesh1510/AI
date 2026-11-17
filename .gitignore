@@ -3,3 +3,7 @@ ci-screenshots/
 tests/screenshots/
 # generated per install; signs form tokens (never commit)
 data/.form_secret
+
+# local, untracked configuration (database/mail/admin secrets); see docs/phase4/DEPLOYMENT_CHECKLIST.md
+config.local.php
+data/security.log

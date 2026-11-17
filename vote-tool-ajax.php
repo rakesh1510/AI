@@ -2,33 +2,15 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
-}
-
 header('Content-Type: application/json');
+sec_guard_write('interact', 40, 600);
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Invalid request']);
-        exit;
-    }
-
-    $toolId = trim($_POST['id'] ?? '');
-    $type = trim($_POST['type'] ?? 'up');
-
-    if ($toolId === '') {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'message' => 'Missing tool id']);
-        exit;
-    }
-
-    if ($type !== 'up' && $type !== 'down') {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'message' => 'Invalid vote type']);
-        exit;
-    }
+    $toolId = trim((string)($_POST['id'] ?? ''));
+    $type = trim((string)($_POST['type'] ?? 'up'));
+    if ($toolId === '' || !find_tool($toolId)) { sec_fail(422, 'Unknown tool'); }
+    if ($type !== 'up' && $type !== 'down') { sec_fail(422, 'Invalid vote type'); }
+    if (!interactions_writable()) { header('Retry-After: 300'); sec_fail(503, 'Voting is temporarily unavailable.'); }
 
     $ok = vote_tool_action($toolId, $type);
     $counts = tool_vote_breakdown($toolId);
@@ -41,9 +23,6 @@ try {
         'clicks' => function_exists('click_count') ? (int)click_count($toolId) : 0,
     ]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage(),
-    ]);
+    sec_log_exception($e, 'vote-tool-ajax.php');
+    sec_fail(500, 'Something went wrong. Please try again later.');
 }

@@ -17,4 +17,9 @@ require __DIR__ . '/layout_top.php';
     <div class="actions"><a class="btn" href="/categories.php">Browse categories</a><a class="btn secondary" href="/guides.php">Read the guides</a></div>
   </div>
 </div>
+<section class="panel" data-shortlists hidden style="margin-top:22px" aria-labelledby="slTitle">
+  <h2 id="slTitle" style="margin-top:0">Saved shortlists</h2>
+  <p class="small">Shortlists from the <a href="/recommend.php">recommendation wizard</a>, saved in this browser only.</p>
+  <ul class="linkList" data-shortlists-list></ul>
+</section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

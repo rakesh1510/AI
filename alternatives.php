@@ -26,15 +26,17 @@ $jsonld = [
   seo_breadcrumb_node($crumbs),
 ];
 $related = guides_for_tool($id);
+$why = [];
+foreach (tool_alternatives_ranked($t, $byId, 12) as $r) $why[$r['tool']['id']] = $r;
 require __DIR__ . '/layout_top.php';
 ?>
 <?= render_breadcrumbs($crumbs) ?>
 <article class="prose">
   <h1><?= h($t['name']) ?> alternatives</h1>
-  <p class="guideMeta">Facts from vendor pages collected <?= h($cp['review']['reviewed_on'] ?? '') ?> · <a href="/methodology.php">Methodology</a></p>
+  <p class="guideMeta"><?= render_evidence_badge($t) ?> · Facts from vendor pages collected <?= h($cp['review']['reviewed_on'] ?? '') ?> · <a href="/methodology.php">Methodology</a></p>
   <p>People look for <?= h($t['name']) ?> alternatives for practical reasons. From its vendor pages, the main limits to be aware of are:</p>
   <ul><?php foreach (array_slice($cp['limitations'] ?? [], 0, 3) as $l): ?><li><?= h($l) ?></li><?php endforeach; ?></ul>
-  <p>The tools below are other options in the “<?= h($t['subcategory'] ?: $t['category']) ?>” group that have reviewed profiles on AIHubpedia. We have not benchmarked output quality, so use the comparison to shortlist and then test.</p>
+  <p>The tools below are other options in the “<?= h($t['subcategory'] ?: $t['category']) ?>” group that have reviewed profiles on AIHubpedia. We have not benchmarked output quality, so use the comparison to shortlist and then test. “Why it is listed” shows the documented reasons; a capability we have no sourced statement about is treated as unknown, not as missing.</p>
 
   <h2><?= h($t['name']) ?> compared with its alternatives</h2>
   <?= render_profile_table(array_merge([$t], $alts)) ?>
@@ -47,6 +49,12 @@ require __DIR__ . '/layout_top.php';
       <li><strong>Free option:</strong> <?= h(profile_free_option($ap)) ?></li>
       <li><strong>Watch out for:</strong> <?= h(profile_key_limit($ap)) ?></li>
     </ul>
+    <?php if (!empty($why[$a['id']]['reasons'])): $w = $why[$a['id']]; ?>
+      <p class="altWhy"><strong>Why it is listed:</strong></p>
+      <ul class="altWhy"><?php foreach ($w['reasons'] as $rs): ?><li><?= h($rs) ?></li><?php endforeach; ?>
+        <?php if ($w['only_candidate']): ?><li>Also documents: <?= h(implode(', ', array_slice($w['only_candidate'], 0, 4))) ?></li><?php endif; ?>
+        <?php if ($w['pricing_differs']): ?><li>Pricing model differs from <?= h($t['name']) ?>: check the pricing details</li><?php endif; ?></ul>
+    <?php endif; ?>
     <p><a href="<?= h(tool_path($a['id'])) ?>"><?= h($a['name']) ?> profile</a> · <a href="<?= h(compare_path($t['id'], $a['id'])) ?>"><?= h($t['name']) ?> vs <?= h($a['name']) ?></a></p>
   <?php endforeach; ?>
 

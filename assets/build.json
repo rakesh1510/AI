@@ -1,9 +1,9 @@
 {
-    "built": "2026-11-15",
+    "built": "2026-11-17",
     "sources": {
         "assets/css/style.css": "852c95249e04d540de8e513978c6422e3afaff24",
-        "assets/css/ui.css": "9bec9dab360b35aba8798eb56673f0a5a547976e",
-        "assets/js/app.js": "161b4a03e83e8b4b11c82d3e383494873cf5db47",
-        "assets/js/interactions.js": "953fc859bc37129a7b11516103f45e694d7438de"
+        "assets/css/ui.css": "131e73e9c8f68373d0548ee216c5892700eca53e",
+        "assets/js/app.js": "5e3be3d0c4013a025d1ea94ff20f600ad9745312",
+        "assets/js/interactions.js": "55e52b28e92d145bbe17384876073d63409668c3"
     }
 }

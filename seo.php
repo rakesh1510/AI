@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Central technical-SEO helpers: canonical URLs, titles, descriptions,
  * robots directives, JSON-LD and per-page defaults.
@@ -108,6 +109,12 @@ function seo_page_registry(): array {
     'top.php' => ['title' => 'Top AI Tools — Ranked by Clicks & Ratings', 'desc' => 'The most-used AI tools on AIHubpedia, ranked by outbound clicks and visitor ratings. Compare categories, pricing and alternatives.'],
     'leaderboard.php' => ['title' => 'AI Tools Leaderboard — Community Popularity Ranking', 'desc' => 'Top 20 AI tools ranked by AIHubpedia visitor activity: outbound clicks, likes and dislikes. See how the popularity score is calculated.'],
     'compare.php' => ['title' => 'Compare AI Tools Side by Side', 'desc' => 'Pick any two AI tools and compare category, pricing, listed features, use cases, platforms and integrations side by side.'],
+    'recommend.php' => ['title' => 'AI Tool Recommendation Wizard: Get a Shortlist in Six Questions', 'desc' => 'Answer six questions about your goal, budget, team and experience and get a transparent shortlist of AI tools with reasons, pricing sources and limitations. No sign-up.'],
+    'changelog.php' => ['title' => 'Recently Updated AI Tool Profiles and Verified Change Log', 'desc' => 'When AIHubpedia last reviewed each tool profile, and the changes editors have verified against vendor pages. Nothing is guessed.'],
+    'newsletter-archive.php' => ['title' => 'AIHubpedia Newsletter Archive', 'desc' => 'Past AIHubpedia newsletter issues: notable AI tool price and plan changes and new guides, each item with its source.'],
+    'newsletter-issue.php' => ['title' => 'Newsletter Issue', 'desc' => 'An AIHubpedia newsletter issue.'],
+    'pricing-comparison.php' => ['title' => 'AI Tool Pricing Comparisons: Plans, Free Options and Sources', 'desc' => 'Compare AI tool pricing as stated by vendors, with retrieval dates, confidence notes and source links.'],
+    'solutions.php' => ['title' => 'Find AI Tools by Problem or Task', 'desc' => 'Start from the problem you need to solve and get a transparent, ranked shortlist of AI tools with the reasons for each match.'],
     'comparisons.php' => ['title' => 'AI Tool Comparisons — Popular Head-to-Head Matchups', 'desc' => 'Popular AI tool comparisons on AIHubpedia: chatbots, writing assistants, coding tools and more, compared side by side.'],
     'blog.php' => ['title' => 'AI Tools Blog — Guides & Shortlists', 'desc' => 'Guides, shortlists and updates to help you choose the right AI tools for writing, coding, design and productivity.'],
     'about.php' => ['title' => 'About AIHubpedia — Independent AI Tools Directory', 'desc' => 'Learn what AIHubpedia is, how AI tools are listed and organised, and how rankings and comparisons work.'],
@@ -133,9 +140,10 @@ function seo_page_registry(): array {
     'disclosure.php' => ['title' => 'Advertising & Affiliate Disclosure', 'desc' => 'How AIHubpedia labels sponsored placements and affiliate links, and why paid placements never change a tool profile.'],
     '404.php' => ['title' => 'Page Not Found', 'desc' => 'The page you requested could not be found.', 'robots' => 'noindex'],
     'admin.php' => ['title' => 'Admin', 'desc' => 'AIHubpedia administration area for managing listings and settings.', 'robots' => 'noindex'],
+    'admin-leads.php' => ['title' => 'Leads', 'desc' => 'AIHubpedia lead status and reporting (admin only).', 'robots' => 'noindex'],
     'login.php' => ['title' => 'Demo Login', 'desc' => 'Demo login for testing AIHubpedia bookmarks and saved AI tools.', 'robots' => 'noindex'],
     'bookmarks.php' => ['title' => 'My Bookmarks', 'desc' => 'Your saved AI tools on AIHubpedia, stored for this demo account.', 'robots' => 'noindex'],
-    'affiliate-dashboard.php' => ['title' => 'Affiliate Dashboard (Demo)', 'desc' => 'Preview of the AIHubpedia affiliate dashboard with demo figures.', 'robots' => 'noindex'],
+    'affiliate-dashboard.php' => ['title' => 'Affiliate reporting', 'desc' => 'Affiliate link reporting for AIHubpedia (no revenue figures are shown).', 'robots' => 'noindex'],
     'analytics-dashboard.php' => ['title' => 'Analytics Dashboard (Demo)', 'desc' => 'Preview of the AIHubpedia analytics dashboard with demo figures.', 'robots' => 'noindex'],
     'dark-mode-demo.php' => ['title' => 'Dark Mode Demo', 'desc' => 'Preview of the experimental AIHubpedia dark mode theme.', 'robots' => 'noindex'],
     'multilingual-demo.php' => ['title' => 'Multilingual Demo', 'desc' => 'Preview of experimental multilingual support on AIHubpedia.', 'robots' => 'noindex'],
@@ -165,6 +173,9 @@ function seo_canonical_params(): array {
     'post.php' => ['slug'],
     'ai-use-case.php' => ['slug'],
     'compare.php' => ['a', 'b'],
+    'solutions.php' => ['problem'],
+    'newsletter-issue.php' => ['slug'],
+    'pricing-comparison.php' => ['group'],
   ];
 }
 

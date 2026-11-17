@@ -1,4 +1,5 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
 /**
  * Database-powered discovery: ranked tool search, suggestions and goal-based entry points.
  *
@@ -8,16 +9,23 @@
  */
 
 function search_normalize(string $s): string {
-  $s = mb_strtolower($s, 'UTF-8');
-  $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
-  return trim(preg_replace('/\s+/u', ' ', $s));
+  static $memo = [];   // pure function: memoised because the same tool text is normalised for every query
+  if (isset($memo[$s])) return $memo[$s];
+  if (count($memo) > 30000) $memo = [];
+  $o = mb_strtolower($s, 'UTF-8');
+  $o = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $o);
+  return $memo[$s] = trim(preg_replace('/\s+/u', ' ', $o));
 }
 
 /** @return string[] tokens of at least 2 characters (a single 1-character query yields no tokens) */
 function search_tokens(string $q): array {
   $out = [];
   foreach (explode(' ', search_normalize($q)) as $t) { if (mb_strlen($t) >= 2) $out[] = $t; }
-  return array_values(array_unique($out));
+  $out = array_values(array_unique($out));
+  // Filler words ("tools to transcribe") must not match random descriptions; keep them only when nothing else is left.
+  $stop = ['tool', 'tools', 'best', 'top', 'ai', 'to', 'for', 'and', 'the', 'with', 'of', 'in', 'on', 'my', 'your', 'an', 'is', 'it', 'at', 'by', 'from', 'or', 'are', 'me', 'do', 'can', 'how'];
+  $kept = array_values(array_filter($out, fn($t) => !in_array($t, $stop, true)));
+  return $kept ?: $out;
 }
 
 /** Word-prefix containment: "tran" matches "transcription tool" and "otter transcribe". */
@@ -25,10 +33,81 @@ function search_has_word_prefix(string $haystack, string $needle): bool {
   return $needle !== '' && (strpos(' ' . $haystack, ' ' . $needle) !== false);
 }
 
+/** Editorial synonym groups (data/search_synonyms.json) as normalised term lists. */
+function search_synonym_groups(): array {
+  static $groups = null;
+  if ($groups !== null) return $groups;
+  $groups = [];
+  foreach ((catalog_json('search_synonyms.json', ['groups' => []])['groups'] ?? []) as $g) {
+    $terms = array_values(array_unique(array_filter(array_map('search_normalize', (array)$g), 'strlen')));
+    if (count($terms) >= 2) $groups[] = $terms;
+  }
+  return $groups;
+}
+
 /**
- * Rank tools for a query.
+ * Related terms for each query token: token => list of [term, from] where "from" is the group term that triggered it.
+ * A group is triggered by a single-word term equal to the token, or by a multi-word term that appears as a phrase in the query.
+ */
+function search_expansions(string $qn, array $tokens): array {
+  $out = [];
+  foreach (search_synonym_groups() as $terms) {
+    foreach ($terms as $trigger) {
+      $words = explode(' ', $trigger);
+      $phrase = count($words) > 1;
+      if ($phrase && !search_has_word_prefix($qn . ' ', $trigger . ' ')) continue;
+      if ($phrase) {
+        // A phrase is one concept: attach the related terms to its first query word; the other words are covered by it.
+        $inQuery = array_values(array_filter($words, fn($w) => in_array($w, $tokens, true)));
+        if (!$inQuery) continue;
+        $anchor = $inQuery[0];
+        foreach ($terms as $alt) { if ($alt !== $trigger) $out[$anchor][$alt] = $trigger; }
+        foreach (array_slice($inQuery, 1) as $w) $out['__covered'][$w] = $anchor;
+      } elseif (in_array($trigger, $tokens, true)) {
+        foreach ($terms as $alt) { if ($alt !== $trigger) $out[$trigger][$alt] = $trigger; }
+      }
+    }
+  }
+  $covered = $out['__covered'] ?? []; unset($out['__covered']);
+  $res = array_map(fn($m) => array_map(fn($alt, $from) => ['term' => (string)$alt, 'from' => $from], array_keys($m), $m), $out);
+  if ($covered) $res['__covered'] = $covered;
+  return $res;
+}
+
+/** Weight of the best field that contains $needle as a word prefix, with a short field label for explanations. */
+function search_field_match(array $f, string $needle): array {
+  $best = [0.0, ''];
+  $try = function (float $w, string $label, bool $hit) use (&$best) { if ($hit && $w > $best[0]) $best = [$w, $label]; };
+  $try(16, 'name', search_has_word_prefix($f['name'], $needle));
+  $try(10, 'name', strpos($f['name'], $needle) !== false);
+  $try(9, 'subcategory', search_has_word_prefix($f['sub'], $needle));
+  $try(6, 'category', search_has_word_prefix($f['cat'], $needle));
+  $try(4, 'tags', search_has_word_prefix($f['tags'], $needle));
+  $try(3, 'one-line description', search_has_word_prefix($f['short'], $needle));
+  $try(2, 'use cases and features', search_has_word_prefix($f['uses'], $needle));
+  $try(1, 'description', search_has_word_prefix($f['desc'], $needle));
+  return $best;
+}
+
+/** Normalised searchable fields of one tool, memoised by content so repeated queries do not re-normalise the whole catalogue. */
+function search_tool_fields(array $t): array {
+  static $memo = [];
+  $key = (string)($t['id'] ?? '') . '|' . crc32(json_encode([$t['name'] ?? '', $t['subcategory'] ?? '', $t['category'] ?? '', $t['tags'] ?? [], $t['short'] ?? '', $t['use_cases'] ?? [], $t['features'] ?? [], $t['description'] ?? '']));
+  if (isset($memo[$key])) return $memo[$key];
+  if (count($memo) > 20000) $memo = [];
+  return $memo[$key] = [
+    'name' => search_normalize((string)($t['name'] ?? '')), 'slug' => search_normalize((string)($t['id'] ?? '')),
+    'sub' => search_normalize((string)($t['subcategory'] ?? '')), 'cat' => search_normalize((string)($t['category'] ?? '')),
+    'tags' => search_normalize(implode(' ', (array)($t['tags'] ?? []))), 'short' => search_normalize((string)($t['short'] ?? '')),
+    'uses' => search_normalize(implode(' ', array_merge((array)($t['use_cases'] ?? []), (array)($t['features'] ?? [])))),
+    'desc' => search_normalize((string)($t['description'] ?? '')),
+  ];
+}
+
+/**
+ * Rank tools for a query with transparent rules. Each result carries "reasons": plain-language statements of why it matched.
  * @param array $tools  catalogue records (load_tools()['tools'])
- * @return array<int,array{tool:array,score:float}> best first
+ * @return array<int,array{tool:array,score:float,reasons:string[]}> best first
  */
 function search_tools_ranked(array $tools, string $q, int $limit = 24, array $filters = []): array {
   $qn = search_normalize($q);
@@ -36,45 +115,46 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
   if ($qn === '' || (!$tokens && mb_strlen($qn) < 2)) return [];
   if (!$tokens) $tokens = [$qn];
   $clicks = function_exists('all_click_counts') ? all_click_counts() : [];
+  $expansions = search_expansions($qn, $tokens);
+  $covered = $expansions['__covered'] ?? []; unset($expansions['__covered']);
   $results = []; $partial = [];
   foreach ($tools as $t) {
     if (!empty($filters['category']) && ($t['category'] ?? '') !== $filters['category']) continue;
     if (!empty($filters['pricing_type']) && strcasecmp((string)($t['pricing_type'] ?? ''), $filters['pricing_type']) !== 0) continue;
-    $name = search_normalize((string)($t['name'] ?? ''));
-    $slug = search_normalize((string)($t['id'] ?? ''));
-    $sub = search_normalize((string)($t['subcategory'] ?? ''));
-    $cat = search_normalize((string)($t['category'] ?? ''));
-    $tags = search_normalize(implode(' ', (array)($t['tags'] ?? [])));
-    $short = search_normalize((string)($t['short'] ?? ''));
-    $uses = search_normalize(implode(' ', array_merge((array)($t['use_cases'] ?? []), (array)($t['features'] ?? []))));
-    $desc = search_normalize((string)($t['description'] ?? ''));
-    $score = 0.0;
-    if ($qn === $name || $qn === $slug) $score += 100;
-    elseif (strpos($name, $qn) === 0) $score += 70;
-    elseif (search_has_word_prefix($name, $qn)) $score += 50;
-    elseif (strpos($name, $qn) !== false) $score += 35;
-    $matchedTokens = 0; $tokenScore = 0.0;
+    $f = search_tool_fields($t);
+    $score = 0.0; $reasons = [];
+    if ($qn === $f['name'] || $qn === $f['slug']) { $score += 100; $reasons[] = 'Exact name match'; }
+    elseif (strpos($f['name'], $qn) === 0) { $score += 70; $reasons[] = 'Name starts with your search'; }
+    elseif (search_has_word_prefix($f['name'], $qn)) { $score += 50; $reasons[] = 'A word in the name matches'; }
+    elseif (strpos($f['name'], $qn) !== false) { $score += 35; $reasons[] = 'Name contains your search'; }
+    $matchedTokens = 0; $tokenScore = 0.0; $altHit = [];
     foreach ($tokens as $tok) {
-      $m = 0.0;
-      if (search_has_word_prefix($name, $tok)) $m = max($m, 16);
-      elseif (strpos($name, $tok) !== false) $m = max($m, 10);
-      if (search_has_word_prefix($sub, $tok)) $m = max($m, 9);
-      if (search_has_word_prefix($cat, $tok)) $m = max($m, 6);
-      if (search_has_word_prefix($tags, $tok)) $m = max($m, 4);
-      if (search_has_word_prefix($short, $tok)) $m = max($m, 3);
-      if (search_has_word_prefix($uses, $tok)) $m = max($m, 2);
-      if (search_has_word_prefix($desc, $tok)) $m = max($m, 1);
-      if ($m > 0.0) { $matchedTokens++; $tokenScore += $m; }
+      if (isset($covered[$tok]) && !empty($altHit[$covered[$tok]])) { $matchedTokens++; continue; }   // part of a phrase already matched through a related term
+      [$m, $label] = search_field_match($f, $tok);
+      if ($m > 0.0) {
+        $matchedTokens++; $tokenScore += $m;
+        if ($label !== 'name' || $score === 0.0) $reasons[] = 'Matched “' . $tok . '” in ' . $label;
+        continue;
+      }
+      // Related terms (editorial synonyms): weaker than a direct match and always labelled.
+      $bestAlt = [0.0, '', ''];
+      foreach (($expansions[$tok] ?? []) as $ex) {
+        [$am, $al] = search_field_match($f, $ex['term']);
+        if ($am * 0.6 > $bestAlt[0]) $bestAlt = [$am * 0.6, $al, $ex['term']];
+      }
+      if ($bestAlt[0] > 0.0) { $altHit[$tok] = true; $matchedTokens++; $tokenScore += $bestAlt[0]; $reasons[] = 'Related term “' . $bestAlt[2] . '” found in ' . $bestAlt[1] . ' (for “' . $tok . '”)'; }
     }
     if ($matchedTokens === 0) continue;
     $score += $tokenScore;
-    if (!empty($t['curated'])) $score += 10;
-    $score += min(6.0, log(1 + (int)($clicks[$t['id']] ?? 0)) * 1.5);
-    $row = ['tool' => $t, 'score' => $score];
+    if (!empty($t['curated'])) { $score += 10; $reasons[] = 'Has a reviewed, sourced profile'; }
+    $boost = min(6.0, log(1 + (int)($clicks[$t['id']] ?? 0)) * 1.5);
+    if ($boost >= 1.5) $reasons[] = 'Popular with visitors';
+    $score += $boost;
+    $row = ['tool' => $t, 'score' => $score, 'reasons' => array_values(array_unique($reasons))];
     if ($matchedTokens === count($tokens)) $results[] = $row; else $partial[] = $row;
   }
   // Multi-word queries with no tool matching every word fall back to tools matching some of them, best first.
-  if (!$results && $partial) { foreach ($partial as &$p) $p['partial'] = true; unset($p); $results = $partial; }
+  if (!$results && $partial) { foreach ($partial as &$p) { $p['partial'] = true; $p['reasons'][] = 'Matches some of your words, not all'; } unset($p); $results = $partial; }
   // Typo tolerance: only when nothing matched, compare against tool names.
   if (!$results && mb_strlen($qn) >= 4) {
     foreach ($tools as $t) {
@@ -82,7 +162,7 @@ function search_tools_ranked(array $tools, string $q, int $limit = 24, array $fi
       $name = search_normalize((string)($t['name'] ?? ''));
       $best = levenshtein(substr($qn, 0, 40), substr($name, 0, 40));
       foreach (explode(' ', $name) as $w) { if ($w !== '') $best = min($best, levenshtein(substr($qn, 0, 40), substr($w, 0, 40))); }
-      if ($best <= 2) $results[] = ['tool' => $t, 'score' => 20 - $best * 5 + (!empty($t['curated']) ? 5 : 0), 'fuzzy' => true];
+      if ($best <= 2) $results[] = ['tool' => $t, 'score' => 20 - $best * 5 + (!empty($t['curated']) ? 5 : 0), 'fuzzy' => true, 'reasons' => ['Name is similar to your search (possible typo)']];
     }
   }
   usort($results, fn($a, $b) => $b['score'] <=> $a['score'] ?: strcasecmp($a['tool']['name'], $b['tool']['name']));
@@ -148,4 +228,67 @@ function search_suggest_payload(array $tools, string $q, int $toolLimit = 6): ar
     if ($ok) $guides[] = ['type' => 'guide', 'label' => $g['h1'], 'meta' => 'Guide', 'url' => guide_path($slug)];
   }
   return ['q' => $q, 'items' => array_merge($items, array_slice($cats, 0, 3), array_slice($guides, 0, 2))];
+}
+
+// ---------------------------------------------------------------------------
+// Task / business-problem discovery (data/solutions.json)
+// ---------------------------------------------------------------------------
+function solutions_all(): array { return catalog_json('solutions.json', ['problems' => []])['problems'] ?? []; }
+function solution_get(string $slug): ?array { $p = solutions_all()[$slug] ?? null; return $p ? $p + ['slug' => $slug] : null; }
+function solution_path(string $slug): string { return '/solutions.php?problem=' . rawurlencode($slug); }
+function solution_url(string $slug): string { return site_url(solution_path($slug)); }
+
+/** Ranked tools for a problem: same transparent rules as search, so every result carries its reasons. */
+const SOLUTION_PAGE_LIMIT = 12;   // tools shown on a problem page; the evidence gate counts exactly these
+function solution_results(array $tools, array $problem, int $limit = SOLUTION_PAGE_LIMIT): array {
+  return search_tools_ranked($tools, (string)$problem['query'], $limit);
+}
+
+/** Evidence gate: a problem page is indexable only with at least three reviewed, sourced tools among the results. */
+function solution_reviewed_count(array $results): int {
+  return count(array_filter($results, fn($r) => !empty($r['tool']['curated'])));
+}
+function solution_indexable(array $results): bool { return solution_reviewed_count($results) >= 3; }
+
+/** Ranked rows kept in the cache per problem: enough for the hub counts (40) and the page (12). */
+const SOLUTION_CACHE_ROWS = 40;
+
+/**
+ * slug => [['id','score','reasons','partial'], ...] for every problem, computed once per catalogue/code version (see cache.php).
+ * @return array{0:array,1:string} [data, 'hit'|'miss'|'off']
+ */
+function solution_pages_data(): array {
+  static $memo = null;
+  if ($memo !== null) return $memo;
+  return $memo = cache_remember('solutions', function () {
+    $tools = array_values(tools_by_id()); $out = [];
+    foreach (solutions_all() as $slug => $p) {
+      $rows = [];
+      foreach (solution_results($tools, $p, SOLUTION_CACHE_ROWS) as $r) $rows[] = ['id' => (string)$r['tool']['id'], 'score' => round((float)$r['score'], 4), 'reasons' => array_values($r['reasons'] ?? []), 'partial' => !empty($r['partial'])];
+      $out[$slug] = $rows;
+    }
+    return $out;
+  });
+}
+
+/** Same shape as solution_results() for the real catalogue, served from the cache. Tool records are always read fresh. */
+function solution_results_cached(string $slug, int $limit = SOLUTION_PAGE_LIMIT): array {
+  [$data, $state] = solution_pages_data(); $byId = tools_by_id(); $out = [];
+  if ($state === 'off') {   // no usable cache (disabled, unwritable or unsafe directory): compute only what this request needs, never all ten problems
+    static $live = [];
+    if (!isset($live[$slug])) { $p = solution_get($slug); $live[$slug] = $p ? solution_results(array_values($byId), $p, SOLUTION_CACHE_ROWS) : []; }
+    return array_slice($live[$slug], 0, $limit);
+  }
+  foreach (array_slice($data[$slug] ?? [], 0, $limit) as $row) {
+    if (!isset($byId[$row['id']])) continue;
+    $out[] = ['tool' => $byId[$row['id']], 'score' => $row['score'], 'reasons' => $row['reasons']] + ($row['partial'] ? ['partial' => true] : []);
+  }
+  return $out;
+}
+
+/** Slugs of indexable problem pages (used by the sitemap). */
+function solutions_indexable_slugs(?array $tools = null): array {
+  $out = [];
+  foreach (array_keys(solutions_all()) as $slug) { if (solution_indexable(solution_results_cached($slug, SOLUTION_PAGE_LIMIT))) $out[] = $slug; }
+  return $out;
 }

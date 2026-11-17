@@ -3,38 +3,14 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 
 header('Content-Type: application/json');
+sec_guard_write('interact', 120, 600);
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid request'
-        ]);
-        exit;
-    }
-
-    $toolId = trim($_POST['id'] ?? '');
-
-    if ($toolId === '') {
-        http_response_code(422);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Missing tool id'
-        ]);
-        exit;
-    }
-
-    $total = record_click($toolId);
-
-    echo json_encode([
-        'success' => true,
-        'clicks' => (int)$total,
-    ]);
+    $toolId = trim((string)($_POST['id'] ?? ''));
+    if ($toolId === '' || !find_tool($toolId)) { sec_fail(422, 'Unknown tool'); }
+    if (!interactions_writable()) { header('Retry-After: 300'); sec_fail(503, 'Click statistics are temporarily unavailable.'); }
+    echo json_encode(['success' => true, 'clicks' => (int)record_click($toolId)]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage(),
-    ]);
+    sec_log_exception($e, 'track-click.php');
+    sec_fail(500, 'Something went wrong. Please try again later.');
 }
