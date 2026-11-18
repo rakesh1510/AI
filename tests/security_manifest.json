@@ -10,6 +10,7 @@
   "crm_core.php": "lib",
   "crm_sales.php": "lib",
   "uni_core.php": "lib",
+  "universe-api.php": "page",
   "crm_money.php": "lib",
   "crm_growth.php": "lib",
   "crm_dashboard.php": "lib",

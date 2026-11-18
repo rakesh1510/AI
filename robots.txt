@@ -32,6 +32,7 @@ Disallow: /unsubscribe.php
 Disallow: /inquiry.php
 Disallow: /event.php
 Disallow: /suggest.php
+Disallow: /universe-api.php
 Disallow: /search.php
 Disallow: /favorites.php
 Disallow: /contact_send.php
