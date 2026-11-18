@@ -168,6 +168,17 @@ CREATE TABLE IF NOT EXISTS uni_event_source (
     CONSTRAINT fk_uni_event_source_source FOREIGN KEY (source_id) REFERENCES uni_source (id) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Evidence for entities (QA/CEO requirement: an entity cannot be verified without source evidence).
+CREATE TABLE IF NOT EXISTS uni_entity_source (
+    entity_id BIGINT UNSIGNED NOT NULL,
+    source_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY (entity_id, source_id),
+    KEY idx_uni_entity_source_source (source_id),
+    CONSTRAINT fk_uni_entity_source_entity FOREIGN KEY (entity_id) REFERENCES uni_entity (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_uni_entity_source_source FOREIGN KEY (source_id) REFERENCES uni_source (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS uni_edge (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     from_entity_id BIGINT UNSIGNED NOT NULL,

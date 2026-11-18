@@ -3,5 +3,5 @@
 -- Idempotent: safe to run twice. Export the uni_* tables first if they hold real records.
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS uni_audit_log, uni_correction, uni_release_parent, uni_release, uni_edge_source, uni_edge,
-  uni_event_source, uni_event, uni_entity, uni_review, uni_source;
+  uni_event_source, uni_event, uni_entity_source, uni_entity, uni_review, uni_source;
 SET FOREIGN_KEY_CHECKS = 1;

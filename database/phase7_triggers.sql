@@ -69,6 +69,9 @@ BEGIN
               AND r.decision = 'accept' AND r.reviewer_id = NEW.verified_by AND r.proposed_by = NEW.proposed_by) < 1 THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: review_id must be an accept review of this row by verified_by';
         END IF;
+        IF (SELECT COUNT(*) FROM uni_entity_source WHERE entity_id = OLD.id) < 1 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: cannot verify without at least one source';
+        END IF;
     END IF;
 END$$
 DELIMITER ;
@@ -358,7 +361,8 @@ DELIMITER $$
 CREATE TRIGGER trg_uni_source_bu BEFORE UPDATE ON uni_source FOR EACH ROW
 BEGIN
     IF NOT (NEW.created_by <=> OLD.created_by) OR NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) OR NOT (CAST(NEW.url AS BINARY) <=> CAST(OLD.url AS BINARY)) OR NOT (CAST(NEW.publisher AS BINARY) <=> CAST(OLD.publisher AS BINARY)) OR NOT (NEW.retrieved_at <=> OLD.retrieved_at) OR NOT (CAST(NEW.quote AS BINARY) <=> CAST(OLD.quote AS BINARY)) OR NOT (CAST(NEW.content_hash AS BINARY) <=> CAST(OLD.content_hash AS BINARY)) THEN
-        IF EXISTS (SELECT 1 FROM uni_event_source l JOIN uni_event x ON x.id = l.event_id WHERE l.source_id = OLD.id AND x.state = 'verified')
+        IF EXISTS (SELECT 1 FROM uni_entity_source l JOIN uni_entity x ON x.id = l.entity_id WHERE l.source_id = OLD.id AND x.state = 'verified')
+          OR EXISTS (SELECT 1 FROM uni_event_source l JOIN uni_event x ON x.id = l.event_id WHERE l.source_id = OLD.id AND x.state = 'verified')
           OR EXISTS (SELECT 1 FROM uni_edge_source l JOIN uni_edge x ON x.id = l.edge_id WHERE l.source_id = OLD.id AND x.state = 'verified')
           OR EXISTS (SELECT 1 FROM uni_release x WHERE x.source_id = OLD.id AND x.state = 'verified')
           OR EXISTS (SELECT 1 FROM uni_release_parent l JOIN uni_release x ON x.id = l.release_id WHERE l.source_id = OLD.id AND x.state = 'verified') THEN
@@ -481,4 +485,31 @@ BEGIN
     END IF;
 END$$
 
+DELIMITER ;
+
+-- Entity source links follow the same rules as event and edge source links.
+DROP TRIGGER IF EXISTS trg_uni_entity_source_bi;
+DROP TRIGGER IF EXISTS trg_uni_entity_source_bu;
+DROP TRIGGER IF EXISTS trg_uni_entity_source_bd;
+DELIMITER $$
+CREATE TRIGGER trg_uni_entity_source_bi BEFORE INSERT ON uni_entity_source FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*) FROM uni_entity x WHERE x.id = NEW.entity_id AND x.state = 'verified') > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row cannot gain source links (supersede it with a new version)';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_entity_source_bu BEFORE UPDATE ON uni_entity_source FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*) FROM uni_entity x WHERE x.id IN (OLD.entity_id, NEW.entity_id) AND x.state = 'verified') > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: source links of a verified row are immutable';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_entity_source_bd BEFORE DELETE ON uni_entity_source FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*) FROM uni_entity x WHERE x.id = OLD.entity_id AND x.state = 'verified') > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: source links of a verified row cannot be removed';
+    END IF;
+END$$
 DELIMITER ;

@@ -120,7 +120,10 @@ function mkCorrection(PDO $p, int $maker, int $source, array $o = []): int {
 function mkReview(PDO $p, string $type, int $target, int $reviewer, int $proposer, string $decision = 'accept'): int {
     return insertRow($p, 'uni_review', ['target_type' => $type, 'target_id' => $target, 'reviewer_id' => $reviewer, 'proposed_by' => $proposer, 'decision' => $decision, 'decided_at' => now()]);
 }
-function verifyRow(PDO $p, string $t, int $id, int $verifier, int $review): void {
+function verifyRow(PDO $p, string $t, int $id, int $verifier, int $review, bool $autoSource = true): void {
+    if ($autoSource && $t === 'uni_entity' && (int)one($p, 'SELECT COUNT(*) FROM uni_entity_source WHERE entity_id = ?', [$id]) < 1) {   // entities need evidence too
+        $sid = mkSource($p, (int)one($p, 'SELECT proposed_by FROM uni_entity WHERE id = ?', [$id])); linkSrc($p, 'uni_entity_source', 'entity_id', $id, $sid);
+    }
     $s = $p->prepare("UPDATE $t SET state='verified', verified_by=?, verified_at=NOW(), review_id=? WHERE id=?"); $s->execute([$verifier, $review, $id]);
 }
 function linkSrc(PDO $p, string $t, string $col, int $id, int $src): void { insertRow($p, $t, [$col => $id, 'source_id' => $src, 'created_at' => now()]); }
@@ -134,7 +137,7 @@ $crmBefore = $pdo->query("SHOW TABLES LIKE 'crm\\_%'")->fetchAll(PDO::FETCH_COLU
 sec('1. Migration applies twice (additive, idempotent)');
 $n1 = applyFile($pdo, SQLDIR . '/phase7_universe.sql');
 $tables1 = uniTables($pdo); $snap1 = snapshot($pdo);
-ok("first apply ($n1 statements) creates 11 uni_* tables", count($tables1) === 11, implode(',', $tables1));
+ok("first apply ($n1 statements) creates 12 uni_* tables", count($tables1) === 12, implode(',', $tables1));
 $m = $maker = mkUser($pdo, 'editor');
 $u1 = mkSource($pdo, $maker); // data present before 2nd apply
 $n2 = applyFile($pdo, SQLDIR . '/phase7_universe.sql');
@@ -148,8 +151,8 @@ ok('migration has no CREATE TRIGGER (triggers are in the optional file)', stripo
 
 sec('2. Structure: engine, charset/collation, FKs');
 $rows = $pdo->query("SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'uni\\_%'")->fetchAll();
-ok('all uni_* tables are InnoDB', count(array_filter($rows, fn($r) => $r['ENGINE'] === 'InnoDB')) === 11);
-ok('all uni_* tables use utf8mb4_unicode_ci', count(array_filter($rows, fn($r) => $r['TABLE_COLLATION'] === 'utf8mb4_unicode_ci')) === 11);
+ok('all uni_* tables are InnoDB', count(array_filter($rows, fn($r) => $r['ENGINE'] === 'InnoDB')) === 12);
+ok('all uni_* tables use utf8mb4_unicode_ci', count(array_filter($rows, fn($r) => $r['TABLE_COLLATION'] === 'utf8mb4_unicode_ci')) === 12);
 $fks = $pdo->query("SELECT CONSTRAINT_NAME, DELETE_RULE, UPDATE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'uni\\_%'")->fetchAll();
 ok('uni_* has foreign keys (' . count($fks) . ')', count($fks) >= 30);
 ok('EVERY uni_* FK is ON DELETE RESTRICT', count(array_filter($fks, fn($r) => $r['DELETE_RULE'] === 'RESTRICT')) === count($fks), json_encode(array_filter($fks, fn($r) => $r['DELETE_RULE'] !== 'RESTRICT')));
@@ -464,7 +467,7 @@ if (getenv('P7_ALLOW_CREATE_USER') === '1') {
     }
     $lim = new PDO($dsnBase . ";dbname=$dbName", $nt, 'x', $opt);
     applyFile($lim, SQLDIR . '/phase7_universe.sql');
-    ok('schema applies for a user without TRIGGER privilege', count(uniTables($lim)) === 11);
+    ok('schema applies for a user without TRIGGER privilege', count(uniTables($lim)) === 12);
     $denied = null;
     try { applyFile($lim, SQLDIR . '/phase7_triggers.sql'); } catch (PDOException $e) { $denied = (int)($e->errorInfo[1] ?? 0); }
     ok("triggers file is rejected cleanly for that user (error $denied) and detectable", in_array($denied, [1142, 1227, 1419, 1044], true));
@@ -509,6 +512,9 @@ expectReject('QA7a state in upper case is rejected by the CHECK (case-sensitive)
 expectReject('QA7b state with a trailing space is rejected by the CHECK', fn() => mkEntity($pdo, $qa_m, ['state' => 'proposed ']), 'check', 'chk_uni_entity_state');
 expectReject('QA7c source URL containing whitespace or markup is rejected', fn() => insertRow($pdo, 'uni_source', ['url' => 'https://x.test/a b<script>', 'publisher' => 'p', 'retrieved_at' => now(), 'quote' => 'q', 'origin' => 'human', 'created_by' => $qa_m, 'created_at' => now()]), 'check', 'chk_uni_source_url');
 expectReject('QA7d source URL with upper-case scheme or javascript: is rejected', fn() => insertRow($pdo, 'uni_source', ['url' => 'javascript:alert(1)', 'publisher' => 'p', 'retrieved_at' => now(), 'quote' => 'q', 'origin' => 'human', 'created_by' => $qa_m, 'created_at' => now()]), 'check', 'chk_uni_source_url');
+expectReject('ENT1 verify an entity with ZERO sources rejected (CEO requirement)', function () use ($pdo, $qa_m, $qa_v) { $e = mkEntity($pdo, $qa_m); verifyRow($pdo, 'uni_entity', $e, $qa_v, mkReview($pdo, 'entity', $e, $qa_v, $qa_m), false); }, 'trigger', 'at least one source');
+expectReject('ENT2 add a source link to an already verified entity', function () use ($pdo, $qa_m, $qa_v) { $e = mkEntity($pdo, $qa_m); verifyRow($pdo, 'uni_entity', $e, $qa_v, mkReview($pdo, 'entity', $e, $qa_v, $qa_m)); linkSrc($pdo, 'uni_entity_source', 'entity_id', $e, mkSource($pdo, $qa_m)); }, 'trigger', 'cannot gain');
+expectReject('ENT3 remove the source link of a verified entity', function () use ($pdo, $qa_m, $qa_v) { $e = mkEntity($pdo, $qa_m); verifyRow($pdo, 'uni_entity', $e, $qa_v, mkReview($pdo, 'entity', $e, $qa_v, $qa_m)); $pdo->exec("DELETE FROM uni_entity_source WHERE entity_id=$e"); }, 'trigger', 'cannot be removed');
 gap('QA6 TRUNCATE / DROP TRIGGER / ALTER ... DROP CHECK are DDL and bypass triggers: only grants can stop them (web user must not hold DROP, ALTER, TRIGGER, DELETE)', fn() => true);
 
 sec('7. Final rollback removes triggers too');

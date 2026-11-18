@@ -160,8 +160,8 @@ function uni_source_valid(array $s): bool {
 function uni_valid_source_count(PDO $pdo, string $type, int $id): int {
   if ($type === 'release') {
     $s = $pdo->prepare('SELECT s.* FROM uni_release r JOIN uni_source s ON s.id = r.source_id WHERE r.id = ?');
-  } elseif ($type === 'event' || $type === 'edge') {
-    $s = $pdo->prepare($type === 'event' ? 'SELECT s.* FROM uni_event_source l JOIN uni_source s ON s.id = l.source_id WHERE l.event_id = ?' : 'SELECT s.* FROM uni_edge_source l JOIN uni_source s ON s.id = l.source_id WHERE l.edge_id = ?');
+  } elseif ($type === 'event' || $type === 'edge' || $type === 'entity') {
+    $s = $pdo->prepare($type === 'event' ? 'SELECT s.* FROM uni_event_source l JOIN uni_source s ON s.id = l.source_id WHERE l.event_id = ?' : ($type === 'edge' ? 'SELECT s.* FROM uni_edge_source l JOIN uni_source s ON s.id = l.source_id WHERE l.edge_id = ?' : 'SELECT s.* FROM uni_entity_source l JOIN uni_source s ON s.id = l.source_id WHERE l.entity_id = ?'));
   } else return 0;
   $s->execute([$id]); $n = 0; foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) if (uni_source_valid($r)) $n++;
   return $n;
@@ -170,7 +170,7 @@ function uni_valid_source_count(PDO $pdo, string $type, int $id): int {
 function uni_attach_source(PDO $pdo, int $actorId, string $type, int $targetId, $source): array {
   $actor = uni_actor($pdo, $actorId);
   if (!uni_can_propose($actor)) return [false, 'forbidden'];
-  if (!in_array($type, ['event', 'edge'], true)) return [false, 'type_invalid'];
+  if (!in_array($type, ['event', 'edge', 'entity'], true)) return [false, 'type_invalid'];
   return uni_tx($pdo, function () use ($pdo, $actorId, $type, $targetId, $source) {
     $row = uni_row($pdo, $type, $targetId, true);
     if (!$row) return [false, 'not_found'];
@@ -180,7 +180,7 @@ function uni_attach_source(PDO $pdo, int $actorId, string $type, int $targetId, 
     else return [false, 'source_invalid'];
     $q = $pdo->prepare('SELECT * FROM uni_source WHERE id = ?'); $q->execute([$sid]); $src = $q->fetch(PDO::FETCH_ASSOC);
     if (!$src || !uni_source_valid($src)) return [false, 'source_invalid'];
-    $link = $type === 'event' ? ['uni_event_source', 'event_id'] : ['uni_edge_source', 'edge_id'];
+    $link = $type === 'event' ? ['uni_event_source', 'event_id'] : ($type === 'edge' ? ['uni_edge_source', 'edge_id'] : ['uni_entity_source', 'entity_id']);
     $dup = $pdo->prepare("SELECT 1 FROM {$link[0]} WHERE {$link[1]} = ? AND source_id = ?"); $dup->execute([$targetId, $sid]);
     if ($dup->fetchColumn()) return [false, 'already_attached'];
     uni_insert($pdo, $link[0], [$link[1] => $targetId, 'source_id' => $sid, 'created_at' => crm_now()]);
@@ -345,7 +345,7 @@ function uni_submit_for_review(PDO $pdo, int $actorId, string $type, int $id): a
     $row = uni_row($pdo, $type, $id, true); if (!$row) return [false, 'not_found'];
     if ($row['state'] !== 'proposed') return [false, 'not_proposed'];
     if ($row['origin'] === 'import') return [false, 'import_needs_new_version'];
-    if ($type !== 'entity' && uni_valid_source_count($pdo, $type, $id) < 1) return [false, 'source_required'];
+    if (uni_valid_source_count($pdo, $type, $id) < 1) return [false, 'source_required'];
     $u = $pdo->prepare("UPDATE " . uni_table($type) . " SET state = 'in_review' WHERE id = ? AND state = 'proposed'"); $u->execute([$id]);
     if ($u->rowCount() !== 1) return [false, 'not_proposed'];
     uni_audit($pdo, $actorId, 'submit', $type, $id, 'submitted for review');
@@ -362,7 +362,7 @@ function uni_second_review_required(PDO $pdo, string $type, int $id): bool {
 /** Checks that must hold at the moment of verification (re-read from the database inside the transaction). → null or error code */
 function uni_verify_preconditions(PDO $pdo, string $type, array $row): ?string {
   if ($row['origin'] === 'import') return 'import_cannot_be_verified';
-  if ($type !== 'entity' && uni_valid_source_count($pdo, $type, (int)$row['id']) < 1) return 'source_required';
+  if (uni_valid_source_count($pdo, $type, (int)$row['id']) < 1) return 'source_required';
   $live = function (int $entityId) use ($pdo): bool { $e = uni_entity_live($pdo, $entityId); return $e !== null && $e['state'] === 'verified'; };
   if ($type === 'event' || $type === 'release') { if (!$live((int)$row['entity_id'])) return 'entity_not_verified'; }
   if ($type === 'edge') { if (!$live((int)$row['from_entity_id']) || !$live((int)$row['to_entity_id'])) return 'entity_not_verified'; }
@@ -472,8 +472,8 @@ function uni_correct(PDO $pdo, int $actorId, string $type, int $id, array $chang
       $new['version_label'] = $lb; $new['release_date'] = $pd[0]; $new['date_precision'] = $pd[1]; $new['change_set'] = $cs === null ? null : json_encode($cs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     $nid = uni_insert($pdo, uni_table($type), $new);
-    if ($type === 'event' || $type === 'edge') {
-      [$lt, $col] = $type === 'event' ? ['uni_event_source', 'event_id'] : ['uni_edge_source', 'edge_id'];
+    if ($type === 'event' || $type === 'edge' || $type === 'entity') {
+      [$lt, $col] = $type === 'event' ? ['uni_event_source', 'event_id'] : ($type === 'edge' ? ['uni_edge_source', 'edge_id'] : ['uni_entity_source', 'entity_id']);
       $pdo->prepare("INSERT INTO $lt ($col, source_id, created_at) SELECT ?, source_id, ? FROM $lt WHERE $col = ?")->execute([$nid, crm_now(), $id]);
     }
     if ($type === 'release') {
@@ -535,7 +535,7 @@ function uni_live_entity_join(string $a, string $col, string $c): string {
 }
 function uni_pub_sources(PDO $pdo, string $linkTable, string $col, array $ids): array {
   if (!$ids) return [];
-  if (!in_array($linkTable, ['uni_event_source', 'uni_edge_source'], true) || !in_array($col, ['event_id', 'edge_id'], true)) return [];
+  if (!in_array($linkTable, ['uni_event_source', 'uni_edge_source', 'uni_entity_source'], true) || !in_array($col, ['event_id', 'edge_id', 'entity_id'], true)) return [];
   $s = $pdo->prepare("SELECT l.$col AS k, s.url, s.publisher, s.retrieved_at, s.quote FROM $linkTable l JOIN uni_source s ON s.id = l.source_id WHERE l.$col IN (" . implode(',', array_fill(0, count($ids), '?')) . ') ORDER BY s.id');
   $s->execute(array_values($ids)); $out = [];
   foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) { $k = (int)$r['k']; unset($r['k']); $out[$k][] = $r; }
