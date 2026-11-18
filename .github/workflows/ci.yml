@@ -81,6 +81,9 @@ jobs:
       - name: Security regression tests (proxy trust, redirects, CSRF, rate limits, secrets, admin)
         run: php tests/security_test.php
 
+      - name: Secret-initialisation regression (pages must work when the signing secret cannot be written)
+        run: php tests/secret_init_test.php
+
       - name: Security inventory and secrets scan (every PHP file classified, no secrets in tracked files)
         run: php tests/security_inventory_test.php
 
