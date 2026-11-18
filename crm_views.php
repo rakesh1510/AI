@@ -87,7 +87,7 @@ function crm_nav(string $v, array $u): string {
 }
 function crm_tbl(string $caption, array $head, array $rows): string {
   if (!$rows) return '<p class="small">Nothing to show yet.</p>';
-  $o = '<div class="tableWrap"><table class="table"><caption class="sr">' . crm_h($caption) . '</caption><thead><tr>'; foreach ($head as $h) $o .= '<th scope="col">' . crm_h($h) . '</th>'; $o .= '</tr></thead><tbody>';
+  $o = '<div class="tableWrap" tabindex="0" role="region" aria-label="' . crm_h($caption) . ' (scrollable)"><table class="table"><caption class="sr">' . crm_h($caption) . '</caption><thead><tr>'; foreach ($head as $h) $o .= '<th scope="col">' . crm_h($h) . '</th>'; $o .= '</tr></thead><tbody>';
   foreach ($rows as $r) { $o .= '<tr>'; foreach ($r as $c) $o .= '<td>' . $c . '</td>'; $o .= '</tr>'; } return $o . '</tbody></table></div>';
 }
 function crm_link(string $v, $id, string $text): string { return '<a href="/crm.php?v=' . crm_h($v) . '&amp;id=' . (int)$id . '">' . crm_h($text) . '</a>'; }

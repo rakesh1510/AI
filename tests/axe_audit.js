@@ -6,7 +6,8 @@ const axePath = process.env.AXE_PATH || require.resolve('axe-core/axe.min.js');
 const pages = ['/', '/search.php?q=transcribe', '/category.php?name=Productivity', '/tool.php?id=chatgpt', '/compare.php?a=chatgpt&b=claude', '/business.php', '/advertise.php',
   '/guide.php?slug=best-ai-chatbots-and-assistants', '/favorites.php', '/disclosure.php', '/categories.php', '/leaderboard.php', '/top.php',
   '/recommend.php', '/recommend.php?go=1&objective=meetings&budget=free_only&team=small&integrations%5B%5D=zoom', '/solutions.php', '/solutions.php?problem=transcribe-meetings-and-interviews',
-  '/compare.php?a=otter-ai&b=fireflies-ai', '/pricing-comparison.php?group=meetings-transcription', '/changelog.php', '/alternatives.php?tool=otter-ai', '/newsletter-archive.php'];
+  '/compare.php?a=otter-ai&b=fireflies-ai', '/pricing-comparison.php?group=meetings-transcription', '/changelog.php', '/alternatives.php?tool=otter-ai', '/newsletter-archive.php',
+  '/services.php', '/services.php?s=custom-ai-agents', '/partners.php'];
 (async () => {
   const browser = await chromium.launch(); let total = 0; const byRule = {};
   for (const theme of ['light', 'dark']) for (const [prof, opts] of [['desktop', { viewport: { width: 1366, height: 900 } }], ['mobile', devices['Pixel 7']]]) {
