@@ -629,3 +629,180 @@ function uni_public_neighbourhood(PDO $pdo, $slug, $limit = 100): array {
   }
   return ['center' => $center, 'nodes' => array_values($nodes), 'edges' => $edges, 'truncated' => $trunc];
 }
+
+// ---- PUBLIC READS for the HTTP API (universe-api.php): same rule, verified + current rows and verified + current entities only --------------
+/** Edge types that may be drawn as lineage, mapped to their lineage kind. Everything else (developed_by, integrates_with, hosted_on, acquired_by, version_of) is never lineage. */
+function uni_lineage_edge_kinds(): array { return ['derived_from' => 'technical_ancestry', 'built_on' => 'technical_ancestry', 'successor_of' => 'product_succession', 'renamed_from' => 'product_succession']; }
+function uni_unavailable(string $reason = 'no_verified_data'): array { return ['available' => false, 'reason' => $reason]; }
+function uni_available($value): array { return ['available' => true, 'value' => $value]; }
+/** Source rows reduced to what the graph and lineage views need (no quote). */
+function uni_pub_source_brief(array $rows): array { return array_map(fn($r) => ['url' => $r['url'], 'publisher' => $r['publisher'], 'retrieved_at' => $r['retrieved_at']], $rows); }
+function uni_pub_entity_node(array $r, string $p = ''): array { return ['ref' => $r[$p . 'ref'], 'slug' => $r[$p . 'slug'], 'type' => $r[$p . 'type'], 'name' => $r[$p . 'name']]; }
+
+/** One verified, current entity with its sources, or null. */
+function uni_public_entity_detail(PDO $pdo, $slug): ?array {
+  if (!is_string($slug) || $slug === '' || strlen($slug) > 120) return null;
+  $s = $pdo->prepare("SELECT id AS _id, lineage_key AS ref, entity_type, slug, name, summary, verified_at FROM uni_entity WHERE slug = ? AND state = 'verified' AND is_current = 1"); $s->execute([$slug]);
+  $r = $s->fetch(PDO::FETCH_ASSOC); if (!$r) return null;
+  $src = uni_pub_sources($pdo, 'uni_entity_source', 'entity_id', [(int)$r['_id']]); $r['sources'] = $src[(int)$r['_id']] ?? []; unset($r['_id']);
+  return $r;
+}
+/** Heatmap buckets of VERIFIED events. grain day|week (week starts Monday) count day-precision events only; month counts day and month precision. Year-only events never invent a finer bucket
+ *  and are reported in excluded_coarser_precision. $entitySlug and $eventType are optional filters. @return array|null null when the range or a filter is invalid. */
+function uni_public_heatmap(PDO $pdo, string $grain, string $from, string $to, ?string $entitySlug = null, ?string $eventType = null): ?array {
+  $exprs = ['day' => "DATE_FORMAT(ev.event_date, '%Y-%m-%d')", 'week' => "DATE_FORMAT(DATE_SUB(ev.event_date, INTERVAL WEEKDAY(ev.event_date) DAY), '%Y-%m-%d')", 'month' => "DATE_FORMAT(ev.event_date, '%Y-%m')"];
+  if (!isset($exprs[$grain]) || uni_parse_date($from) === null || uni_parse_date($to) === null || $from > $to) return null;
+  if ($eventType !== null && !in_array($eventType, uni_event_types(), true)) return null;
+  $prec = $grain === 'month' ? "('day','month')" : "('day')";
+  $base = 'FROM uni_event ev ' . uni_live_entity_join('ev', 'entity_id', 'en') . " WHERE ev.state = 'verified' AND ev.is_current = 1 AND ev.event_date BETWEEN ? AND ?"; $args = [$from, $to];
+  if ($entitySlug !== null) { $base .= ' AND en.slug = ?'; $args[] = $entitySlug; }
+  if ($eventType !== null) { $base .= ' AND ev.event_type = ?'; $args[] = $eventType; }
+  $s = $pdo->prepare('SELECT ' . $exprs[$grain] . " AS period, COUNT(*) AS n $base AND ev.date_precision IN $prec GROUP BY period ORDER BY period LIMIT 4000"); $s->execute($args);
+  $buckets = array_map(fn($r) => ['period' => $r['period'], 'count' => (int)$r['n']], $s->fetchAll(PDO::FETCH_ASSOC));
+  $x = $pdo->prepare("SELECT COUNT(*) $base AND ev.date_precision NOT IN $prec"); $x->execute($args);
+  return ['grain' => $grain, 'buckets' => $buckets, 'total' => array_sum(array_column($buckets, 'count')), 'excluded_coarser_precision' => (int)$x->fetchColumn()];
+}
+/** Day drill-down: the verified events behind one day bucket (day precision only, exactly the rows the day/week heatmap counts) with their sources. Capped at 100. */
+function uni_public_day_events(PDO $pdo, string $day, ?string $entitySlug = null, ?string $eventType = null): ?array {
+  $d = uni_parse_date($day, 'day'); if ($d === null) return null;
+  if ($eventType !== null && !in_array($eventType, uni_event_types(), true)) return null;
+  $from = 'FROM uni_event ev ' . uni_live_entity_join('ev', 'entity_id', 'en') . " WHERE ev.state = 'verified' AND ev.is_current = 1 AND ev.date_precision = 'day' AND ev.event_date = ?"; $args = [$d[0]];
+  if ($entitySlug !== null) { $from .= ' AND en.slug = ?'; $args[] = $entitySlug; }
+  if ($eventType !== null) { $from .= ' AND ev.event_type = ?'; $args[] = $eventType; }
+  $c = $pdo->prepare("SELECT COUNT(*) $from"); $c->execute($args);
+  $s = $pdo->prepare("SELECT ev.id AS _id, ev.lineage_key AS ref, ev.event_type, ev.event_date, ev.date_precision, ev.date_kind, ev.title, ev.summary, ev.verified_at, en.slug AS entity_slug, en.name AS entity_name $from ORDER BY ev.title, ev.id LIMIT 100");
+  $s->execute($args); $rows = $s->fetchAll(PDO::FETCH_ASSOC); $src = uni_pub_sources($pdo, 'uni_event_source', 'event_id', array_map(fn($r) => (int)$r['_id'], $rows));
+  foreach ($rows as &$r) { $r['sources'] = $src[(int)$r['_id']] ?? []; unset($r['_id']); } unset($r);
+  return ['day' => $d[0], 'count' => (int)$c->fetchColumn(), 'items' => $rows];
+}
+/** Progressive 1-hop graph: edges of the centre ordered stably, $limit (1..200) edges from $offset, nodes = the centre plus the neighbours of the returned edges (so at most limit + 1). Each edge keeps its own type and sources. */
+function uni_public_graph(PDO $pdo, $slug, $limit = 50, $offset = 0, ?string $edgeType = null): ?array {
+  $center = uni_public_entity($pdo, $slug); if (!$center) return null;
+  $lim = filter_var($limit, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]); $lim = $lim === false ? 50 : $lim;
+  $off = filter_var($offset, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => UNI_MAX_PAGE * UNI_MAX_PER_PAGE]]); $off = $off === false ? 0 : $off;
+  if ($edgeType !== null && !in_array($edgeType, uni_edge_types(), true)) return null;
+  $from = 'FROM uni_edge ed ' . uni_live_entity_join('ed', 'from_entity_id', 'fe') . ' ' . uni_live_entity_join('ed', 'to_entity_id', 'te') . " WHERE ed.state = 'verified' AND ed.is_current = 1 AND (fe.slug = ? OR te.slug = ?)";
+  $args = [$center['slug'], $center['slug']]; if ($edgeType !== null) { $from .= ' AND ed.edge_type = ?'; $args[] = $edgeType; }
+  $c = $pdo->prepare("SELECT COUNT(*) $from"); $c->execute($args); $total = (int)$c->fetchColumn();
+  $s = $pdo->prepare("SELECT ed.id AS _id, ed.edge_type, ed.valid_from, ed.valid_to, fe.lineage_key AS f_ref, fe.slug AS f_slug, fe.entity_type AS f_type, fe.name AS f_name, te.lineage_key AS t_ref, te.slug AS t_slug, te.entity_type AS t_type, te.name AS t_name $from ORDER BY ed.edge_type, ed.id LIMIT ? OFFSET ?");
+  foreach ($args as $i => $a) $s->bindValue($i + 1, $a); $s->bindValue(count($args) + 1, $lim, PDO::PARAM_INT); $s->bindValue(count($args) + 2, $off, PDO::PARAM_INT); $s->execute();
+  $rows = $s->fetchAll(PDO::FETCH_ASSOC); $src = uni_pub_sources($pdo, 'uni_edge_source', 'edge_id', array_map(fn($r) => (int)$r['_id'], $rows));
+  $nodes = [$center['ref'] => uni_pub_entity_node(['ref' => $center['ref'], 'slug' => $center['slug'], 'type' => $center['entity_type'], 'name' => $center['name']])]; $edges = [];
+  foreach ($rows as $r) {
+    $nodes[$r['f_ref']] = uni_pub_entity_node($r, 'f_'); $nodes[$r['t_ref']] = uni_pub_entity_node($r, 't_');
+    $edges[] = ['from' => $r['f_ref'], 'to' => $r['t_ref'], 'type' => $r['edge_type'], 'valid_from' => $r['valid_from'], 'valid_to' => $r['valid_to'], 'sources' => uni_pub_source_brief($src[(int)$r['_id']] ?? [])];
+  }
+  $next = $off + count($rows);
+  return ['center' => $center['ref'], 'nodes' => array_values($nodes), 'edges' => $edges, 'limit' => $lim, 'offset' => $off, 'total_edges' => $total, 'has_more' => $next < $total, 'next_offset' => $next < $total ? $next : null];
+}
+/** Release graph of an entity (model family): its verified releases, the documented parent links (each with its own source) reached within 4 hops in either direction (node cap $maxNodes),
+ *  plus entity-level edges of lineage types only. @return array|null null for an unknown entity */
+function uni_public_lineage(PDO $pdo, $slug, $maxNodes = 100): ?array {
+  $ent = uni_public_entity($pdo, $slug); if (!$ent) return null;
+  $cap = filter_var($maxNodes, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]); $cap = $cap === false ? 100 : $cap;
+  $live = fn(string $a, string $c) => uni_live_entity_join($a, 'entity_id', $c);
+  $s = $pdo->prepare('SELECT rl.lineage_key FROM uni_release rl ' . $live('rl', 'en') . " WHERE rl.state = 'verified' AND rl.is_current = 1 AND en.slug = ? ORDER BY rl.release_date, rl.id LIMIT ?");
+  $s->bindValue(1, $ent['slug']); $s->bindValue(2, $cap + 1, PDO::PARAM_INT); $s->execute();
+  $seed = $s->fetchAll(PDO::FETCH_COLUMN); $truncated = count($seed) > $cap; $keys = array_fill_keys(array_slice($seed, 0, $cap), true); $links = [];
+  for ($round = 0; $round < 4 && $keys; $round++) {
+    $list = array_keys($keys); $ph = implode(',', array_fill(0, count($list), '?')); $before = count($keys);
+    $q = $pdo->prepare('SELECT c.lineage_key AS child_ref, pc.lineage_key AS parent_ref, ps.url, ps.publisher, ps.retrieved_at FROM uni_release_parent l
+      JOIN uni_release c ON c.id = l.release_id AND c.is_current = 1 AND c.state = \'verified\' ' . $live('c', 'ce') . '
+      JOIN uni_release po ON po.id = l.parent_release_id JOIN uni_release pc ON pc.lineage_key = po.lineage_key AND pc.is_current = 1 AND pc.state = \'verified\' ' . $live('pc', 'pe') . "
+      JOIN uni_source ps ON ps.id = l.source_id WHERE c.lineage_key IN ($ph) OR pc.lineage_key IN ($ph) ORDER BY c.release_date, c.id, pc.release_date, pc.id LIMIT 1000");
+    $q->execute(array_merge($list, $list));
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
+      foreach ([$r['child_ref'], $r['parent_ref']] as $k) if (!isset($keys[$k])) { if (count($keys) >= $cap) { $truncated = true; continue 2; } $keys[$k] = true; }
+      $links[$r['parent_ref'] . '|' . $r['child_ref']] = ['from' => $r['parent_ref'], 'to' => $r['child_ref'], 'type' => 'release_parent', 'source' => uni_pub_source_brief([$r])[0]];
+    }
+    if (count($keys) === $before) break;
+  }
+  $nodes = [];
+  if ($keys) {
+    $list = array_keys($keys);
+    $q = $pdo->prepare('SELECT rl.lineage_key AS ref, rl.version_label, rl.release_date, rl.date_precision, en.slug AS entity_slug, en.name AS entity_name, so.url, so.publisher, so.retrieved_at FROM uni_release rl ' . $live('rl', 'en') .
+      " JOIN uni_source so ON so.id = rl.source_id WHERE rl.state = 'verified' AND rl.is_current = 1 AND rl.lineage_key IN (" . implode(',', array_fill(0, count($list), '?')) . ') ORDER BY rl.release_date, rl.id');
+    $q->execute($list);
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) { $src = uni_pub_source_brief([$r])[0]; unset($r['url'], $r['publisher'], $r['retrieved_at']); $nodes[$r['ref']] = $r + ['source' => $src]; }
+  }
+  $links = array_values(array_filter($links, fn($l) => isset($nodes[$l['from']], $nodes[$l['to']])));
+  // entity-level lineage edges (derived_from, built_on, successor_of, renamed_from only), each tagged with its lineage kind
+  $kinds = uni_lineage_edge_kinds(); $types = array_keys($kinds);
+  $e = $pdo->prepare('SELECT ed.id AS _id, ed.edge_type, ed.valid_from, ed.valid_to, fe.lineage_key AS f_ref, fe.slug AS f_slug, fe.entity_type AS f_type, fe.name AS f_name, te.lineage_key AS t_ref, te.slug AS t_slug, te.entity_type AS t_type, te.name AS t_name
+    FROM uni_edge ed ' . uni_live_entity_join('ed', 'from_entity_id', 'fe') . ' ' . uni_live_entity_join('ed', 'to_entity_id', 'te') . " WHERE ed.state = 'verified' AND ed.is_current = 1 AND (fe.slug = ? OR te.slug = ?) AND ed.edge_type IN (" . implode(',', array_fill(0, count($types), '?')) . ') ORDER BY ed.edge_type, ed.id LIMIT 100');
+  $e->execute(array_merge([$ent['slug'], $ent['slug']], $types)); $erows = $e->fetchAll(PDO::FETCH_ASSOC);
+  $esrc = uni_pub_sources($pdo, 'uni_edge_source', 'edge_id', array_map(fn($r) => (int)$r['_id'], $erows));
+  $enodes = [$ent['ref'] => uni_pub_entity_node(['ref' => $ent['ref'], 'slug' => $ent['slug'], 'type' => $ent['entity_type'], 'name' => $ent['name']])]; $elinks = [];
+  foreach ($erows as $r) {
+    $enodes[$r['f_ref']] = uni_pub_entity_node($r, 'f_'); $enodes[$r['t_ref']] = uni_pub_entity_node($r, 't_');
+    $elinks[] = ['from' => $r['f_ref'], 'to' => $r['t_ref'], 'type' => $kinds[$r['edge_type']], 'edge_type' => $r['edge_type'], 'valid_from' => $r['valid_from'], 'valid_to' => $r['valid_to'], 'sources' => uni_pub_source_brief($esrc[(int)$r['_id']] ?? [])];
+  }
+  return ['entity' => $ent['ref'], 'nodes' => array_values($nodes), 'edges' => $links, 'entities' => array_values($enodes), 'entity_edges' => $elinks, 'truncated' => $truncated, 'node_cap' => $cap,
+    'allowed_lineage_types' => ['technical_ancestry', 'product_succession', 'release_parent']];
+}
+/** Two verified, current releases of ONE entity, resolved by lineage ref (32 hex) or version label. @return array ['error' => code] or the diff */
+function uni_public_release_diff(PDO $pdo, $slug, $a, $b): array {
+  $ent = uni_public_entity($pdo, $slug); if (!$ent) return ['error' => 'entity_not_found'];
+  $find = function ($id) use ($pdo, $ent) {
+    if (!is_string($id) || $id === '' || mb_strlen($id) > 80) return ['error' => 'release_not_found'];
+    $col = preg_match('/^[0-9a-f]{32}$/D', $id) ? 'rl.lineage_key' : 'rl.version_label';
+    $s = $pdo->prepare('SELECT rl.id AS _id, rl.lineage_key AS ref, rl.version_label, rl.release_date, rl.date_precision, rl.change_set FROM uni_release rl ' . uni_live_entity_join('rl', 'entity_id', 'en') . " WHERE rl.state = 'verified' AND rl.is_current = 1 AND en.slug = ? AND $col = ? ORDER BY rl.id LIMIT 2");
+    $s->execute([$ent['slug'], $id]); $rows = $s->fetchAll(PDO::FETCH_ASSOC);
+    if (!$rows) return ['error' => 'release_not_found']; if (count($rows) > 1) return ['error' => 'release_ambiguous'];
+    return $rows[0];
+  };
+  $ra = $find($a); if (isset($ra['error'])) return $ra; $rb = $find($b); if (isset($rb['error'])) return $rb;
+  if ($ra['ref'] === $rb['ref']) return ['error' => 'same_release'];
+  $swapped = $ra['release_date'] > $rb['release_date']; if ($swapped) [$ra, $rb] = [$rb, $ra];
+  $cs = fn($r) => $r['change_set'] === null ? null : json_decode((string)$r['change_set'], true);
+  $ca = $cs($ra); $cb = $cs($rb); $isMap = fn($v) => is_array($v) && ($v === [] || !array_is_list($v));
+  $change = uni_unavailable('change_set_missing');
+  if ($isMap($ca) && $isMap($cb)) {
+    $added = []; $removed = []; $changed = []; $same = 0;
+    foreach ($cb as $k => $v) { $k = (string)$k; if (!array_key_exists($k, $ca)) $added[] = $k; elseif (json_encode($ca[$k]) !== json_encode($v)) $changed[] = ['key' => $k, 'from' => $ca[$k], 'to' => $v]; else $same++; }
+    foreach ($ca as $k => $v) if (!array_key_exists((string)$k, $cb)) $removed[] = (string)$k;
+    sort($added); sort($removed);
+    $change = ['available' => true, 'added' => $added, 'removed' => $removed, 'changed' => $changed, 'unchanged_count' => $same];
+  }
+  $days = (int)round((strtotime($rb['release_date'] . ' UTC') - strtotime($ra['release_date'] . ' UTC')) / 86400);
+  $facet = function (string $key, string $eventType) use ($pdo, $ent, $ra, $rb, $ca, $cb, $isMap) {
+    $out = ['available' => false, 'reason' => 'no_verified_data'];
+    $inA = $isMap($ca) && array_key_exists($key, $ca); $inB = $isMap($cb) && array_key_exists($key, $cb);
+    if ($inA || $inB) { $out = ['available' => true, 'change_set' => ['from' => $inA ? $ca[$key] : null, 'to' => $inB ? $cb[$key] : null, 'status' => !$inA ? 'added' : (!$inB ? 'removed' : (json_encode($ca[$key]) === json_encode($cb[$key]) ? 'unchanged' : 'changed'))]]; }
+    $s = $pdo->prepare('SELECT ev.id AS _id, ev.lineage_key AS ref, ev.event_type, ev.event_date, ev.date_precision, ev.title, ev.summary FROM uni_event ev ' . uni_live_entity_join('ev', 'entity_id', 'en') .
+      " WHERE ev.state = 'verified' AND ev.is_current = 1 AND en.slug = ? AND ev.event_type = ? AND ev.event_date > ? AND ev.event_date <= ? ORDER BY ev.event_date, ev.id LIMIT 20");
+    $s->execute([$ent['slug'], $eventType, $ra['release_date'], $rb['release_date']]); $rows = $s->fetchAll(PDO::FETCH_ASSOC);
+    if ($rows) { $src = uni_pub_sources($pdo, 'uni_event_source', 'event_id', array_map(fn($r) => (int)$r['_id'], $rows)); foreach ($rows as &$r) { $r['sources'] = uni_pub_source_brief($src[(int)$r['_id']] ?? []); unset($r['_id']); } unset($r); unset($out['reason']); $out['available'] = true; $out['events'] = $rows; }
+    return $out;
+  };
+  $brief = fn($r) => ['ref' => $r['ref'], 'version_label' => $r['version_label'], 'release_date' => $r['release_date'], 'date_precision' => $r['date_precision']];
+  return ['entity' => ['ref' => $ent['ref'], 'slug' => $ent['slug'], 'name' => $ent['name']], 'from' => $brief($ra), 'to' => $brief($rb), 'swapped_to_chronological_order' => $swapped, 'days_between' => $days,
+    'change_set' => $change, 'pricing' => $facet('pricing', 'pricing_change'), 'integrations' => $facet('integrations', 'integration')];
+}
+/** 2 to 4 verified entities side by side. Every field is {available: true, value} or {available: false, reason}: missing data is never guessed. @return array ['error' => code] or ['entities' => [...]] */
+function uni_public_compare(PDO $pdo, array $slugs): array {
+  $slugs = array_values(array_unique(array_filter($slugs, 'is_string')));
+  if (count($slugs) < 2 || count($slugs) > 4) return ['error' => 'count_invalid'];
+  $out = [];
+  foreach ($slugs as $slug) {
+    $e = uni_public_entity_detail($pdo, $slug); if (!$e) return ['error' => 'entity_not_found'];
+    $rel = uni_public_releases($pdo, ['entity_slug' => $slug], 1, 1); $evs = uni_public_events($pdo, ['entity_slug' => $slug], 1, 1); $price = uni_public_events($pdo, ['entity_slug' => $slug, 'event_type' => 'pricing_change'], 1, 1);
+    $dev = uni_public_edges($pdo, ['entity_slug' => $slug, 'edge_type' => 'developed_by'], 1, 20); $int = uni_public_edges($pdo, ['entity_slug' => $slug, 'edge_type' => 'integrates_with'], 1, 20);
+    $latest = $rel['items'][0] ?? null; $other = fn($ed) => $ed['from_slug'] === $slug ? ['slug' => $ed['to_slug'], 'name' => $ed['to_name']] : ['slug' => $ed['from_slug'], 'name' => $ed['from_name']];
+    $devs = array_values(array_map(fn($ed) => ['slug' => $ed['to_slug'], 'name' => $ed['to_name']], array_filter($dev['items'], fn($ed) => $ed['from_slug'] === $slug)));
+    $pricing = uni_unavailable();
+    if ($latest && is_array($latest['change_set']) && array_key_exists('pricing', $latest['change_set'])) $pricing = uni_available(['from' => 'latest_release_change_set', 'value' => $latest['change_set']['pricing']]);
+    elseif ($price['items']) { $p = $price['items'][0]; $pricing = uni_available(['from' => 'pricing_change_event', 'date' => $p['event_date'], 'title' => $p['title'], 'sources' => uni_pub_source_brief($p['sources'])]); }
+    $out[] = ['entity' => ['ref' => $e['ref'], 'slug' => $e['slug'], 'type' => $e['entity_type'], 'name' => $e['name']], 'fields' => [
+      'summary' => $e['summary'] !== '' ? uni_available($e['summary']) : uni_unavailable(),
+      'sources' => $e['sources'] ? uni_available(uni_pub_source_brief($e['sources'])) : uni_unavailable(),
+      'developer' => $devs ? uni_available($devs) : uni_unavailable(),
+      'release_count' => $rel['total'] > 0 ? uni_available($rel['total']) : uni_unavailable(),
+      'latest_release' => $latest ? uni_available(['version_label' => $latest['version_label'], 'release_date' => $latest['release_date'], 'date_precision' => $latest['date_precision'], 'source' => ['url' => $latest['source_url'], 'publisher' => $latest['source_publisher'], 'retrieved_at' => $latest['source_retrieved_at']]]) : uni_unavailable(),
+      'event_count' => $evs['total'] > 0 ? uni_available($evs['total']) : uni_unavailable(),
+      'latest_event' => $evs['items'] ? uni_available(['event_type' => $evs['items'][0]['event_type'], 'event_date' => $evs['items'][0]['event_date'], 'title' => $evs['items'][0]['title'], 'sources' => uni_pub_source_brief($evs['items'][0]['sources'])]) : uni_unavailable(),
+      'pricing' => $pricing,
+      'integrations' => $int['items'] ? uni_available(array_map($other, $int['items'])) : uni_unavailable()]];
+  }
+  return ['entities' => $out];
+}
