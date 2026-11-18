@@ -1,34 +1,99 @@
+name: Deploy production (manual, approval required)
 
-name: Deploy AI to VPS
+# Replaces the push-to-main auto-deploy. Nothing deploys on push or merge any more.
+# A person starts this workflow by hand with an exact commit SHA that is already on main and has a green CI run;
+# the "production" environment then pauses until a required reviewer approves (configure in GitHub settings, see docs/DEPLOY_PROTECTION.md).
+# No third-party action handles the SSH key: plain ssh with a pinned host key. Debug output is off.
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Full 40-character commit SHA on main to deploy'
+        required: true
+        type: string
+      confirm:
+        description: 'Type DEPLOY to confirm'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
 
 concurrency:
-  group: deploy-ai-main
-  cancel-in-progress: true
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
+  verify:
+    name: Verify the commit (no secrets available here)
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
     steps:
-      - name: Deploy AI on VPS
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          debug: true
-          script: |
-            set -e
-            whoami
-            pwd
-            cd /var/www/html/AI
-            git remote -v
-            git fetch origin main
-            git reset --hard origin/main
-            git log --oneline -n 3
+          fetch-depth: 0
+      - id: check
+        env:
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_CONFIRM: ${{ inputs.confirm }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [ "$INPUT_CONFIRM" = "DEPLOY" ] || { echo "confirmation text must be DEPLOY"; exit 1; }
+          [[ "$INPUT_REF" =~ ^[0-9a-f]{40}$ ]] || { echo "ref must be a full 40-character lower-case commit SHA"; exit 1; }
+          git cat-file -e "$INPUT_REF^{commit}" || { echo "unknown commit"; exit 1; }
+          git merge-base --is-ancestor "$INPUT_REF" origin/main || { echo "commit is not on main"; exit 1; }
+          ok=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$INPUT_REF&status=success" --jq '.total_count')
+          [ "$ok" -ge 1 ] || { echo "no successful CI run for this commit"; exit 1; }
+          echo "sha=$INPUT_REF" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy (waits for required reviewer)
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        env:
+          SHA: ${{ needs.verify.outputs.sha }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST_KEY: ${{ secrets.VPS_HOST_KEY }}   # the server's public host key line, so the host is verified
+          HEALTH_URL: ${{ vars.PROD_HEALTH_URL }}
+        run: |
+          set -euo pipefail
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]
+          umask 077
+          install -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s %s\n' "[$VPS_HOST]:$VPS_PORT" "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes "$VPS_USER@$VPS_HOST" \
+            "bash -s -- '$SHA' '$HEALTH_URL'" <<'REMOTE'
+          set -euo pipefail
+          SHA="$1"; HEALTH="$2"
+          cd /var/www/html/AI
+          # 1. refuse to overwrite hand edits on the server
+          [ -z "$(git status --porcelain)" ] || { echo "working tree is not clean: abort, nothing changed"; exit 1; }
+          PREV=$(git rev-parse HEAD)
+          # 2. a database/file backup is mandatory; the server admin provides this executable
+          [ -x /usr/local/bin/aihub-predeploy-backup ] || { echo "backup script missing: abort, nothing changed"; exit 1; }
+          /usr/local/bin/aihub-predeploy-backup
+          # 3. deploy exactly the approved commit
+          git fetch origin main
+          git merge-base --is-ancestor "$SHA" origin/main
+          git checkout --detach "$SHA"
+          # 4. health check, roll the files back if it fails (database changes are NOT rolled back by this)
+          if ! curl -fsS --max-time 20 -o /dev/null "$HEALTH"; then
+            echo "health check failed: restoring $PREV"; git checkout --detach "$PREV"; exit 1
+          fi
+          echo "deployed $SHA (previous $PREV)"
+          REMOTE
+      - name: Remove key material
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
