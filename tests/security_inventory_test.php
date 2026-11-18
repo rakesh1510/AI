@@ -38,7 +38,7 @@ foreach ($man as $f => $k) {
       ok(strpos($src, '$_GET') === false, "write endpoint $f does not read state from the query string");
       break;
     case 'token_write':
-      ok(preg_match('/form_token_valid\(|lead_validate\(|newsletter_valid_token\(/', $src) === 1, "token endpoint $f validates its secret token");
+      ok(preg_match('/form_token_valid\(|lead_validate\(|newsletter_valid_token\(|project_validate\(|partner_validate\(/', $src) === 1, "token endpoint $f validates its secret token");
       break;
     case 'admin':
       ok(preg_match('/admin_require\(/', $src) === 1, "admin page $f calls admin_require() before output");

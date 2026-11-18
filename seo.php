@@ -136,6 +136,11 @@ function seo_page_registry(): array {
     'subscribe.php' => ['title' => 'Subscribe to AIHubpedia Updates', 'desc' => 'Confirm your email subscription to AIHubpedia updates.', 'robots' => 'noindex'],
     'newsletter-confirm.php' => ['title' => 'Confirm Subscription', 'desc' => 'Confirm your AIHubpedia email subscription.', 'robots' => 'noindex'],
     'unsubscribe.php' => ['title' => 'Unsubscribe', 'desc' => 'Unsubscribe from AIHubpedia emails.', 'robots' => 'noindex'],
+    'services.php' => ['title' => 'AI Development Services by TrustNova Tech', 'desc' => 'Custom AI agents, enterprise assistants, document intelligence, workflow automation and custom software from TrustNova Tech.'],
+    'partners.php' => ['title' => 'Partner with AIHubpedia and TrustNova Tech', 'desc' => 'Apply to partner with AIHubpedia: AI vendors, startups, SaaS companies, affiliates, technology providers and agencies.'],
+    'project-inquiry.php' => ['title' => 'Project Inquiry', 'desc' => 'TrustNova Tech project inquiry form.', 'robots' => 'noindex'],
+    'partner-apply.php' => ['title' => 'Partnership Application', 'desc' => 'AIHubpedia partnership application form.', 'robots' => 'noindex'],
+    'crm.php' => ['title' => 'CRM', 'desc' => 'AIHubpedia internal CRM (sign-in required).', 'robots' => 'noindex'],
     'business.php' => ['title' => 'AI Consulting & Custom AI Agents by TrustNova Tech', 'desc' => 'Request an AI consultation or a custom AI agent or software project from TrustNova Tech. Tell us what you want to build.'],
     'disclosure.php' => ['title' => 'Advertising & Affiliate Disclosure', 'desc' => 'How AIHubpedia labels sponsored placements and affiliate links, and why paid placements never change a tool profile.'],
     '404.php' => ['title' => 'Page Not Found', 'desc' => 'The page you requested could not be found.', 'robots' => 'noindex'],
@@ -176,6 +181,7 @@ function seo_canonical_params(): array {
     'solutions.php' => ['problem'],
     'newsletter-issue.php' => ['slug'],
     'pricing-comparison.php' => ['group'],
+    'services.php' => ['s'],
   ];
 }
 

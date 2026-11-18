@@ -49,7 +49,9 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
       <div class="footerCol">
         <h3>For businesses</h3>
         <a href="/business.php">AI consultation &amp; custom agents</a>
+        <a href="/services.php">AI development services</a>
         <a href="/advertise.php">Advertise on AIHubpedia</a>
+        <a href="/partners.php">Partnerships</a>
         <a href="/submit.php">Submit your AI tool</a>
         <a href="/disclosure.php">Advertising &amp; affiliate disclosure</a>
         <a href="/contact.php">Contact</a>
