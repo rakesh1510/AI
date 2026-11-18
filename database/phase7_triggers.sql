@@ -252,7 +252,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a row cannot supersede itself';
     END IF;
     IF OLD.state = 'verified' THEN
-        IF NEW.state <> 'superseded'
+        IF (NEW.state <> 'superseded' AND NEW.state <> 'verified') OR (NEW.state = 'verified' AND NEW.is_current < OLD.is_current)
           OR NOT (NEW.entity_id <=> OLD.entity_id)
           OR NOT (NEW.event_id <=> OLD.event_id)
           OR NOT (CAST(NEW.version_label AS BINARY) <=> CAST(OLD.version_label AS BINARY))

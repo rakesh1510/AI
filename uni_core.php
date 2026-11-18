@@ -92,26 +92,42 @@ function uni_audit(PDO $pdo, ?int $actor, string $action, string $type = '', ?in
   $pdo->prepare('INSERT INTO uni_audit_log (at, actor_id, action, target_type, target_id, summary, detail) VALUES (?,?,?,?,?,?,?)')
       ->execute([gmdate('Y-m-d H:i:s') . '.' . str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT), $actor, substr($action, 0, 40), substr($type, 0, 12), $id, mb_substr(crm_scrub($summary), 0, 255), $detail ? json_encode($detail, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null]);
 }
-/** Runs $fn in a transaction (joins one already open). $fn returns [ok, result]; ok=false or an exception rolls back. Database rule violations map to stable codes. */
+const UNI_TX_ATTEMPTS = 4;          // a transaction that InnoDB picked as a deadlock victim (error 1213) is re-run this many times before giving up
+/** Runs $fn in a transaction (joins one already open). $fn returns [ok, result]; ok=false or an exception rolls back. Database rule violations map to stable codes.
+ *  Deadlock victims (1213) are retried from the start with a short random back-off ($fn must therefore only touch the database), then reported as 'deadlock'; lock wait timeouts as 'busy'. */
 function uni_tx(PDO $pdo, callable $fn): array {
+  static $depth = 0;                                                    // >0 while inside one of OUR transactions (nested calls rethrow retryable errors to the outermost)
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $own = !$pdo->inTransaction();
-  try {
-    if ($own) $pdo->beginTransaction();
-    $r = $fn();
-    if ($own) { if ($r[0]) $pdo->commit(); else $pdo->rollBack(); }
-    return $r;
-  } catch (Throwable $e) {
-    if ($own && $pdo->inTransaction()) $pdo->rollBack();
-    if ($e instanceof PDOException) {
-      $code = (int)($e->errorInfo[1] ?? 0); $st = (string)($e->errorInfo[0] ?? '');
-      if ($code === 1062) return [false, 'duplicate_current'];
-      if ($code === 3819 || $code === 4025) return [false, 'db_constraint'];
-      if ($st === '45000') return [false, 'db_rule'];
-      if ($code === 1452 || $code === 1451) return [false, 'reference_invalid'];
-    }
-    sec_log_exception($e, 'uni_tx');
-    return [false, 'error'];
+  for ($attempt = 1; ; $attempt++) {
+    $depth++;
+    try {
+      if ($own) $pdo->beginTransaction();
+      $r = $fn();
+      if ($own) { if ($r[0]) $pdo->commit(); else $pdo->rollBack(); }
+      return $r;
+    } catch (Throwable $e) {
+      if ($own && $pdo->inTransaction()) { try { $pdo->rollBack(); } catch (Throwable $e2) { /* connection state already reset by the server */ } }
+      if ($e instanceof PDOException) {
+        $code = (int)($e->errorInfo[1] ?? 0); $st = (string)($e->errorInfo[0] ?? '');
+        if ($code === 1213 || $code === 1205) {
+          if (!$own && $depth > 1) throw $e;                            // nested in our own transaction: the whole outer transaction is gone, let it retry
+          if ($code === 1213 && $own && $attempt < UNI_TX_ATTEMPTS) { usleep(random_int(5000, 30000) * $attempt); continue; }
+          return [false, $code === 1213 ? 'deadlock' : 'busy'];
+        }
+        if ($code === 1062) {
+          $m = $e->getMessage();
+          if (strpos($m, 'uq_uni_entity_current_slug') !== false) return [false, 'slug_taken'];
+          if (strpos($m, 'uq_uni_edge_current_triple') !== false) return [false, 'edge_exists'];
+          return [false, 'duplicate_current'];
+        }
+        if ($code === 3819 || $code === 4025) return [false, 'db_constraint'];
+        if ($st === '45000') return [false, 'db_rule'];
+        if ($code === 1452 || $code === 1451) return [false, 'reference_invalid'];
+      }
+      sec_log_exception($e, 'uni_tx');
+      return [false, 'error'];
+    } finally { $depth--; }
   }
 }
 /** Locks and returns one row of a uni table ($type whitelisted), or null. */

@@ -107,6 +107,12 @@ jobs:
       - name: Phase 7 read API tests (universe-api.php over HTTP, verified-only, no identity fields, hostile input, rate limit)
         run: php tests/phase7_api_test.php
 
+      - name: Phase 7 concurrency tests (separate OS processes and connections racing on accepts, corrections, attach, slugs, deadlocks; trigger and no-trigger modes)
+        run: php tests/phase7_concurrency_test.php
+
+      - name: Phase 7 database privilege model (least-privilege app, importer, public and migrator accounts; TRUNCATE needs DROP; triggers fire without SUPER)
+        run: php tests/phase7_privilege_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
