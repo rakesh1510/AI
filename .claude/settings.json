@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push origin main:*)",
+      "Bash(git push origin HEAD:main:*)",
+      "Bash(git push -u origin main:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push origin --force:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(gh release create:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(sftp:*)",
+      "Bash(rsync:*)",
+      "Bash(ftp:*)",
+      "Bash(lftp:*)",
+      "Read(./config.local.php)",
+      "Read(./data/.form_secret)"
+    ]
+  }
+}
