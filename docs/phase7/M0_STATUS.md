@@ -24,3 +24,6 @@ Branch `feat/aihubpedia-ai-universe-phase7`, based on the Phase 6 branch (draft 
 3. Case/trailing-space variants of state values under a case-insensitive collation.
 4. 20% second-reviewer sampling lives in the service layer.
 5. Source edits on verified rows are blocked, not flagged.
+
+## Graph rendering prototype (`prototypes/universe-graph/`, synthetic data only)
+Canvas + d3-force (worker) + d3-zoom + quadtree hit-test; accessible table view; six separate relationship types; public mode never draws unverified edges. Measured (two headless runs, indicative only): 500 and 5,000 nodes pass the thresholds (p95 frame <= 33 ms desktop, <= 50 ms mobile with 4x CPU throttle); 50,000 nodes pass on desktop only with clustering or progressive loading; 50,000 on mobile fails or sits at the threshold (50.0 and 50.1 ms). Not tested: real devices, GPU, screen readers, Firefox, WebKit. Not integrated with the PHP APIs yet.

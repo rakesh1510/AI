@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Universe graph prototype (synthetic data)</title>
+<style>
+:root{--bg:#fbfbf8;--fg:#1c1c1c;--muted:#555;--line:#c9c9c0;--panel:#fff;--accent:#0b5cad;--warn:#8a1c1c;--warnbg:#fde8e8;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);display:grid;grid-template-rows:auto 1fr;height:100dvh;overflow:hidden}
+header{padding:6px 12px;border-bottom:1px solid var(--line);background:#fff}
+.top{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+h1{font-size:1.05rem;margin:0 0 2px}
+.syn{margin:0;padding:4px 8px;background:var(--warnbg);color:var(--warn);border:2px solid var(--warn);font-weight:700;font-size:.85rem;border-radius:4px}
+.review{margin:4px 0 0;padding:4px 8px;background:#222;color:#fff;font-size:.8rem}
+button,select,input[type=search],summary,.chk{min-height:44px;min-width:44px;font:inherit}
+button,select,input[type=search]{border:1px solid #777;border-radius:6px;background:#fff;color:var(--fg);padding:4px 10px}
+button{cursor:pointer}
+button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+summary{display:flex;align-items:center;cursor:pointer;font-weight:600;padding:0 4px}
+details{border-top:1px solid var(--line)}
+#bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0}
+#bar label{display:flex;align-items:center;gap:6px;font-size:.9rem}
+#bar input[type=search]{flex:1 1 160px;min-width:0}
+.grp{display:flex;gap:4px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 12px}
+.chk{display:inline-flex;align-items:center;gap:6px;padding:0 6px}
+.chk input{width:24px;height:24px;margin:0}
+#legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2px 16px;padding:4px 0 8px}
+#legend .row{display:flex;align-items:center;gap:8px;min-height:32px;font-size:.88rem}
+#legend svg{flex:none}
+#legend small{color:var(--muted)}
+main{position:relative;display:grid;grid-template-columns:1fr;min-height:0}
+@media (min-width:860px){main.has-sel{grid-template-columns:1fr 360px}}
+#stage{position:relative;min-height:0;min-width:0;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;background:#fbfbf8}
+#hud{position:absolute;left:8px;bottom:8px;right:8px;pointer-events:none;font-size:.8rem;color:#333;text-shadow:0 0 3px #fff,0 0 3px #fff}
+#tablewrap{position:absolute;inset:0;overflow:auto;background:#fff;padding:8px}
+#tablewrap[hidden],canvas[hidden]{display:none}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;border-bottom:1px solid var(--line);padding:6px 8px;min-height:44px}
+tbody tr{height:44px;cursor:pointer}
+tbody tr:focus-visible{outline:3px solid #f5a623;outline-offset:-3px}
+tbody tr[aria-selected=true]{background:#dbeafe}
+.pager{display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap}
+#panel{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:8px 12px;min-height:0}
+#panel[hidden]{display:none}
+@media (max-width:859px){#panel{position:fixed;left:0;right:0;bottom:0;max-height:48dvh;border-left:0;border-top:3px solid var(--accent);box-shadow:0 -4px 12px rgba(0,0,0,.2);z-index:5}}
+#panel h2{font-size:1.05rem;margin:0;display:inline}
+#panel dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0;font-size:.9rem}
+#panel dt{color:var(--muted)}
+#panel dd{margin:0}
+#edges{list-style:none;margin:0;padding:0}
+#edges li{border-top:1px solid var(--line);padding:6px 0;font-size:.88rem}
+#edges .rel{display:flex;align-items:center;gap:8px;font-weight:600}
+#edges .cite{color:#333;margin-left:64px}
+.badge{display:inline-block;background:#222;color:#fff;font-size:.7rem;padding:1px 6px;border-radius:3px;margin-left:6px}
+.linkbtn{border:0;background:none;color:var(--accent);text-decoration:underline;padding:0 4px;min-height:44px;text-align:left}
+#results{list-style:none;margin:0;padding:0;position:absolute;z-index:6;background:#fff;border:1px solid #777;border-radius:6px;max-width:92vw;display:none}
+#results li{min-height:44px;display:flex;align-items:center;padding:0 12px;cursor:pointer}
+#results li[aria-selected=true],#results li:hover{background:#dbeafe}
+#progress{font-size:.8rem;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><h1>AI Universe graph prototype</h1>
+  <p class="syn" role="note">SYNTHETIC TEST DATA - randomly generated; none of these companies, products or relationships are real.</p></div>
+  <p class="review" id="reviewBanner" hidden>REVIEW MODE: unverified relationships are visible. Not for public display.</p>
+  <details id="controls" open>
+    <summary>Controls, filters and search</summary>
+    <div id="bar">
+      <div class="grp" role="group" aria-label="View">
+        <button id="vGraph" type="button" aria-pressed="true">Graph</button>
+        <button id="vTable" type="button" aria-pressed="false">Table</button>
+      </div>
+      <label>Nodes <select id="size" aria-label="Dataset size"></select></label>
+      <label>Loading <select id="load" aria-label="Loading strategy">
+        <option value="all">all at once</option><option value="progressive">progressive (1-hop)</option></select></label>
+      <input id="q" type="search" placeholder="Search nodes" aria-label="Search nodes by name" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+      <ul id="results" role="listbox" aria-label="Search results"></ul>
+    </div>
+    <fieldset id="filters"><legend class="sr">Filter by node type</legend></fieldset>
+  </details>
+  <details id="legendBox">
+    <summary>Legend (relationship types and node types)</summary>
+    <div id="legend"></div>
+  </details>
+</header>
+<main id="main">
+  <section id="stage" aria-label="Graph or table of nodes">
+    <canvas id="cv" tabindex="0" role="application"
+      aria-label="Interactive graph of synthetic nodes. Arrow keys pan, plus and minus zoom, Escape clears selection. For a keyboard and screen reader friendly list use the Table view."></canvas>
+    <div id="hud"><span id="progress"></span></div>
+    <div id="tablewrap" hidden>
+      <div class="pager">
+        <button id="prev" type="button">Previous</button>
+        <span id="pageinfo" aria-live="polite"></span>
+        <button id="next" type="button">Next</button>
+      </div>
+      <table id="tbl" role="grid" aria-label="Nodes (same data as the graph). Arrow keys move between rows, Enter opens details.">
+        <caption class="sr">SYNTHETIC TEST DATA - list of nodes</caption>
+        <thead><tr role="row"><th scope="col" role="columnheader">Name</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Company</th><th scope="col" role="columnheader">Links</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+  <aside id="panel" role="complementary" aria-label="Node details" hidden>
+    <div><h2 id="pname" tabindex="-1"></h2> <button id="pclose" type="button" aria-label="Close details">Close</button></div>
+    <dl id="pdl"></dl>
+    <h3 style="font-size:.95rem;margin:6px 0">Relationships (verified, with source)</h3>
+    <ul id="edges"></ul>
+  </aside>
+</main>
+<div id="live" class="sr" aria-live="polite"></div>
+<script src="vendor/d3-dispatch.min.js"></script>
+<script src="vendor/d3-timer.min.js"></script>
+<script src="vendor/d3-quadtree.min.js"></script>
+<script src="vendor/d3-force.min.js"></script>
+<script src="vendor/d3-color.min.js"></script>
+<script src="vendor/d3-interpolate.min.js"></script>
+<script src="vendor/d3-ease.min.js"></script>
+<script src="vendor/d3-selection.min.js"></script>
+<script src="vendor/d3-transition.min.js"></script>
+<script src="vendor/d3-drag.min.js"></script>
+<script src="vendor/d3-zoom.min.js"></script>
+<script src="data-gen.js"></script>
+<script src="graph.js"></script>
+</body>
+</html>
