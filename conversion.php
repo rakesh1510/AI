@@ -39,6 +39,11 @@ function lead_types(): array {
     'consultation' => ['label' => 'AI consultation', 'group' => 'business'],
     'ai_agent' => ['label' => 'Custom AI agent', 'group' => 'business'],
     'software_dev' => ['label' => 'Custom software development', 'group' => 'business'],
+    // Phase 6
+    'category_sponsor' => ['label' => 'Category sponsorship (register interest)', 'group' => 'advertise'],
+    'custom_campaign' => ['label' => 'Custom campaign', 'group' => 'advertise'],
+    'dev_project' => ['label' => 'TrustNova Tech project inquiry', 'group' => 'project'],
+    'partnership_application' => ['label' => 'Partnership application', 'group' => 'partner'],
   ];
 }
 /** Package catalogue for /advertise.php (data/sponsorship_packages.json). Listed prices come from the site configuration, inquiry packages carry no price. */
@@ -282,7 +287,7 @@ function render_lead_form(array $opts): string {
   $idp = $opts['id'] ?? 'lead';
   $fe = fn($k) => isset($err[$k]) ? '<p class="fieldError" id="' . $idp . '-' . $k . '-err" role="alert">' . $h($err[$k]) . '</p>' : '';
   $aria = fn($k) => isset($err[$k]) ? ' aria-invalid="true" aria-describedby="' . $idp . '-' . $k . '-err"' : '';
-  $o = '<form class="leadForm" method="post" action="/inquiry.php" novalidate>';
+  $o = '<form class="leadForm" method="post" action="' . $h($opts['action'] ?? '/inquiry.php') . '" novalidate>';
   if (!empty($err['_token']) || !empty($err['_bot'])) $o .= '<p class="fieldError" role="alert">' . $h($err['_token'] ?? $err['_bot']) . '</p>';
   $o .= '<input type="hidden" name="form_token" value="' . $h(form_token('lead')) . '"><input type="hidden" name="source_page" value="' . $h($opts['source'] ?? '') . '">';
   $o .= '<div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>';

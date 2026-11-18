@@ -28,10 +28,12 @@ $canonical = preg_replace('#^https?://(www\.)?(aihubpedia\.com|187\.77\.184\.173
 // Robots: error responses, registry noindex pages and parameterised (search/filter) URLs are not indexed.
 $__status = http_response_code();
 $robots = $robots ?? ($__page['robots'] ?? 'index');
-if ((is_int($__status) && $__status >= 400) || seo_has_noncanonical_params()) $robots = 'noindex';
+// A page may set a stricter full robots string (private pages use 'noindex, nofollow'); that must survive error statuses and be sent as the header too.
+$__strict_robots = is_string($robots) && strpos($robots, 'nofollow') !== false;
+if (((is_int($__status) && $__status >= 400) || seo_has_noncanonical_params()) && !$__strict_robots) $robots = 'noindex';
 $__robots_meta = $robots === 'index' ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
   : ($robots === 'noindex' ? 'noindex, follow' : $robots);
-if (!headers_sent() && strpos($__robots_meta, 'noindex') !== false) header('X-Robots-Tag: noindex, follow');
+if (!headers_sent() && strpos($__robots_meta, 'noindex') !== false) header('X-Robots-Tag: ' . ($__strict_robots ? $__robots_meta : 'noindex, follow'));
 
 $og_type = $og_type ?? 'website';
 $og_image = $og_image ?? site_url('/logo.png');

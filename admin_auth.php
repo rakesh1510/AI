@@ -83,7 +83,7 @@ function admin_require(string $title = 'Admin'): void {
   header('X-Robots-Tag: noindex, nofollow');
   if (!admin_enabled()) {
     http_response_code(503);
-    $GLOBALS['title'] = $title . ' — AIHubpedia';
+    $GLOBALS['title'] = $title . ' — AIHubpedia'; $robots = 'noindex, nofollow'; /* local variable: this function includes the layout, which reads $robots from the including scope */
     require __DIR__ . '/layout_top.php';
     echo '<section class="panel"><h1>Admin is disabled</h1><p class="small">No administrator password has been configured on this server. Set <code>AIHUB_ADMIN_PASS_HASH</code> to enable it. There is no default password.</p></section>';
     require __DIR__ . '/layout_bottom.php';
@@ -100,7 +100,7 @@ function admin_require(string $title = 'Admin'): void {
     }
   }
   if (admin_logged_in()) return;
-  $GLOBALS['title'] = $title . ' — AIHubpedia';
+  $GLOBALS['title'] = $title . ' — AIHubpedia'; $robots = 'noindex, nofollow'; /* local variable: this function includes the layout, which reads $robots from the including scope */
   require __DIR__ . '/layout_top.php';
   ?>
   <section class="panel" style="max-width:420px;margin:24px auto">

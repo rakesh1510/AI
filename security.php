@@ -126,8 +126,11 @@ function sec_secret(): string {
   if (is_file($file) && ($v = trim((string)@file_get_contents($file))) !== '') return $secret = $v;
   $v = bin2hex(random_bytes(32));
   if (@file_put_contents($file, $v, LOCK_EX) !== false) { @chmod($file, 0600); return $secret = $v; }
-  sec_log('secret_not_persisted', ['hint' => 'set AIHUB_FORM_SECRET']);
-  return $secret = $v;   // tokens will not validate on the next request: forms fail closed instead of using a guessable key
+  // Assign BEFORE logging. sec_log() builds its network hash with sec_ip_hash(), which calls sec_secret() again; with $secret still null that
+  // recursed until the 30 s execution limit and every page answered HTTP 500 when the web server user could not write data/.form_secret.
+  $secret = $v;
+  sec_log('secret_not_persisted', ['hint' => 'set AIHUB_FORM_SECRET or make data/ writable by the web server user']);
+  return $secret;   // tokens will not validate on the next request: forms fail closed instead of using a guessable key
 }
 
 /** Short salted hash of the client network, used only for rate limiting and abuse counters. IPv6 is truncated to /64. */

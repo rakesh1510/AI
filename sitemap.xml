@@ -16,6 +16,8 @@
   <url><loc>https://aihubpedia.com/community.php</loc><changefreq>weekly</changefreq><priority>0.4</priority></url>
   <url><loc>https://aihubpedia.com/submit.php</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://aihubpedia.com/business.php</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://aihubpedia.com/services.php</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://aihubpedia.com/partners.php</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://aihubpedia.com/disclosure.php</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://aihubpedia.com/advertise.php</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://aihubpedia.com/about.php</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
@@ -24,6 +26,16 @@
   <url><loc>https://aihubpedia.com/privacy.php</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://aihubpedia.com/terms.php</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://aihubpedia.com/impressum.php</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=custom-ai-agents</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=enterprise-ai-assistants</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=rag-document-intelligence</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=ai-workflow-automation</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=custom-saas-applications</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=api-integrations</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=backend-development</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=software-modernization</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=cloud-solutions</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://aihubpedia.com/services.php?s=ai-business-applications</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://aihubpedia.com/category.php?name=Audio</loc><lastmod>2026-03-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://aihubpedia.com/category.php?name=Audio&amp;sub=voice-speech</loc><lastmod>2026-03-05</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://aihubpedia.com/category.php?name=Automation</loc><lastmod>2026-03-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>

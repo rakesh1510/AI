@@ -45,10 +45,11 @@ $phase = [
   'database/phase2_analytics.sql' => ['page_views' => ['traffic statistics (optional; off unless AIHUB_ANALYTICS=1)', 'no statistics are recorded']],
   'database/phase3_business.sql' => ['leads' => ['lead capture', 'forms show "temporarily unavailable" with an email fallback'], 'subscribers' => ['newsletter double opt-in', 'signup shows "temporarily unavailable"'], 'events' => ['consent-gated events', 'no events are recorded']],
   'database/phase4_business.sql' => ['leads' => ['lead qualification, attribution and status (additive columns)', 'extra answers are appended to the message; status/attribution unavailable'], 'lead_status_history' => ['lead status history', 'status changes work but history is not kept']],
+  'database/phase6_crm.sql' => [],
   'database/install_compare_tables.sql' => ['compare_tool_profiles' => ['source-backed comparison data', 'comparison pages use basic catalogue data'], 'compare_tool_points' => ['source-backed comparison data', 'comparison pages use basic catalogue data'], 'compare_tool_sources' => ['source-backed comparison data', 'comparison pages use basic catalogue data']],
 ];
 foreach ($phase as $file => $tables) foreach (parse_sql("$root/$file") as $t => $cols) {
-  $meta = $tables[$t] ?? ['feature', 'degrades'];
+  $meta = $tables[$t] ?? ($file === 'database/phase6_crm.sql' ? ['CRM, sales pipeline, proposals and revenue records (Phase 6)', 'the CRM at /crm.php shows "not set up"; public forms and every earlier feature keep working'] : ['feature', 'degrades']);
   if (isset($expected[$t])) { $expected[$t]['columns'] += $cols; $expected[$t]['file'] .= '; ' . $file; $ext = ($file === 'database/phase4_business.sql'); if ($ext) $expected[$t]['extension_columns'] = array_keys($cols); continue; }
   $expected[$t] = ['feature' => $meta[0], 'degrade' => $meta[1], 'required' => false, 'columns' => $cols, 'notes' => '', 'file' => $file];
 }
@@ -78,7 +79,8 @@ foreach ($expected as $t => $d) {
 }
 // ---- migration plan (text only) ----------------------------------------------------------------------------------------------------------
 $steps = [];
-$sqlFileFor = ['page_views' => 'phase2_analytics.sql', 'leads' => 'phase3_business.sql', 'subscribers' => 'phase3_business.sql', 'events' => 'phase3_business.sql', 'lead_status_history' => 'phase4_business.sql', 'compare_tool_profiles' => 'install_compare_tables.sql', 'compare_tool_points' => 'install_compare_tables.sql', 'compare_tool_sources' => 'install_compare_tables.sql', 'categories' => 'full_mysql_schema.sql', 'tools' => 'full_mysql_schema.sql', 'posts' => 'full_mysql_schema.sql', 'use_cases' => 'full_mysql_schema.sql', 'site_settings' => 'full_mysql_schema.sql', 'submissions' => 'full_mysql_schema.sql'];
+foreach (array_keys(parse_sql("$root/database/phase6_crm.sql")) as $__t6) $sqlFileFor[$__t6] = 'phase6_crm.sql';
+$sqlFileFor = ($sqlFileFor ?? []) + ['page_views' => 'phase2_analytics.sql', 'leads' => 'phase3_business.sql', 'subscribers' => 'phase3_business.sql', 'events' => 'phase3_business.sql', 'lead_status_history' => 'phase4_business.sql', 'compare_tool_profiles' => 'install_compare_tables.sql', 'compare_tool_points' => 'install_compare_tables.sql', 'compare_tool_sources' => 'install_compare_tables.sql', 'categories' => 'full_mysql_schema.sql', 'tools' => 'full_mysql_schema.sql', 'posts' => 'full_mysql_schema.sql', 'use_cases' => 'full_mysql_schema.sql', 'site_settings' => 'full_mysql_schema.sql', 'submissions' => 'full_mysql_schema.sql'];
 $idx = []; $q = $pdo->prepare('SELECT TABLE_NAME, INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = ?'); $q->execute([$dbName]); foreach ($q->fetchAll(PDO::FETCH_NUM) as [$t, $i]) $idx[strtolower($t)][$i] = true;
 $voteType = ''; if (isset($have['tool_votes']['vote_type'])) { $q = $pdo->prepare("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tool_votes' AND COLUMN_NAME = 'vote_type'"); $q->execute([$dbName]); $voteType = strtolower((string)$q->fetchColumn()); }
 foreach ($report as $r) {

@@ -163,7 +163,7 @@ foreach (['install-database.php', 'install-full-mysql.php', 'import-json-to-mysq
 }
 ok(!file_exists("$root/vote_debug.php"), 'debug endpoint that printed visitor IP/cookies is removed');
 // every endpoint that reads $_POST must carry a CSRF/token/auth guard
-$guards = '/sec_guard_write\(|sec_csrf_ok\(|form_token_valid\(|lead_validate\(|admin_csrf_ok\(|admin_require\(|sec_token_valid\(|\$_SESSION\[[\'"]csrf[\'"]\]/';
+$guards = '/sec_guard_write\(|sec_csrf_ok\(|crm_csrf_ok\(|project_validate\(|partner_validate\(|form_token_valid\(|lead_validate\(|admin_csrf_ok\(|admin_require\(|sec_token_valid\(|\$_SESSION\[[\'"]csrf[\'"]\]/';
 $unguarded = [];
 foreach ($files as $p) { $s = (string)file_get_contents($p); if (preg_match('/\$_POST/', $s) && !preg_match($guards, $s)) $unguarded[] = $rel($p); }
 $unguarded = array_values(array_filter($unguarded, fn($f) => !in_array($f, ['layout_top.php', 'layout_bottom.php'], true)));

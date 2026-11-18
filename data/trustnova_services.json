@@ -1,0 +1,216 @@
+{
+ "note": "TrustNova Tech service descriptions for /services.php. Original text. It contains NO client names, case studies, testimonials, results, team-size or location claims, because none are supplied. Do not add any without the owner's evidence.",
+ "honest_notes": [
+  "We have not published client case studies or references. If relevant experience exists for your project, we will describe it and share references only with the client's permission.",
+  "Every project starts with a written scope. We do not promise outcomes in advance; we agree how success will be measured.",
+  "AI systems can be wrong. We design for review, logging and fallbacks."
+ ],
+ "process": [
+  {
+   "step": "Inquiry",
+   "text": "You describe the problem. We reply by email if it looks like a fit. No obligation and no sales calls unless you ask for one."
+  },
+  {
+   "step": "Discovery",
+   "text": "We clarify goals, data, constraints and risks."
+  },
+  {
+   "step": "Proposal",
+   "text": "A written scope, timeline and price for you to review."
+  },
+  {
+   "step": "Delivery",
+   "text": "Iterative build with regular reviews and automated tests."
+  },
+  {
+   "step": "Handover",
+   "text": "Code, documentation and a maintenance option."
+  }
+ ],
+ "services": {
+  "custom-ai-agents": {
+   "title": "Custom AI agents",
+   "summary": "Software agents that carry out a defined task with your data and tools, with limits, logging and a person in control where it matters.",
+   "good_fit": [
+    "Teams with a repeatable, rules-driven task that currently takes manual effort",
+    "Processes where a mistake is recoverable and can be reviewed"
+   ],
+   "deliverables": [
+    "Scoped design of the task, tools the agent may use and what it must never do",
+    "A working agent with logging and an approval step for risky actions",
+    "Evaluation on examples from your own process, with the failures reported",
+    "Handover notes and a maintenance plan"
+   ],
+   "questions": [
+    "What is the task, and what does a correct result look like?",
+    "Which systems must it read or change, and who owns them?",
+    "What happens when it is wrong or unsure?"
+   ]
+  },
+  "enterprise-ai-assistants": {
+   "title": "Enterprise AI assistants",
+   "summary": "Assistants for employees or customers that answer from approved company knowledge, respect access rules and say when they do not know.",
+   "good_fit": [
+    "Organisations with documented knowledge that people struggle to find",
+    "Support and internal-help scenarios where answers must be traceable"
+   ],
+   "deliverables": [
+    "Requirements for sources, access control and tone",
+    "An assistant that cites the documents it used and declines questions outside its scope",
+    "Test set of real questions with measured answer quality",
+    "Monitoring and feedback loop"
+   ],
+   "questions": [
+    "Who may see which documents?",
+    "What are the ten questions it must answer well?",
+    "What must it refuse?"
+   ]
+  },
+  "rag-document-intelligence": {
+   "title": "RAG and document intelligence",
+   "summary": "Retrieval-based systems that search, summarise and extract facts from your documents with references back to the source passage.",
+   "good_fit": [
+    "Contracts, manuals, policies, research or case files that are too large to read",
+    "Teams that need citations, not just answers"
+   ],
+   "deliverables": [
+    "Ingestion pipeline for your document formats",
+    "Retrieval tuned on your own examples, with citations to the source passage",
+    "Extraction of structured fields where that is the goal",
+    "An evaluation report that states where it fails"
+   ],
+   "questions": [
+    "What formats and volumes are involved?",
+    "How are documents updated or withdrawn?",
+    "How will correctness be checked?"
+   ]
+  },
+  "ai-workflow-automation": {
+   "title": "AI workflow automation",
+   "summary": "Automations that connect your existing tools and use AI only where it adds value, with clear fallbacks to a person.",
+   "good_fit": [
+    "Operations teams with multi-step, repetitive work across several systems",
+    "Companies that want fewer manual hand-offs without replacing their tools"
+   ],
+   "deliverables": [
+    "Process map and a decision on what should and should not be automated",
+    "Implemented workflow with error handling and alerts",
+    "Runbook for the people who operate it"
+   ],
+   "questions": [
+    "Which steps are manual today and how often do they run?",
+    "What are the exceptions?",
+    "Who is alerted when it fails?"
+   ]
+  },
+  "custom-saas-applications": {
+   "title": "Custom SaaS applications",
+   "summary": "Web applications built for a specific business process or product idea, from first release to a maintainable codebase.",
+   "good_fit": [
+    "Founders and businesses with a defined product or process",
+    "Teams that outgrew spreadsheets or off-the-shelf tools"
+   ],
+   "deliverables": [
+    "Scope and priorities for a first release",
+    "Working application with authentication, data model and admin tools",
+    "Automated tests for the critical paths and deployment instructions",
+    "Source code and documentation handed over"
+   ],
+   "questions": [
+    "Who are the users and what must the first release do?",
+    "What existing systems must it integrate with?",
+    "What are the security and privacy requirements?"
+   ]
+  },
+  "api-integrations": {
+   "title": "API integrations",
+   "summary": "Reliable connections between your systems and third-party services, including data mapping, retries and monitoring.",
+   "good_fit": [
+    "Businesses whose tools do not talk to each other",
+    "Products that need to connect to partner or customer systems"
+   ],
+   "deliverables": [
+    "Integration design covering data mapping, authentication and failure handling",
+    "Implemented and tested integration with logging",
+    "Documentation of limits, rate limits and error behaviour"
+   ],
+   "questions": [
+    "Which systems and APIs are involved?",
+    "What volume and latency are expected?",
+    "How should failures be handled?"
+   ]
+  },
+  "backend-development": {
+   "title": "Backend development",
+   "summary": "Server-side services, databases and APIs designed for correctness, security and operations.",
+   "good_fit": [
+    "Teams that need to extend or stabilise a backend",
+    "Products that need a clean API for web or mobile apps"
+   ],
+   "deliverables": [
+    "Service and data design reviewed with you",
+    "Implemented services with automated tests",
+    "Operational notes: configuration, backups, monitoring"
+   ],
+   "questions": [
+    "What does the system store and who may access it?",
+    "What load do you expect?",
+    "What is your hosting environment?"
+   ]
+  },
+  "software-modernization": {
+   "title": "Enterprise software modernisation",
+   "summary": "Stepwise improvement of ageing applications: assessment, risk reduction, and incremental replacement rather than a risky rewrite.",
+   "good_fit": [
+    "Organisations running critical software that is hard to change",
+    "Teams facing unsupported frameworks or fragile deployments"
+   ],
+   "deliverables": [
+    "Assessment of the current system, its risks and options, in writing",
+    "A staged plan that keeps the business running",
+    "Implemented first stage with tests around existing behaviour"
+   ],
+   "questions": [
+    "What does the system do and who depends on it?",
+    "What breaks or hurts today?",
+    "What constraints apply (compliance, downtime)?"
+   ]
+  },
+  "cloud-solutions": {
+   "title": "Cloud solutions",
+   "summary": "Cloud architecture and deployment for applications, with attention to cost, security and recoverability.",
+   "good_fit": [
+    "Teams moving to or optimising cloud infrastructure",
+    "Products that need repeatable deployments and backups"
+   ],
+   "deliverables": [
+    "Architecture proposal with cost drivers explained",
+    "Infrastructure as code and deployment pipeline",
+    "Backup, restore and monitoring procedures tested with you"
+   ],
+   "questions": [
+    "Which cloud and compliance requirements apply?",
+    "What availability do you need?",
+    "Who will operate it afterwards?"
+   ]
+  },
+  "ai-business-applications": {
+   "title": "AI-powered business applications",
+   "summary": "Applications where AI is a feature of a business workflow: classification, drafting, search or recommendations, with human review built in.",
+   "good_fit": [
+    "Businesses adding AI capabilities to an existing process or product",
+    "Teams that need evaluation and guardrails, not just a demo"
+   ],
+   "deliverables": [
+    "Problem framing and success measures agreed before building",
+    "Application with AI components, evaluation on your data and a review step",
+    "Documentation of known limitations and monitoring plan"
+   ],
+   "questions": [
+    "What decision or task should the AI support?",
+    "What data is available and how sensitive is it?",
+    "How will we measure that it helps?"
+   ]
+  }
+ }
+}

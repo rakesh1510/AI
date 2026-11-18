@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/crm_intake.php';
 $title = 'Advertise on AIHubpedia: Featured & Spotlight Listings';
 $meta_desc = 'Pricing and options for labelled featured listings and homepage spotlight placements on AIHubpedia, plus affiliate partnership enquiries.';
 $tiers = pricing_tiers();
@@ -88,6 +89,11 @@ require __DIR__ . '/layout_top.php';
       <h2>What we report, and what we do not</h2>
       <p class="small">We do not publish audience, traffic or subscriber figures, because we have not yet measured an audience we could stand behind. If you sponsor, we agree in writing, before it starts, what we can actually measure and how (for example, outbound clicks counted on our own redirect). We report raw counts with the dates they cover. We do not promise rankings, traffic, sign-ups or revenue, and a sponsor cannot change a tool's facts, evidence level or position in editorial recommendations.</p>
     </div>
+    <div class="panel" style="margin-top:18px" id="definitions">
+      <h2>Reporting definitions</h2>
+      <dl class="small"><?php foreach (crm_reporting_definitions() as $term => $def): ?><dt><strong><?= htmlspecialchars(ucwords(str_replace('_', ' ', $term)), ENT_QUOTES) ?></strong></dt><dd style="margin:0 0 8px"><?= htmlspecialchars($def, ENT_QUOTES) ?></dd><?php endforeach; ?></dl>
+      <p class="small">Sponsored items always carry a visible label (“Sponsored”, “Advertisement” or “Partner content”) and are reviewed against our <a href="/methodology.php">methodology</a> before they run. Approval is a person’s decision recorded internally.</p>
+    </div>
     <div class="panel" style="margin-top:18px">
       <h2>How it works</h2>
       <ol class="steps"><li><div>Send your request below (or <a href="/submit.php">submit your tool</a> for a standard listing).</div></li><li><div>We review the tool against our <a href="/methodology.php">methodology</a>; not every tool is accepted.</div></li><li><div>If accepted, we agree the placement and dates by email before anything goes live.</div></li></ol>
@@ -96,7 +102,7 @@ require __DIR__ . '/layout_top.php';
   <div class="panel" id="request">
     <h2>Advertiser or partner enquiry</h2>
     <p class="small">Tell us what you would like to do. Choosing a package is optional and not a commitment.</p>
-    <?= render_lead_form(['types' => ['advertiser', 'affiliate_partner', 'newsletter_sponsor'], 'default' => $default, 'package' => $pkg, 'packages' => true, 'id' => 'adv', 'source' => '/advertise.php', 'budget' => false, 'message_label' => 'Tell us about your tool and what you would like to do', 'button' => 'Send enquiry']) ?>
+    <?= render_lead_form(['types' => ['advertiser', 'category_sponsor', 'custom_campaign', 'newsletter_sponsor', 'affiliate_partner'], 'default' => $default, 'package' => $pkg, 'packages' => true, 'id' => 'adv', 'source' => '/advertise.php', 'budget' => false, 'message_label' => 'Tell us about your tool and what you would like to do', 'button' => 'Send enquiry']) ?>
   </div>
 </div>
 

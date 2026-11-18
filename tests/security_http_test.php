@@ -59,8 +59,12 @@ $r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'
 ok($r['code'] === 403, 'vote without token rejected (' . $r['code'] . ')');
 $r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], ['X-CSRF-Token: ' . $tok, 'Origin: https://evil.example']);
 ok($r['code'] === 403, 'vote with valid token but foreign Origin rejected (' . $r['code'] . ')');
-$r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], ['X-CSRF-Token: ' . substr($tok, 0, -1) . '0', 'Origin: http://' . $host]);
+// The tampered token must DIFFER from the real one. Replacing the last character with a fixed '0' left the token unchanged 1 time in 16 (CI run #40, MySQL 8.0 job), which made this check flaky; choose a different character.
+$last = substr($tok, -1); $flip = $last === '0' ? '1' : '0';
+$r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], ['X-CSRF-Token: ' . substr($tok, 0, -1) . $flip, 'Origin: http://' . $host]);
 ok($r['code'] === 403, 'vote with tampered token rejected');
+$r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], ['X-CSRF-Token: ' . substr($tok, 1), 'Origin: http://' . $host]);
+ok($r['code'] === 403, 'vote with truncated token rejected');
 $r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'chatgpt', 'type' => 'up'], ['X-CSRF-Token: ' . $tok, 'Origin: http://' . $host]);
 ok($r['code'] === 200 && (json_decode($r['body'], true)['likes'] ?? -1) >= 0, 'vote with token and same origin accepted');
 $r = http('POST', "$base/vote-tool-ajax.php", ['id' => 'no-such-tool-xyz', 'type' => 'up'], ['X-CSRF-Token: ' . $tok, 'Origin: http://' . $host]);

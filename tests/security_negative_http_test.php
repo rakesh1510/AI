@@ -12,7 +12,8 @@ $rateDir = getenv('AIHUB_RATE_DIR') ?: '';
 $adminPw = getenv('AIHUB_TEST_ADMIN_PW') ?: 'ci-admin-test-pw';
 $smtpLog = getenv('AIHUB_SMTP_LOG') ?: '/tmp/smtp_sink.log';
 if (stripos((string)sec_setting('AIHUB_DB_NAME', 'db.name'), 'test') === false) { fwrite(STDERR, "Refusing: database name must contain 'test'\n"); exit(2); }
-db_connection_available(); $pdo = db();
+db_connection_available(); $pdo = db(); require_once $root . '/crm_core.php';
+$crmTemp = false; if (crm_tables_ready() && !(int)$pdo->query('SELECT COUNT(*) FROM crm_users')->fetchColumn()) { crm_user_create($pdo, 'negtest', 'Neg Test', 'viewer', password_hash(bin2hex(random_bytes(12)), PASSWORD_DEFAULT)); $crmTemp = true; }   // so crm.php answers with the sign-in form (not the 503 'disabled' page) during the barrage
 $host = parse_url($base, PHP_URL_HOST) . ':' . parse_url($base, PHP_URL_PORT);
 $own = ['Origin: http://' . $host];
 $pass = 0; $fail = 0;
@@ -30,7 +31,7 @@ function http(string $method, string $url, $body = null, array $headers = [], ?s
 function clear_rate(): void { global $rateDir; foreach (glob($rateDir . '/*') ?: [] as $f) @unlink($f); }
 function snapshot(): array {
   global $pdo, $root; $s = [];
-  foreach (['leads', 'subscribers', 'tool_votes', 'tool_clicks', 'contact_messages', 'submissions', 'lead_status_history', 'ratings'] as $t) { try { $s["db:$t"] = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn(); } catch (Throwable $e) { /* table may not exist */ } }
+  foreach (['leads', 'subscribers', 'tool_votes', 'tool_clicks', 'contact_messages', 'submissions', 'lead_status_history', 'ratings', 'crm_companies', 'crm_contacts', 'crm_leads', 'crm_opportunities', 'crm_proposals', 'crm_contracts', 'crm_campaigns', 'crm_partners', 'crm_prospects', 'crm_outreach_drafts', 'crm_tasks', 'crm_activities', 'crm_audit_log', 'crm_users'] as $t) { try { $s["db:$t"] = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn(); } catch (Throwable $e) { /* table may not exist */ } }
   try { $s['db:settings'] = md5(json_encode($pdo->query('SELECT setting_key, setting_value FROM site_settings ORDER BY 1')->fetchAll())); } catch (Throwable $e) {}
   foreach (glob($root . '/data/*.json') as $f) $s['file:' . basename($f)] = md5_file($f);
   return $s;
@@ -56,7 +57,7 @@ clear_rate();
 $before = snapshot();
 $payloads = ["' OR '1'='1", "1; DROP TABLE leads;--", '" onmouseover="alert(1)', '<script>alert(1)</script>', '../../data/site.json', '..%2f..%2fdata%2fsite.json', "%00", "php://filter/convert.base64-encode/resource=helpers.php", "\r\nSet-Cookie: pwn=1", "{{7*7}}", str_repeat('A', 5000), '-1 UNION SELECT 1,2,3--', 'javascript:alert(1)', '//evil.example', '${jndi:ldap://x}'];
 $params = ['id', 'q', 'slug', 'name', 'tool', 'a', 'b', 'group', 'problem', 'token', 'page', 'sub', 'cat', 'price', 'objective', 'budget', 'package', 'need', 'type', 'return', 'context', 'next', 'url', 'redirect', 'sent', 'ref', 'utm_source'];
-$endpoints = array_merge($byKind['page'], $byKind['write'], $byKind['token_write'], $byKind['redirect'], $byKind['admin'], $byKind['retired']);
+$endpoints = array_merge($byKind['page'], $byKind['write'], $byKind['token_write'], $byKind['redirect'], $byKind['admin'], $byKind['crm_admin'] ?? [], $byKind['retired']);
 $errors = []; $leaks = []; $reflect = []; $five = [];
 foreach ($endpoints as $f) {
   if (in_array($f, ['sitemap.php'], true)) continue;
@@ -150,9 +151,9 @@ $pdo->exec('DELETE FROM subscribers');
 
 section('Admin: access control matrix and brute force');
 $jar = tempnam(sys_get_temp_dir(), 'adm');
-foreach (['/admin.php', '/admin-leads.php', '/admin-editorial.php'] as $p) {
+foreach (['/admin.php', '/admin-leads.php', '/admin-editorial.php', '/crm.php'] as $p) {
   $r = http('GET', $base . $p, null, [], $jar);
-  ok(in_array($r['code'], [200, 503], true) && stripos($r['body'], 'Admin sign-in') !== false && !preg_match('/@example\.test|Total leads|Tool submissions|Review history/', $r['body']), "$p shows only the sign-in form to anonymous visitors");
+  ok(in_array($r['code'], [200, 503], true) && preg_match('/(Admin|CRM) sign-in/i', $r['body']) && !preg_match('/@example\.test|Total leads|Tool submissions|Review history/', $r['body']), "$p shows only the sign-in form to anonymous visitors");
   foreach (['set_status' => ['id' => 1, 'status' => 'won'], 'approve' => ['i' => 0], 'mark_paid' => ['i' => 0], 'reject' => ['i' => 0], 'review' => ['tool_id' => 'chatgpt', 'action' => 'verify', 'reviewer' => 'Mallory', 'confirm' => '1', 'sources_checked' => 3, 'checklist' => ['sources_opened' => '1', 'pricing_checked' => '1', 'features_checked' => '1', 'conflicts_handled' => '1', 'no_marketing_claims' => '1']]] as $act => $extra) {
     $b = snapshot(); $r = http('POST', $base . $p, ['admin_action' => $act] + $extra, $own, $jar); $a = snapshot();
     ok(diff($b, $a) === [] && !in_array($r['code'], [500], true), "anonymous $act on $p changes nothing (HTTP {$r['code']})");
@@ -202,5 +203,6 @@ $p = http('POST', "$base/newsletter-confirm.php", ['token' => str_repeat('c', 32
 ok($p['code'] === 400, 'an unknown token is refused');
 $pdo->exec('DELETE FROM subscribers'); $pdo->exec('DELETE FROM leads');
 
+if ($crmTemp) { $pdo->exec('DELETE FROM crm_audit_log'); $pdo->exec("DELETE FROM crm_users WHERE username = 'negtest'"); }
 echo "\nPASSED: $pass  FAILED: $fail\n";
 exit($fail ? 1 : 0);

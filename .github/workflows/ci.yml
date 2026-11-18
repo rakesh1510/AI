@@ -12,11 +12,16 @@ permissions:
 
 jobs:
   test:
+    name: test (MySQL ${{ matrix.mysql }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']   # staging/production run MySQL 8.4.x; 8.0 stays covered for older hosts
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:${{ matrix.mysql }}
         env:
           MYSQL_ROOT_PASSWORD: root_test_only
           MYSQL_DATABASE: aihub_test
@@ -72,17 +77,26 @@ jobs:
       - name: Phase 5 content backlog integrity (evidence gates, no invented figures)
         run: php tests/content_backlog_test.php
 
+      - name: Phase 6 CRM logic tests (roles, leads, deduplication, pipeline, proposals, revenue, campaigns, partners, outreach drafts, dashboard)
+        run: php tests/crm_logic_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 
       - name: Security regression tests (proxy trust, redirects, CSRF, rate limits, secrets, admin)
         run: php tests/security_test.php
 
+      - name: Secret-initialisation regression (pages must work when the signing secret cannot be written)
+        run: php tests/secret_init_test.php
+
       - name: Security inventory and secrets scan (every PHP file classified, no secrets in tracked files)
         run: php tests/security_inventory_test.php
 
       - name: Database compatibility scenarios (synthetic databases built from the repository SQL)
         run: php tests/db_compat_test.php
+
+      - name: Phase 6 migration test (additive, idempotent, relationships, rollback, 20,000-lead scale)
+        run: php tests/phase6_migration_test.php
 
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
@@ -110,6 +124,9 @@ jobs:
 
       - name: B2B lead reliability with mock mail (failure visibility, retry, status workflow)
         run: php tests/lead_reliability_test.php http://127.0.0.1:8002
+
+      - name: Phase 6 CRM and public intake over HTTP (authorization, CSRF, sessions, forms into the CRM, full workflow)
+        run: php tests/crm_http_test.php http://127.0.0.1:8002
 
       - name: Editorial verification queue (read-only audit of all tools)
         run: php scripts/editorial_queue.php --top=5
@@ -141,6 +158,12 @@ jobs:
         env:
           NODE_PATH: /tmp/pw/node_modules
         run: node tests/browser_phase4_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p4
+
+      - name: Phase 6 browser tests (services, partners, advertiser, CRM interface incl. axe; desktop, mobile, no-JS)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/browser_phase6_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p6
 
       - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
         env:
