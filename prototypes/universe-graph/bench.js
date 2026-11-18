@@ -9,6 +9,14 @@ const DataGen = require('./data-gen.js');
 
 const ROOT = __dirname;
 const QUICK = process.argv.includes('--quick');
+const ARG = (n, d) => { const a = process.argv.find(x => x.startsWith('--' + n + '=')); return a ? a.slice(n.length + 3) : d; };
+const ONLY_PROFILES = ARG('profiles', 'desktop,mobile').split(',');
+const ONLY_SIZES = ARG('sizes', '').split(',').filter(Boolean).map(Number);
+const ONLY_VARIANTS = ARG('variants', '').split(',').filter(Boolean);
+const REPEAT = +ARG('repeat', 1);
+const OUT = ARG('out', 'bench-results.json');
+const NO_CHECKS = process.argv.includes('--no-checks');
+const UPDATE_README = !process.argv.includes('--no-readme') && !process.argv.some(a => a.startsWith('--out='));
 const SETTLE_CAP = QUICK ? 20000 : 90000;
 const THRESH = { desktop: 33, mobile: 50, hit: 16 };
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.md': 'text/plain' };
@@ -35,8 +43,11 @@ const RUNS = [
   { size: 5000, variant: 'default', q: '' },
   { size: 50000, variant: 'default', q: '' },
   { size: 50000, variant: 'no-clustering', q: '&cluster=off' },
-  { size: 50000, variant: 'progressive', q: '&load=progressive' }
-];
+  { size: 50000, variant: 'progressive', q: '&load=progressive' },
+  { size: 500, variant: 'limits-off', q: '&limits=off' },
+  { size: 5000, variant: 'limits-off', q: '&limits=off' },
+  { size: 50000, variant: 'limits-off', q: '&limits=off' }
+].filter(r => (ONLY_SIZES.length ? ONLY_SIZES.includes(r.size) : true) && (ONLY_VARIANTS.length ? ONLY_VARIANTS.includes(r.variant) : r.variant !== 'limits-off'));
 
 async function newPage(browser, profile, extra) {
   const ctx = await browser.newContext(Object.assign({}, PROFILES[profile].ctx, extra || {}));
@@ -209,7 +220,7 @@ function table(results) {
   let md = '| Profile | Nodes | Variant | First paint (ms) | Layout settle (ms) | Frame avg / p95 (ms) | Hit-test mean / p95 (ms) | Idle full-quality redraw fit / k=2 (ms) | Click to paint (ms) | JS heap (MB) | Frame thr. | Verdict |\n|---|---|---|---|---|---|---|---|---|---|---|---|\n';
   for (const r of results) {
     const settle = r.layoutSettleMs + (r.layoutCappedAtLimit ? ' (stopped at cap, ' + r.layoutTicks + ' ticks)' : '');
-    md += `| ${r.profile} | ${r.nodes.toLocaleString('en-US')} | ${r.variant} | ${r.firstPaintMs} | ${settle} | ${r.frame.avgMs} / ${r.frame.p95Ms} | ${r.hitTest.batchMeanMs} / ${r.hitTest.perCallP95Ms} | ${r2(r.settledRedrawAtFit.ms)} / ${r2(r.settledRedrawAtDetail.ms)} | ${r.clickToPaint.meanMs} | ${r.heapAfterInteractionMB} | ${r.verdict.frameP95Threshold} | ${r.verdict.pass ? 'PASS' : 'FAIL'} |\n`;
+    md += `| ${r.profile}${r.repeat > 1 ? ' #' + r.repeat : ''} | ${r.nodes.toLocaleString('en-US')} | ${r.variant} | ${r.firstPaintMs} | ${settle} | ${r.frame.avgMs} / ${r.frame.p95Ms} | ${r.hitTest.batchMeanMs} / ${r.hitTest.perCallP95Ms} | ${r2(r.settledRedrawAtFit.ms)} / ${r2(r.settledRedrawAtDetail.ms)} | ${r.clickToPaint.meanMs} | ${r.heapAfterInteractionMB} | ${r.verdict.frameP95Threshold} | ${r.verdict.pass ? 'PASS' : 'FAIL'} |\n`;
   }
   return md;
 }
@@ -219,21 +230,20 @@ function table(results) {
   const browser = await chromium.launch({ args: ['--enable-precise-memory-info'] });
   const res = { generatedAt: new Date().toISOString(), chromium: browser.version(), quick: QUICK, thresholds: THRESH, settleCapMs: SETTLE_CAP, note: 'All data SYNTHETIC. Frame time = requestAnimationFrame interval during a scripted 390-frame zoom/pan; first 5 frames dropped.', calibration: {}, runs: [] };
   if (process.argv.includes('--checks-only')) { const C = await checks(browser, base); console.log(JSON.stringify(C, null, 1)); await browser.close(); srv.close(); return; }
-  for (const prof of ['desktop', 'mobile']) {
+  for (const prof of ONLY_PROFILES) {
     const { ctx, page } = await newPage(browser, prof); await page.goto(base + '/index.html?size=500'); res.calibration[prof] = await calibrate(page); await ctx.close();
   }
-  for (const prof of ['desktop', 'mobile']) for (const spec of RUNS) {
-    process.stderr.write(`run ${prof} ${spec.size} ${spec.variant}\n`);
-    try { const r = await runOne(browser, base, prof, spec); res.runs.push(r); process.stderr.write(`  first paint ${r.firstPaintMs}ms settle ${r.layoutSettleMs}ms p95 ${r.frame.p95Ms}ms hit ${r.hitTest.perCallP95Ms}ms\n`); }
-    catch (e) { res.runs.push({ profile: prof, size: spec.size, variant: spec.variant, error: String(e.message) }); process.stderr.write('  ERROR ' + e.message + '\n'); }
+  for (const prof of ONLY_PROFILES) for (const spec of RUNS) for (let rep = 1; rep <= REPEAT; rep++) {
+    process.stderr.write(`run ${prof} ${spec.size} ${spec.variant} #${rep}\n`);
+    try { const r = await runOne(browser, base, prof, spec); r.repeat = rep; res.runs.push(r); process.stderr.write(`  first paint ${r.firstPaintMs}ms settle ${r.layoutSettleMs}ms p95 ${r.frame.p95Ms}ms hit ${r.hitTest.perCallP95Ms}ms\n`); }
+    catch (e) { res.runs.push({ profile: prof, size: spec.size, variant: spec.variant, repeat: rep, error: String(e.message) }); process.stderr.write('  ERROR ' + e.message + '\n'); }
   }
-  process.stderr.write('checks\n');
-  res.checks = await checks(browser, base);
+  if (!NO_CHECKS) { process.stderr.write('checks\n'); res.checks = await checks(browser, base); }
   await browser.close(); srv.close();
-  fs.writeFileSync(path.join(ROOT, 'bench-results.json'), JSON.stringify(res, null, 2));
+  fs.writeFileSync(path.join(ROOT, OUT), JSON.stringify(res, null, 2));
   const md = table(res.runs.filter(r => !r.error));
   const rp = path.join(ROOT, 'README.md');
-  if (fs.existsSync(rp)) {
+  if (UPDATE_README && fs.existsSync(rp)) {
     let t = fs.readFileSync(rp, 'utf8');
     t = t.replace(/<!-- BENCH:START -->[\s\S]*<!-- BENCH:END -->/, '<!-- BENCH:START -->\n' + md + '\n<!-- BENCH:END -->');
     fs.writeFileSync(rp, t);
