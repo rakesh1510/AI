@@ -14,9 +14,12 @@ $pass = 0; $fail = 0; function ok(bool $c, string $m): void { global $pass, $fai
 $ddl = (string)file_get_contents($schema);
 if (preg_match('/^\s*INSERT\s+INTO/mi', $ddl)) { echo "Refusing: the schema file contains INSERT statements (data). Provide a DDL-only copy.\n"; exit(2); }
 $tmp = sys_get_temp_dir() . '/aihub_liveshape_' . getmypid(); @mkdir($tmp, 0700, true);
-file_put_contents("$tmp/live.sql", str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_unicode_ci', $ddl));   // MariaDB (used locally) has no 0900 collations; MySQL 8.4 does, and the CRM names none explicitly
-$cli = fn(string $sql, string $db = '') => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
-$file = fn(string $f) => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ' ' . escapeshellarg($DB) . ' < ' . escapeshellarg($f) . ' 2>&1');
+// MySQL 8 knows utf8mb4_0900_ai_ci and the DDL is used unchanged; MariaDB does not, so there (and only there) it is mapped to a close equivalent.
+$has0900 = false; $__c = new PDO("mysql:host=$H;charset=utf8mb4", $RU, $RP); foreach ($__c->query("SHOW COLLATION LIKE 'utf8mb4_0900_ai_ci'") as $__r) $has0900 = true; unset($__c);
+file_put_contents("$tmp/live.sql", $has0900 ? $ddl : str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_unicode_ci', $ddl)); echo '  (server collation support: ' . ($has0900 ? 'MySQL 8, DDL used unchanged' : 'MariaDB, 0900 mapped to unicode_ci') . ")\n";
+file_put_contents("$tmp/client.cnf", "[client]\nhost=$H\nuser=$RU\npassword=$RP\n"); chmod("$tmp/client.cnf", 0600);   // see tests/phase6_migration_test.php: no password on the command line
+$cli = fn(string $sql, string $db = '') => shell_exec('mysql --defaults-extra-file=' . escapeshellarg("$tmp/client.cnf") . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
+$file = fn(string $f) => shell_exec('mysql --defaults-extra-file=' . escapeshellarg("$tmp/client.cnf") . ' ' . escapeshellarg($DB) . ' < ' . escapeshellarg($f) . ' 2>&1');
 $cli("DROP DATABASE IF EXISTS `$DB`; CREATE DATABASE `$DB` CHARACTER SET utf8mb4;"); $o = $file("$tmp/live.sql"); if (trim((string)$o) !== '') { echo "could not build the scratch database: $o\n"; exit(2); }
 $pdo = new PDO("mysql:host=$H;dbname=$DB;charset=utf8mb4", $RU, $RP, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $tables = fn() => $pdo->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$DB' ORDER BY 1")->fetchAll(PDO::FETCH_COLUMN);

@@ -12,11 +12,16 @@ $RU = getenv('AIHUB_COMPAT_ROOT_USER') ?: $U; $RP = getenv('AIHUB_COMPAT_ROOT_PA
 $pass = 0; $fail = 0;
 function ok(bool $c, string $m): void { global $pass, $fail; if ($c) $pass++; else { $fail++; echo "  FAIL: $m\n"; } }
 function section(string $t): void { echo "== $t\n"; }
-$cli = fn(string $sql, string $db = '') => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
-$file = fn(string $f) => shell_exec('mysql -h' . escapeshellarg($H) . ' -u' . escapeshellarg($RU) . ' -p' . escapeshellarg($RP) . ' ' . escapeshellarg($DB) . ' < ' . escapeshellarg($f) . ' 2>&1');
+// Credentials go in a private option file, never on the command line: the MySQL 8 client prints "[Warning] Using a password on the command line
+// interface can be insecure" to stderr, which would be indistinguishable from a real migration message. The assertions below still require the
+// client's output to be EMPTY, so any genuine warning or error from the SQL is still caught.
+$tmp = sys_get_temp_dir() . '/aihub_p6mig_' . getmypid(); @mkdir($tmp, 0700, true);
+file_put_contents("$tmp/client.cnf", "[client]\nhost=$H\nuser=$RU\npassword=$RP\n"); chmod("$tmp/client.cnf", 0600);
+$cli = fn(string $sql, string $db = '') => shell_exec('mysql --defaults-extra-file=' . escapeshellarg("$tmp/client.cnf") . ($db !== '' ? ' ' . escapeshellarg($db) : '') . ' -e ' . escapeshellarg($sql) . ' 2>&1');
+$file = fn(string $f) => shell_exec('mysql --defaults-extra-file=' . escapeshellarg("$tmp/client.cnf") . ' ' . escapeshellarg($DB) . ' < ' . escapeshellarg($f) . ' 2>&1');
 $cli("DROP DATABASE IF EXISTS `$DB`; CREATE DATABASE `$DB` CHARACTER SET utf8mb4;");
 // Baseline = everything before Phase 6, built exactly like tests/setup_test_db.sh does
-$s = (string)file_get_contents("$root/database/full_mysql_schema.sql"); $tmp = sys_get_temp_dir() . '/aihub_p6mig_' . getmypid(); @mkdir($tmp, 0700, true);
+$s = (string)file_get_contents("$root/database/full_mysql_schema.sql");
 file_put_contents("$tmp/core.sql", substr($s, 0, strpos($s, 'CREATE TABLE IF NOT EXISTS tool_clicks')) . substr($s, strpos($s, 'CREATE TABLE IF NOT EXISTS submissions')));
 foreach (["$tmp/core.sql", "$root/tests/fixtures/interactions_current.sql", "$root/database/install_compare_tables.sql", "$root/database/phase2_analytics.sql", "$root/database/phase3_business.sql", "$root/database/phase4_business.sql"] as $f) { $o = $file($f); if (trim((string)$o) !== '' && stripos($o, 'ERROR') !== false) { echo "baseline build failed: $o\n"; exit(2); } }
 $cli("INSERT INTO leads (created_at, lead_type, name, email, message, consent_at) VALUES (NOW(), 'advertiser', 'Base Line', 'base@example.test', 'baseline row for the migration test', NOW()), (NOW(), 'consultation', 'Two', 'two@example.test', 'second baseline row for the migration test', NOW());", $DB);
@@ -62,8 +67,9 @@ $orphan = false; try { $pdo->exec("INSERT INTO crm_opportunities (company_id, ki
 foreach (['crm_audit_log', 'crm_leads', 'crm_companies'] as $t) $pdo->exec("DELETE FROM $t");
 
 section('Scale: 20,000 synthetic leads');
-$t0 = microtime(true); $pdo->exec('CREATE TEMPORARY TABLE d10 (d TINYINT)'); $pdo->exec('INSERT INTO d10 VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)'); $pdo->exec('CREATE TEMPORARY TABLE nums (seq INT PRIMARY KEY)'); $pdo->exec('INSERT INTO nums SELECT a.d + b.d * 10 + c.d * 100 + e.d * 1000 + f.d * 10000 + 1 FROM d10 a, d10 b, d10 c, d10 e, d10 f WHERE a.d + b.d * 10 + c.d * 100 + e.d * 1000 + f.d * 10000 < 20000');
-$pdo->exec("INSERT INTO crm_companies (name, domain, created_at, updated_at, is_synthetic) SELECT CONCAT('Company ', seq), CONCAT('c', seq, '.example'), NOW(), NOW(), 1 FROM nums");
+$t0 = microtime(true); // ordinary helper tables: MySQL refuses to open a TEMPORARY table more than once in one query (error 1137), MariaDB allows it
+$pdo->exec('CREATE TABLE p6_d10 (d TINYINT)'); $pdo->exec('INSERT INTO p6_d10 VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)'); $pdo->exec('CREATE TABLE p6_nums (seq INT PRIMARY KEY)'); $pdo->exec('INSERT INTO p6_nums SELECT a.d + b.d * 10 + c.d * 100 + e.d * 1000 + f.d * 10000 + 1 FROM p6_d10 a, p6_d10 b, p6_d10 c, p6_d10 e, p6_d10 f WHERE a.d + b.d * 10 + c.d * 100 + e.d * 1000 + f.d * 10000 < 20000');
+$pdo->exec("INSERT INTO crm_companies (name, domain, created_at, updated_at, is_synthetic) SELECT CONCAT('Company ', seq), CONCAT('c', seq, '.example'), NOW(), NOW(), 1 FROM p6_nums");
 $pdo->exec("INSERT INTO crm_contacts (company_id, name, email, email_norm, created_at, is_synthetic) SELECT id, CONCAT('Contact ', id), CONCAT('p', id, '@c', id, '.example'), CONCAT('p', id, '@c', id, '.example'), NOW(), 1 FROM crm_companies");
 $pdo->exec("INSERT INTO crm_leads (kind, subtype, company_id, contact_id, attr_source, status, message, created_at, updated_at, is_synthetic) SELECT ELT(1 + (id % 3), 'advertising', 'partnership', 'development'), 'x', company_id, id, ELT(1 + (id % 4), 'newsletter', 'search', 'direct', 'partner'), ELT(1 + (id % 4), 'new', 'qualified', 'disqualified', 'converted'), 'synthetic', NOW() - INTERVAL (id % 80) DAY, NOW(), 1 FROM crm_contacts");
 $pdo->exec("INSERT INTO crm_opportunities (lead_id, company_id, kind, title, stage, amount_minor, currency, created_at, updated_at, is_synthetic) SELECT id, company_id, kind, CONCAT('Opp ', id), ELT(1 + (id % 6), 'new', 'qualified', 'contacted', 'discovery', 'proposal', 'negotiation'), 100000 + id, 'EUR', NOW(), NOW(), 1 FROM crm_leads WHERE id % 4 = 0");
@@ -74,6 +80,7 @@ echo '  measured: ' . json_encode($m) . "\n";
 ok(is_array($m) && $m['filter_total'] > 1000 && $m['dash_inq'] === 20000 && $m['open_opps'] === 5000 && $m['dupes'] >= 2, 'the CRM reads 20,000 leads and 5,000 opportunities correctly: ' . json_encode($m));
 ok(is_array($m) && $m['filter_ms'] < 1500 && $m['search_ms'] < 1500 && $m['dashboard_ms'] < 3000 && $m['dedupe_ms'] < 500, 'list, search, dashboard and duplicate check stay fast at that size (ms: filter ' . ($m['filter_ms'] ?? '?') . ', search ' . ($m['search_ms'] ?? '?') . ', dashboard ' . ($m['dashboard_ms'] ?? '?') . ', dedupe ' . ($m['dedupe_ms'] ?? '?') . ')');
 
+$pdo->exec('DROP TABLE p6_nums'); $pdo->exec('DROP TABLE p6_d10');
 section('Rollback');
 $out = $file("$root/database/phase6_rollback.sql"); ok(trim((string)$out) === '', 'the rollback script runs without errors' . ($out ? ': ' . trim($out) : ''));
 ok(!array_filter($tables(), fn($t) => strpos($t, 'crm_') === 0) && $fingerprint() === $before, 'rollback removes only the CRM tables; every other table is unchanged');
