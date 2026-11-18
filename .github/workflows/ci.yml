@@ -104,6 +104,9 @@ jobs:
       - name: Phase 7 service layer tests (roles, maker-checker, provenance rules, verified-only public reads; trigger and no-trigger modes)
         run: php tests/phase7_service_test.php
 
+      - name: Phase 7 read API tests (universe-api.php over HTTP, verified-only, no identity fields, hostile input, rate limit)
+        run: php tests/phase7_api_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
