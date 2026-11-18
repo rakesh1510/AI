@@ -72,6 +72,9 @@ function sitemap_entries(): array {
 
   foreach (available_comparison_pairs($tools, 24) as [$a, $b]) $add(compare_page_url($a['id'], $b['id']), null, 'monthly', '0.5');
 
+  /* AI Universe pages are listed only when verified data exists for them (see up_sitemap_entries); a missing or empty ledger adds nothing. */
+  try { require_once __DIR__ . '/uni_pages.php'; foreach (up_sitemap_entries() as [$path, $freq, $prio]) $add(site_url($path), null, $freq, $prio); } catch (Throwable $e) { sec_log_exception($e, 'sitemap universe'); }
+
   if (posts_indexable()) $add(site_url('/blog.php'), null, 'weekly', '0.6');
   foreach (posts_indexable() as $p) {
     $slug = (string)($p['slug'] ?? '');

@@ -142,6 +142,9 @@ function seo_page_registry(): array {
     'partner-apply.php' => ['title' => 'Partnership Application', 'desc' => 'AIHubpedia partnership application form.', 'robots' => 'noindex'],
     'crm.php' => ['title' => 'CRM', 'desc' => 'AIHubpedia internal CRM (sign-in required).', 'robots' => 'noindex'],
     'business.php' => ['title' => 'AI Consulting & Custom AI Agents by TrustNova Tech', 'desc' => 'Request an AI consultation or a custom AI agent or software project from TrustNova Tech. Tell us what you want to build.'],
+    'universe-heatmap.php' => ['title' => 'AI Activity Heatmap: Verified AI Release Calendar', 'desc' => 'A calendar of verified AI releases, launches and updates by day. Every event is sourced and reviewed; days without verified activity stay empty.'],
+    'universe-lineage.php' => ['title' => 'AI Tool Lineage: Verified Release History of AI Models', 'desc' => 'Git-style release histories of AI models and products with dates, sources and documented lineage. Ancestry and succession are kept separate.'],
+    'universe-arena.php' => ['title' => 'AI Battle Arena: Compare AI Tools With Verified Data', 'desc' => 'Compare two to four AI products or models side by side using only verified, sourced data. Missing data is marked unavailable and no winner is declared.'],
     'disclosure.php' => ['title' => 'Advertising & Affiliate Disclosure', 'desc' => 'How AIHubpedia labels sponsored placements and affiliate links, and why paid placements never change a tool profile.'],
     '404.php' => ['title' => 'Page Not Found', 'desc' => 'The page you requested could not be found.', 'robots' => 'noindex'],
     'admin.php' => ['title' => 'Admin', 'desc' => 'AIHubpedia administration area for managing listings and settings.', 'robots' => 'noindex'],
@@ -182,6 +185,8 @@ function seo_canonical_params(): array {
     'newsletter-issue.php' => ['slug'],
     'pricing-comparison.php' => ['group'],
     'services.php' => ['s'],
+    'universe-lineage.php' => ['entity'],
+    'universe-arena.php' => ['e'],
   ];
 }
 
@@ -201,7 +206,7 @@ function seo_default_canonical(): string {
   $allowed = seo_canonical_params()[$script] ?? [];
   $params = [];
   foreach ($allowed as $key) {
-    $val = isset($_GET[$key]) ? trim((string)$_GET[$key]) : '';
+    $val = isset($_GET[$key]) && is_string($_GET[$key]) ? trim($_GET[$key]) : '';
     if ($val === '' || ($key === 'page' && (int)$val <= 1)) continue;
     $params[$key] = $val;
   }
