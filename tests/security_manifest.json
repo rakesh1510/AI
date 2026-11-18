@@ -13,6 +13,8 @@
   "crm_growth.php": "lib",
   "crm_dashboard.php": "lib",
   "crm_intake.php": "lib",
+  "crm_views.php": "lib",
+  "crm.php": "crm_admin",
   "services.php": "page",
   "partners.php": "page",
   "project-inquiry.php": "token_write",

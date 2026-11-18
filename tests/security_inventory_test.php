@@ -21,7 +21,7 @@ $unclassified = array_values(array_diff($files, array_keys($man)));
 $ghost = array_values(array_diff(array_keys($man), $files));
 ok($unclassified === [], 'all top-level PHP files are in the security manifest (unclassified: ' . implode(', ', $unclassified) . ')');
 ok($ghost === [], 'manifest has no entries for deleted files (' . implode(', ', $ghost) . ')');
-$kinds = ['lib', 'cli', 'page', 'write', 'token_write', 'admin', 'demo', 'redirect', 'retired'];
+$kinds = ['lib', 'cli', 'page', 'write', 'token_write', 'admin', 'crm_admin', 'demo', 'redirect', 'retired'];
 foreach ($man as $f => $k) ok(in_array($k, $kinds, true), "$f has a valid kind");
 
 $sinks = '/\b(write_json|file_put_contents|fwrite|unlink|rename|copy|mkdir|move_uploaded_file|send_mail|mail|save_tool_comments|save_tool_votes|save_bookmarks_demo|add_rating|record_click|vote_tool_action|lead_store|newsletter_subscribe|newsletter_confirm|newsletter_unsubscribe)\s*\(|\b(INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM|REPLACE\s+INTO|TRUNCATE|DROP\s+TABLE|ALTER\s+TABLE)\b/i';
@@ -40,6 +40,12 @@ foreach ($man as $f => $k) {
     case 'token_write':
       ok(preg_match('/form_token_valid\(|lead_validate\(|newsletter_valid_token\(|project_validate\(|partner_validate\(/', $src) === 1, "token endpoint $f validates its secret token");
       break;
+    case 'crm_admin':
+      ok(preg_match('/crm_gate\(/', $src) === 1, "CRM page $f calls crm_gate() before output");
+      $firstOut = strpos($src, 'crm_gate('); ok(!preg_match('/(echo|print|\?>\s*<)/', substr($src, 0, $firstOut)) || strpos(substr($src, 0, $firstOut), '?>') === false, "CRM page $f produces no output before the gate");
+      ok(strpos($src, 'crm_csrf_ok(') !== false, "CRM page $f checks the CSRF token on POST");
+      ok(strpos($src, "\$_GET['pass']") === false && !preg_match('/password\s*=\s*[\'"][^\'"]+[\'"]/', $src), "CRM page $f has no URL password and no default credential");
+      break;
     case 'admin':
       ok(preg_match('/admin_require\(/', $src) === 1, "admin page $f calls admin_require() before output");
       ok(strpos($src, "\$_GET['pass']") === false && strpos($src, 'admin123') === false, "admin page $f has no URL password and no default");
@@ -54,7 +60,7 @@ foreach ($man as $f => $k) {
       break;
     case 'lib':
       ok(strpos($raw, 'include-only: never executable directly') !== false, "library $f refuses direct execution even if web-server rules are missing");
-      ok(strpos($raw, 'Location:') === false || in_array($f, ['layout_top.php', 'admin_auth.php'], true), "library $f sends no redirects (admin_auth redirects only to a validated local path)");
+      ok(strpos($raw, 'Location:') === false || in_array($f, ['layout_top.php', 'admin_auth.php', 'crm_views.php'], true), "library $f sends no redirects (admin_auth and crm_views redirect only to a validated local path)");
       break;
     case 'redirect':
       ok(preg_match('/sec_safe_local_path\(|sec_safe_external_url\(|http_build_query|urlencode\(/', $src) === 1 || $f === 'vote-tool.php', "redirect endpoint $f builds its target safely");
