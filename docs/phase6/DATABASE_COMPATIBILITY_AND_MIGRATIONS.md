@@ -50,6 +50,7 @@ Design rules: InnoDB, utf8mb4; money in `BIGINT` minor units with a 3-letter cur
 | Tool and editorial data (JSON and DB) | Untouched; the CRM never reads or writes it, and ranking code never reads the CRM (tested) |
 
 ## Evidence (`tests/phase6_migration_test.php`, isolated throw-away database; run it to reproduce)
+Verified on **MySQL 8.0.46** (local isolated server and GitHub Actions) and MariaDB 10.11: the migration applies with **no output and exit status 0**, twice, and the rollback runs cleanly. (An earlier CI failure was a test-harness problem, not the SQL: see TEST_RESULTS.md, run #32.)
 * Baseline built from the repository's Phase 1 to 4 SQL; fingerprint taken of every existing table (checksum, column definitions, row count).
 * After applying the migration: 18 tables exist; **every pre-existing table is identical**; applying it again changes nothing.
 * Foreign-key behaviour proven: duplicate contact email refused; a company with opportunities cannot be deleted; deleting a contact keeps the lead; deleting an opportunity removes only its stage history; an orphan opportunity is refused.

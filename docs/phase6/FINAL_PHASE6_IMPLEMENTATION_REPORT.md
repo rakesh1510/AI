@@ -1,6 +1,6 @@
 # Final Phase 6 implementation report
 
-Branch `feat/aihubpedia-global-revenue-phase6` from `eba6ac0` (Phase 5). Draft PR into `feat/aihubpedia-content-authority-phase5`. **Not merged, not deployed. Phase 4.2 not started.** Nothing touched production, Hostinger, the VPS, a live database, real credentials, real e-mail, payments or any real contact. Test results: TEST_RESULTS.md. The supplied database export was used only to check compatibility on a throw-away local copy and is **not in the repository**.
+Branch `feat/aihubpedia-global-revenue-phase6` from `eba6ac0` (Phase 5). Draft PR into `feat/aihubpedia-content-authority-phase5`. **Not merged, not deployed. Phase 4.2 not started.** Nothing touched production, Hostinger, the VPS, a live database, real credentials, real e-mail, payments or any real contact. Test results and real CI results: TEST_RESULTS.md (CI run #32 failed on a test-harness portability bug between MariaDB and MySQL 8; fixed and re-verified on MySQL 8.0.46 locally and in GitHub Actions, runs #34 and #35 passed). The supplied database export was used only to check compatibility on a throw-away local copy and is **not in the repository**.
 
 ## Status by priority (complete = working code + tests + evidence)
 | # | Priority | Status | Evidence |
