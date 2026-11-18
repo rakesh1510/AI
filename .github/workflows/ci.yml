@@ -12,11 +12,16 @@ permissions:
 
 jobs:
   test:
+    name: test (MySQL ${{ matrix.mysql }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']   # staging/production run MySQL 8.4.x; 8.0 stays covered for older hosts
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:${{ matrix.mysql }}
         env:
           MYSQL_ROOT_PASSWORD: root_test_only
           MYSQL_DATABASE: aihub_test
