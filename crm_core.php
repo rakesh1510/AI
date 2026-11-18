@@ -6,7 +6,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  * Identity: CRM users live in the crm_users table (created only by scripts/crm_user.php; there are no default accounts). Passwords are
  * stored as password_hash() values. Every change records the acting user in crm_audit_log. The older single-password admin pages
  * (admin.php, admin-leads.php, admin-editorial.php) are unchanged and separate.
- * Roles: owner (everything incl. approvals, contracts, revenue), sales (create/edit CRM records, no approvals or revenue), viewer (read only).
+ * Roles: owner (everything incl. approvals, contracts, revenue), sales (create/edit CRM records, no approvals or revenue), viewer (read only),
+ * editor (Phase 7: propose/attach/submit uni_* items, no CRM access), verifier (Phase 7: review uni_* items, no CRM access).
  */
 require_once __DIR__ . '/security.php';
 
@@ -15,9 +16,12 @@ const CRM_MAX_SECONDS = 28800;
 
 function crm_roles(): array {
   return [
-    'owner'  => ['read', 'write', 'assign', 'approve', 'revenue', 'users', 'outreach'],
+    'owner'  => ['read', 'write', 'assign', 'approve', 'revenue', 'users', 'outreach', 'uni_propose', 'uni_review'],
     'sales'  => ['read', 'write', 'assign', 'outreach'],
     'viewer' => ['read'],
+    // Phase 7 (AI Universe ledger): deliberately NO 'read'/'write', so these roles see nothing in the CRM. uni_review is necessary but not sufficient: the service layer also demands role === 'verifier' (owner cannot verify).
+    'editor'   => ['uni_propose'],
+    'verifier' => ['uni_review'],
   ];
 }
 function crm_can(?string $role, string $action): bool { return $role !== null && in_array($action, crm_roles()[$role] ?? [], true); }
