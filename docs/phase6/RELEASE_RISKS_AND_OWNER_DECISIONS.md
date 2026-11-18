@@ -8,7 +8,7 @@ Phase 6 is **not merged and not deployed**; the draft PR targets the Phase 5 bra
 ## Blocked on information you must supply
 | # | Item | Why blocked |
 |---|---|---|
-| 1 | **Sanitized schema-only export of the live "aihub" database** | Needed to finalize the migration against reality; none supplied and none committed (DATABASE doc) |
+| 1 | **The schema export you supplied contained data rows** (not schema-only) | It was not committed or printed; only its DDL was extracted locally. Treat the original as sensitive and share a truly schema-only export next time (DATABASE doc) |
 | 2 | A working mail provider and authenticated sending domain (SPF/DKIM/DMARC) | Needed for any real notification or newsletter; none was used |
 | 3 | Legal entity and texts for TrustNova Tech (Impressum, privacy policy for CRM data, retention period) | Forms now store business contact data in a CRM |
 
@@ -33,7 +33,7 @@ Phase 6 is **not merged and not deployed**; the draft PR targets the Phase 5 bra
 | Historical credentials in Git | High | Rotate (urgent) |
 | CRM holds personal data without a retention routine | Medium | Decide policy; manual purge until built |
 | Single-factor CRM login | Medium | Strong passwords, IP restriction, MFA later |
-| Migration unverified against the live schema | Medium | Staging copy first; preflight; rollback script; supply the schema |
+| Live database lacks the Phase 2–4 tables (leads, subscribers, events, page_views, contact_messages) | Medium | Apply the documented order on a copy first; forms already degrade safely and the CRM-only path keeps inquiries |
 | Unanswered inquiries | Medium (commercial) | Reply routine; dashboard shows unassigned and overdue |
 | Demand for paid placements unproven; no audience data | High (commercial) | Services first; pilots before prices |
 | Forecast figures misread as revenue | Medium | Labelled hypothetical; separated vocabulary |

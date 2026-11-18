@@ -27,7 +27,7 @@ function crm_intake_campaign_package(string $leadType, string $pkgInterest): str
  * Mirrors one stored public inquiry into the CRM. Advertising types also create a campaign record (status "inquiry"); partnership types create a
  * partner application (status "applied", never public). @param array $clean validated fields (lead_validate) plus optional 'details', 'partner_category'.
  */
-function crm_intake_record(PDO $pdo, array $clean, int $publicLeadId, bool $synthetic = false): array {
+function crm_intake_record(PDO $pdo, array $clean, int $publicLeadId = 0, bool $synthetic = false): array {
   $map = crm_intake_kind((string)($clean['lead_type'] ?? '')); if (!$map) return [false, 'kind_invalid'];
   [$kind, $subtype] = $map; $details = (array)($clean['details'] ?? []);
   foreach (['package_interest', 'campaign_goal', 'ref_tool'] as $k) if (!empty($clean[$k])) $details[$k] = $clean[$k];
@@ -35,7 +35,7 @@ function crm_intake_record(PDO $pdo, array $clean, int $publicLeadId, bool $synt
   try {
     [$ok, $leadId, $info] = crm_lead_ingest($pdo, ['kind' => $kind, 'subtype' => $subtype, 'name' => $clean['name'] ?? '', 'email' => $clean['email'] ?? '', 'company' => $clean['company'] ?? '', 'website' => $clean['website'] ?? '', 'message' => $clean['message'] ?? '',
       'budget' => $clean['budget'] ?? '', 'timeline' => $clean['timeline'] ?? '', 'source' => $clean['source_page'] ?? '', 'attr_source' => $clean['attr_source'] ?? '', 'attr_medium' => $clean['attr_medium'] ?? '', 'attr_campaign' => $clean['attr_campaign'] ?? '',
-      'details' => $details, 'public_lead_id' => $publicLeadId, 'pref' => $clean['contact_pref'] ?? 'email', 'synthetic' => $synthetic]);
+      'details' => $details, 'public_lead_id' => $publicLeadId > 0 ? $publicLeadId : null, 'pref' => $clean['contact_pref'] ?? 'email', 'synthetic' => $synthetic]);
     if (!$ok) { if ($own) $pdo->rollBack(); return [false, (string)$leadId]; }
     $extra = [];
     if ($kind === 'advertising') { [$cok, $cid] = crm_campaign_create($pdo, null, (int)$info['company_id'], crm_intake_campaign_package($clean['lead_type'], (string)($clean['package_interest'] ?? '')), 'Inquiry from ' . crm_line($clean['company'] ?: $clean['name'], 120), (int)$leadId, (int)$info['contact_id'], $synthetic); if ($cok) $extra['campaign_id'] = (int)$cid; }
@@ -109,4 +109,28 @@ function render_partner_form(array $opts = []): string {
       . crm_form_field('pa-message', 'Your collaboration proposal', '<textarea class="input" id="pa-message" name="message" rows="5" required' . $aria('message') . '>' . $h($v['message'] ?? '') . '</textarea>', $e['message'] ?? '', 'What would we do together, and what do you expect from AIHubpedia? Please do not include confidential information.');
   $o .= '<div class="field check"><label><input type="checkbox" name="consent" value="1" required' . (!empty($v['consent']) ? ' checked' : '') . $aria('consent') . '> I agree that AIHubpedia may use these details to reply to my application. <a href="/privacy.php">Privacy policy</a></label>' . (isset($e['consent']) ? '<p class="fieldError" id="pa-consent-err" role="alert">' . $h($e['consent']) . '</p>' : '') . '</div>';
   return $o . '<button class="btn" type="submit">Send application</button></form>';
+}
+
+/**
+ * Shared submit path for the public forms (advertising, project, partnership).
+ * Order: the public `leads` table when it exists (existing notification tracking, reports and rate limit), then the CRM mirror. If the `leads` table
+ * does not exist (the live "aihub" schema lacks the Phase 3/4 tables) but the CRM tables do, the inquiry is stored in the CRM only, so no inquiry is
+ * lost; the per-network limit then uses the file-based limiter. If neither exists the form reports "temporarily unavailable".
+ * @return array{status:string,lead_id:int,crm:string} status: ok | rate_limited | unavailable
+ */
+function crm_public_submit(array $clean, string $logCtx): array {
+  try {
+    $haveLeads = db_table_exists('leads'); $haveCrm = crm_tables_ready();
+    if (!$haveLeads && !$haveCrm) return ['status' => 'unavailable', 'lead_id' => 0, 'crm' => 'none'];
+    $pdo = db(); $ipHash = conversion_ip_hash();
+    if ($haveLeads ? lead_rate_limited($pdo, 'leads', $ipHash, 5) : sec_rate_limited('public_inquiry', 5, 3600)) return ['status' => 'rate_limited', 'lead_id' => 0, 'crm' => 'none'];
+    $leadId = $haveLeads ? lead_store($pdo, $clean, $ipHash) : 0; $crmLead = 0; $crmState = $haveCrm ? 'failed' : 'not_installed';
+    if ($haveCrm) { try { [$ok, $id] = crm_intake_record($pdo, $clean, $leadId); if ($ok) { $crmState = 'stored'; $crmLead = (int)$id; } } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':crm'); } }
+    $sent = false; try { $sent = lead_notify_owner($clean); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, $logCtx . ':notify'); }
+    if ($haveLeads) { try { lead_record_notification($pdo, $leadId, $sent, mail_last_error()); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-record'); } }
+    elseif (!$sent && $crmLead) { try { crm_activity_add($pdo, null, 'lead', $crmLead, 'system', 'The owner e-mail notification failed (' . mail_last_error() . '). Check this lead in the CRM.'); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-note'); } }
+    if (!$sent) sec_log('lead_notification_failed', ['lead' => $leadId ?: $crmLead, 'reason' => mail_last_error()]);
+    event_record_server('lead_submit', (string)($clean['lead_type'] ?? ''));
+    return ['status' => 'ok', 'lead_id' => $leadId, 'crm' => $crmState];
+  } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':submit'); return ['status' => 'unavailable', 'lead_id' => 0, 'crm' => 'none']; }
 }

@@ -143,4 +143,5 @@ $smtp = (string)@file_get_contents(getenv('AIHUB_SMTP_LOG') ?: '/tmp/smtp_sink.l
 $out = http('POST', "$base/crm.php", ['act' => 'logout', '_csrf' => $O['csrf']], $own, $O['jar']); $after = http('GET', "$base/crm.php?v=leads", null, [], $O['jar']); ok($out['code'] === 303 && stripos($after['body'], 'CRM sign-in') !== false, 'logout ends the session');
 $aud = implode("\n", array_map(fn($x) => implode(' ', $x), crm_audit_recent($pdo, 500))); ok(!preg_match('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $aud) && strpos($aud, 'crm-test-password') === false, 'the audit log holds no email address and no password');
 foreach (['crm_audit_log', 'crm_outreach_drafts', 'crm_prospects', 'crm_partners', 'crm_campaigns', 'crm_revenue_entries', 'crm_contracts', 'crm_proposal_items', 'crm_proposal_versions', 'crm_proposals', 'crm_tasks', 'crm_activities', 'crm_stage_history', 'crm_opportunities', 'crm_leads', 'crm_contacts', 'crm_companies', 'crm_users'] as $t) $pdo->exec("DELETE FROM $t"); $pdo->exec('DELETE FROM lead_status_history'); $pdo->exec('DELETE FROM leads');
+clear_rate();
 echo "\nPASSED: $pass  FAILED: $fail\n"; exit($fail ? 1 : 0);

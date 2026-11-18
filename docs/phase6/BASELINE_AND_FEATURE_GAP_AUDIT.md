@@ -10,7 +10,7 @@
 | Editor-verified profiles | **0** | same (and the committed review log is empty) |
 | Top-level PHP files classified in the security manifest | 109 before Phase 6, 123 after | `tests/security_inventory_test.php` |
 | Tables defined by committed SQL before Phase 6 | 17 (tools, categories, posts, use_cases, site_settings, tool_clicks, tool_votes, submissions, contact_messages, leads, lead_status_history, subscribers, events, page_views, three compare tables) | `database/*.sql`, `tests/phase6_migration_test.php` |
-| Sanitized production schema | **not supplied**; none exists in the repository | see DATABASE_COMPATIBILITY_AND_MIGRATIONS.md |
+| Live "aihub" schema | **Supplied mid-phase and checked** (12 live tables; 6 earlier-phase tables absent live; not committed) | see DATABASE_COMPATIBILITY_AND_MIGRATIONS.md |
 
 ## 2. What already existed (reused, not rebuilt)
 | Area | Existing | Reused how |
@@ -37,7 +37,7 @@
 | TrustNova service pages and guided project inquiry | One generic consultation form (`business.php`) | 10 service pages and a guided inquiry connected to the CRM |
 | Ethical business development | None | Prospect research records, outreach **drafts only**, consent and unsubscribe handling |
 | Competitor research | Phase 4 benchmark (competitor unreachable) | Updated from public search results, still unverified (FUTUREPEDIA_COMPETITOR_ANALYSIS.md) |
-| Schema compatibility with the live "aihub" database | Not possible without the sanitized schema | Independent additive migration tested on synthetic databases; **final verification blocked until the schema is supplied** |
+| Schema compatibility with the live "aihub" database | Unknown until the schema arrived | Checked against the supplied schema: no conflicts; one incompatibility (forms needed the missing `leads` table) fixed; migration tested on a live-shaped synthetic database |
 
 ## 4. Gaps that remain (honest list)
 * Real e-mail delivery, payments, invoicing, subscriptions: intentionally not built (the brief forbids activating them).
