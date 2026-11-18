@@ -38,3 +38,10 @@ Confirmed bypasses, all fixed and now covered by tests (`tests/phase7_schema_tes
 7. LOW: state/origin case and trailing-space variants and unsafe source URLs: CHECKs are now case-sensitive, reject trailing spaces, and the URL CHECK allows only `https?://` without whitespace or `<>"`.
 Not fixable in SQL (documented gap): TRUNCATE, DROP TRIGGER and ALTER ... DROP CHECK are DDL. The application database user must NOT hold DROP, ALTER, TRIGGER, DELETE or TRUNCATE rights (grant review is part of staging verification).
 Prototype findings fixed: `?mode=review` can no longer be switched on from the URL (needs a flag set only by an authenticated editorial page; real deployments must filter on the server), and every interpolated field in the detail panel is escaped. Still open: table `role=grid` accessibility polish, edge-label overlap, real-device measurements.
+
+## PHP service layer (`uni_core.php`) and roles
+- `editor` and `verifier` added to `crm_roles()` (no CRM page permissions; Phase 6 roles unchanged). Verification needs the literal role `verifier` (owner cannot verify), maker != checker, a different user for the proposer, source with non-empty quote and retrieved date, AI-assisted/import rows only through a human review, 20% deterministic second-review sampling (first 25 always), corrections create new versions, duplicates and conflicts are flagged in the audit log (never auto-merged).
+- Public reads return only verified, current rows, with a lineage `ref` instead of database ids; no proposer/reviewer identity, origin or notes.
+- Version publish order changed after the QA review: successor verified first, then predecessor superseded, then successor made current.
+- `tests/phase7_service_test.php`: 727 passed, 0 failed on MySQL 8.0.46 (runs the whole suite without triggers and with triggers).
+- Open: concurrent double-review is covered sequentially only (unique review key + row lock); entities have no source table so an entity can be verified without a source; HTTP editor UI and read endpoints not built yet.

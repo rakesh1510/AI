@@ -408,13 +408,16 @@ function uni_review(PDO $pdo, int $reviewerId, string $type, int $id, string $de
       uni_audit($pdo, (int)$reviewer['id'], 'review_accept_first', $type, $id, 'first accept, second reviewer required');
       return [true, ['state' => 'in_review', 'awaiting_second_review' => true, 'review_id' => $rid]];
     }
-    // finalize: retire the live version of the lineage FIRST, then publish this one (UNIQUE current_lineage / slug / edge triple)
-    if ((int)$row['version_no'] > 1 || $row['supersedes_id'] !== null) {
-      $old = $pdo->prepare("UPDATE $t SET state = 'superseded', is_current = 0 WHERE lineage_key = ? AND is_current = 1 AND id <> ?"); $old->execute([$row['lineage_key'], $id]);
-    }
-    $u = $pdo->prepare("UPDATE $t SET state = 'verified', verified_by = ?, verified_at = ?, review_id = ?, is_current = 1 WHERE id = ? AND state = 'in_review'");
+    // finalize. A successor version is verified FIRST (is_current stays 0), then the live version is retired (the database refuses to retire a
+    // verified row that has no verified successor), then the successor becomes current (UNIQUE current_lineage / slug / edge triple).
+    $isSuccessor = (int)$row['version_no'] > 1 || $row['supersedes_id'] !== null;
+    $u = $pdo->prepare("UPDATE $t SET state = 'verified', verified_by = ?, verified_at = ?, review_id = ?, is_current = " . ($isSuccessor ? '0' : '1') . " WHERE id = ? AND state = 'in_review'");
     $u->execute([(int)$reviewer['id'], crm_now(), $rid, $id]);
     if ($u->rowCount() !== 1) return [false, 'not_in_review'];
+    if ($isSuccessor) {
+      $old = $pdo->prepare("UPDATE $t SET state = 'superseded', is_current = 0 WHERE lineage_key = ? AND is_current = 1 AND id <> ?"); $old->execute([$row['lineage_key'], $id]);
+      $pdo->prepare("UPDATE $t SET is_current = 1 WHERE id = ?")->execute([$id]);
+    }
     uni_audit($pdo, (int)$reviewer['id'], 'verified', $type, $id, 'verified', ['second_review' => $need === 2]);
     return [true, ['state' => 'verified', 'awaiting_second_review' => false, 'review_id' => $rid]];
   });
