@@ -342,6 +342,7 @@ expectOk('control: ai_assisted row can be verified through review (I3 only block
     $e = $goodEvent(['origin' => 'ai_assisted']); $r = mkReview($pdo, 'event', $e, $v1u, $maker); verifyRow($pdo, 'uni_event', $e, $v1u, $r);
 });
 expectOk('control: edge with source verified through review', function () use ($pdo, $maker, $v1u, $ent, $ent2, $src) {
+    foreach ([$ent, $ent2] as $en) if (one($pdo, 'SELECT state FROM uni_entity WHERE id = ?', [$en]) !== 'verified') verifyRow($pdo, 'uni_entity', $en, $v1u, mkReview($pdo, 'entity', $en, $v1u, $maker));   // endpoints must be verified first (QA finding 5)
     $e = mkEdge($pdo, $maker, $ent, $ent2, ['edge_type' => 'hosted_on']); linkSrc($pdo, 'uni_edge_source', 'edge_id', $e, $src);
     $r = mkReview($pdo, 'edge', $e, $v1u, $maker); verifyRow($pdo, 'uni_edge', $e, $v1u, $r);
 });
@@ -413,7 +414,13 @@ expectReject('[trigger] edit url of a source used by a verified event rejected',
 expectReject('[trigger] change-case-only edit of source publisher rejected', fn() => $pdo->exec("UPDATE uni_source SET publisher=UPPER(publisher) WHERE id=$src"), 'trigger', 'source used by a verified');
 $free = mkSource($pdo, $maker);
 expectOk('control: a source used by no verified row can still be corrected', fn() => $pdo->exec("UPDATE uni_source SET quote='fixed typo' WHERE id=$free"));
-expectOk('control: verified row can be superseded (state change only)', fn() => $pdo->exec("UPDATE uni_event SET state='superseded', is_current=0 WHERE id=$ev"));
+expectReject('[trigger] verified row cannot be taken down without a verified successor (QA finding 4)', fn() => $pdo->exec("UPDATE uni_event SET state='superseded', is_current=0 WHERE id=$ev"), 'trigger', 'verified successor');
+expectOk('control: verified row can be superseded once a verified successor version exists', function () use ($pdo, $ev, $maker, $v1u, $src) {
+    $lkey = (string)one($pdo, 'SELECT lineage_key FROM uni_event WHERE id = ?', [$ev]); $ent = (int)one($pdo, 'SELECT entity_id FROM uni_event WHERE id = ?', [$ev]);
+    $v2 = mkEvent($pdo, $maker, $ent, ['lineage_key' => $lkey, 'version_no' => 2, 'supersedes_id' => $ev, 'is_current' => 0]);
+    linkSrc($pdo, 'uni_event_source', 'event_id', $v2, $src); verifyRow($pdo, 'uni_event', $v2, $v1u, mkReview($pdo, 'event', $v2, $v1u, $maker));
+    $pdo->exec("UPDATE uni_event SET state='superseded', is_current=0 WHERE id=$ev"); $pdo->exec("UPDATE uni_event SET is_current=1 WHERE id=$v2");
+});
 expectReject('[trigger] superseded row is immutable afterwards', fn() => $pdo->exec("UPDATE uni_event SET title='x' WHERE id=$ev"), 'trigger', 'immutable');
 expectReject('[trigger] superseded row cannot be resurrected', fn() => $pdo->exec("UPDATE uni_event SET state='proposed' WHERE id=$ev"), 'trigger', 'immutable');
 
@@ -466,6 +473,43 @@ if (getenv('P7_ALLOW_CREATE_USER') === '1') {
     expectReject('CHECK rules still guard in no-trigger mode (year precision)', fn() => mkEvent($lim, $m2, $ex, ['event_date' => '2024-05-05', 'date_precision' => 'year']), 'check', 'chk_uni_event_year_jan1');
     foreach (['%', 'localhost'] as $h) { $admin->exec("DROP USER IF EXISTS '$nt'@'$h'"); }
 } else { $skip_n++; echo "  SKIP  set P7_ALLOW_CREATE_USER=1 on a private scratch server to run the no-TRIGGER-privilege simulation\n"; }
+
+
+sec('6b. Bypass attempts reported by the QA review (all must be rejected)');
+$qa_m = mkUser($pdo, 'editor'); $qa_v = mkUser($pdo, 'verifier'); $qa_v2 = mkUser($pdo, 'verifier');
+$qa_src = mkSource($pdo, $qa_m);
+expectReject('QA1 rewrite proposed_by and self-verify in one UPDATE', function () use ($pdo, $qa_m, $qa_v, $qa_v2) {
+    $e = mkEntity($pdo, $qa_v); $r = mkReview($pdo, 'entity', $e, $qa_v, $qa_m);
+    $pdo->exec("UPDATE uni_entity SET proposed_by=$qa_m, state='verified', verified_by=$qa_v, verified_at=NOW(), review_id=$r WHERE id=$e");
+}, 'trigger', 'immutable');
+expectReject('QA2 flip origin import->human while verifying', function () use ($pdo, $qa_m, $qa_v) {
+    $e = mkEntity($pdo, $qa_m, ['origin' => 'import']); $r = mkReview($pdo, 'entity', $e, $qa_v, $qa_m);
+    $pdo->exec("UPDATE uni_entity SET origin='human', state='verified', verified_by=$qa_v, verified_at=NOW(), review_id=$r WHERE id=$e");
+}, 'trigger', 'immutable');
+expectReject('QA3 REPLACE INTO an existing verified row', function () use ($pdo, $qa_m, $qa_v) {
+    $e = mkEntity($pdo, $qa_m); verifyRow($pdo, 'uni_entity', $e, $qa_v, mkReview($pdo, 'entity', $e, $qa_v, $qa_m));
+    $pdo->exec("REPLACE INTO uni_entity (id, entity_type, slug, name, state, origin, proposed_by, proposed_at, lineage_key) VALUES ($e, 'company', 'hack', 'HACK', 'proposed', 'human', $qa_m, NOW(), '" . lk() . "')");
+}, 'trigger', 'cannot be deleted');
+expectReject('QA3b DELETE a verified entity', function () use ($pdo, $qa_m, $qa_v) {
+    $e = mkEntity($pdo, $qa_m); verifyRow($pdo, 'uni_entity', $e, $qa_v, mkReview($pdo, 'entity', $e, $qa_v, $qa_m)); $pdo->exec("DELETE FROM uni_entity WHERE id=$e");
+}, 'trigger', 'cannot be deleted');
+expectReject('QA5a verify an edge whose endpoints are unverified', function () use ($pdo, $qa_m, $qa_v, $qa_src) {
+    $a = mkEntity($pdo, $qa_m); $b = mkEntity($pdo, $qa_m); $e = mkEdge($pdo, $qa_m, $a, $b); linkSrc($pdo, 'uni_edge_source', 'edge_id', $e, $qa_src);
+    verifyRow($pdo, 'uni_edge', $e, $qa_v, mkReview($pdo, 'edge', $e, $qa_v, $qa_m));
+}, 'trigger', 'endpoints');
+expectReject('QA5b add a source link to an already verified event', function () use ($pdo, $qa_m, $qa_v, $qa_src) {
+    $a = mkEntity($pdo, $qa_m); $ev = mkEvent($pdo, $qa_m, $a); linkSrc($pdo, 'uni_event_source', 'event_id', $ev, $qa_src);
+    verifyRow($pdo, 'uni_event', $ev, $qa_v, mkReview($pdo, 'event', $ev, $qa_v, $qa_m)); linkSrc($pdo, 'uni_event_source', 'event_id', $ev, mkSource($pdo, $qa_m));
+}, 'trigger', 'cannot gain');
+expectReject('QA5c change created_by of a source backing a verified event', function () use ($pdo, $qa_m, $qa_v, $qa_v2) {
+    $s2 = mkSource($pdo, $qa_m); $a = mkEntity($pdo, $qa_m); $ev = mkEvent($pdo, $qa_m, $a); linkSrc($pdo, 'uni_event_source', 'event_id', $ev, $s2);
+    verifyRow($pdo, 'uni_event', $ev, $qa_v, mkReview($pdo, 'event', $ev, $qa_v, $qa_m)); $pdo->exec("UPDATE uni_source SET created_by=$qa_v2 WHERE id=$s2");
+}, 'trigger', 'source used by a verified');
+expectReject('QA7a state in upper case is rejected by the CHECK (case-sensitive)', fn() => mkEntity($pdo, $qa_m, ['state' => 'PROPOSED']), 'check', 'chk_uni_entity_state');
+expectReject('QA7b state with a trailing space is rejected by the CHECK', fn() => mkEntity($pdo, $qa_m, ['state' => 'proposed ']), 'check', 'chk_uni_entity_state');
+expectReject('QA7c source URL containing whitespace or markup is rejected', fn() => insertRow($pdo, 'uni_source', ['url' => 'https://x.test/a b<script>', 'publisher' => 'p', 'retrieved_at' => now(), 'quote' => 'q', 'origin' => 'human', 'created_by' => $qa_m, 'created_at' => now()]), 'check', 'chk_uni_source_url');
+expectReject('QA7d source URL with upper-case scheme or javascript: is rejected', fn() => insertRow($pdo, 'uni_source', ['url' => 'javascript:alert(1)', 'publisher' => 'p', 'retrieved_at' => now(), 'quote' => 'q', 'origin' => 'human', 'created_by' => $qa_m, 'created_at' => now()]), 'check', 'chk_uni_source_url');
+gap('QA6 TRUNCATE / DROP TRIGGER / ALTER ... DROP CHECK are DDL and bypass triggers: only grants can stop them (web user must not hold DROP, ALTER, TRIGGER, DELETE)', fn() => true);
 
 sec('7. Final rollback removes triggers too');
 applyFile($pdo, SQLDIR . '/phase7_rollback.sql');

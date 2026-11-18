@@ -11,7 +11,9 @@
     size: +P.get('size') || 500,
     load: P.get('load') === 'progressive' ? 'progressive' : 'all',
     cluster: P.get('cluster') !== 'off',
-    mode: P.get('mode') === 'review' ? 'review' : 'public',   // 'public' never renders unverified edges
+    // 'public' never renders unverified edges. Review mode can NOT be switched on from the URL (QA finding): it needs a flag that only an
+    // authenticated editorial page may set, and a real deployment must also filter on the server (state='verified' AND is_current=1).
+    mode: (window.UNIVERSE_REVIEW_ENABLED === true && P.get('mode') === 'review') ? 'review' : 'public',
     bench: P.has('bench'),
     settleCap: +P.get('settleCap') || 0
   };
@@ -475,13 +477,13 @@
     if (sel < 0) { panel.hidden = true; main.classList.remove('has-sel'); if (lastFocus && opts && opts.fromClose) lastFocus.focus(); return; }
     var n = nodes[sel], a = adj[sel];
     $('#pname').textContent = n.name;
-    $('#pdl').innerHTML = '<dt>Type</dt><dd>' + typeSwatch(n.type) + n.type + '</dd><dt>ID</dt><dd>' + n.id + '</dd><dt>Company</dt><dd>' + esc(nodes[n.c].name) + '</dd><dt>Relationships</dt><dd>' + a.length + (cfg.mode === 'public' ? ' (verified only)' : ' (review mode)') + '</dd><dt>Data</dt><dd>SYNTHETIC TEST DATA</dd>';
+    $('#pdl').innerHTML = '<dt>Type</dt><dd>' + typeSwatch(n.type) + esc(n.type) + '</dd><dt>ID</dt><dd>' + esc(n.id) + '</dd><dt>Company</dt><dd>' + esc(nodes[n.c].name) + '</dd><dt>Relationships</dt><dd>' + a.length + (cfg.mode === 'public' ? ' (verified only)' : ' (review mode)') + '</dd><dt>Data</dt><dd>SYNTHETIC TEST DATA</dd>';
     var html = '', shown = Math.min(a.length, 120);
     for (var q = 0; q < shown; q++) {
       var e = edges[a[q]], out = e.s === sel, o = nodes[out ? e.t : e.s];
-      html += '<li><div class="rel">' + swatch(e.rel) + '<span>' + e.rel + '</span>' + (e.v ? '' : '<span class="badge">UNVERIFIED</span>') + '</div>' +
-        '<div>' + (out ? 'to ' : 'from ') + '<button class="linkbtn" type="button" data-go="' + o.i + '">' + esc(o.name) + '</button> <small>(' + o.type + (wIdx[o.i] < 0 ? ', not loaded yet' : '') + ')</small></div>' +
-        '<div class="cite">Source: ' + e.src + ' (synthetic citation)<br>' + (e.date ? 'Verified: ' + e.date : 'Verification date: not recorded') + '</div></li>';
+      html += '<li><div class="rel">' + swatch(e.rel) + '<span>' + esc(e.rel) + '</span>' + (e.v ? '' : '<span class="badge">UNVERIFIED</span>') + '</div>' +
+        '<div>' + (out ? 'to ' : 'from ') + '<button class="linkbtn" type="button" data-go="' + o.i + '">' + esc(o.name) + '</button> <small>(' + esc(o.type) + (wIdx[o.i] < 0 ? ', not loaded yet' : '') + ')</small></div>' +
+        '<div class="cite">Source: ' + esc(e.src) + ' (synthetic citation)<br>' + (e.date ? 'Verified: ' + esc(e.date) : 'Verification date: not recorded') + '</div></li>';
     }
     if (a.length > shown) html += '<li>' + (a.length - shown) + ' more relationships not listed.</li>';
     if (!a.length) html += '<li>No verified relationships.</li>';

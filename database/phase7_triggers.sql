@@ -25,6 +25,15 @@ END$$
 
 CREATE TRIGGER trg_uni_entity_bu BEFORE UPDATE ON uni_entity FOR EACH ROW
 BEGIN
+    IF NOT (NEW.proposed_by <=> OLD.proposed_by) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: proposed_by is immutable';
+    END IF;
+    IF NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: origin is immutable';
+    END IF;
+    IF OLD.state = 'verified' AND NEW.state = 'superseded' AND (SELECT COUNT(*) FROM uni_entity s WHERE s.supersedes_id = OLD.id AND s.state = 'verified') < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row can only be superseded by a verified successor version';
+    END IF;
     IF OLD.state = 'superseded' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: superseded rows are immutable';
     END IF;
@@ -32,7 +41,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a row cannot supersede itself';
     END IF;
     IF OLD.state = 'verified' THEN
-        IF NEW.state <> 'superseded'
+        IF (NEW.state <> 'superseded' AND NEW.state <> 'verified') OR (NEW.state = 'verified' AND NEW.is_current < OLD.is_current)
           OR NOT (CAST(NEW.entity_type AS BINARY) <=> CAST(OLD.entity_type AS BINARY))
           OR NOT (CAST(NEW.slug AS BINARY) <=> CAST(OLD.slug AS BINARY))
           OR NOT (CAST(NEW.name AS BINARY) <=> CAST(OLD.name AS BINARY))
@@ -81,6 +90,15 @@ END$$
 
 CREATE TRIGGER trg_uni_event_bu BEFORE UPDATE ON uni_event FOR EACH ROW
 BEGIN
+    IF NOT (NEW.proposed_by <=> OLD.proposed_by) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: proposed_by is immutable';
+    END IF;
+    IF NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: origin is immutable';
+    END IF;
+    IF OLD.state = 'verified' AND NEW.state = 'superseded' AND (SELECT COUNT(*) FROM uni_event s WHERE s.supersedes_id = OLD.id AND s.state = 'verified') < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row can only be superseded by a verified successor version';
+    END IF;
     IF OLD.state = 'superseded' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: superseded rows are immutable';
     END IF;
@@ -88,7 +106,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a row cannot supersede itself';
     END IF;
     IF OLD.state = 'verified' THEN
-        IF NEW.state <> 'superseded'
+        IF (NEW.state <> 'superseded' AND NEW.state <> 'verified') OR (NEW.state = 'verified' AND NEW.is_current < OLD.is_current)
           OR NOT (NEW.entity_id <=> OLD.entity_id)
           OR NOT (CAST(NEW.event_type AS BINARY) <=> CAST(OLD.event_type AS BINARY))
           OR NOT (NEW.event_date <=> OLD.event_date)
@@ -143,6 +161,20 @@ END$$
 
 CREATE TRIGGER trg_uni_edge_bu BEFORE UPDATE ON uni_edge FOR EACH ROW
 BEGIN
+    IF NOT (NEW.proposed_by <=> OLD.proposed_by) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: proposed_by is immutable';
+    END IF;
+    IF NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: origin is immutable';
+    END IF;
+    IF OLD.state = 'verified' AND NEW.state = 'superseded' AND (SELECT COUNT(*) FROM uni_edge s WHERE s.supersedes_id = OLD.id AND s.state = 'verified') < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row can only be superseded by a verified successor version';
+    END IF;
+    IF NEW.state = 'verified' AND OLD.state <> 'verified' THEN
+        IF (SELECT COUNT(*) FROM uni_entity e WHERE e.id IN (NEW.from_entity_id, NEW.to_entity_id) AND e.state = 'verified') < 2 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: both endpoints of an edge must be verified entities first';
+        END IF;
+    END IF;
     IF OLD.state = 'superseded' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: superseded rows are immutable';
     END IF;
@@ -150,7 +182,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a row cannot supersede itself';
     END IF;
     IF OLD.state = 'verified' THEN
-        IF NEW.state <> 'superseded'
+        IF (NEW.state <> 'superseded' AND NEW.state <> 'verified') OR (NEW.state = 'verified' AND NEW.is_current < OLD.is_current)
           OR NOT (NEW.from_entity_id <=> OLD.from_entity_id)
           OR NOT (NEW.to_entity_id <=> OLD.to_entity_id)
           OR NOT (CAST(NEW.edge_type AS BINARY) <=> CAST(OLD.edge_type AS BINARY))
@@ -204,6 +236,12 @@ END$$
 
 CREATE TRIGGER trg_uni_release_bu BEFORE UPDATE ON uni_release FOR EACH ROW
 BEGIN
+    IF NOT (NEW.proposed_by <=> OLD.proposed_by) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: proposed_by is immutable';
+    END IF;
+    IF NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: origin is immutable';
+    END IF;
     IF OLD.state = 'superseded' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: superseded rows are immutable';
     END IF;
@@ -258,6 +296,12 @@ END$$
 
 CREATE TRIGGER trg_uni_correction_bu BEFORE UPDATE ON uni_correction FOR EACH ROW
 BEGIN
+    IF NOT (NEW.proposed_by <=> OLD.proposed_by) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: proposed_by is immutable';
+    END IF;
+    IF NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: origin is immutable';
+    END IF;
     IF OLD.state IN ('verified','superseded') THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: decided corrections are immutable';
     END IF;
@@ -313,7 +357,7 @@ DROP TRIGGER IF EXISTS trg_uni_source_bu;
 DELIMITER $$
 CREATE TRIGGER trg_uni_source_bu BEFORE UPDATE ON uni_source FOR EACH ROW
 BEGIN
-    IF NOT (CAST(NEW.url AS BINARY) <=> CAST(OLD.url AS BINARY)) OR NOT (CAST(NEW.publisher AS BINARY) <=> CAST(OLD.publisher AS BINARY)) OR NOT (NEW.retrieved_at <=> OLD.retrieved_at) OR NOT (CAST(NEW.quote AS BINARY) <=> CAST(OLD.quote AS BINARY)) OR NOT (CAST(NEW.content_hash AS BINARY) <=> CAST(OLD.content_hash AS BINARY)) THEN
+    IF NOT (NEW.created_by <=> OLD.created_by) OR NOT (CAST(NEW.origin AS BINARY) <=> CAST(OLD.origin AS BINARY)) OR NOT (CAST(NEW.url AS BINARY) <=> CAST(OLD.url AS BINARY)) OR NOT (CAST(NEW.publisher AS BINARY) <=> CAST(OLD.publisher AS BINARY)) OR NOT (NEW.retrieved_at <=> OLD.retrieved_at) OR NOT (CAST(NEW.quote AS BINARY) <=> CAST(OLD.quote AS BINARY)) OR NOT (CAST(NEW.content_hash AS BINARY) <=> CAST(OLD.content_hash AS BINARY)) THEN
         IF EXISTS (SELECT 1 FROM uni_event_source l JOIN uni_event x ON x.id = l.event_id WHERE l.source_id = OLD.id AND x.state = 'verified')
           OR EXISTS (SELECT 1 FROM uni_edge_source l JOIN uni_edge x ON x.id = l.edge_id WHERE l.source_id = OLD.id AND x.state = 'verified')
           OR EXISTS (SELECT 1 FROM uni_release x WHERE x.source_id = OLD.id AND x.state = 'verified')
@@ -379,3 +423,62 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- Review hardening (QA agent findings): verified/superseded rows cannot be deleted (also blocks REPLACE INTO), and verified rows cannot gain source links.
+DROP TRIGGER IF EXISTS trg_uni_entity_bd;
+DROP TRIGGER IF EXISTS trg_uni_event_bd;
+DROP TRIGGER IF EXISTS trg_uni_edge_bd;
+DROP TRIGGER IF EXISTS trg_uni_release_bd;
+DROP TRIGGER IF EXISTS trg_uni_correction_bd;
+DROP TRIGGER IF EXISTS trg_uni_event_source_bi;
+DROP TRIGGER IF EXISTS trg_uni_edge_source_bi;
+DELIMITER $$
+CREATE TRIGGER trg_uni_entity_bd BEFORE DELETE ON uni_entity FOR EACH ROW
+BEGIN
+    IF OLD.state IN ('verified','superseded') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: verified or superseded rows cannot be deleted';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_event_bd BEFORE DELETE ON uni_event FOR EACH ROW
+BEGIN
+    IF OLD.state IN ('verified','superseded') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: verified or superseded rows cannot be deleted';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_edge_bd BEFORE DELETE ON uni_edge FOR EACH ROW
+BEGIN
+    IF OLD.state IN ('verified','superseded') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: verified or superseded rows cannot be deleted';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_release_bd BEFORE DELETE ON uni_release FOR EACH ROW
+BEGIN
+    IF OLD.state IN ('verified','superseded') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: verified or superseded rows cannot be deleted';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_correction_bd BEFORE DELETE ON uni_correction FOR EACH ROW
+BEGIN
+    IF OLD.state IN ('verified','superseded') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: verified or superseded rows cannot be deleted';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_event_source_bi BEFORE INSERT ON uni_event_source FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*) FROM uni_event x WHERE x.id = NEW.event_id AND x.state = 'verified') > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row cannot gain source links (supersede it with a new version)';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_uni_edge_source_bi BEFORE INSERT ON uni_edge_source FOR EACH ROW
+BEGIN
+    IF (SELECT COUNT(*) FROM uni_edge x WHERE x.id = NEW.edge_id AND x.state = 'verified') > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'uni: a verified row cannot gain source links (supersede it with a new version)';
+    END IF;
+END$$
+
+DELIMITER ;

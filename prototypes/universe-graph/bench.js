@@ -190,7 +190,9 @@ async function checks(browser, base) {
   await rm.ctx.close(); await rm2.ctx.close();
   // review mode contrast
   const rv = await newPage(browser, 'desktop');
+  await rv.page.addInitScript(() => { window.UNIVERSE_REVIEW_ENABLED = true; });   // review mode needs this flag; the URL alone no longer enables it
   await rv.page.goto(`${base}/index.html?size=500&bench=1&mode=review`); await rv.page.waitForFunction(() => GraphApp.perf.settled, null, { timeout: 60000 });
+  { const pub = await browser.newPage(); await pub.goto(`${base}/index.html?size=500&bench=1&mode=review`); await pub.waitForFunction(() => GraphApp.perf.settled, null, { timeout: 60000 }); C.urlAloneCannotEnableReviewMode = await pub.evaluate(() => ({ unverifiedEdgesLoaded: GraphApp.edges().filter(x => !x.v).length, bannerHidden: document.querySelector('#reviewBanner').hidden })); await pub.close(); }
   C.reviewModeOnlyViaUrl = await rv.page.evaluate(() => { const e = GraphApp.edges().find(x => !x.v); GraphApp.select(e.s, {}); return { unverifiedEdgesLoaded: GraphApp.edges().filter(x => !x.v).length, badgeInPanel: /UNVERIFIED/.test(document.querySelector('#edges').textContent), bannerVisible: !document.querySelector('#reviewBanner').hidden }; });
   await rv.ctx.close();
   // progressive 1-hop
