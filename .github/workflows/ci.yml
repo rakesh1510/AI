@@ -98,6 +98,9 @@ jobs:
       - name: Phase 6 migration test (additive, idempotent, relationships, rollback, 20,000-lead scale)
         run: php tests/phase6_migration_test.php
 
+      - name: Phase 7 schema test (uni_* provenance ledger: additive, idempotent, rollback, every invariant has a bypass attempt, trigger and no-trigger modes)
+        run: php tests/phase7_schema_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
