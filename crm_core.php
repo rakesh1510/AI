@@ -53,8 +53,29 @@ function crm_domain(string $urlOrHost): string {
   $host = preg_replace('/^www\./', '', $host) ?? '';
   return preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $host) ? substr($host, 0, 190) : '';
 }
-/** Domains of free email providers must not be used to match companies. */
-function crm_is_free_mail_domain(string $d): bool { return in_array($d, ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'proton.me', 'protonmail.com', 'gmx.com', 'gmx.de', 'aol.com', 'live.com', 'mail.com', 'yandex.com', 'qq.com'], true); }
+/**
+ * Webmail and ISP mailbox domains must never identify a company. The explicit list is a convenience, NOT the safety mechanism: company matching
+ * never relies on an e-mail domain alone (see crm_company_find_or_create), because no list can be complete.
+ */
+function crm_is_free_mail_domain(string $d): bool {
+  $d = strtolower(trim($d));
+  if ($d === '') return false;
+  static $exact = ['gmail.com', 'googlemail.com', 'icloud.com', 'me.com', 'mac.com', 'msn.com', 'ymail.com', 'rocketmail.com', 'proton.me', 'protonmail.com', 'protonmail.ch', 'pm.me', 'tutanota.com', 'tuta.io', 'tutamail.com',
+    'web.de', 'freenet.de', 'mail.de', 'posteo.de', 'posteo.net', 'online.de', 't-online.de', 'arcor.de', '1und1.de', 'mailbox.org', 'bluewin.ch', 'seznam.cz', 'wp.pl', 'o2.pl', 'interia.pl', 'onet.pl', 'libero.it', 'virgilio.it', 'tiscali.it',
+    'orange.fr', 'wanadoo.fr', 'free.fr', 'laposte.net', 'sfr.fr', 'neuf.fr', 'rediffmail.com', 'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru', 'qq.com', '163.com', '126.com', 'sina.com', 'foxmail.com', 'naver.com', 'daum.net', 'hanmail.net',
+    'comcast.net', 'verizon.net', 'att.net', 'sbcglobal.net', 'bellsouth.net', 'cox.net', 'charter.net', 'earthlink.net', 'btinternet.com', 'sky.com', 'virginmedia.com', 'talktalk.net', 'shaw.ca', 'rogers.com', 'bigpond.com', 'optusnet.com.au', 'zoho.com', 'fastmail.com', 'fastmail.fm', 'hushmail.com'];
+  if (in_array($d, $exact, true)) return true;
+  // providers that exist under many country domains (yahoo.co.in, hotmail.co.uk, outlook.de, gmx.net, aol.fr, yandex.ru, live.nl ...)
+  return (bool)preg_match('/^(yahoo|hotmail|outlook|live|gmx|aol|yandex|ya|mail|icloud|msn)\.[a-z]{2,3}(\.[a-z]{2})?$/', $d);
+}
+/** Company-name key for matching: lower case, no accents or punctuation, legal-form words removed ("Acme Test GmbH" and "ACME TEST Ltd." → "acme test"). */
+function crm_company_key(string $name): string {
+  $n = function_exists('mb_strtolower') ? mb_strtolower($name, 'UTF-8') : strtolower($name);
+  if (function_exists('iconv')) { $t = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $n); if ($t !== false && $t !== '') $n = $t; }
+  $n = preg_replace('/[^a-z0-9]+/', ' ', $n) ?? '';
+  $n = preg_replace('/\b(gmbh|ag|kg|ug|ohg|mbh|co|ltd|limited|llc|llp|lp|inc|incorporated|corp|corporation|company|plc|sa|sas|sarl|srl|spa|bv|nv|ab|as|oy|aps|pty|pvt|private|ooo|zao|kk|the)\b/', ' ', $n) ?? '';
+  return trim(preg_replace('/\s+/', ' ', $n) ?? '');
+}
 function crm_mask_email(string $e): string { $p = explode('@', $e, 2); return count($p) === 2 ? substr($p[0], 0, 1) . '***@' . $p[1] : '***'; }
 /** Removes anything that looks like an email address so audit summaries never hold personal data. */
 function crm_scrub(string $s): string { return preg_replace('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', '[email]', $s) ?? ''; }

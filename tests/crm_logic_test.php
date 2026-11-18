@@ -78,6 +78,25 @@ ok(crm_leads_list($pdo, ['status' => 'converted'])['total'] === 1 && crm_leads_l
 ok(crm_leads_list($pdo, ['q' => 'acme'])['total'] >= 3 && crm_leads_list($pdo, ['q' => '%'])['total'] === 0 && crm_leads_list($pdo, ['q' => "' OR '1'='1"])['total'] === 0 && crm_leads_list($pdo, ['q' => 'ada@acme'])['total'] >= 1, 'search matches company/contact/email; wildcard and SQL-injection input match nothing special');
 ok(crm_leads_list($pdo, ['kind' => 'bogus; DROP TABLE crm_leads'])['total'] > 0, 'an unknown filter value is ignored, not executed');
 
+section('Company matching safety (QA-BUG-002)');
+foreach (['web.de', 'gmx.net', 't-online.de', 'yahoo.co.in', 'rediffmail.com', 'hotmail.co.uk', 'outlook.de', 'mail.ru', 'gmail.com', 'live.nl', 'aol.fr', 'yandex.ru', 'freenet.de'] as $fm) ok(crm_is_free_mail_domain($fm), "$fm is a free-mail domain");
+ok(!crm_is_free_mail_domain('acme-test.example') && !crm_is_free_mail_domain('mailchimp.com') && !crm_is_free_mail_domain('liveperson.com') && !crm_is_free_mail_domain('outlookcloud.io'), 'company domains with provider-like names are not mistaken for free mail');
+ok(crm_company_key('Acme Test GmbH') === 'acme test' && crm_company_key('ACME TEST Ltd.') === 'acme test' && crm_company_key('The Müller & Söhne AG') === 'muller sohne' && crm_company_key('GmbH') === '', 'company-name keys ignore case, accents, punctuation and legal forms');
+$cm0 = (int)$pdo->query('SELECT COUNT(*) FROM crm_companies')->fetchColumn();
+[$ca] = crm_company_find_or_create($pdo, 'Alpha Synthetic GmbH', '', 'test', true, 'web.de'); [$cb] = crm_company_find_or_create($pdo, 'Beta Synthetic AG', '', 'test', true, 'web.de');
+ok($ca !== $cb && (string)$pdo->query("SELECT domain FROM crm_companies WHERE id = $ca")->fetchColumn() === '', 'QA scenario: two inquirers on web.de with different company names become two companies and no domain is stored');
+[$cc, $created, $info] = crm_company_find_or_create($pdo, 'Gamma Test Ltd', 'https://www.gamma-test.example', 'test', true); [$cd, $c2, $i2] = crm_company_find_or_create($pdo, 'GAMMA TEST LIMITED', 'https://gamma-test.example/about', 'test', true);
+ok($created && $cd === $cc && !$c2, 'the same company typed twice (different legal form, case and website path) is one company');
+[$ce, $c3, $i3] = crm_company_find_or_create($pdo, 'Totally Different Co', 'https://gamma-test.example', 'test', true);
+ok($ce !== $cc && $c3 && $i3['possible_duplicate_of'] === $cc, 'typing an existing customer\'s website with another name creates a separate company and flags the possible duplicate');
+ok(count(array_filter(crm_activities($pdo, 'company', $ce), fn($a) => strpos($a['body'], 'Possible duplicate') !== false && strpos($a['body'], '#' . $cc) !== false)) === 1, 'the flag is a visible note on the new company (nothing merged automatically)');
+[$cf] = crm_company_find_or_create($pdo, 'Delta Test Inc', '', 'test', true, 'delta-test.example'); [$cg, $c4] = crm_company_find_or_create($pdo, 'Someone Else', '', 'test', true, 'delta-test.example');
+ok($cg !== $cf && $c4, 'a corporate e-mail domain alone never attaches an inquirer to an existing company');
+[$ch, $c5] = crm_company_find_or_create($pdo, 'Delta Test', '', 'test', true, 'delta-test.example'); ok($ch === $cf && !$c5, 'the same name plus the matching e-mail domain still resolves to the existing company');
+[$ci, $c6] = crm_company_find_or_create($pdo, 'Delta Test Inc', 'https://other-domain.example', 'test', true); ok($ci !== $cf && $c6, 'the same name with a CONFLICTING website is not merged');
+[$cj, $c7] = crm_company_find_or_create($pdo, '', '', 'test', true, 'gmx.net'); [$ck, $c8] = crm_company_find_or_create($pdo, '', '', 'test', true, 'gmx.net'); ok($c7 && $c8 && $cj !== $ck, 'anonymous free-mail inquiries never share a company');
+$pdo->exec("DELETE FROM crm_activities WHERE entity_type = 'company'"); $pdo->exec('DELETE FROM crm_companies WHERE is_synthetic = 1 AND source = \'test\'');
+
 section('Opportunities and pipeline');
 $ok_all = true; foreach (array_keys(crm_stages()) as $a) foreach (array_keys(crm_stages()) as $b) { $exp = false; $open = crm_open_stages(); if (in_array($a, $open, true)) { if ($b === 'lost') $exp = true; elseif ($b === 'won') $exp = $a === 'negotiation'; elseif (in_array($b, $open, true)) $exp = array_search($b, $open) > array_search($a, $open); } if (crm_opp_can_move($a, $b) !== $exp) { $ok_all = false; fwrite(STDERR, "  transition $a→$b\n"); } } ok($ok_all, 'complete stage transition matrix (forward only, won only from negotiation, lost from any open stage, closed is final)');
 ok(crm_opp_move($pdo, $viewer, (int)$opp1, 'contacted')[1] === 'forbidden' && crm_opp_move($pdo, $sales, (int)$opp1, 'new')[1] === 'transition_invalid' && crm_opp_move($pdo, $sales, (int)$opp1, 'won')[1] === 'transition_invalid', 'viewers cannot move; no backwards or skip-to-won');

@@ -12,7 +12,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   header('Location: /crm.php?' . http_build_query($gq + ['m' => $code]), true, 303); exit;
 }
 $crmView = (string)($_GET["v"] ?? "dashboard"); if (!in_array($crmView, crm_views(), true)) $crmView = "dashboard";   // not $v: layout_top.php overwrites $v
-$title = 'CRM — AIHubpedia';
+$title = 'CRM — AIHubpedia'; $robots = 'noindex, nofollow';   // private page: the layout must not downgrade this to "noindex, follow"
 require __DIR__ . '/layout_top.php';
 ?>
 <h1>CRM <span class="small">(internal)</span></h1>

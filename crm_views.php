@@ -9,7 +9,7 @@ require_once __DIR__ . '/crm_intake.php';
 function crm_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES); }
 function crm_gate_page(string $title, string $body, int $status = 200): void {
   http_response_code($status); header('Cache-Control: no-store'); header('X-Robots-Tag: noindex, nofollow');
-  $GLOBALS['title'] = $title . ' — AIHubpedia CRM'; require __DIR__ . '/layout_top.php'; echo '<section class="panel" style="max-width:520px;margin:24px auto">' . $body . '</section>'; require __DIR__ . '/layout_bottom.php'; exit;
+  $GLOBALS['title'] = $title . ' — AIHubpedia CRM'; $robots = 'noindex, nofollow'; /* local variable: this function includes the layout, which reads $robots from the including scope */ require __DIR__ . '/layout_top.php'; echo '<section class="panel" style="max-width:520px;margin:24px auto">' . $body . '</section>'; require __DIR__ . '/layout_bottom.php'; exit;
 }
 /** Gate: returns the signed-in user, or renders the sign-in form / a disabled notice and exits. Must run before any output. */
 function crm_gate(): array {

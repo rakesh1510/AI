@@ -16,15 +16,39 @@ function crm_lead_statuses(): array { return ['new' => 'New', 'qualified' => 'Qu
 function crm_deny(?array $user, string $perm): bool { return !crm_can($user['role'] ?? null, $perm); }
 
 // ---- companies and contacts ----------------------------------------------------------------------------------------------------------
+/**
+ * Finds or creates the company for an inquiry. SAFETY RULES (QA-BUG-002):
+ *  - An unverified visitor can type any website and any e-mail address, so a domain is NEVER enough to attach someone to an existing company.
+ *  - Merge only when the normalised company names agree (legal forms ignored) AND no conflicting domain exists; a typed website or a corporate e-mail
+ *    domain can only confirm a name match, never replace it.
+ *  - A matching domain with a DIFFERENT name creates a separate company and records a "possible duplicate" note on it for staff to review.
+ *  - Free-mail domains are never stored as a company domain. Nothing is merged automatically beyond the rule above.
+ * @return array{0:int,1:bool,2?:array} [companyId, created, info] info['possible_duplicate_of'] = id of a company that shares the domain but not the name
+ */
 function crm_company_find_or_create(PDO $pdo, string $name, string $website = '', string $source = '', bool $synthetic = false, string $emailDomain = ''): array {
-  $name = crm_line($name, 190); $website = crm_text($website, 255);
-  $domain = crm_domain($website); if ($domain === '' && $emailDomain !== '' && !crm_is_free_mail_domain($emailDomain)) $domain = $emailDomain;
+  $name = crm_line($name, 190); $website = crm_text($website, 255); $nameGiven = $name !== '';
+  $typedDomain = crm_domain($website);
+  $mailDomain = ($emailDomain !== '' && !crm_is_free_mail_domain($emailDomain)) ? strtolower($emailDomain) : '';
+  $domain = $typedDomain !== '' ? $typedDomain : $mailDomain;          // used for storage and for duplicate flags only
   if ($name === '') $name = $domain !== '' ? $domain : 'Unknown company';
-  if ($domain !== '') { $s = $pdo->prepare('SELECT id FROM crm_companies WHERE domain = ? ORDER BY id LIMIT 1'); $s->execute([$domain]); if ($id = $s->fetchColumn()) return [(int)$id, false]; }
-  $s = $pdo->prepare('SELECT id FROM crm_companies WHERE LOWER(name) = LOWER(?) AND (domain = \'\' OR ? = \'\') ORDER BY id LIMIT 1'); $s->execute([$name, $domain]); if ($id = $s->fetchColumn()) return [(int)$id, false];
+  $key = crm_company_key($name);
+  // 1. same normalised name (and not a conflicting domain): the same company
+  if ($nameGiven && $key !== '') {   // an inquiry without a company name is never matched by name
+    $tokens = explode(' ', $key); usort($tokens, fn($a, $b) => strlen($b) <=> strlen($a));          // candidate filter on the rarest-looking (longest) token, then exact key comparison in PHP
+    $q = $pdo->prepare('SELECT id, name, domain FROM crm_companies WHERE name LIKE ? ORDER BY id LIMIT 500'); $q->execute(['%' . addcslashes($tokens[0], '%_\\') . '%']);
+    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $c) {
+      if (crm_company_key((string)$c['name']) !== $key) continue;
+      if ($domain === '' || $c['domain'] === '' || $c['domain'] === $domain) return [(int)$c['id'], false, []];   // same name, compatible domain
+    }
+  }
+  // 2. no name match: create a new company; if the domain belongs to a differently named company, flag it for review instead of merging
+  $dupOf = null;
+  if ($domain !== '') { $s = $pdo->prepare('SELECT id FROM crm_companies WHERE domain = ? ORDER BY id LIMIT 1'); $s->execute([$domain]); $dupOf = $s->fetchColumn() ?: null; }
   $now = crm_now();
-  $pdo->prepare('INSERT INTO crm_companies (name, domain, website, source, created_at, updated_at, is_synthetic) VALUES (?,?,?,?,?,?,?)')->execute([$name, $domain, $website !== '' && crm_domain($website) !== '' ? $website : '', crm_line($source, 60), $now, $now, $synthetic ? 1 : 0]);
-  return [(int)$pdo->lastInsertId(), true];
+  $pdo->prepare('INSERT INTO crm_companies (name, domain, website, source, created_at, updated_at, is_synthetic) VALUES (?,?,?,?,?,?,?)')->execute([$name, $domain, $typedDomain !== '' ? $website : '', crm_line($source, 60), $now, $now, $synthetic ? 1 : 0]);
+  $id = (int)$pdo->lastInsertId();
+  if ($dupOf) crm_activity_add($pdo, null, 'company', $id, 'system', 'Possible duplicate: company #' . (int)$dupOf . ' has the same website or e-mail domain but a different name. Not merged. Review before linking.');
+  return [$id, true, ['possible_duplicate_of' => $dupOf ? (int)$dupOf : null]];
 }
 function crm_contact_find_or_create(PDO $pdo, ?int $companyId, string $name, string $email, string $roleTitle = '', string $pref = 'email', string $consentSource = '', bool $synthetic = false): array {
   $norm = crm_email_norm($email);
@@ -66,7 +90,7 @@ function crm_lead_ingest(PDO $pdo, array $in): array {
   $own = false; if (!$pdo->inTransaction()) { $pdo->beginTransaction(); $own = true; }
   try {
     $domain = (string)substr(strrchr($email, '@') ?: '', 1);
-    [$companyId] = crm_company_find_or_create($pdo, (string)($in['company'] ?? ''), (string)($in['website'] ?? ''), (string)($in['source'] ?? ''), $syn, strtolower($domain));
+    [$companyId] = crm_company_find_or_create($pdo, trim((string)($in['company'] ?? '')) !== '' ? (string)$in['company'] : $name . ' (individual)', (string)($in['website'] ?? ''), (string)($in['source'] ?? ''), $syn, strtolower($domain));
     [$contactId, $newContact] = crm_contact_find_or_create($pdo, $companyId, $name, $email, '', (string)($in['pref'] ?? 'email'), (string)($in['source'] ?? ''), $syn);
     $dupOf = null;
     if (!$newContact) { $s = $pdo->prepare("SELECT id FROM crm_leads WHERE contact_id = ? AND status IN ('new','qualified') AND created_at >= ? ORDER BY id LIMIT 1"); $s->execute([$contactId, crm_now(time() - 30 * 86400)]); $dupOf = $s->fetchColumn() ?: null; }

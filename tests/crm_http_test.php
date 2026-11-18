@@ -95,6 +95,18 @@ $r = $post($O, ['act' => 'opp_create', '_csrf' => $O['csrf'], 'company_id' => 1,
 $r = $post($O, ['act' => 'opp_create', '_csrf' => 'deadbeef', 'company_id' => 1, 'kind' => 'advertising', 'title' => 'badtoken', 'amount' => '1']); ok($r['code'] === 403 && $snap() === $b, 'a wrong CSRF token is refused');
 $r = http('GET', "$base/crm.php?v=opp_create&act=opp_create&company_id=1&title=get", null, [], $O['jar']); ok($snap() === $b, 'state never changes on a GET');
 
+section('Robots headers (QA-BUG-003) and inquiry company matching over HTTP (QA-BUG-002)');
+foreach (['/crm.php', '/crm.php?v=leads', '/admin.php', '/admin-editorial.php'] as $rp) { $rr = http('GET', $base . $rp); ok(preg_match('/^X-Robots-Tag:\s*noindex, nofollow\s*$/mi', $rr['head']) === 1 && preg_match('/<meta name="robots" content="noindex, nofollow">/', $rr['body']) === 1, "$rp sends noindex, nofollow in the header and the meta tag"); }
+$rr = http('GET', "$base/robots.txt"); foreach (['/crm.php', '/admin-editorial.php', '/project-inquiry.php', '/partner-apply.php'] as $rp) ok(strpos($rr['body'], "Disallow: $rp") !== false, "robots.txt disallows $rp");
+ok(preg_match('/^X-Robots-Tag:\s*noindex, follow\s*$/mi', http('GET', "$base/search.php?q=x")['head']) === 1, 'ordinary noindex pages keep noindex, follow');
+$pdo->exec('DELETE FROM leads'); clear_rate();
+$wa = submit('/project-inquiry.php', ['email' => 'alpha.qa@web.de', 'company' => 'Alpha Synthetic GmbH', 'name' => 'Alpha QA', 'website' => ''] + $proj, '/services.php'); $pdo->exec('DELETE FROM leads');
+$wb = submit('/project-inquiry.php', ['email' => 'beta.qa@web.de', 'company' => 'Beta Synthetic AG', 'name' => 'Beta QA', 'website' => ''] + $proj, '/services.php'); $pdo->exec('DELETE FROM leads');
+$cn = $pdo->query("SELECT c.name FROM crm_leads l JOIN crm_contacts k ON k.id = l.contact_id JOIN crm_companies c ON c.id = l.company_id WHERE k.email_norm IN ('alpha.qa@web.de','beta.qa@web.de') ORDER BY l.id")->fetchAll(PDO::FETCH_COLUMN);
+ok($wa['code'] === 303 && $wb['code'] === 303 && $cn === ['Alpha Synthetic GmbH', 'Beta Synthetic AG'], 'QA-BUG-002 over HTTP: two web.de inquirers keep their own company names');
+$wc = submit('/project-inquiry.php', ['email' => 'mallory@evil.example', 'company' => 'Mallory Ltd', 'name' => 'Mallory', 'website' => 'https://projectco.example'] + $proj, '/services.php'); $pdo->exec('DELETE FROM leads');
+ok($wc['code'] === 303 && (string)$pdo->query("SELECT c.name FROM crm_leads l JOIN crm_contacts k ON k.id = l.contact_id JOIN crm_companies c ON c.id = l.company_id WHERE k.email_norm = 'mallory@evil.example'")->fetchColumn() === 'Mallory Ltd', 'a visitor typing an existing customer\'s website does not become part of that customer\'s company');
+
 section('Views: escaping, masking and role-based access');
 $ls = http('GET', "$base/crm.php?v=leads", null, [], $O['jar']); ok($ls['code'] === 200 && strpos($ls['body'], 'ProjectCo Test') !== false && strpos($ls['body'], 'pat@projectco.example') === false && strpos($ls['body'], 'p***@projectco.example') !== false, 'the lead list shows the data with the email masked');
 $xl = (int)$pdo->query("SELECT id FROM crm_leads WHERE contact_id IN (SELECT id FROM crm_contacts WHERE email_norm = 'xss@xss-co.example')")->fetchColumn(); $xp = http('GET', "$base/crm.php?v=lead&id=$xl", null, [], $O['jar']);
