@@ -152,6 +152,7 @@ $refs = [
   ['https://www.reddit.com/r/x', '', 'social'], ['https://news.ycombinator.com/', '', 'social'], ['https://example.org/', '', 'other'],
 ];
 foreach ($refs as [$ref, $utm, $want]) ok(analytics_classify_referrer($ref, 'aihubpedia.com', $utm)['class'] === $want, "referrer '$ref' utm '$utm' → $want");
+putenv('AIHUB_ANALYTICS_SALT=' . str_repeat('t', 40));   // test-only salt; with no strong salt the hash is empty (tests/analytics_salt_test.php)
 $h1 = analytics_visitor_hash('1.2.3.4', 'UA', '2026-11-15'); $h2 = analytics_visitor_hash('1.2.3.4', 'UA', '2026-11-16'); $h3 = analytics_visitor_hash('1.2.3.5', 'UA', '2026-11-15');
 ok(strlen($h1) === 16 && $h1 !== $h2 && $h1 !== $h3 && $h1 === analytics_visitor_hash('1.2.3.4', 'UA', '2026-11-15'), 'visitor hash is stable within a period, rotates across periods and differs per visitor');
 ok(strpos($h1, '1.2.3.4') === false, 'visitor hash does not contain the IP');

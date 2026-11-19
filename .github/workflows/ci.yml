@@ -52,6 +52,9 @@ jobs:
       - name: Security inventory and secrets scan (every PHP file classified, no secrets in tracked files)
         run: php tests/security_inventory_test.php
 
+      - name: Analytics salt (no visitor hash without a strong salt; tracking off by default)
+        run: php tests/analytics_salt_test.php
+
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php
 

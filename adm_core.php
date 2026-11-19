@@ -91,6 +91,7 @@ function adm_health(PDO $pdo): array {
   $h[] = ['AI Universe schema', adm_safe(fn() => $pdo->query('SELECT 1 FROM uni_entity LIMIT 1') !== false, false) ? 'Installed' : 'Not installed', null];
   $an = function_exists('analytics_enabled') ? analytics_enabled() : false;
   $h[] = ['Visitor tracking (AIHUB_ANALYTICS)', $an ? 'Enabled on this server' : 'Not enabled on this server', null];
+  if ($an) $h[] = ['Visitor hash salt (AIHUB_ANALYTICS_SALT)', function_exists('analytics_salt_ok') && analytics_salt_ok() ? 'Set (strong)' : 'WARNING: missing or shorter than 32 characters - no visitor hashes are recorded', null];
   $h[] = ['Signing secret', getenv('AIHUB_FORM_SECRET') ? 'Set in the environment' : 'Not set in the environment (file fallback in use)', null];
   $h[] = ['PHP version', PHP_VERSION, null];
   return $h;

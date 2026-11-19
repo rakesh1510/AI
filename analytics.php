@@ -65,8 +65,11 @@ function analytics_page_type(string $script): string {
   return $map[$base] ?? 'other';
 }
 
+/** True only when AIHUB_ANALYTICS_SALT is a secret of at least 32 characters. There is no default salt: without one no visitor hash exists. */
+function analytics_salt_ok(): bool { $s = getenv('AIHUB_ANALYTICS_SALT'); return is_string($s) && strlen($s) >= 32 && stripos($s, 'default') === false; }   // the former public placeholder contains 'default' and is rejected
 function analytics_visitor_hash(string $ip, string $ua, string $period): string {
-  $salt = getenv('AIHUB_ANALYTICS_SALT') ?: 'aihubpedia-default-salt-set-AIHUB_ANALYTICS_SALT';
+  if (!analytics_salt_ok()) return '';   // missing or weak salt: never record a visitor hash (a public default would make hashes reversible)
+  $salt = (string)getenv('AIHUB_ANALYTICS_SALT');
   return substr(hash('sha256', $salt . '|' . $period . '|' . $ip . '|' . $ua), 0, 16);
 }
 
