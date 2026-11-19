@@ -19,7 +19,7 @@ const NO_CHECKS = process.argv.includes('--no-checks');
 const UPDATE_README = !process.argv.includes('--no-readme') && !process.argv.some(a => a.startsWith('--out='));
 const SETTLE_CAP = QUICK ? 20000 : 90000;
 const THRESH = { desktop: 33, mobile: 50, hit: 16 };
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.md': 'text/plain' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.md': 'text/plain' };
 
 function serve() {
   return new Promise(res => {

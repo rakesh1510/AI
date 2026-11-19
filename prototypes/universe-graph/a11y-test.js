@@ -11,7 +11,7 @@ const ROOT = __dirname;
 const OUT = (process.argv.find(a => a.startsWith('--out=')) || '--out=a11y-results.json').slice(6);
 const AXE_PATH = process.env.AXE_CORE_PATH || require.resolve('axe-core/axe.min.js');
 const AXE_SRC = fs.readFileSync(AXE_PATH, 'utf8');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 
 function serve() {
   return new Promise(res => {

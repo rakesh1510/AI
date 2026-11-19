@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
 const http = require('http'), fs = require('fs'), path = require('path');
 const ROOT = __dirname;
 const OUT = (process.argv.find(a => a.startsWith('--out=')) || '--out=bench-results-label-overlap.json').slice(6);
-const MIME = { '.html': 'text/html', '.js': 'text/javascript' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 function serve() {
   return new Promise(res => {
     const srv = http.createServer((q, r) => {
