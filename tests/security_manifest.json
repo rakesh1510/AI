@@ -29,6 +29,8 @@
   "crm.php": "crm_admin",
   "admin-center.php": "crm_admin",
   "adm_core.php": "lib",
+  "adm_analytics.php": "lib",
+  "scripts/adm_rollup.php": "cli",
   "universe-editor.php": "crm_admin",
   "services.php": "page",
   "partners.php": "page",

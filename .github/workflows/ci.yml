@@ -204,6 +204,12 @@ jobs:
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: php tests/phase8a_admin_center_test.php
 
+      - name: Phase 8B analytics (migration and rollback, rollup numbers, honest states, owner-only, safe CSV, bot filter, scale, axe and responsive checks; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: php tests/phase8b_analytics_test.php
+
       - name: Phase 7 browser tests (heatmap, lineage, arena and editor pages incl. axe, keyboard, 360px, dark, no-JS; own scratch database)
         env:
           NODE_PATH: /tmp/pw/node_modules

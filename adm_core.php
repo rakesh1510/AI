@@ -28,7 +28,7 @@ function adm_modules(): array {
     'crm'         => ['label' => 'CRM and leads', 'href' => '/crm.php', 'perm' => 'crm', 'live' => true, 'group' => 'Business', 'note' => 'Leads, pipeline, proposals, contracts, campaigns, partners.'],
     'universe'    => ['label' => 'AI Universe review', 'href' => '/universe-editor.php', 'perm' => 'universe', 'live' => true, 'group' => 'Business', 'note' => 'Propose, adopt and independently verify AI Universe records.'],
     'legacy'      => ['label' => 'Legacy admin', 'href' => '/admin.php', 'perm' => 'legacy', 'live' => true, 'group' => 'Business', 'note' => 'Submissions, featured plans, leads and editorial pages. Uses its own sign-in until they move here.'],
-    'analytics'   => ['label' => 'Analytics', 'phase' => '8B', 'perm' => 'analytics', 'group' => 'Growth', 'scope' => ['Visitors, sessions and page views with daily, weekly, monthly and custom ranges', 'Outbound AI tool clicks, top tools and top pages', 'Referrals, countries and devices where legitimately available', 'Privacy-aware collection and retention']],
+    'analytics'   => ['label' => 'Analytics', 'href' => '/admin-center.php?m=analytics', 'perm' => 'analytics', 'live' => true, 'internal' => true, 'group' => 'Growth', 'note' => 'Visitors, page views, tool clicks, sources, countries and conversions.'],
     'tools'       => ['label' => 'AI tool management', 'phase' => '8C', 'perm' => 'tools', 'group' => 'Growth', 'scope' => ['Add, edit, publish, unpublish and soft-delete tools with restore', 'Search, filters, bulk actions, categories and tags', 'Submission moderation and featured placements']],
     'finance'     => ['label' => 'Finance and revenue', 'phase' => '8D', 'perm' => 'finance', 'group' => 'Money', 'scope' => ['Income and expense entries, invoices and payment status (paid, pending, refunded, overdue)', 'Monthly recurring revenue, profit and loss, CSV export', 'EUR primary reporting currency with later multi-currency support']],
     'advertising' => ['label' => 'Advertising', 'phase' => '8E', 'perm' => 'advertising', 'group' => 'Money', 'scope' => ['Advertiser profiles, campaigns, featured listing subscriptions, sponsored newsletter bookings', 'Renewal tracking and follow-up reminders', 'Outbound messages only after human approval']],
@@ -81,11 +81,7 @@ function adm_tiles_universe(PDO $pdo): array {
 }
 
 function adm_tiles_pending(): array {
-  return [
-    adm_tile('Visitors and page views', null, 'Not available yet: arrives with Phase 8B. Tracking is opt-in and its production status is not confirmed.', 'na'),
-    adm_tile('Outbound AI tool clicks', null, 'Not available yet: arrives with Phase 8B.', 'na'),
-    adm_tile('Website performance (Core Web Vitals)', null, 'Not available yet: arrives with Phase 8G.', 'na'),
-  ];
+  return [adm_tile('Website performance (Core Web Vitals)', null, 'Not available yet: arrives with Phase 8G.', 'na')];
 }
 
 function adm_health(PDO $pdo): array {
@@ -110,7 +106,7 @@ function adm_css(): string {
     . '.admTop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:var(--navBg);color:var(--navInk)}'
     . '.admBrand{font-weight:700;letter-spacing:.2px}.admWho{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.95rem}.admWho form{margin:0}'
     . '.admBtn{min-height:44px;min-width:44px;padding:.5rem .9rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}'
-    . '.admLayout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px)}'
+    . '.admLayout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 64px)}'
     . '.admSide{background:var(--navBg);color:var(--navInk);padding:12px}.admSide h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;margin:14px 8px 4px;opacity:.8}'
     . '.admSide ul{list-style:none;margin:0;padding:0}.admSide a,.admSide .soon{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:.5rem .75rem;border-radius:8px;color:var(--navInk);text-decoration:none}'
     . '.admSide a:hover{background:rgba(255,255,255,.1)}.admSide a[aria-current=page]{background:var(--brand);color:var(--brandInk);font-weight:600}.admSide .soon{opacity:.75}'
@@ -121,7 +117,8 @@ function adm_css(): string {
     . '.tile .val{font-size:1.7rem;font-weight:700;line-height:1.2}.tile .nv{font-size:1.05rem;font-weight:600;color:var(--na)}.tile p{margin:.4rem 0 0;font-size:.85rem;color:var(--muted)}'
     . '.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:18px}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line)}'
     . '.scroll{overflow-x:auto}.sec h2{font-size:1.15rem;margin:1.2rem 0 .2rem}'
-    . '@media (max-width:900px){.admLayout{grid-template-columns:1fr}.admSide{padding:8px}.admSide ul{display:flex;flex-wrap:wrap;gap:4px}.admSide h2{display:none}.admMain{padding:14px}}'
+    . 'th a,.admLink{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 .25rem}.admMain{min-width:0}.admMain input[type=date]{max-width:100%}'
+    . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admSide{padding:8px}.admSide ul{display:flex;flex-wrap:wrap;gap:4px}.admSide h2{display:none}.admMain{padding:14px}}'
     . '@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}';
 }
 
@@ -163,9 +160,10 @@ function adm_dashboard_body(PDO $pdo, array $user): string {
   $role = (string)$user['role']; $o = '<h1>Overview</h1><p class="lead">Every figure comes from stored records; where there is nothing to show, the tile says so. Reporting currency: ' . ADM_REPORT_CURRENCY . '.</p>';
   if (adm_can($role, 'crm')) $o .= '<section class="sec" aria-labelledby="s-crm"><h2 id="s-crm">Sales and revenue (CRM)</h2>' . adm_tiles_html(adm_tiles_crm($pdo)) . '</section>';
   if (adm_can($role, 'universe')) $o .= '<section class="sec" aria-labelledby="s-uni"><h2 id="s-uni">AI Universe</h2>' . adm_tiles_html(adm_tiles_universe($pdo)) . '</section>';
+  if (adm_can($role, 'analytics') && function_exists('adma_overview_tiles')) $o .= '<section class="sec" aria-labelledby="s-traf"><h2 id="s-traf">Traffic (last 7 days)</h2>' . adm_tiles_html(adma_overview_tiles($pdo)) . '<p><a class="admLink" href="/admin-center.php?m=analytics">Open the full analytics report</a></p></section>';
   if (adm_can($role, 'analytics')) $o .= '<section class="sec" aria-labelledby="s-pend"><h2 id="s-pend">Coming in later phases</h2>' . adm_tiles_html(adm_tiles_pending()) . '</section>';
   if ($role === 'owner') {
-    $o .= '<section class="sec" aria-labelledby="s-health"><h2 id="s-health">System health</h2><div class="panel scroll"><table><caption class="sr" style="position:absolute;left:-999px">System health checks</caption><thead><tr><th scope="col">Check</th><th scope="col">Status</th></tr></thead><tbody>';
+    $o .= '<section class="sec" aria-labelledby="s-health"><h2 id="s-health">System health</h2><div class="panel scroll" role="region" tabindex="0" aria-label="System health checks"><table><caption class="sr" style="position:absolute;left:-999px">System health checks</caption><thead><tr><th scope="col">Check</th><th scope="col">Status</th></tr></thead><tbody>';
     foreach (adm_health($pdo) as [$k, $v]) $o .= '<tr><th scope="row">' . adm_h($k) . '</th><td>' . adm_h($v) . '</td></tr>';
     $o .= '</tbody></table></div></section>';
   }

@@ -18,12 +18,13 @@ const sizes = [['desktop', 1280, 800], ['tablet', 768, 1024], ['mobile', 360, 74
     const page = await ctx.newPage(); await page.goto(base + '/admin-center.php');
     const tag = `${scheme}/${name}`;
     check(await page.locator('nav[aria-label="Control Center sections"]').count() === 1, `${tag}: signed in and navigation present`);
-    for (const path of ['/admin-center.php', '/admin-center.php?m=finance']) {
+    for (const path of ['/admin-center.php', '/admin-center.php?m=finance', ...(process.env.EXTRA_PATHS || '').split(',').filter(Boolean)]) {
       await page.goto(base + path);
       await page.addScriptTag({ content: axeSrc });
       const v = await page.evaluate(async () => (await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(x => x.id + ':' + x.nodes.length));
       check(v.length === 0, `${tag} ${path}: axe violations ${JSON.stringify(v)}`);
-      check(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), `${tag} ${path}: no horizontal page overflow`);
+      const over = await page.evaluate(() => { const vw = document.documentElement.clientWidth; if (document.documentElement.scrollWidth <= vw + 1) return []; return [...document.querySelectorAll('body *')].filter(e => { const r = e.getBoundingClientRect(); return r.right > vw + 1 && !e.closest('.scroll') && r.width > 0; }).slice(0, 4).map(e => e.tagName + '.' + (e.className || '') + ' right=' + Math.round(e.getBoundingClientRect().right)); });
+      check(over.length === 0, `${tag} ${path}: no horizontal page overflow ${JSON.stringify(over)}`);
       const small = await page.evaluate(() => [...document.querySelectorAll('a[href],button,input,select')].filter(e => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && cs.visibility !== 'hidden' && (r.height < 43.5 || r.width < 43.5) && !e.classList.contains('skip'); }).map(e => (e.textContent || e.name || e.tagName).trim().slice(0, 30)));
       check(small.length === 0, `${tag} ${path}: targets under 44px ${JSON.stringify(small)}`);
     }
