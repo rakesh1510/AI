@@ -1,0 +1,248 @@
+name: CI database and browser suite (manual only)
+
+# Test-only workflow: never deploys. Runs against an isolated MySQL service container
+# seeded from the repository's schema/JSON plus synthetic data.
+# MANUAL ONLY (workflow_dispatch). Not part of routine development: it starts MySQL 8.0 and 8.4 service containers
+# and runs every database, migration, rollback and database-backed browser test. Run it only on the owner's request.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (MySQL ${{ matrix.mysql }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']   # staging/production run MySQL 8.4.x; 8.0 stays covered for older hosts
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ROOT_PASSWORD: root_test_only
+          MYSQL_DATABASE: aihub_test
+          MYSQL_USER: aihub_test
+          MYSQL_PASSWORD: test_only_pw
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot_test_only"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      AIHUB_DB_HOST: 127.0.0.1
+      AIHUB_DB_NAME: aihub_test
+      AIHUB_DB_USER: aihub_test
+      AIHUB_DB_PASS: test_only_pw
+      AIHUB_RATE_DIR: /tmp/aihub_rate_ci
+      AIHUB_SECURITY_LOG: /tmp/aihub_security_ci.log
+      AIHUB_TEST_ADMIN_PW: ci-admin-test-pw
+      AIHUB_COMPAT_ROOT_USER: root
+      AIHUB_COMPAT_ROOT_PASS: root_test_only
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, dom, curl
+          coverage: none
+
+      - name: PHP syntax check
+        run: ./tests/php_lint.sh
+
+      - name: Built assets are current (CSS/JS sources match assets/build.json)
+        run: php scripts/build_assets.php --check
+
+      - name: Build isolated test database
+        run: ./tests/setup_test_db.sh
+
+      - name: Data quality tests (taxonomy, classifier accuracy, profiles, analytics logic)
+        run: php tests/data_quality_test.php
+
+      - name: Phase 4 logic tests (discovery, evidence, B2B funnel, wizard, SEO/GEO, newsletter)
+        run: php tests/phase4_logic_test.php
+
+      - name: Phase 5 editorial verification tests (fact states, freshness, review log, nothing verified by default)
+        run: php tests/editorial_review_test.php
+
+      - name: Phase 5 discovery quality tests (search fixtures, editorial independence from sponsorship and clicks)
+        run: php tests/discovery_quality_test.php
+
+      - name: Phase 5 localisation tests (registry, hreflang, canonical, duplicate content)
+        run: php tests/i18n_test.php
+
+      - name: Phase 5 content backlog integrity (evidence gates, no invented figures)
+        run: php tests/content_backlog_test.php
+
+      - name: Phase 6 CRM logic tests (roles, leads, deduplication, pipeline, proposals, revenue, campaigns, partners, outreach drafts, dashboard)
+        run: php tests/crm_logic_test.php
+
+      - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
+        run: php tests/ux_logic_test.php
+
+      - name: Security regression tests (proxy trust, redirects, CSRF, rate limits, secrets, admin)
+        run: php tests/security_test.php
+
+      - name: Secret-initialisation regression (pages must work when the signing secret cannot be written)
+        run: php tests/secret_init_test.php
+
+      - name: Security inventory and secrets scan (every PHP file classified, no secrets in tracked files)
+        run: php tests/security_inventory_test.php
+
+      - name: Database compatibility scenarios (synthetic databases built from the repository SQL)
+        run: php tests/db_compat_test.php
+
+      - name: Phase 6 migration test (additive, idempotent, relationships, rollback, 20,000-lead scale)
+        run: php tests/phase6_migration_test.php
+
+      - name: Phase 7 schema test (uni_* provenance ledger - additive, idempotent, rollback, every invariant has a bypass attempt)
+        run: php tests/phase7_schema_test.php
+
+      - name: Phase 7 service layer tests (roles, maker-checker, provenance rules, verified-only public reads; trigger and no-trigger modes)
+        run: php tests/phase7_service_test.php
+
+      - name: Phase 7 read API tests (universe-api.php over HTTP, verified-only, no identity fields, hostile input, rate limit)
+        run: php tests/phase7_api_test.php
+
+      - name: Phase 7 concurrency tests (separate OS processes and connections racing on accepts, corrections, attach, slugs, deadlocks; trigger and no-trigger modes)
+        run: php tests/phase7_concurrency_test.php
+
+      - name: Phase 7 database privilege model (least-privilege app, importer, public and migrator accounts; TRUNCATE needs DROP; triggers fire without SUPER)
+        run: php tests/phase7_privilege_test.php
+
+      - name: Phase 7 importer tests (CLI only, dry run default, proposed import rows only, hostile input, idempotent, least-privilege account)
+        run: php tests/phase7_import_test.php
+
+      - name: Phase 7 editor and verifier UI over HTTP (authorization matrix, CSRF, maker-checker, AI-assisted review path, escaping, hostile input)
+        run: php tests/phase7_editor_http_test.php
+
+      - name: Phase 7 public universe pages over HTTP (heatmap, lineage, arena - verified-only, empty states, escaping, hostile input, sitemap rules)
+        run: php tests/phase7_pages_test.php
+
+      - name: Phase 7 graph page tests (universe-graph.php - verified-only data, empty and unavailable states, escaping, hostile parameters, built assets, sitemap)
+        run: php tests/phase7_graph_page_test.php
+
+      - name: Phase 7 facts tests (source-backed comparison facts - migration, rollback, invariants, service layer, compare API and arena, editor; trigger and no-trigger modes)
+        run: php tests/phase7_facts_test.php
+
+      - name: Phase 7 public-source path (collector replay, importer, human adoption, independent verification, public pages; synthetic data)
+        run: php tests/phase7_collect_test.php
+
+      - name: Catalogue audit (fails on invalid reviewed profiles)
+        run: php scripts/audit_catalog.php
+
+      - name: Start SMTP sink and PHP server
+        run: |
+          mkdir -p "$AIHUB_RATE_DIR"
+          export AIHUB_ADMIN_PASS_HASH="$(php -r 'echo password_hash(getenv("AIHUB_TEST_ADMIN_PW"), PASSWORD_DEFAULT);')"
+          nohup python3 tests/smtp_sink.py 2525 /tmp/smtp_sink.log >/dev/null 2>&1 &
+          AIHUB_ANALYTICS=1 AIHUB_ANALYTICS_SALT=ci-test-salt nohup php -d output_buffering=0 -d log_errors=1 -d error_log=/tmp/php-errors.log -S 127.0.0.1:8002 -t . tests/router.php > /dev/null 2>&1 &
+          sleep 2
+          curl -fsS -o /dev/null http://127.0.0.1:8002/
+
+      - name: SEO tests (incl. every sitemap URL)
+        run: php tests/seo_test.php http://127.0.0.1:8002 --full-sitemap
+
+      - name: Seed synthetic leads (test database only; the logic tests above clear the table)
+        run: php scripts/seed_synthetic_leads.php --count=24
+
+      - name: Security tests against the running server (CSRF, origin, GET inertness, blocked files, admin login)
+        run: php tests/security_http_test.php http://127.0.0.1:8002
+
+      - name: Negative security tests (hostile barrage, forms abuse, spoofed headers, admin brute force)
+        run: php tests/security_negative_http_test.php http://127.0.0.1:8002
+
+      - name: B2B lead reliability with mock mail (failure visibility, retry, status workflow)
+        run: php tests/lead_reliability_test.php http://127.0.0.1:8002
+
+      - name: Phase 6 CRM and public intake over HTTP (authorization, CSRF, sessions, forms into the CRM, full workflow)
+        run: php tests/crm_http_test.php http://127.0.0.1:8002
+
+      - name: Editorial verification queue (read-only audit of all tools)
+        run: php scripts/editorial_queue.php --top=5
+
+      - name: SEO and GEO audit gate (every sitemap URL, titles, canonicals, JSON-LD, duplicates)
+        run: php scripts/seo_audit.php http://127.0.0.1:8002
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright + Chromium
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.56.1 axe-core@4.10.2
+          npx playwright install --with-deps chromium
+
+      - name: Browser tests (Chromium desktop + mobile)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_test.js http://127.0.0.1:8002 ./ci-screenshots ci
+
+      - name: Phase 3 UX, conversion and privacy browser tests
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_ux_test.js http://127.0.0.1:8002 ./ci-screenshots ci-ux
+
+      - name: Phase 4 browser tests (wizard, problem pages, evidence matrix, advertiser page; desktop, mobile, no-JS)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/browser_phase4_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p4
+
+      - name: Phase 6 browser tests (services, partners, advertiser, CRM interface incl. axe; desktop, mobile, no-JS)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/browser_phase6_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p6
+
+      - name: Phase 8A Control Center (authorization matrix, CSRF, no invented figures, audit, axe and responsive browser checks; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: php tests/phase8a_admin_center_test.php
+
+      - name: Phase 8B analytics (migration and rollback, rollup numbers, honest states, owner-only, safe CSV, bot filter, scale, axe and responsive checks; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: php tests/phase8b_analytics_test.php
+
+      - name: Phase 7 browser tests (heatmap, lineage, arena and editor pages incl. axe, keyboard, 360px, dark, no-JS; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/browser_phase7_test.js ./ci-screenshots ci-p7
+
+      - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/axe_audit.js http://127.0.0.1:8002 --strict
+
+      - name: Phase 7 graph page browser test (real HTTP data source, expand and load more, review mode locked, error and empty states, keyboard, no-JS, axe light and dark desktop and 360px)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_CORE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node prototypes/universe-graph/http-source-test.js --out=/tmp/http-source-results.json
+
+      - name: Business report runs against the test database
+        run: php scripts/business_report.php --days=1 > /dev/null
+
+      - name: Capture design screenshots (light/dark, desktop/tablet/mobile)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+        run: node tests/capture_screens.js http://127.0.0.1:8002 ./ci-screenshots ci-design
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: ci-screenshots/
+
+      - name: PHP error log
+        if: failure()
+        run: tail -n 100 /tmp/php-errors.log || true
