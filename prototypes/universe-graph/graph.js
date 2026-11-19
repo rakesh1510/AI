@@ -242,7 +242,7 @@
   }
 
   function startWorker() {
-    worker = new Worker('layout-worker.js');
+    worker = new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : ''));   // next to this script (the production page serves it from /assets/universe/)
     worker.onmessage = function (ev) {
       var m = ev.data; if (m.type !== 'pos') return;
       var p = m.pos, n = Math.min(m.n, loadedList.length);

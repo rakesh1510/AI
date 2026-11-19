@@ -62,7 +62,7 @@
 .ugapp .help kbd{border:1px solid var(--ctl-border);border-radius:4px;padding:0 4px;font:inherit;font-weight:700;background:none}
 .ugapp #layout{display:grid;grid-template-columns:1fr;min-height:0}
 @media (min-width:860px){.ugapp #layout.has-sel{grid-template-columns:1fr 360px}}
-.ugapp main{position:relative;display:grid;grid-template-columns:1fr;min-height:0;min-width:0;padding:0;max-width:none;margin:0}
+.ugapp main,.ugapp #ugmain{position:relative;display:grid;grid-template-columns:1fr;min-height:0;min-width:0;padding:0;max-width:none;margin:0}
 .ugapp #stage{position:relative;min-height:0;min-width:0;overflow:hidden}
 .ugapp #stage:focus{outline:none}
 .ugapp canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;background:var(--cv-bg)}

@@ -178,6 +178,7 @@ function seo_canonical_params(): array {
     'category.php' => ['name', 'sub', 'page'],
     'alternatives.php' => ['tool'],
     'guide.php' => ['slug'],
+    'universe-graph.php' => ['slug', 'page'],
     'post.php' => ['slug'],
     'ai-use-case.php' => ['slug'],
     'compare.php' => ['a', 'b'],

@@ -1,9 +1,35 @@
 {
-    "built": "2026-11-17",
+    "built": "2026-11-19",
     "sources": {
         "assets/css/style.css": "852c95249e04d540de8e513978c6422e3afaff24",
         "assets/css/ui.css": "f27df4243d5b134e0b005c659ffe81c95841324b",
         "assets/js/app.js": "5e3be3d0c4013a025d1ea94ff20f600ad9745312",
-        "assets/js/interactions.js": "55e52b28e92d145bbe17384876073d63409668c3"
+        "assets/js/interactions.js": "55e52b28e92d145bbe17384876073d63409668c3",
+        "prototypes/universe-graph/data-source.js": "17dd525005e5c43c5efe9ff32a5ff37b548a1961",
+        "prototypes/universe-graph/graph.css": "7637c182260c6870f1be2966d1bcddc6fdb1d244",
+        "prototypes/universe-graph/graph.js": "e347b7f56acd6a46667befbfd3ce67b7a50ded10",
+        "prototypes/universe-graph/layout-worker.js": "607ce92fe355d33244e8a564a6499539b810dd51",
+        "prototypes/universe-graph/vendor/d3-color.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-color.min.js": "e56c0920a9adf1ac7229709d1cefc5cfccf34511",
+        "prototypes/universe-graph/vendor/d3-dispatch.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-dispatch.min.js": "cbf38b40349eb00bc322421cb793b038bb678c0e",
+        "prototypes/universe-graph/vendor/d3-drag.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-drag.min.js": "166a86cfd5b3bb744f9126bf52440adba103257c",
+        "prototypes/universe-graph/vendor/d3-ease.LICENSE": "33fd965fce5eeed6805f3c67316ab4f65301eee3",
+        "prototypes/universe-graph/vendor/d3-ease.min.js": "a6d6d8265ea057865b696771d5cd63cb1970b995",
+        "prototypes/universe-graph/vendor/d3-force.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-force.min.js": "0746eb2670a46df5317474818533ba2d67948227",
+        "prototypes/universe-graph/vendor/d3-interpolate.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-interpolate.min.js": "01625c0aa0ffa1f26dad330408059a9f597d212d",
+        "prototypes/universe-graph/vendor/d3-quadtree.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-quadtree.min.js": "890f6943e1246ca58f9162945df4d49ef721f04e",
+        "prototypes/universe-graph/vendor/d3-selection.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-selection.min.js": "ed61a3534e16905bc7a14d327796e3b6c8f9d5f2",
+        "prototypes/universe-graph/vendor/d3-timer.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-timer.min.js": "f31d2dfd661fe4a9fbff4ee0ef5b5caaed6ec372",
+        "prototypes/universe-graph/vendor/d3-transition.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-transition.min.js": "69efdc10dc513ca6a3d93fed8d884f1d16aec128",
+        "prototypes/universe-graph/vendor/d3-zoom.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
+        "prototypes/universe-graph/vendor/d3-zoom.min.js": "ae6be3cddb442c650ee93204a770fb0a977eeeab"
     }
 }

@@ -59,6 +59,8 @@ function sitemap_entries(): array {
     foreach (newsletter_issues_public() as $slug => $i) $add(newsletter_issue_url($slug), (string)$i['published_on'], 'yearly', '0.4');
   }
 
+  foreach (sitemap_universe_paths() as $uPath) $add(site_url($uPath), null, 'weekly', '0.5');   // AI Universe graph: evidence-gated, nothing is listed while there is no verified data
+
   foreach (load_use_cases() as $slug => $case) $add(use_case_page_url((string)$slug), null, 'weekly', '0.6');
 
   foreach ($tools as $t) {
@@ -83,6 +85,24 @@ function sitemap_entries(): array {
     $add(post_page_url($slug), ($d !== '' && strtotime($d)) ? date('Y-m-d', strtotime($d)) : null, 'monthly', '0.6');
   }
   return array_values($entries);
+}
+
+/** Paths of the AI Universe graph pages that have verified content: none while the ledger holds no verified entity (or when it cannot be read), otherwise the graph page and the first 200 entity deep links. */
+function sitemap_universe_paths(): array {
+  try {
+    require_once __DIR__ . '/db.php';
+    require_once __DIR__ . '/uni_core.php';
+    $pdo = db();
+    $first = uni_public_entities($pdo, [], 1, 100);
+    if ($first['total'] === 0) return [];
+    $items = $first['items'];
+    if ($first['has_more']) $items = array_merge($items, uni_public_entities($pdo, [], 2, 100)['items']);
+    $out = ['/universe-graph.php'];
+    foreach ($items as $it) $out[] = '/universe-graph.php?slug=' . rawurlencode((string)$it['slug']);
+    return $out;
+  } catch (Throwable $e) {
+    return [];
+  }
 }
 
 function sitemap_xml(array $entries): string {

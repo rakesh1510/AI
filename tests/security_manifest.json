@@ -15,6 +15,7 @@
   "universe-lineage.php": "page",
   "universe-arena.php": "page",
   "uni_pages.php": "lib",
+  "universe-graph.php": "page",
   "uni_views.php": "lib",
   "crm_money.php": "lib",
   "crm_growth.php": "lib",
