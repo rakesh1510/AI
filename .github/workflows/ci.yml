@@ -55,7 +55,7 @@ jobs:
       - name: Analytics salt (no visitor hash without a strong salt; tracking off by default)
         run: php tests/analytics_salt_test.php
 
-      - name: Phase 8C tool management (database-free: validation, permissions, lifecycle, stale edits, listing, rendering, migration and guard checks)
+      - name: Phase 8C tool management (database-free; validation, permissions, lifecycle, stale edits, listing, rendering, migration and guard checks)
         run: php tests/phase8c_tools_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
