@@ -1,0 +1,1025 @@
+{
+ "checks": [
+  {
+   "name": "loads every verified entity (and nothing else)",
+   "ok": true,
+   "detail": "N=113 expected 113"
+  },
+  {
+   "name": "HTTP source is active on the production page",
+   "ok": true
+  },
+  {
+   "name": "relationships are not loaded before an entity is selected (progressive)",
+   "ok": true,
+   "detail": "E=0"
+  },
+  {
+   "name": "no synthetic label anywhere on the production page",
+   "ok": true
+  },
+  {
+   "name": "synthetic generator is not loaded",
+   "ok": true
+  },
+  {
+   "name": "plain list is collapsed once the app is up, app is visible",
+   "ok": true
+  },
+  {
+   "name": "no external hosts contacted, API is GET only",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "no unverified or ghost entity in the node list",
+   "ok": true
+  },
+  {
+   "name": "no page errors on load",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "legend lists the nine relationship types separately",
+   "ok": true
+  },
+  {
+   "name": "canvas has no synthetic watermark and a graph role / label",
+   "ok": true
+  },
+  {
+   "name": "selecting an entity requests only its own neighbourhood page (limit 100) and its detail",
+   "ok": true,
+   "detail": "7.0.0.1:8300/universe-api.php?r=entities&page=1&per_page=100 7.0.0.1:8300/universe-api.php?r=entities&page=2&per_page=100 http://127.0.0.1:8300/universe-api.php?r=entity&slug=acme 1:8300/universe-api.php?r=graph&slug=acme&limit=100&offset=0"
+  },
+  {
+   "name": "first neighbourhood page is paged: 100 of 110",
+   "ok": true,
+   "detail": "{\"state\":\"more\",\"total\":110,\"next\":100,\"err\":\"\"} loaded 100"
+  },
+  {
+   "name": "panel lists 100 relationships, each with a typed label",
+   "ok": true,
+   "detail": "100"
+  },
+  {
+   "name": "every relationship shows its source link and the retrieval date",
+   "ok": true,
+   "detail": "{\"type\":\"developed_by\",\"link\":true,\"cite\":\"Source: Example Publisher (opens in a new tab) (retrieved 2025-01-15)\"}"
+  },
+  {
+   "name": "panel states how many are loaded and that more exist",
+   "ok": true
+  },
+  {
+   "name": "entity verification date and source are shown",
+   "ok": true
+  },
+  {
+   "name": "\"Load more\" button is visible after the first page",
+   "ok": true
+  },
+  {
+   "name": "after \"Load more\" all relationships are present and the button is gone",
+   "ok": true,
+   "detail": "edges 110"
+  },
+  {
+   "name": "relationship types stay separate (four distinct types kept)",
+   "ok": true,
+   "detail": "acquired_by,developed_by,integrates_with,renamed_from"
+  },
+  {
+   "name": "focus is not lost when the \"Load more\" button disappears",
+   "ok": true
+  },
+  {
+   "name": "requests of the second page use offset 100",
+   "ok": true
+  },
+  {
+   "name": "unverified relationships of acme (proposed, in review, rejected) never appear",
+   "ok": true
+  },
+  {
+   "name": "selection is mirrored in a shareable ?slug= URL",
+   "ok": true,
+   "detail": "http://127.0.0.1:8300/universe-graph.php?slug=acme#sel=acme&k=1.600&x=-293.1&y=165.5"
+  },
+  {
+   "name": "following a relationship selects the neighbour, loads its neighbourhood and updates the URL",
+   "ok": true
+  },
+  {
+   "name": "model X shows its distinct types (derived_from, successor_of, built_on, hosted_on, developed_by, version_of)",
+   "ok": true,
+   "detail": "built_on,derived_from,developed_by,hosted_on,successor_of,version_of"
+  },
+  {
+   "name": "\"Developed by\" is derived from a loaded developed_by relationship, not guessed",
+   "ok": true
+  },
+  {
+   "name": "keyboard: \"]\" moves to a related entity and \"b\" goes back",
+   "ok": true
+  },
+  {
+   "name": "keyboard: Escape clears the selection and closes the panel",
+   "ok": true
+  },
+  {
+   "name": "no page errors while expanding",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "deep link ?slug= selects the entity and opens its details",
+   "ok": true
+  },
+  {
+   "name": "deep link loads relationships",
+   "ok": true
+  },
+  {
+   "name": "server-rendered detail for the same entity exists in the collapsed plain list",
+   "ok": true
+  },
+  {
+   "name": "unknown slug: server answers 404 with the not-found text and no app",
+   "ok": true
+  },
+  {
+   "name": "review mode cannot be enabled through the URL or a global (mode stays public)",
+   "ok": true
+  },
+  {
+   "name": "?source=synthetic, ?size and ?api= have no effect on the production page",
+   "ok": true
+  },
+  {
+   "name": "hostile entity name is shown as text in the table",
+   "ok": true,
+   "detail": "<img src=x onerror=\"window.__xss=1\">HOSTILE"
+  },
+  {
+   "name": "hostile name is text in the panel; no element or handler was created from it",
+   "ok": true
+  },
+  {
+   "name": "hostile name is text in the search results",
+   "ok": true
+  },
+  {
+   "name": "no script ran from entity text",
+   "ok": true
+  },
+  {
+   "name": "network failure: honest error with retry, role=alert, canvas hidden",
+   "ok": true
+  },
+  {
+   "name": "the plain server-rendered list stays open as the fallback",
+   "ok": true
+  },
+  {
+   "name": "\"Try again\" recovers once the API is reachable",
+   "ok": true
+  },
+  {
+   "name": "HTTP 503: \"temporarily unavailable\" message",
+   "ok": true
+  },
+  {
+   "name": "empty API answer: \"No verified data yet\" (role=status), no canvas",
+   "ok": true
+  },
+  {
+   "name": "malformed API answer is rejected, not rendered",
+   "ok": true
+  },
+  {
+   "name": "payload validation: invalid rows are dropped and counted, valid ones kept",
+   "ok": true,
+   "detail": "{\"N\":2,\"stats\":{\"droppedNodes\":7,\"droppedEdges\":0,\"droppedSources\":0,\"requests\":1}}"
+  },
+  {
+   "name": "unknown relationship types and unknown endpoints are dropped; javascript: URLs never become links",
+   "ok": true,
+   "detail": "{\"e\":1,\"links\":[],\"types\":[\"developed_by\"]}"
+  },
+  {
+   "name": "HTTP 429 on a neighbourhood: honest message and a retry button, graph stays usable",
+   "ok": true
+  },
+  {
+   "name": "retry after the error loads the relationships",
+   "ok": true
+  },
+  {
+   "name": "moving the selection aborts the in-flight neighbourhood request of the previous entity",
+   "ok": true,
+   "detail": "[\"net::ERR_ABORTED\"]"
+  },
+  {
+   "name": "an aborted entity can be loaded again when selected again",
+   "ok": true
+  },
+  {
+   "name": "keyboard: Enter on the Table button switches to the table",
+   "ok": true
+  },
+  {
+   "name": "keyboard: arrow keys move between row buttons",
+   "ok": true
+  },
+  {
+   "name": "keyboard: Enter on a row selects the entity and moves focus to its details",
+   "ok": true
+  },
+  {
+   "name": "keyboard: pager works (page 2 of 3, 50 rows)",
+   "ok": true
+  },
+  {
+   "name": "keyboard: N selects an entity from the graph, Enter opens its details",
+   "ok": true
+  },
+  {
+   "name": "keyboard: Tab moves on from the details heading to the Close button",
+   "ok": true
+  },
+  {
+   "name": "keyboard: Close clears the selection and returns focus",
+   "ok": true
+  },
+  {
+   "name": "keyboard: skip link focuses the graph",
+   "ok": true
+  },
+  {
+   "name": "no page errors during keyboard use",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "no JavaScript: app hidden, plain list open with 50 entities per page and deep links",
+   "ok": true,
+   "detail": "{\"appShown\":false,\"open\":true,\"rows\":50,\"links\":50,\"note\":true}"
+  },
+  {
+   "name": "no JavaScript: entity page lists its verified relationships with sources (first 100 of 110)",
+   "ok": true,
+   "detail": "{\"rows\":100,\"th\":100,\"cites\":100,\"more\":true}"
+  },
+  {
+   "name": "axe light/desktop/graph-idle: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/graph-selected: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/table: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/search-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/legend-help-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/api-error: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/api-empty: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/no-js-list: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/desktop/no-js-entity: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe light/mobile360/graph-idle: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/graph-idle)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/graph-selected: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/graph-selected)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/table: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/table)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/search-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/search-open)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/legend-help-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/legend-help-open)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/api-error: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/api-error)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/api-empty: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/api-empty)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/no-js-list: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/no-js-list)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe light/mobile360/no-js-entity: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (light/no-js-entity)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/desktop/graph-idle: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/graph-selected: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/table: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/search-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/legend-help-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/api-error: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/api-empty: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/no-js-list: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/desktop/no-js-entity: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "axe dark/mobile360/graph-idle: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/graph-idle)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/graph-selected: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/graph-selected)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/table: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/table)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/search-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/search-open)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/legend-help-open: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/legend-help-open)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/api-error: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/api-error)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/api-empty: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/api-empty)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/no-js-list: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/no-js-list)",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "axe dark/mobile360/no-js-entity: 0 violations",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "no horizontal page scroll at 360px (dark/no-js-entity)",
+   "ok": true,
+   "detail": "0"
+  }
+ ],
+ "axe": [
+  {
+   "state": "graph-idle",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 47,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-selected",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "table",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "search-open",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "legend-help-open",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 48,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-error",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-empty",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-list",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 51,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-entity",
+   "scheme": "light",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 54,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-idle",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 47,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-selected",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 6,
+     "targets": [
+      "#zIn",
+      "#zOut",
+      "#zFit",
+      "#zPick"
+     ]
+    }
+   ],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "table",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "search-open",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "legend-help-open",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 48,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-error",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-empty",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-list",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-entity",
+   "scheme": "light",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 707,
+     "targets": [
+      "#entity > div > .pretty > caption",
+      "#entity > div > .pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(4)",
+      "th[scope=\"col\"]:nth-child(5)"
+     ]
+    }
+   ],
+   "passes": 55,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-idle",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 47,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-selected",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "table",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "search-open",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "legend-help-open",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 48,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-error",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-empty",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-list",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 51,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-entity",
+   "scheme": "dark",
+   "profile": "desktop",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 54,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-idle",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 47,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "graph-selected",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 6,
+     "targets": [
+      "#zIn",
+      "#zOut",
+      "#zFit",
+      "#zPick"
+     ]
+    }
+   ],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "table",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "search-open",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 50,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "legend-help-open",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [],
+   "passes": 48,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-error",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "api-empty",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 53,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-list",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 103,
+     "targets": [
+      ".pretty > caption",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(2)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      "tr:nth-child(1) > td:nth-child(2)"
+     ]
+    }
+   ],
+   "passes": 52,
+   "horizontalOverflowPx": 0
+  },
+  {
+   "state": "no-js-entity",
+   "scheme": "dark",
+   "profile": "mobile360",
+   "version": "4.10.2",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "nodes": 707,
+     "targets": [
+      "#entity > div > .pretty > caption",
+      "#entity > div > .pretty > thead > tr > th[scope=\"col\"]:nth-child(3)",
+      ".pretty > thead > tr > th[scope=\"col\"]:nth-child(4)",
+      "th[scope=\"col\"]:nth-child(5)"
+     ]
+    }
+   ],
+   "passes": 55,
+   "horizontalOverflowPx": 0
+  }
+ ],
+ "notes": [],
+ "summary": {
+  "checks": 117,
+  "failed": 0,
+  "axeRuns": 36,
+  "axeViolations": 0
+ }
+}

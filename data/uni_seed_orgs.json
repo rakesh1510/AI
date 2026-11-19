@@ -1,0 +1,12 @@
+[
+ {"name":"Meta Platforms","hf":"meta-llama"},{"name":"Google","hf":"google"},{"name":"Microsoft","hf":"microsoft"},{"name":"Nvidia","hf":"nvidia"},
+ {"name":"OpenAI","hf":"openai"},{"name":"IBM","hf":"ibm-granite"},{"name":"Apple","hf":"apple"},{"name":"Salesforce","hf":"Salesforce"},{"name":"Databricks","hf":"databricks"},
+ {"name":"Allen Institute for AI","hf":"allenai"},{"name":"xAI","hf":"xai-org"},{"name":"Cohere","hf":"CohereLabs"},
+ {"name":"Mistral AI","hf":"mistralai"},{"name":"Black Forest Labs","hf":"black-forest-labs"},{"name":"Stability AI","hf":"stabilityai"},
+ {"name":"DeepSeek","hf":"deepseek-ai"},{"name":"Alibaba Group","hf":"Qwen"},{"name":"Beijing Academy of Artificial Intelligence","hf":"BAAI"},
+ {"name":"Shanghai Artificial Intelligence Laboratory","hf":"internlm"},{"name":"Moonshot AI","hf":"moonshotai"},{"name":"Zhipu AI","hf":"zai-org"},
+ {"name":"01.AI","hf":"01-ai"},{"name":"Baidu","hf":"baidu"},{"name":"Tencent","hf":"tencent"},
+ {"name":"LG AI Research","hf":"LGAI-EXAONE"},{"name":"Upstage","hf":"upstage"},{"name":"Naver","hf":"naver-hyperclovax"},
+ {"name":"Sakana AI","hf":"SakanaAI"},{"name":"rinna","hf":"rinna"},{"name":"Sarvam AI","hf":"sarvamai"},
+ {"name":"Technology Innovation Institute","hf":"tiiuae"},{"name":"AI21 Labs","hf":"ai21labs"}
+]

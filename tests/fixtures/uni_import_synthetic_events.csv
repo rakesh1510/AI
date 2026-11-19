@@ -1,0 +1,2 @@
+entity,event_type,event_date,title,source_url,source_publisher,source_retrieved_at,source_quote
+synthetic-orbit-chat,product_release,2024-09-01,Synthetic Orbit Chat ships (fictional),https://example.test/synthetic/orbit-chat,Example Test Publisher (synthetic),2025-01-17,"SYNTHETIC: a fictional quote, ""quoted"" and with a comma, for CSV tests."

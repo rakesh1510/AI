@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AI Universe graph prototype (synthetic data)</title>
+<link rel="stylesheet" href="graph.css">
+<style>html,body{margin:0;height:100%;overflow:hidden}</style>
+</head>
+<body>
+<div class="ugapp" id="ugapp">
+<div class="skips">
+  <a class="skip" href="#controls" data-skip="controls">Skip to controls and search</a>
+  <a class="skip" href="#stage" data-skip="stage">Skip to graph or table</a>
+  <a class="skip" href="#panel" data-skip="panel" id="skipPanel" hidden>Skip to node details</a>
+</div>
+<header>
+  <div class="top"><h1>AI Universe graph prototype</h1>
+  <p class="syn" id="synBanner">SYNTHETIC TEST DATA - randomly generated; none of these companies, products or relationships are real.</p></div>
+  <p class="review" id="reviewBanner" hidden>REVIEW MODE: unverified relationships are visible. Not for public display.</p>
+  <details id="controls" open tabindex="-1">
+    <summary>Controls, filters and search</summary>
+    <div id="bar">
+      <div class="grp" role="group" aria-label="View">
+        <button id="vGraph" type="button" aria-pressed="true">Graph</button>
+        <button id="vTable" type="button" aria-pressed="false">Table</button>
+      </div>
+      <label>Data source <select id="srcSel"><option value="synthetic">SYNTHETIC TEST DATA</option><option value="http">Verified data (read API)</option></select></label>
+      <label id="lblSize">Nodes <select id="size"></select></label>
+      <label id="lblLoad">Loading <select id="load">
+        <option value="all">all at once</option><option value="progressive">progressive (1-hop)</option></select></label>
+      <label class="sr" for="q">Search nodes by name</label>
+      <input id="q" type="search" placeholder="Search nodes" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+      <div id="reswrap"><ul id="results" role="listbox" aria-label="Search results"></ul><p id="resmsg" hidden>No matches</p></div>
+    </div>
+    <fieldset id="filters"><legend class="sr">Filter by node type</legend></fieldset>
+  </details>
+  <details id="kbdBox">
+    <summary>Keyboard and touch help</summary>
+    <ul class="help">
+      <li>Graph focused: <kbd>Arrow keys</kbd> pan, <kbd>+</kbd> / <kbd>-</kbd> zoom, <kbd>0</kbd> fit all, <kbd>Esc</kbd> clear selection.</li>
+      <li><kbd>Enter</kbd> selects the node nearest the centre (or zooms into the nearest cluster); then <kbd>Enter</kbd> again opens its details.</li>
+      <li><kbd>N</kbd> / <kbd>Shift+N</kbd> next / previous node by distance from the centre; <kbd>]</kbd> / <kbd>[</kbd> next / previous related node; <kbd>B</kbd> back to the previous selection.</li>
+      <li>Buttons on the graph do the same without keys. The Table view lists the same nodes and keeps the selection.</li>
+      <li>Touch: drag to pan, pinch to zoom, tap a node or cluster.</li>
+    </ul>
+  </details>
+  <details id="legendBox">
+    <summary>Legend (relationship types and node types)</summary>
+    <div id="legend"></div>
+  </details>
+</header>
+<div id="layout">
+<main id="main">
+  <section id="stage" aria-label="Graph or table of nodes" tabindex="-1">
+    <canvas id="cv" tabindex="0" role="application" aria-roledescription="graph" aria-describedby="cvhelp"
+      aria-label="Interactive graph of synthetic nodes"></canvas>
+    <p id="cvhelp" class="sr">Arrow keys pan, plus and minus zoom, zero fits all, Enter selects the node nearest the centre, N and Shift N cycle nodes, right and left square brackets cycle related nodes, B goes back, Escape clears the selection. The Table view is an equivalent list.</p>
+    <div id="zoomctl" role="group" aria-label="Graph navigation">
+      <button id="zIn" type="button">Zoom in</button>
+      <button id="zOut" type="button">Zoom out</button>
+      <button id="zFit" type="button">Fit</button>
+      <button id="zPick" type="button">Select centre</button>
+      <button id="zNext" type="button" disabled>Next related</button>
+    </div>
+    <div id="hud"><span id="progress"></span></div>
+    <div id="tablewrap" hidden role="region" aria-label="Node table">
+      <div class="pager" role="group" aria-label="Table paging">
+        <button id="prev" type="button">Previous page</button>
+        <span id="pageinfo"></span>
+        <button id="next" type="button">Next page</button>
+      </div>
+      <table id="tbl">
+        <caption id="tcap" tabindex="-1">SYNTHETIC TEST DATA - list of nodes (same nodes as the graph)</caption>
+        <thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col" id="thCo">Company</th><th scope="col" id="thRel">Verified relationships (count)</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<aside id="panel" aria-label="Node details" hidden>
+  <div><h2 id="pname" tabindex="-1"></h2> <button id="pclose" type="button" aria-label="Close details">Close</button></div>
+  <p id="psum" hidden></p>
+  <dl id="pdl"></dl>
+  <h3 id="relh">Relationships (verified, with source)</h3>
+  <p id="relnote" class="verified-note" hidden></p>
+  <ul id="edges" aria-labelledby="relh"></ul>
+  <p id="pnet" role="status"></p>
+  <button id="pmore" type="button" hidden>Load more relationships</button>
+</aside>
+</div>
+<div id="live" class="sr" role="status" aria-live="polite" aria-atomic="true"></div>
+</div>
+<script src="vendor/d3-dispatch.min.js"></script>
+<script src="vendor/d3-timer.min.js"></script>
+<script src="vendor/d3-quadtree.min.js"></script>
+<script src="vendor/d3-force.min.js"></script>
+<script src="vendor/d3-color.min.js"></script>
+<script src="vendor/d3-interpolate.min.js"></script>
+<script src="vendor/d3-ease.min.js"></script>
+<script src="vendor/d3-selection.min.js"></script>
+<script src="vendor/d3-transition.min.js"></script>
+<script src="vendor/d3-drag.min.js"></script>
+<script src="vendor/d3-zoom.min.js"></script>
+<script src="data-gen.js"></script>
+<script src="data-source.js"></script>
+<script src="graph.js"></script>
+</body>
+</html>

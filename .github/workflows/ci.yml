@@ -98,6 +98,39 @@ jobs:
       - name: Phase 6 migration test (additive, idempotent, relationships, rollback, 20,000-lead scale)
         run: php tests/phase6_migration_test.php
 
+      - name: Phase 7 schema test (uni_* provenance ledger - additive, idempotent, rollback, every invariant has a bypass attempt)
+        run: php tests/phase7_schema_test.php
+
+      - name: Phase 7 service layer tests (roles, maker-checker, provenance rules, verified-only public reads; trigger and no-trigger modes)
+        run: php tests/phase7_service_test.php
+
+      - name: Phase 7 read API tests (universe-api.php over HTTP, verified-only, no identity fields, hostile input, rate limit)
+        run: php tests/phase7_api_test.php
+
+      - name: Phase 7 concurrency tests (separate OS processes and connections racing on accepts, corrections, attach, slugs, deadlocks; trigger and no-trigger modes)
+        run: php tests/phase7_concurrency_test.php
+
+      - name: Phase 7 database privilege model (least-privilege app, importer, public and migrator accounts; TRUNCATE needs DROP; triggers fire without SUPER)
+        run: php tests/phase7_privilege_test.php
+
+      - name: Phase 7 importer tests (CLI only, dry run default, proposed import rows only, hostile input, idempotent, least-privilege account)
+        run: php tests/phase7_import_test.php
+
+      - name: Phase 7 editor and verifier UI over HTTP (authorization matrix, CSRF, maker-checker, AI-assisted review path, escaping, hostile input)
+        run: php tests/phase7_editor_http_test.php
+
+      - name: Phase 7 public universe pages over HTTP (heatmap, lineage, arena - verified-only, empty states, escaping, hostile input, sitemap rules)
+        run: php tests/phase7_pages_test.php
+
+      - name: Phase 7 graph page tests (universe-graph.php - verified-only data, empty and unavailable states, escaping, hostile parameters, built assets, sitemap)
+        run: php tests/phase7_graph_page_test.php
+
+      - name: Phase 7 facts tests (source-backed comparison facts - migration, rollback, invariants, service layer, compare API and arena, editor; trigger and no-trigger modes)
+        run: php tests/phase7_facts_test.php
+
+      - name: Phase 7 public-source path (collector replay, importer, human adoption, independent verification, public pages; synthetic data)
+        run: php tests/phase7_collect_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
@@ -165,11 +198,23 @@ jobs:
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: node tests/browser_phase6_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p6
 
+      - name: Phase 7 browser tests (heatmap, lineage, arena and editor pages incl. axe, keyboard, 360px, dark, no-JS; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/browser_phase7_test.js ./ci-screenshots ci-p7
+
       - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
         env:
           NODE_PATH: /tmp/pw/node_modules
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: node tests/axe_audit.js http://127.0.0.1:8002 --strict
+
+      - name: Phase 7 graph page browser test (real HTTP data source, expand and load more, review mode locked, error and empty states, keyboard, no-JS, axe light and dark desktop and 360px)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_CORE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node prototypes/universe-graph/http-source-test.js --out=/tmp/http-source-results.json
 
       - name: Business report runs against the test database
         run: php scripts/business_report.php --days=1 > /dev/null

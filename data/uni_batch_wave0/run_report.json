@@ -1,0 +1,43 @@
+{
+    "mode": "replay",
+    "organisations_in_seed": 32,
+    "companies": 24,
+    "models": 80,
+    "events": 69,
+    "edges": 93,
+    "sources": 266,
+    "skipped": [
+        {
+            "what": "Apple",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "Allen Institute for AI",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "xAI",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "Shanghai Artificial Intelligence Laboratory",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "Tencent",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "Naver",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "Sakana AI",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        },
+        {
+            "what": "rinna",
+            "why": "no_exact_label_organisation_match_on_wikidata"
+        }
+    ]
+}

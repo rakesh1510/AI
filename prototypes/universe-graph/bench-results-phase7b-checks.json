@@ -1,0 +1,116 @@
+{
+ "width360": {
+  "graphScrollWidth": 360,
+  "viewport": 360,
+  "tableScrollWidth": 360
+ },
+ "syntheticLabelVisibleGraph": true,
+ "legendRelTypesListed": [
+  "technical_ancestry",
+  "product_succession",
+  "company_ownership",
+  "integration",
+  "similarity",
+  "historical_association"
+ ],
+ "touchTargets": {
+  "checked": 171,
+  "under44": []
+ },
+ "syntheticLabelVisibleTable": true,
+ "tableKeyboard": {
+  "arrowDownTwiceFocusedRowIndex": 2,
+  "enterSelected": 2,
+  "selectionMatchesFocusedRow": true,
+  "panelOpened": true,
+  "focusMovedToPanelHeading": true,
+  "tabReachesCloseButton": true
+ },
+ "tableAria": {
+  "explicitRoleOnTable": null,
+  "hasCaption": true,
+  "colHeadersWithScope": 4,
+  "rowHeadersWithScope": 50,
+  "rowsWithRoleAttr": 0,
+  "canvasLabel": true
+ },
+ "edgePanel": {
+  "edgesListed": 12,
+  "withCitation": 12,
+  "withDateOrNotRecorded": 12,
+  "withUnverifiedText": 0
+ },
+ "audit": {
+  "mode": "public",
+  "relTypes": [
+   "technical_ancestry",
+   "product_succession",
+   "company_ownership",
+   "integration",
+   "similarity",
+   "historical_association"
+  ],
+  "branchStyleRels": [
+   "technical_ancestry",
+   "product_succession"
+  ],
+  "edgesInUi": 937,
+  "unverifiedEdgesInUiArray": 0,
+  "edgesMissingCitation": 0,
+  "edgesWithoutDate": 80,
+  "unverifiedDrawnOnCanvas": 0,
+  "distinctDashOrWidth": 6
+ },
+ "search": {
+  "resultsShown": 8,
+  "enterSelectedNode": true
+ },
+ "filter": {
+  "visibleBefore": 500,
+  "visibleAfterUncheckingModel": 250
+ },
+ "deepLink": {
+  "hash": "#sel=n7&k=1.750&x=120.0&y=-80.0",
+  "restoredSel": 7,
+  "restoredK": 1.75,
+  "expectedK": 1.75,
+  "panelOpen": true
+ },
+ "pageErrors": [],
+ "reducedMotion": {
+  "matches": true,
+  "zoomTransitionMs": 0,
+  "zoomTransitionMsWhenNoPreference": 450
+ },
+ "urlAloneCannotEnableReviewMode": {
+  "unverifiedEdgesLoaded": 0,
+  "bannerHidden": true
+ },
+ "reviewModeOnlyViaUrl": {
+  "unverifiedEdgesLoaded": 64,
+  "badgeInPanel": true,
+  "bannerVisible": true
+ },
+ "progressive": {
+  "loadedBefore": 200,
+  "selectedId": 230,
+  "degree": 13,
+  "loadedAfterOneSelect": 213,
+  "addedNodes": 13,
+  "expandMs": 0.2999999998137355
+ },
+ "determinism": {
+  "500": {
+   "checksum": "d4d88eb1",
+   "identicalOnSecondRun": true
+  },
+  "5000": {
+   "checksum": "dcb09263",
+   "identicalOnSecondRun": true
+  },
+  "50000": {
+   "checksum": "5d1cad96",
+   "identicalOnSecondRun": true
+  }
+ }
+}

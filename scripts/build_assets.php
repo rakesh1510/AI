@@ -3,6 +3,8 @@
  * Builds the production assets (committed, because deployments have no build step):
  *   assets/css/site.min.css   = style.css + ui.css, comments and whitespace removed (one render-blocking request instead of two)
  *   assets/js/app.min.js, assets/js/interactions.min.js   (terser, if installed)
+ *   assets/universe/*         = byte-identical copy of the graph app (prototypes/universe-graph/{graph.js,graph.css,data-source.js,layout-worker.js,vendor/d3-*}); the
+ *                               production page universe-graph.php serves it from there. The synthetic generator (data-gen.js) is deliberately NOT copied.
  *   assets/build.json         = SHA-1 of every source, used by tests to prove the built files are current
  *
  * Usage: php scripts/build_assets.php          rebuild
@@ -22,8 +24,15 @@ function css_minify(string $css): string {
 }
 
 $sources = ['assets/css/style.css', 'assets/css/ui.css', 'assets/js/app.js', 'assets/js/interactions.js'];
+// graph app: source of truth is the prototype folder, the served copy lives in assets/universe/ (same relative names)
+$uniSrc = ['graph.js', 'graph.css', 'data-source.js', 'layout-worker.js'];
+foreach ((array)glob("$root/prototypes/universe-graph/vendor/d3-*") as $f) $uniSrc[] = 'vendor/' . basename($f);
+sort($uniSrc);
+$uniPairs = [];
+foreach ($uniSrc as $f) $uniPairs["prototypes/universe-graph/$f"] = "assets/universe/$f";
 $hashes = [];
 foreach ($sources as $s) $hashes[$s] = sha1_file("$root/$s");
+foreach (array_keys($uniPairs) as $s) $hashes[$s] = sha1_file("$root/$s");
 $buildFile = "$root/assets/build.json";
 $prev = is_file($buildFile) ? (json_decode(file_get_contents($buildFile), true)['sources'] ?? []) : [];
 $outputs = ['assets/css/site.min.css', 'assets/js/app.min.js', 'assets/js/interactions.min.js'];
@@ -32,6 +41,8 @@ if ($check) {
   $stale = [];
   foreach ($hashes as $s => $h) if (($prev[$s] ?? '') !== $h) $stale[] = $s;
   foreach ($outputs as $o) if (!is_file("$root/$o")) $stale[] = $o . ' (missing)';
+  foreach ($uniPairs as $from => $to) { if (!is_file("$root/$to")) $stale[] = $to . ' (missing)'; elseif (sha1_file("$root/$to") !== $hashes[$from]) $stale[] = $to . ' (differs from ' . $from . ')'; }
+  foreach ((array)glob("$root/assets/universe/{,vendor/}*", GLOB_BRACE) as $f) { if (is_file($f) && !in_array('assets/universe/' . substr($f, strlen("$root/assets/universe/")), $uniPairs, true)) $stale[] = substr($f, strlen($root) + 1) . ' (not a built output)'; }
   if ($stale) { fwrite(STDERR, "Built assets are stale or missing: " . implode(', ', $stale) . "\nRun: php scripts/build_assets.php\n"); exit(1); }
   echo "Built assets are up to date.\n"; exit(0);
 }
@@ -53,5 +64,8 @@ foreach (['app', 'interactions'] as $js) {
   }
   printf("%s.min.js: %d bytes (from %d)\n", $js, filesize($dst), filesize($src));
 }
+@mkdir("$root/assets/universe/vendor", 0775, true);
+foreach ($uniPairs as $from => $to) { file_put_contents("$root/$to", file_get_contents("$root/$from")); }
+printf("assets/universe: %d files copied from prototypes/universe-graph\n", count($uniPairs));
 file_put_contents($buildFile, json_encode(['built' => date('Y-m-d'), 'sources' => $hashes], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
 echo "Wrote assets/build.json\n";

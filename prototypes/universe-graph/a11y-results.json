@@ -1,0 +1,372 @@
+{
+  "generatedAt": "2026-11-19T13:08:55.371Z",
+  "chromium": "153.0.8010.12",
+  "axeCore": "4.10.2",
+  "runs": [
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "graph-idle",
+      "violations": [],
+      "incomplete": [],
+      "passes": 41
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "graph-selected-panel-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "controls-legend-help-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 44
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "search-results-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 45
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "search-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 42
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "table-page1",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "table-selected",
+      "violations": [],
+      "incomplete": [],
+      "passes": 52
+    },
+    {
+      "scheme": "light",
+      "profile": "desktop",
+      "state": "table-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 46
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "graph-idle",
+      "violations": [],
+      "incomplete": [],
+      "passes": 37
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "graph-selected-panel-open",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 3,
+          "targets": [
+            "#zPick",
+            "#zNext",
+            "#progress"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
+      "passes": 43
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "controls-legend-help-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 45
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "search-results-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 46
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "search-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 43
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "table-page1",
+      "violations": [],
+      "incomplete": [],
+      "passes": 42
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "table-selected",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 27,
+          "targets": [
+            "#pageinfo",
+            "#next",
+            "#tcap",
+            "th[scope=\"col\"]:nth-child(1)"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
+      "passes": 47
+    },
+    {
+      "scheme": "light",
+      "profile": "mobile360",
+      "state": "table-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "graph-idle",
+      "violations": [],
+      "incomplete": [],
+      "passes": 41
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "graph-selected-panel-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "controls-legend-help-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 44
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "search-results-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 45
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "search-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 42
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "table-page1",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "table-selected",
+      "violations": [],
+      "incomplete": [],
+      "passes": 52
+    },
+    {
+      "scheme": "dark",
+      "profile": "desktop",
+      "state": "table-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 46
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "graph-idle",
+      "violations": [],
+      "incomplete": [],
+      "passes": 37
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "graph-selected-panel-open",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 3,
+          "targets": [
+            "#zPick",
+            "#zNext",
+            "#progress"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
+      "passes": 43
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "controls-legend-help-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 45
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "search-results-open",
+      "violations": [],
+      "incomplete": [],
+      "passes": 46
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "search-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 43
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "table-page1",
+      "violations": [],
+      "incomplete": [],
+      "passes": 42
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "table-selected",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 27,
+          "targets": [
+            "#pageinfo",
+            "#next",
+            "#tcap",
+            "th[scope=\"col\"]:nth-child(1)"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
+      "passes": 47
+    },
+    {
+      "scheme": "dark",
+      "profile": "mobile360",
+      "state": "table-no-matches",
+      "violations": [],
+      "incomplete": [],
+      "passes": 47
+    }
+  ],
+  "keyboard": {
+    "firstTabIsSkipLink": true,
+    "skipToGraphFocusesCanvas": true,
+    "skipLinkKeepsHash": true,
+    "keyboardPanZoom": {
+      "xChanged": true,
+      "zoomIncreased": true
+    },
+    "keyboardSelect": {
+      "enterSelected": true,
+      "relatedMoved": true,
+      "backReturned": true
+    },
+    "enterOpensDetails": true,
+    "escapeClears": true,
+    "tableKeepsSelection": {
+      "sel": 37,
+      "markedRow": 37,
+      "ariaCurrent": true
+    },
+    "graphKeepsSelection": true,
+    "afterNext": {
+      "focusId": "next",
+      "live": "Page 2 of 10, rows 51 to 100 of 500.",
+      "info": "500 nodes, showing 51 to 100, page 2 of 10"
+    },
+    "atLastPage": {
+      "nextDisabled": true,
+      "focusId": "prev"
+    },
+    "pageUpFocus": {
+      "focusIsRowBtn": true,
+      "page": 8
+    },
+    "searchAnnouncement": {
+      "live": "44 nodes match. Page 1 of 1.",
+      "rows": 44
+    },
+    "noMatchAnnouncement": {
+      "live": "No nodes match the current search and filters.",
+      "emptyRow": true
+    },
+    "tableAria": {
+      "explicitRoleOnTable": null,
+      "anyRoleGrid": false,
+      "scopeCols": 4,
+      "relHeader": "Verified relationships (count)"
+    },
+    "reducedMotion": {
+      "zoomMs": 0,
+      "cssTransitionNone": "0s"
+    },
+    "pageErrors": []
+  },
+  "totalViolationNodes": 0
+}
