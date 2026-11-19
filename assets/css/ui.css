@@ -484,3 +484,4 @@ table.pkgTable{min-width:720px}
 .uniSubnav a:hover{background:var(--surface-2);color:var(--brand)}
 .uniSubnav a[aria-current="page"]{background:var(--surface-2);color:var(--brand);box-shadow:inset 0 -3px 0 var(--brand)}
 .uniSubnav a[aria-current="true"]{color:var(--brand)}
+@media (min-width:1181px) and (max-width:5000px){.primaryNav>a,.moreMenu__btn{padding:9px 7px;font-size:14px}.primaryNav{margin-left:0;gap:0}.hdrSearch{flex-basis:130px}}
