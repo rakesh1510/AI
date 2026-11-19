@@ -55,6 +55,17 @@ jobs:
       - name: Analytics salt (no visitor hash without a strong salt; tracking off by default)
         run: php tests/analytics_salt_test.php
 
+      - name: Phase 8C tool management (database-free: validation, permissions, lifecycle, stale edits, listing, rendering, migration and guard checks)
+        run: php tests/phase8c_tools_test.php
+
+      - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.56.1 axe-core@4.10.2
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE" && php tests/adm_tools_preview.php /tmp/p8c_preview
+          NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_phase8c_preview_test.js /tmp/p8c_preview
+
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php
 

@@ -1,0 +1,138 @@
+<?php
+if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly
+// Phase 8C (M2-M3): AI tool management screens for the Control Center. Pure rendering over an AdmToolStore, so previews and tests need no database.
+require_once __DIR__ . '/adm_tools_core.php';
+
+function admt_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function admt_url(array $p = []): string { return '/admin-center.php?' . http_build_query(['m' => 'tools'] + array_filter($p, fn($v) => $v !== '' && $v !== null && $v !== false)); }
+function admt_chip(string $s): string { return '<span class="chip chip-' . admt_h($s) . '">' . admt_h(ucfirst($s)) . '</span>'; }
+
+function admt_css(): string {
+  return '.tHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}.tBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:.5rem 1rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;text-decoration:none;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 14px -8px rgba(16,32,63,.35);transition:transform .15s,box-shadow .15s}'
+    . '.tBtn:hover{transform:translateY(-1px);box-shadow:0 8px 18px -8px rgba(16,32,63,.45)}.tBtn.primary{background:linear-gradient(180deg,var(--brand),#0847c4);border-color:transparent;color:#fff}.tBtn.danger{border-color:#b42318;color:#b42318}'
+    . '@media (prefers-color-scheme:dark){.tBtn.primary{color:#06142e;background:linear-gradient(180deg,#7db1ff,var(--brand))}.tBtn.danger{border-color:#ff8a80;color:#ff8a80}}'
+    . '.tTabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:0;list-style:none}.tTabs a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 .9rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none}.tTabs a[aria-current=true]{background:var(--brand);color:var(--brandInk);border-color:transparent;font-weight:600}'
+    . '.tFilter{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 24px -18px rgba(16,32,63,.5)}'
+    . '.tFilter label,.tForm label{display:grid;gap:4px;font-size:.88rem;color:var(--muted);font-weight:600}.tFilter input,.tFilter select,.tForm input,.tForm select,.tForm textarea{min-height:44px;padding:.5rem .65rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;width:100%}.tForm textarea{min-height:96px}'
+    . '.tFilter .chk{display:flex;align-items:center;gap:8px;min-height:44px}.tFilter .chk input{width:22px;min-height:22px}'
+    . '.toolCards{list-style:none;margin:16px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}'
+    . '.toolCard{position:relative;display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 12px 26px -20px rgba(16,32,63,.6);transition:transform .18s,box-shadow .18s}'
+    . '.toolCard:hover{transform:translateY(-2px);box-shadow:0 18px 30px -20px rgba(16,32,63,.7)}.toolCard h3{margin:0;font-size:1.05rem;overflow-wrap:anywhere}.toolCard h3 a{display:inline-flex;align-items:center;min-height:44px}.toolCard .meta{color:var(--muted);font-size:.85rem;overflow-wrap:anywhere}.toolCard code,.tDetail code{font-size:.82rem}'
+    . '.chip{display:inline-block;font-size:.74rem;font-weight:700;padding:.1rem .55rem;border-radius:999px;border:1px solid currentColor;white-space:nowrap}.chip-published{color:var(--ok)}.chip-draft{color:var(--na)}.chip-unpublished{color:var(--muted)}.chip-deleted{color:#b42318}'
+    . '@media (prefers-color-scheme:dark){.chip-deleted{color:#ff8a80}}.warn{color:var(--na);font-size:.82rem}.tDetail dl{display:grid;grid-template-columns:minmax(110px,170px) minmax(0,1fr);gap:6px 14px;margin:0}.tDetail dt{color:var(--muted);font-weight:600}.tDetail dd{margin:0;overflow-wrap:anywhere}'
+    . '.tActions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.tActions form{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tForm{display:grid;gap:14px;max-width:820px}.tForm .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}'
+    . '.err{color:#b42318;font-size:.85rem;font-weight:600}@media (prefers-color-scheme:dark){.err{color:#ff8a80}}.flash{border:1px solid var(--ok);border-left-width:6px;border-radius:10px;padding:10px 14px;background:var(--surface);margin:10px 0}.flash.bad{border-color:#b42318}'
+    . '.pager{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.tHist{list-style:none;margin:0;padding:0;display:grid;gap:8px}.tHist li{border-left:3px solid var(--line);padding-left:12px}'
+    . '@media (max-width:600px){.tDetail dl{grid-template-columns:minmax(0,1fr)}.tDetail dt{margin-top:6px}}';
+}
+
+function admt_flash(?string $msg, bool $bad = false): string { return $msg ? '<p class="flash' . ($bad ? ' bad' : '') . '" role="' . ($bad ? 'alert' : 'status') . '">' . admt_h($msg) . '</p>' : ''; }
+function admt_field(string $name, string $label, string $val, array $errs, string $type = 'text', array $attr = []): string {
+  $id = 'f_' . $name; $e = $errs[$name] ?? null; $a = '';
+  foreach ($attr as $k => $v) $a .= ' ' . $k . ($v === true ? '' : '="' . admt_h($v) . '"');
+  return '<label for="' . $id . '">' . admt_h($label) . '<input id="' . $id . '" name="' . $name . '" type="' . $type . '" value="' . admt_h($val) . '"' . $a . ($e ? ' aria-invalid="true" aria-describedby="' . $id . '_e"' : '') . '></label>' . ($e ? '<span class="err" id="' . $id . '_e">' . admt_h($e) . '</span>' : '');
+}
+function admt_area(string $name, string $label, string $val, array $errs, string $hint = ''): string {
+  $id = 'f_' . $name; $e = $errs[$name] ?? null;
+  return '<label for="' . $id . '">' . admt_h($label) . ($hint !== '' ? ' <span class="small">(' . admt_h($hint) . ')</span>' : '') . '<textarea id="' . $id . '" name="' . $name . '"' . ($e ? ' aria-invalid="true" aria-describedby="' . $id . '_e"' : '') . '>' . admt_h($val) . '</textarea></label>' . ($e ? '<span class="err" id="' . $id . '_e">' . admt_h($e) . '</span>' : '');
+}
+
+/** Create / edit form. $v = values to show (posted values on a validation error), $errs = field errors. */
+function admt_form(AdmToolStore $s, array $user, ?array $cur, array $v, array $errs, ?string $top = null): string {
+  $edit = $cur !== null; $lines = fn($k) => implode("\n", (array)($v[$k] ?? []));
+  $o = '<h1>' . ($edit ? 'Edit ' . admt_h($cur['name']) : 'New tool') . '</h1><p class="lead">' . ($edit ? 'Changes to a published tool go live when saved. Every save is recorded in the history.' : 'New tools start as drafts. Only the owner can publish.') . '</p>';
+  $o .= admt_flash($top, true);
+  $o .= '<form class="tForm panel" method="post" action="/admin-center.php?m=tools" novalidate>' . (function_exists('crm_csrf_field') ? crm_csrf_field() : '') . '<input type="hidden" name="act" value="tool_' . ($edit ? 'edit' : 'create') . '">';
+  if ($edit) $o .= '<input type="hidden" name="slug" value="' . admt_h($cur['slug']) . '"><input type="hidden" name="version" value="' . (int)$cur['_version'] . '">';
+  $o .= '<div class="row2">' . admt_field('name', 'Name', (string)($v['name'] ?? ''), $errs, 'text', ['required' => true, 'maxlength' => '120', 'autocomplete' => 'off']);
+  $o .= $edit ? '<label for="f_slug">Address (cannot be changed)<input id="f_slug" type="text" value="' . admt_h($cur['slug']) . '" readonly></label>' : admt_field('slug', 'Address (optional, from the name if empty)', (string)($v['slug'] ?? ''), $errs, 'text', ['maxlength' => '120', 'autocapitalize' => 'none', 'autocomplete' => 'off']);
+  $o .= '</div><div class="row2"><label for="f_category">Category<select id="f_category" name="category" required' . (isset($errs['category']) ? ' aria-invalid="true" aria-describedby="f_category_e"' : '') . '><option value="">Choose…</option>';
+  foreach ($s->categories() as $c) $o .= '<option' . (($v['category'] ?? '') === $c ? ' selected' : '') . '>' . admt_h($c) . '</option>';
+  $o .= '</select></label>' . (isset($errs['category']) ? '<span class="err" id="f_category_e">' . admt_h($errs['category']) . '</span>' : '');
+  $o .= '<label for="f_pricing_type">Pricing type<select id="f_pricing_type" name="pricing_type" required' . (isset($errs['pricing_type']) ? ' aria-invalid="true" aria-describedby="f_pricing_type_e"' : '') . '><option value="">Choose…</option>';
+  foreach (ADMT_PRICING as $p) $o .= '<option' . (($v['pricing_type'] ?? '') === $p ? ' selected' : '') . '>' . admt_h($p) . '</option>';
+  $o .= '</select></label>' . (isset($errs['pricing_type']) ? '<span class="err" id="f_pricing_type_e">' . admt_h($errs['pricing_type']) . '</span>' : '') . '</div>';
+  $o .= admt_area('short', 'Short description', (string)($v['short'] ?? ''), $errs, '20 to 300 characters') . admt_area('description', 'Description', (string)($v['description'] ?? ''), $errs);
+  $o .= '<div class="row2">' . admt_area('features', 'Features', $lines('features'), $errs, 'one per line') . admt_area('use_cases', 'Use cases', $lines('use_cases'), $errs, 'one per line') . admt_area('pros', 'Pros', $lines('pros'), $errs, 'one per line') . admt_area('cons', 'Cons', $lines('cons'), $errs, 'one per line') . '</div>';
+  $o .= '<div class="row2">' . admt_field('website', 'Website', (string)($v['website'] ?? ''), $errs, 'url', ['required' => true, 'inputmode' => 'url']) . admt_field('affiliate', 'Affiliate link (optional)', (string)($v['affiliate'] ?? ''), $errs, 'url', ['inputmode' => 'url']) . '</div>';
+  $o .= '<div class="row2">' . admt_field('pricing', 'Pricing note', (string)($v['pricing'] ?? ''), $errs) . admt_field('logo', 'Logo (optional)', (string)($v['logo'] ?? ''), $errs) . '</div>';
+  $o .= admt_field('tags', 'Tags (comma separated, up to 12)', implode(', ', (array)($v['tags'] ?? [])), $errs) . '<div class="row2">' . admt_field('seo_title', 'Search title (optional, 70)', (string)($v['seo_title'] ?? ''), $errs) . admt_field('seo_description', 'Search description (optional, 200)', (string)($v['seo_description'] ?? ''), $errs) . '</div>';
+  $o .= admt_field('note', 'Change note (optional)', '', [], 'text', ['maxlength' => '500']);
+  return $o . '<div class="tActions"><button class="tBtn primary" type="submit">' . ($edit ? 'Save changes' : 'Create draft') . '</button><a class="tBtn" href="' . admt_h($edit ? admt_url(['view' => 'detail', 'slug' => $cur['slug']]) : admt_url()) . '">Cancel</a></div></form>';
+}
+
+function admt_action_form(array $t, string $act, string $label, string $cls = '', bool $confirm = false): string {
+  return '<form method="post" action="/admin-center.php?m=tools">' . (function_exists('crm_csrf_field') ? crm_csrf_field() : '') . '<input type="hidden" name="act" value="tool_' . $act . '"><input type="hidden" name="slug" value="' . admt_h($t['slug']) . '"><input type="hidden" name="version" value="' . (int)$t['_version'] . '">'
+    . ($confirm ? '<label class="chk" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="confirm" value="1" required style="width:22px;min-height:22px"> Confirm</label>' : '') . '<button class="tBtn ' . $cls . '" type="submit">' . admt_h($label) . '</button></form>';
+}
+
+function admt_detail(AdmToolStore $s, array $user, string $slug, ?string $flash): string {
+  $t = admt_valid_slug($slug) ? $s->get($slug) : null; $role = (string)($user['role'] ?? '');
+  if ($t === null) return '<h1>Tool not found</h1><p><a class="admLink" href="' . admt_h(admt_url()) . '">Back to the tool list</a></p>';
+  $t += ['pricing_type' => '', 'pricing' => '', 'website' => '', 'short' => '', 'features' => [], 'tags' => [], 'updated_at' => '', 'category' => '', 'name' => '']; $st = (string)$t['status']; $miss = admt_readiness($t);
+  $o = '<p><a class="admLink" href="' . admt_h(admt_url()) . '">← All tools</a></p><div class="tHead"><h1>' . admt_h($t['name']) . ' ' . admt_chip($st) . '</h1></div>' . admt_flash($flash);
+  $o .= '<section class="panel" aria-labelledby="t-act"><h2 id="t-act">Actions</h2><div class="tActions">';
+  if ($st !== 'deleted' && adm_can($role, 'tools')) $o .= '<a class="tBtn" href="' . admt_h(admt_url(['view' => 'edit', 'slug' => $slug])) . '">Edit</a>';
+  if ($st === 'published' && adm_can($role, 'tools')) $o .= admt_action_form($t, 'unpublish', 'Unpublish');
+  if (in_array($st, ['draft', 'unpublished'], true) && adm_can($role, 'tools_publish')) $o .= admt_action_form($t, 'publish', 'Publish', 'primary');
+  if ($st !== 'deleted' && adm_can($role, 'tools_publish')) $o .= admt_action_form($t, 'delete', 'Move to trash', 'danger', true);
+  if ($st === 'deleted' && adm_can($role, 'tools_publish')) $o .= admt_action_form($t, 'restore', 'Restore');
+  if (!adm_can($role, 'tools_publish')) $o .= '<span class="small">Publishing, deleting and restoring are owner actions.</span>';
+  $o .= '</div>' . ($miss && $st !== 'published' ? '<p class="warn">Not ready to publish. Missing: ' . admt_h(implode(', ', $miss)) . '.</p>' : '') . '</section>';
+  $o .= '<section class="panel tDetail" aria-labelledby="t-det"><h2 id="t-det">Details</h2><dl>';
+  $rows = ['Address' => '<code>' . admt_h($t['slug']) . '</code>' . ($st === 'published' ? ' · <a class="admLink" href="' . admt_h('/tool.php?id=' . rawurlencode($t['slug'])) . '">view public page</a>' : ''), 'Category' => admt_h($t['category']), 'Pricing' => admt_h(trim($t['pricing_type'] . ' ' . $t['pricing'])), 'Website' => admt_h($t['website']),
+    'Short description' => admt_h($t['short']), 'Features' => admt_h(implode('; ', $t['features'])), 'Tags' => admt_h(implode(', ', $t['tags'])), 'Featured' => (int)($t['featured_level'] ?? 0) > 0 ? 'Level ' . (int)$t['featured_level'] . ((string)($t['featured_until'] ?? '') !== '' ? ' until ' . admt_h($t['featured_until']) : '') : 'No', 'Last updated' => admt_h($t['updated_at'])];
+  foreach ($rows as $k => $v) $o .= '<dt>' . admt_h($k) . '</dt><dd>' . ($v === '' ? '<span class="small">Not set</span>' : $v) . '</dd>';
+  $o .= '</dl></section><section class="panel" aria-labelledby="t-hist"><h2 id="t-hist">History</h2>';
+  $h = $s->revisions($slug);
+  $o .= $h ? '<ul class="tHist">' . implode('', array_map(fn($r) => '<li><strong>' . admt_h(ucfirst($r['action'])) . '</strong> by ' . admt_h($r['changed_by']) . ' · <time datetime="' . admt_h(str_replace(' ', 'T', $r['changed_at'])) . 'Z">' . admt_h($r['changed_at']) . ' UTC</time> · #' . (int)$r['revision_no'] . ($r['fields'] ? '<br><span class="small">Changed: ' . admt_h(implode(', ', $r['fields'])) . '</span>' : '') . ($r['note'] !== '' ? '<br><span class="small">' . admt_h($r['note']) . '</span>' : '') . '</li>', $h)) . '</ul>' : '<p class="small">No changes recorded here yet. This tool came from the catalogue seed.</p>';
+  return $o . '</section>';
+}
+
+function admt_list_view(AdmToolStore $s, array $user, array $get, ?string $flash): string {
+  $all = $s->all(); $L = admt_list($all, $get); $role = (string)($user['role'] ?? ''); $cur = (string)($get['status'] ?? '');
+  $o = '<div class="tHead"><div><h1>AI tool management</h1><p class="lead">Create, edit and review the tools shown on the site. ' . adm_n(count($all) - $L['counts']['deleted']) . ' active, ' . adm_n($L['counts']['deleted']) . ' in the trash.</p></div>' . (adm_can($role, 'tools') ? '<a class="tBtn primary" href="' . admt_h(admt_url(['view' => 'new'])) . '">New tool</a>' : '') . '</div>' . admt_flash($flash);
+  $o .= '<nav aria-label="Filter by status"><ul class="tTabs">';
+  $tabs = ['' => ['All active', $L['counts']['draft'] + $L['counts']['published'] + $L['counts']['unpublished']], 'published' => ['Published', $L['counts']['published']], 'draft' => ['Draft', $L['counts']['draft']], 'unpublished' => ['Unpublished', $L['counts']['unpublished']], 'deleted' => ['Trash', $L['counts']['deleted']]];
+  foreach ($tabs as $k => [$lab, $n]) $o .= '<li><a href="' . admt_h(admt_url(['status' => $k] + array_diff_key($get, ['status' => 1, 'page' => 1, 'view' => 1, 'slug' => 1, 'msg' => 1, 'm' => 1]))) . '"' . ((($cur === 'all' ? '' : $cur) === $k) ? ' aria-current="true"' : '') . '>' . admt_h($lab) . ' <span class="badge">' . adm_n($n) . '</span></a></li>';
+  $o .= '</ul></nav><form class="tFilter" method="get" action="/admin-center.php" role="search" aria-label="Search and filter tools"><input type="hidden" name="m" value="tools">' . ($cur !== '' ? '<input type="hidden" name="status" value="' . admt_h($cur) . '">' : '');
+  $o .= '<label>Search<input type="search" name="q" value="' . admt_h($get['q'] ?? '') . '" placeholder="Name, address, tag…"></label><label>Category<select name="category"><option value="">All categories</option>';
+  foreach ($s->categories() as $c) $o .= '<option' . (($get['category'] ?? '') === $c ? ' selected' : '') . '>' . admt_h($c) . '</option>';
+  $o .= '</select></label><label>Tag<input type="text" name="tag" value="' . admt_h($get['tag'] ?? '') . '"></label><label>Sort<select name="sort">';
+  foreach (['name' => 'Name', 'updated' => 'Recently updated', 'status' => 'Status', 'category' => 'Category'] as $k => $l) $o .= '<option value="' . $k . '"' . ($L['sort'] === $k ? ' selected' : '') . '>' . $l . '</option>';
+  $o .= '</select></label><label class="chk"><input type="checkbox" name="featured" value="1"' . (!empty($get['featured']) ? ' checked' : '') . '> Featured only</label><label class="chk"><input type="checkbox" name="incomplete" value="1"' . (!empty($get['incomplete']) ? ' checked' : '') . '> Missing required fields</label><button class="tBtn primary" type="submit">Apply</button></form>';
+  $o .= '<p class="small" role="status">' . adm_n($L['total']) . ' tool' . ($L['total'] === 1 ? '' : 's') . ' found.</p>';
+  if (!$L['rows']) return $o . '<div class="panel"><h2>No tools match</h2><p>Try clearing the search or filters.</p></div>';
+  $o .= '<ul class="toolCards">';
+  foreach ($L['rows'] as $t) { $m = admt_readiness($t); $o .= '<li class="toolCard"><h3><a href="' . admt_h(admt_url(['view' => 'detail', 'slug' => $t['slug']])) . '">' . admt_h($t['name']) . '</a></h3><div>' . admt_chip((string)$t['status']) . ((int)($t['featured_level'] ?? 0) > 0 ? ' <span class="badge">Featured</span>' : '') . '</div><div class="meta">' . admt_h($t['category'] ?: 'No category') . ' · <code>' . admt_h($t['slug']) . '</code></div>' . ($m ? '<div class="warn">Missing: ' . admt_h(implode(', ', $m)) . '</div>' : '') . '<div class="meta">Updated ' . admt_h($t['updated_at']) . '</div></li>'; }
+  $o .= '</ul><nav class="pager" aria-label="Pages">';
+  $q = array_diff_key($get, ['page' => 1, 'view' => 1, 'slug' => 1, 'msg' => 1, 'm' => 1]);
+  if ($L['page'] > 1) $o .= '<a class="tBtn" href="' . admt_h(admt_url($q + ['page' => $L['page'] - 1])) . '">Previous</a>';
+  $o .= '<span>Page ' . $L['page'] . ' of ' . $L['pages'] . '</span>';
+  if ($L['page'] < $L['pages']) $o .= '<a class="tBtn" href="' . admt_h(admt_url($q + ['page' => $L['page'] + 1])) . '">Next</a>';
+  return $o . '</nav>';
+}
+
+/** Router for the module's pages. $form/$errs/$top carry a failed POST back to the form. */
+function admt_body(AdmToolStore $s, array $user, array $get, ?array $form = null, array $errs = [], ?string $top = null): string {
+  $role = (string)($user['role'] ?? ''); if (!adm_can($role, 'tools')) return '<h1>Not allowed</h1>';
+  $flash = isset($get['msg']) && is_string($get['msg']) ? (admt_messages()[$get['msg']] ?? null) : null; $view = (string)($get['view'] ?? 'list'); $slug = is_string($get['slug'] ?? null) ? $get['slug'] : '';
+  if ($view === 'new') return admt_form($s, $user, null, $form ?? [], $errs, $top);
+  if ($view === 'edit') { $t = admt_valid_slug($slug) ? $s->get($slug) : null; if ($t === null || $t['status'] === 'deleted') return '<h1>Tool not found</h1><p><a class="admLink" href="' . admt_h(admt_url()) . '">Back to the tool list</a></p>'; return admt_form($s, $user, $t, $form ?? $t, $errs, $top); }
+  if ($view === 'detail') return ($top ? admt_flash($top, true) : '') . admt_detail($s, $user, $slug, $flash);
+  return ($top ? admt_flash($top, true) : '') . admt_list_view($s, $user, $get, $flash);
+}
+
+/** POST entry used by admin-center.php after the CSRF check. Writes through the store, audits, then redirects (303) or re-renders with errors. */
+function admt_handle_post(AdmToolStore $s, array $user, array $post, callable $audit): array {
+  $act = is_string($post['act'] ?? null) ? substr($post['act'], 5) : '';
+  $r = admt_apply($s, $user, $act, $post, $audit);
+  if ($r['ok']) return ['redirect' => admt_url(['view' => 'detail', 'slug' => $r['slug'], 'msg' => $r['msg']]), 'code' => 303];
+  $slug = (string)($r['slug'] ?? ''); $view = $act === 'create' ? 'new' : ($act === 'edit' ? 'edit' : 'detail');
+  return ['code' => $r['code'], 'form' => $act === 'create' || $act === 'edit' ? admt_validate($post, $s->categories(), $act === 'edit' ? $s->get($slug) : null)[1] : null, 'errs' => $r['errors'], 'top' => $r['errors']['_'] ?? $r['msg'], 'get' => ['m' => 'tools', 'view' => $view, 'slug' => $slug]];
+}
+
+/** Honest state when the content tables or the Phase 8C migration are not installed on this server: read-only, nothing is changed. */
+function admt_not_installed(): string {
+  return '<h1>AI tool management</h1><div class="panel"><h2>Storage not installed</h2><p>This module needs the content tables (<code>tools</code>, <code>categories</code>) and the Phase 8C migration (<code>database/phase8c_tools.sql</code>). Until then the public site keeps using its current catalogue and nothing here can change it.</p><p class="small">The migration is applied by your administrator after the owner approves it.</p></div>';
+}

@@ -248,8 +248,8 @@ function find_tool($id){
                 t.featured_until
               FROM tools t
               LEFT JOIN categories c ON c.id = t.category_id
-              WHERE t.slug = ?
-              LIMIT 1";
+              WHERE t.slug = ? AND t.status = 'published'
+              LIMIT 1";   // unpublished, draft and soft-deleted tools must never open by URL (Phase 8C)
       $stmt = $pdo->prepare($sql);
       $stmt->execute([$id]);
       $row = $stmt->fetch();

@@ -13,6 +13,10 @@ function read_json_local($path, $default){
 }
 
 $pdo = db();
+// Phase 8C: once the tool-management tables exist, MySQL is authoritative. JSON is only a seed: it may ADD tools and categories that are
+// missing, and it NEVER updates or overwrites an existing managed record. (No flag overrides this.)
+$managed = (bool)$pdo->query("SHOW TABLES LIKE 'adm_tool_revision'")->fetchColumn();
+$haveSlugs = $managed ? array_flip($pdo->query('SELECT slug FROM tools')->fetchAll(PDO::FETCH_COLUMN)) : [];
 
 try {
     $pdo->beginTransaction();
@@ -28,7 +32,7 @@ try {
     }
     $categoryNames = array_values(array_unique(array_filter($categoryNames)));
 
-    $catStmt = $pdo->prepare("INSERT INTO categories (slug, name, description) VALUES (?, ?, NULL) ON DUPLICATE KEY UPDATE name = VALUES(name)");
+    $catStmt = $pdo->prepare($managed ? "INSERT IGNORE INTO categories (slug, name, description) VALUES (?, ?, NULL)" : "INSERT INTO categories (slug, name, description) VALUES (?, ?, NULL) ON DUPLICATE KEY UPDATE name = VALUES(name)");
     foreach($categoryNames as $name){
         $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $name), '-'));
         if($slug === '') continue;
@@ -67,6 +71,7 @@ try {
         featured_until = VALUES(featured_until)");
 
     foreach(($toolsData['tools'] ?? []) as $tool){
+        if($managed && isset($haveSlugs[(string)($tool['id'] ?? '')])) continue;   // never overwrite a managed record
         $categoryName = (string)($tool['category'] ?? '');
         $categoryId = $catMap[$categoryName] ?? null;
         $featuredUntil = trim((string)($tool['featured_until'] ?? ''));
