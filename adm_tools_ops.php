@@ -24,7 +24,7 @@ function admt_bulk_plan(AdmToolStore $s, string $op, array $post): array {
   if (!$sel) { $out['error'] = 'Select at least one tool.'; return $out; }
   if (count($sel) > ADMT_BULK_MAX) { $out['error'] = 'Select at most ' . ADMT_BULK_MAX . ' tools at once.'; return $out; }
   $cat = null; $tag = null;
-  if ($op === 'set_category') { $cat = admt_text($post['category'] ?? '', 120); if (!in_array($cat, $s->categories(), true)) { $out['error'] = 'Choose an existing category.'; return $out; } }
+  if ($op === 'set_category') { $cat = admt_text($post['category'] ?? '', 120); if (!in_array($cat, admt_public_categories(), true)) { $out['error'] = 'Choose one of the public categories.'; return $out; } }
   if ($op === 'add_tag' || $op === 'remove_tag') { $tag = admt_clean_tag($post['tag'] ?? ''); if ($tag === null) { $out['error'] = 'Enter a tag of 2 to 30 letters, numbers, spaces, &, ., + or -.'; return $out; } }
   $vers = (array)($post['ver'] ?? []);
   foreach ($sel as $slug) {
@@ -38,6 +38,9 @@ function admt_bulk_plan(AdmToolStore $s, string $op, array $post): array {
       $new['status'] = $to;
     } else {
       if ($st === 'deleted') { $out['problems'][$slug] = 'A deleted tool cannot be edited.'; continue; }
+      $lk = admt_overlay($slug)['locked'];
+      if ($op === 'set_category' && in_array('category', $lk, true)) { $out['problems'][$slug] = 'No public effect: the category is controlled by the editorial classification (public category: ' . (admt_overlay($slug)['public_category'] ?? '') . ').'; continue; }
+      if ($op !== 'set_category' && in_array('tags', $lk, true)) { $out['problems'][$slug] = 'No public effect: tags are controlled by the curated editorial profile.'; continue; }
       if ($op === 'set_category') $new['category'] = $cat;
       elseif ($op === 'add_tag') { $tags = (array)$t['tags']; if (!in_array(mb_strtolower($tag), array_map('mb_strtolower', $tags), true)) $tags[] = $tag; if (count($tags) > 12) { $out['problems'][$slug] = 'Already has 12 tags.'; continue; } $new['tags'] = array_values($tags); }
       else $new['tags'] = array_values(array_filter((array)$t['tags'], fn($x) => mb_strtolower((string)$x) !== mb_strtolower($tag)));
@@ -58,10 +61,10 @@ function admt_submission_blockers(array $sub): array {
 /** The DRAFT created from a submission: only what the submitter provided. No features, pros, cons or tags are invented. Returns [errors, tool]. */
 function admt_submission_draft(array $sub, array $existingSlugs, array $cats, array $post): array {
   $e = []; $name = admt_text($sub['name'] ?? '', 120); if (mb_strlen($name) < 2) $e['name'] = 'The submitted name is too short.';
-  $cat = admt_text($post['category'] ?? '', 120); if (!in_array($cat, $cats, true)) $e['category'] = 'Choose an existing category.';
+  $cat = admt_text($post['category'] ?? '', 120); if (!in_array($cat, admt_public_categories(), true)) $e['category'] = 'Choose one of the public categories.';
   $short = admt_text(($post['short'] ?? '') !== '' ? $post['short'] : ($sub['short_desc'] ?? ''), 300); if (mb_strlen($short) < 20) $e['short'] = 'The short description must be 20 to 300 characters; edit it here.';
   $web = sec_safe_external_url((string)($sub['website'] ?? '')); if ($web === null) $e['website'] = 'The website address is not valid.';
-  $base = admt_text($post['slug'] ?? '', 120); if ($base === '') $base = admt_slugify($name); $slug = $base; $taken = array_flip($existingSlugs);
+  $base = admt_text($post['slug'] ?? '', 120); if ($base === '') $base = admt_slugify($name); $slug = $base; $taken = array_flip(array_merge($existingSlugs, admt_reserved_slugs()));
   if (!admt_valid_slug($slug)) $e['slug'] = 'Use 2 to 120 lowercase letters, numbers and hyphens.';
   else { for ($i = 2; isset($taken[$slug]) && $i < 20; $i++) $slug = substr($base, 0, 115) . '-' . $i; if (isset($taken[$slug])) $e['slug'] = 'That address is in use.'; }
   return [$e, ['slug' => $slug, 'name' => $name, 'category' => $cat, 'short' => $short, 'description' => '', 'features' => [], 'pros' => [], 'cons' => [], 'use_cases' => [], 'pricing' => '', 'pricing_type' => 'Varies', 'website' => $web ?? '', 'affiliate' => '', 'logo' => '', 'tags' => [], 'seo_title' => '', 'seo_description' => '', 'status' => 'draft']];
@@ -76,27 +79,31 @@ function admt_apply_ops(AdmToolStore $s, array $user, string $act, array $post, 
   $catv = ['view' => 'categories'];
   switch ($act) {
     case 'category_add':
-      $n = admt_clean_name($post['name'] ?? ''); if ($n === null) return $fail(422, 'Enter a category name of 2 to 60 letters, numbers, spaces, &, ., + or -.', ['name' => 'Invalid name.'], $catv);
-      $r = $s->addCategory($n); if (!$r['ok']) return $fail(409, 'That category already exists.', [], $catv);
+      $n = admt_clean_name($post['name'] ?? ''); if ($n === null || !in_array($n, admt_public_categories(), true)) return $fail(422, 'Only the public categories can be added. Choose one from the list; changing the public taxonomy is an editorial task.', ['name' => 'Choose a public category.'], $catv);
+      $r = $s->addCategory($n); if (!$r['ok']) return $fail(409, 'That category already exists in the database.', [], $catv);
       $audit('tool_category_add', $n, 'added'); return $ok('category_added', $catv);
     case 'category_rename':
-      $old = admt_text($post['old'] ?? '', 120); $n = admt_clean_name($post['name'] ?? ''); if ($n === null) return $fail(422, 'Enter a category name of 2 to 60 letters, numbers, spaces, &, ., + or -.', [], $catv);
+      $old = admt_text($post['old'] ?? '', 120); $n = admt_clean_name($post['name'] ?? '');
+      if (in_array($old, admt_protected_categories(), true)) return $fail(409, 'Protected: "' . $old . '" is part of the public taxonomy or is used by the editorial classification, so it cannot be renamed here.', [], $catv);
+      if ($n === null || !in_array($n, admt_public_categories(), true)) return $fail(422, 'A category can only be renamed to a public category name.', [], $catv);
       $r = $s->renameCategory($old, $n); if (!$r['ok']) return $fail($r['error'] === 'missing' ? 404 : 409, $r['error'] === 'missing' ? 'Category not found.' : 'A category with that name already exists.', [], $catv);
       $audit('tool_category_rename', $old, 'to ' . $n); return $ok('category_renamed', $catv);
     case 'category_delete':
+      $old = admt_text($post['old'] ?? '', 120);
+      if (in_array($old, admt_protected_categories(), true)) return $fail(409, 'Protected: "' . $old . '" is part of the public taxonomy or is used by the editorial classification, so it cannot be deleted here.', [], $catv);
       if (($post['confirm'] ?? '') !== '1') return $fail(422, 'Tick the confirmation box to delete an empty category.', [], $catv);
-      $old = admt_text($post['old'] ?? '', 120); $r = $s->deleteCategory($old);
+      $r = $s->deleteCategory($old);
       if (!$r['ok']) return $fail($r['error'] === 'in_use' ? 409 : 404, $r['error'] === 'in_use' ? 'A category that still has tools cannot be deleted. Move its tools first.' : 'Category not found.', [], $catv);
       $audit('tool_category_delete', $old, 'deleted (was empty)'); return $ok('category_deleted', $catv);
     case 'tag_rename':
       $old = admt_clean_tag($post['old'] ?? ''); $new = admt_clean_tag($post['new'] ?? ''); if ($old === null || $new === null) return $fail(422, 'Enter the current tag and the new tag (2 to 30 letters, numbers, spaces, &, ., + or -).', [], $catv);
       $items = [];
       foreach ($s->all() as $t) {
-        if ($t['status'] === 'deleted' || !in_array(mb_strtolower($old), array_map('mb_strtolower', (array)$t['tags']), true)) continue;
+        if ($t['status'] === 'deleted' || !in_array(mb_strtolower($old), array_map('mb_strtolower', (array)$t['tags']), true) || in_array('tags', admt_overlay((string)$t['slug'])['locked'], true)) continue;   // curated tags are controlled by the editorial profile
         $tags = []; foreach ((array)$t['tags'] as $g) { $g = mb_strtolower($g) === mb_strtolower($old) ? $new : $g; if (!in_array(mb_strtolower($g), array_map('mb_strtolower', $tags), true)) $tags[] = $g; }
         $items[] = ['slug' => $t['slug'], 'tool' => ['tags' => $tags] + $t, 'expected' => (int)$t['_version']];
       }
-      if (!$items) return $fail(404, 'No active tool uses that tag.', [], $catv); if (count($items) > ADMT_BULK_MAX) return $fail(422, 'More than ' . ADMT_BULK_MAX . ' tools use that tag; narrow it first.', [], $catv);
+      if (!$items) return $fail(404, 'No active tool with editable tags uses that tag.', [], $catv); if (count($items) > ADMT_BULK_MAX) return $fail(422, 'More than ' . ADMT_BULK_MAX . ' tools use that tag; narrow it first.', [], $catv);
       $r = $s->bulkUpdate($items, 'tags', $actor, "tag '$old' to '$new'"); if (!$r['ok']) return $fail(409, 'A tool changed while renaming. Nothing was changed; try again.', [], $catv);
       $audit('tool_tag_rename', $old, 'to ' . $new . ' on ' . count($items) . ' tools'); return $ok('tag_renamed', $catv);
     case 'bulk_review': case 'bulk_apply':

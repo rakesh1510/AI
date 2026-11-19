@@ -17,24 +17,33 @@ function admt_subnav(AdmToolStore $s, string $view): string {
 }
 
 function admt_categories_view(AdmToolStore $s, array $user, ?string $flash, ?string $top): string {
-  $owner = adm_can((string)($user['role'] ?? ''), 'tools_publish'); $counts = $s->categoryCounts();
-  $o = '<h1>Categories and tags</h1><p class="lead">Categories are shared by every tool. Renaming one changes its name everywhere it is used in the database.</p><p class="warn">Editorial classification and curated profile files (data/classification.json, data/curated_profiles.json) keep their own category names and take precedence on the public site. Renaming a category they use can split it into two public categories, so rename only categories that those files do not use.</p>' . admt_flash($flash) . admt_flash($top, true);
-  $o .= '<section class="panel" aria-labelledby="c-h"><h2 id="c-h">Categories</h2><ul class="tRows">';
-  foreach ($counts as $name => $n) {
-    $o .= '<li class="tRow"><div><strong>' . admt_h($name) . '</strong> <span class="badge">' . (int)$n . ' tool' . ($n === 1 ? '' : 's') . '</span></div>';
-    if ($owner) {
-      $o .= '<form method="post" action="/admin-center.php?m=tools" class="tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_category_rename"><input type="hidden" name="old" value="' . admt_h($name) . '"><label>New name<input type="text" name="name" value="' . admt_h($name) . '" maxlength="60" required></label><button class="tBtn" type="submit">Rename</button></form>';
-      if ($n === 0) $o .= '<form method="post" action="/admin-center.php?m=tools" class="tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_category_delete"><input type="hidden" name="old" value="' . admt_h($name) . '"><label class="chk"><input type="checkbox" name="confirm" value="1" required> Confirm</label><button class="tBtn danger" type="submit">Delete empty category</button></form>';
-    }
-    $o .= '</li>';
+  $owner = adm_can((string)($user['role'] ?? ''), 'tools_publish'); $dbCounts = $s->categoryCounts(); $public = admt_public_categories(); $protected = array_flip(admt_protected_categories());
+  $pubCounts = []; foreach ($s->all() as $t) if ($t['status'] !== 'deleted') { $c = admt_effective_category($t); $pubCounts[$c] = ($pubCounts[$c] ?? 0) + 1; }
+  $o = '<h1>Categories and tags</h1><p class="lead">The public categories are fixed by the editorial taxonomy. Visitors see the editorial classification, so the database category of an existing tool does not change what they see.</p>' . admt_flash($flash) . admt_flash($top, true);
+  $o .= '<section class="panel lockNote" role="note"><p><strong>Protected.</strong> Public categories cannot be renamed or deleted here. Changing the taxonomy or reclassifying existing tools is an editorial task (<code>data/taxonomy.json</code>, <code>scripts/classify_tools.php</code>) that needs an SEO review, because category addresses and breadcrumbs depend on these names.</p></section>';
+  $o .= '<section class="panel" aria-labelledby="c-h"><h2 id="c-h">Public categories</h2><ul class="tRows">';
+  foreach ($public as $name) {
+    $o .= '<li class="tRow"><div><strong>' . admt_h($name) . '</strong> <span class="badge">Protected</span><br><span class="small">' . (int)($pubCounts[$name] ?? 0) . ' active tool' . (($pubCounts[$name] ?? 0) === 1 ? '' : 's') . ' shown publicly · ' . (array_key_exists($name, $dbCounts) ? (int)$dbCounts[$name] . ' with this database category' : 'no database row yet (created when a tool uses it)') . '</span></div></li>';
   }
-  $o .= '</ul>' . (!$counts ? '<p>No categories yet.</p>' : '');
-  if ($owner) $o .= '<form method="post" action="/admin-center.php?m=tools" class="tForm tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_category_add"><label for="cat_new">New category<input id="cat_new" type="text" name="name" maxlength="60" required></label><button class="tBtn primary" type="submit">Add category</button></form>';
-  $o .= '</section><section class="panel" aria-labelledby="g-h"><h2 id="g-h">Tags</h2>';
+  $o .= '</ul>';
+  $missing = array_values(array_filter($public, fn($n) => !array_key_exists($n, $dbCounts)));
+  if ($owner && $missing) { $o .= '<form method="post" action="/admin-center.php?m=tools" class="tForm tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_category_add"><label for="cat_new">Add a missing public category to the database<select id="cat_new" name="name" required><option value="">Choose…</option>'; foreach ($missing as $m) $o .= '<option>' . admt_h($m) . '</option>'; $o .= '</select></label><button class="tBtn primary" type="submit">Add category</button></form>'; }
+  $o .= '</section>';
+  $extra = array_diff_key($dbCounts, array_flip($public));
+  if ($extra) {
+    $o .= '<section class="panel" aria-labelledby="x-h"><h2 id="x-h">Database labels that are not public categories</h2><p class="small">These come from the original source data. Tools cannot be placed in them any more.</p><ul class="tRows">';
+    foreach ($extra as $name => $n) {
+      $prot = isset($protected[$name]); $o .= '<li class="tRow"><div><strong>' . admt_h($name) . '</strong> <span class="badge">' . (int)$n . ' tool' . ($n === 1 ? '' : 's') . '</span>' . ($prot ? ' <span class="badge">Protected</span>' : '') . '</div>';
+      if ($owner && !$prot && $n === 0) $o .= '<form method="post" action="/admin-center.php?m=tools" class="tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_category_delete"><input type="hidden" name="old" value="' . admt_h($name) . '"><label class="chk"><input type="checkbox" name="confirm" value="1" required> Confirm</label><button class="tBtn danger" type="submit">Delete unused label</button></form>';
+      $o .= '</li>';
+    }
+    $o .= '</ul></section>';
+  }
+  $o .= '<section class="panel" aria-labelledby="g-h"><h2 id="g-h">Tags</h2>';
   $tags = []; foreach ($s->all() as $t) if ($t['status'] !== 'deleted') foreach ((array)$t['tags'] as $g) { $k = mb_strtolower($g); $tags[$k] = ($tags[$k] ?? ['n' => 0, 'label' => $g]); $tags[$k]['n']++; }
   uasort($tags, fn($a, $b) => $b['n'] <=> $a['n'] ?: strcasecmp($a['label'], $b['label']));
   $o .= $tags ? '<ul class="tChips">' . implode('', array_map(fn($g) => '<li><span class="chip">' . admt_h($g['label']) . ' · ' . (int)$g['n'] . '</span></li>', array_slice($tags, 0, 60))) . '</ul>' : '<p>No tags in use yet.</p>';
-  if ($owner) $o .= '<form method="post" action="/admin-center.php?m=tools" class="tForm tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_tag_rename"><label for="tg_old">Rename or merge tag<input id="tg_old" name="old" type="text" maxlength="30" required></label><label for="tg_new">Into<input id="tg_new" name="new" type="text" maxlength="30" required></label><button class="tBtn" type="submit">Rename tag</button></form><p class="small">If the new tag already exists on a tool the two are merged. Every changed tool gets a history entry.</p>';
+  if ($owner) $o .= '<form method="post" action="/admin-center.php?m=tools" class="tForm tInline">' . admt_csrf() . '<input type="hidden" name="act" value="tool_tag_rename"><label for="tg_old">Rename or merge tag<input id="tg_old" name="old" type="text" maxlength="30" required></label><label for="tg_new">Into<input id="tg_new" name="new" type="text" maxlength="30" required></label><button class="tBtn" type="submit">Rename tag</button></form><p class="small">If the new tag already exists on a tool the two are merged. Tools with a curated editorial profile are skipped because the public site shows the profile\'s tags. Every changed tool gets a history entry.</p>';
   return $o . '</section>';
 }
 
@@ -72,13 +81,13 @@ function admt_submissions_view(AdmToolStore $s, array $user, array $get, ?string
 function admt_submission_view(AdmToolStore $s, array $user, int $id, array $form, array $errs, ?string $top): string {
   $x = $s->submission($id); if ($x === null) return '<h1>Submission not found</h1><p><a class="admLink" href="' . admt_h(admt_url(['view' => 'submissions'])) . '">Back to submissions</a></p>';
   $owner = adm_can((string)($user['role'] ?? ''), 'tools_publish'); $blk = admt_submission_blockers($x); $cats = $s->categories();
-  $o = '<p><a class="admLink" href="' . admt_h(admt_url(['view' => 'submissions'])) . '">← All submissions</a></p><h1>' . admt_h($x['name']) . '</h1>' . admt_flash($top, true);
+  $cats = admt_public_categories(); $o = '<p><a class="admLink" href="' . admt_h(admt_url(['view' => 'submissions'])) . '">← All submissions</a></p><h1>' . admt_h($x['name']) . '</h1>' . admt_flash($top, true);
   $o .= '<section class="panel tDetail" aria-labelledby="s-h"><h2 id="s-h">What was submitted</h2><dl><dt>Status</dt><dd>' . admt_h(ucfirst($x['status'])) . ($x['decision'] !== '' ? ' (' . admt_h(str_replace('_', ' ', $x['decision'])) . ' by ' . admt_h($x['reviewed_by']) . ')' : '') . '</dd><dt>Category</dt><dd>' . admt_h($x['category']) . '</dd><dt>Website</dt><dd>' . admt_h($x['website']) . '</dd><dt>Description</dt><dd>' . admt_h($x['short_desc']) . '</dd><dt>Plan</dt><dd>' . admt_h($x['plan']) . ' · ' . admt_money($x) . '</dd><dt>Payment</dt><dd>' . admt_h(str_replace('_', ' ', $x['payment_status'])) . '</dd><dt>Submitted</dt><dd>' . admt_h($x['created_at']) . '</dd>' . ($x['review_note'] !== '' ? '<dt>Reviewer note</dt><dd>' . admt_h($x['review_note']) . '</dd>' : '') . ($x['tool_slug'] !== '' ? '<dt>Draft tool</dt><dd><a class="admLink" href="' . admt_h(admt_url(['view' => 'detail', 'slug' => $x['tool_slug']])) . '">' . admt_h($x['tool_slug']) . '</a></dd>' : '') . '</dl><p class="small">Submitted text is untrusted: it is shown escaped and never published automatically.</p></section>';
   if ($x['status'] !== 'pending') return $o;
   if (!$owner) return $o . '<p class="panel">Only the owner can decide submissions.</p>';
   $sug = $form['category'] ?? (in_array($x['category'], $cats, true) ? $x['category'] : '');
   $o .= '<form class="tForm panel" method="post" action="/admin-center.php?m=tools" novalidate>' . admt_csrf() . '<input type="hidden" name="id" value="' . (int)$x['id'] . '"><h2>Decision</h2>' . ($blk ? '<p class="warn">Approval is blocked: ' . admt_h(implode(' ', $blk)) . ' You can still reject it or ask for more information.</p>' : '');
-  $o .= '<label for="sb_cat">Category for the draft<select id="sb_cat" name="category"' . (isset($errs['category']) ? ' aria-invalid="true" aria-describedby="sb_cat_e"' : '') . '><option value="">Choose…</option>';
+  $o .= '<label for="sb_cat">Public category for the draft<select id="sb_cat" name="category"' . (isset($errs['category']) ? ' aria-invalid="true" aria-describedby="sb_cat_e"' : '') . '><option value="">Choose…</option>';
   foreach ($cats as $c) $o .= '<option' . ($sug === $c ? ' selected' : '') . '>' . admt_h($c) . '</option>';
   $o .= '</select></label>' . (isset($errs['category']) ? '<span class="err" id="sb_cat_e">' . admt_h($errs['category']) . '</span>' : '');
   $o .= admt_area('short', 'Short description for the draft', (string)($form['short'] ?? $x['short_desc']), $errs, '20 to 300 characters') . admt_field('slug', 'Address (optional, from the name if empty)', (string)($form['slug'] ?? ''), $errs, 'text', ['maxlength' => '120']) . admt_area('note', 'Reason or note (required to reject or ask for information)', (string)($form['note'] ?? ''), $errs);

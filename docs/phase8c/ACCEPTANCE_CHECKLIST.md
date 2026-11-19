@@ -6,7 +6,7 @@ Legend: DONE = verified by database-free checks in routine CI; OPEN = needs owne
 - [x] DONE M1-M7 implemented per `TOOL_MANAGEMENT_PLAN.md`; M1-M3 preserved (commit `942be0d`, CI #93 green).
 - [x] DONE Logic tests 115 + 173, synthetic screens 312 (axe, overflow, 44 px), security inventory 459, security regression 147.
 - [x] DONE Static guards: no hard delete of tools, no ALTER or DROP, no `tools.json` writes, no email, payment or network calls, no AI Universe access, six tables only in the MySQL store.
-- [ ] OPEN Category and overlay consistency fix (`CATEGORY_CONSISTENCY_REVIEW.md`): needs owner approval (C1 to C4), implementation, and a new routine CI run.
+- [x] DONE Category and overlay consistency safeguards (`CATEGORY_SAFEGUARDS_REPORT.md`): public-taxonomy categories, read-only classified and curated fields, protected categories, reserved slugs, 509-tool regression (54 checks). Database and staging verification of it remains under B and E.
 - [ ] OPEN Final CI run on the final commit and review of draft PR #10 by the owner.
 
 ## B. Database verification (all OPEN; needs approval to run on staging only)
@@ -36,7 +36,9 @@ Legend: DONE = verified by database-free checks in routine CI; OPEN = needs owne
 
 ## E. SEO and editorial integrity (OPEN)
 - [ ] Before and after comparison on staging of every public tool page, category page, sitemap and canonical: identical for the existing 509 tools.
-- [ ] A new tool created in the module appears on exactly one valid category page (depends on the consistency fix), with a working breadcrumb and a sensible thin-content treatment.
+- [ ] A new tool created in the module (public category enforced) appears on exactly one valid category page, with a working breadcrumb and a sensible thin-content treatment.
+- [ ] On staging, edit a classified and a curated tool through the module (name only changes) and confirm their public pages are byte-identical apart from the name; confirm the category and curated fields shown to visitors do not change.
+- [ ] On staging, confirm the MySQL store creates the missing database category row when the first tool uses a public category that has no row.
 - [ ] Unpublish, trash and restore remove and return tool pages correctly (404 for unpublished by direct URL, `find_tool` guard).
 - [ ] Curated and verified profiles unchanged and their review labels still shown; AI Universe pages and verification flow unchanged.
 - [ ] Featured placement shows as sponsored, starts and ends on the right dates, and does not change ranking.

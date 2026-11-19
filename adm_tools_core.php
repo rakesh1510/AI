@@ -5,6 +5,7 @@ if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) 
 // Lifecycle uses the existing tools.status column: draft | published | unpublished | deleted (soft delete only, no hard delete in 8C).
 // Permissions (owner decision D2): owner and editor create, edit and unpublish; only the owner publishes, deletes and restores. Enforced here, server side.
 require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/adm_tools_overlay.php';
 require_once __DIR__ . '/adm_tools_ops.php';
 
 const ADMT_STATUSES = ['draft', 'published', 'unpublished', 'deleted'];
@@ -48,15 +49,17 @@ function admt_slugify(string $name): string { return trim((string)preg_replace('
 function admt_valid_slug(string $s): bool { return (bool)preg_match('/^[a-z0-9](?:[a-z0-9-]{0,118}[a-z0-9])?$/', $s) && strlen($s) >= 2; }
 
 /** Validate a create/edit form. $existing is null on create (slug is accepted once) and the stored tool on edit (slug can never change). Returns [errors, tool fields]. */
-function admt_validate(array $in, array $categories, ?array $existing = null): array {
-  $e = []; $t = [];
+function admt_validate(array $in, array $categories, ?array $existing = null, array $locked = []): array {
+  $e = []; $t = []; $lk = array_flip($locked);
   $t['name'] = admt_text($in['name'] ?? '', 120); if (mb_strlen($t['name']) < 2) $e['name'] = 'Enter a name of 2 to 120 characters.';
   if ($existing === null) {
     $slug = admt_text($in['slug'] ?? '', 120); if ($slug === '') $slug = admt_slugify($t['name']);
     if (!admt_valid_slug($slug)) $e['slug'] = 'Use 2 to 120 lowercase letters, numbers and hyphens. The address cannot be changed later.';
+    elseif (in_array($slug, admt_reserved_slugs(), true)) $e['slug'] = 'This address already belongs to a catalogue or editorial record and cannot be reused.';
     $t['slug'] = $slug;
   } else { $t['slug'] = (string)$existing['slug']; }
-  $t['category'] = admt_text($in['category'] ?? '', 120); if (!in_array($t['category'], $categories, true)) $e['category'] = 'Choose one of the existing categories.';
+  if (isset($lk['category']) && $existing !== null) $t['category'] = (string)$existing['category'];   // controlled by the editorial classification: kept as stored
+  else { $t['category'] = admt_text($in['category'] ?? '', 120); if (!in_array($t['category'], $categories, true)) $e['category'] = 'Choose one of the public categories.'; }
   $t['short'] = admt_text($in['short'] ?? '', 300); $sl = mb_strlen($t['short']); if ($sl < 20 || $sl > 300) $e['short'] = 'The short description must be 20 to 300 characters.';
   $t['description'] = admt_text($in['description'] ?? '', 5000);
   foreach (['features', 'pros', 'cons', 'use_cases'] as $f) $t[$f] = admt_list_field($in[$f] ?? '', 10, 200);
@@ -67,6 +70,7 @@ function admt_validate(array $in, array $categories, ?array $existing = null): a
   $logo = trim((string)($in['logo'] ?? '')); if ($logo === '' ) $t['logo'] = ''; elseif (preg_match('#^/assets/[A-Za-z0-9/_.\-]{1,200}$#', $logo) && strpos($logo, '..') === false) $t['logo'] = $logo; elseif (($l = sec_safe_external_url($logo)) !== null) $t['logo'] = $l; else { $e['logo'] = 'The logo must be an /assets/ path or a public http(s) address, or empty.'; $t['logo'] = ''; }
   $tags = admt_list_field($in['tags'] ?? '', 12, 30, ','); foreach ($tags as $g) if (mb_strlen($g) < 2 || !preg_match('/^[\p{L}\p{N} &.+\-]+$/u', $g)) { $e['tags'] = 'Tags are 2 to 30 letters, numbers, spaces, &, ., + or -.'; break; } $t['tags'] = $tags;
   $t['seo_title'] = admt_text($in['seo_title'] ?? '', 70); $t['seo_description'] = admt_text($in['seo_description'] ?? '', 200);
+  if ($existing !== null) foreach ($locked as $f) if ($f !== 'category' && array_key_exists($f, $existing)) { $t[$f] = $existing[$f]; unset($e[$f]); }   // overlay-controlled: edits are ignored, the stored value is kept
   return [$e, $t];
 }
 /** What a tool still needs before it may be published. Empty list = ready. */
@@ -93,7 +97,7 @@ function admt_list(array $tools, array $q): array {
   foreach ($tools as $t) {
     $s = (string)($t['status'] ?? 'draft');
     if ($status === 'deleted' ? $s !== 'deleted' : ($s === 'deleted' || ($status !== '' && $status !== 'all' && $s !== $status))) continue;
-    if ($cat !== '' && (string)($t['category'] ?? '') !== $cat) continue;
+    if ($cat !== '' && admt_effective_category($t) !== $cat) continue;   // the category visitors see
     if ($tag !== '' && !in_array($tag, array_map('mb_strtolower', (array)($t['tags'] ?? [])), true)) continue;
     if (!empty($q['featured']) && !(int)($t['featured_level'] ?? 0)) continue;
     if (!empty($q['incomplete']) && !admt_readiness($t)) continue;
@@ -158,6 +162,7 @@ final class AdmToolMemoryStore implements AdmToolStore {
   private function log(string $slug, int $no, string $action, string $actor, string $note, array $fields): void { $this->revs[$slug][] = ['revision_no' => $no, 'action' => $action, 'changed_by' => $actor, 'changed_at' => gmdate('Y-m-d H:i:s', ++$this->clock), 'note' => $note, 'fields' => $fields]; }
   public function create(array $tool, string $actor, string $note): array {
     if (isset($this->tools[$tool['slug']])) return ['ok' => false, 'error' => 'exists'];
+    if (($tool['category'] ?? '') !== '' && !in_array($tool['category'], $this->cats, true)) $this->cats[] = $tool['category'];
     $tool += ['featured_level' => 0, 'featured_until' => '']; $tool['_version'] = 1; $tool['updated_at'] = gmdate('Y-m-d H:i:s', ++$this->clock); $this->tools[$tool['slug']] = $tool; $this->log($tool['slug'], 1, 'create', $actor, $note, admt_diff([], $tool)); return ['ok' => true];
   }
   public function update(string $slug, array $tool, string $action, string $actor, int $expectedVersion, string $note): array {
@@ -230,7 +235,10 @@ final class AdmToolPdoStore implements AdmToolStore {
     foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) { $b = json_decode((string)$r['before_json'], true) ?: []; $a = json_decode((string)$r['after_json'], true) ?: []; $o[] = ['revision_no' => (int)$r['revision_no'], 'action' => (string)$r['action'], 'changed_by' => (string)$r['changed_by'], 'changed_at' => (string)$r['changed_at'], 'note' => (string)$r['note'], 'fields' => admt_diff($b, $a)]; }
     return $o;
   }
-  private function catId(string $name): ?int { $s = $this->pdo->prepare('SELECT id FROM categories WHERE name = ?'); $s->execute([$name]); $v = $s->fetchColumn(); return $v === false ? null : (int)$v; }
+  private function catId(string $name): ?int {
+    $s = $this->pdo->prepare('SELECT id FROM categories WHERE name = ?'); $s->execute([$name]); $v = $s->fetchColumn(); if ($v !== false) return (int)$v; if ($name === '') return null;
+    $slug = admt_slugify($name); $this->pdo->prepare('INSERT INTO categories (slug, name, description) VALUES (?,?,NULL)')->execute([$slug !== '' ? $slug : 'category', $name]); return (int)$this->pdo->lastInsertId();   // a public category that has no database row yet (inside the caller's transaction)
+  }
   private function bind(array $t): array {
     $j = fn($v) => json_encode(array_values($v), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     return [':name' => $t['name'], ':cid' => $this->catId((string)$t['category']), ':short' => $t['short'], ':descr' => $t['description'], ':features' => $j($t['features']), ':pros' => $j($t['pros']), ':cons' => $j($t['cons']), ':uc' => $j($t['use_cases']),
@@ -334,7 +342,7 @@ function admt_apply(AdmToolStore $s, array $user, string $act, array $post, call
   $actor = (string)($user['username'] ?? 'unknown'); $note = admt_text($post['note'] ?? '', 500);
   if (function_exists('admt_apply_ops') && in_array($act, ADMT_OPS, true)) return admt_apply_ops($s, $user, $act, $post, $audit);
   if ($act === 'create') {
-    [$e, $t] = admt_validate($post, $s->categories()); if ($e) return $fail(422, 'Please correct the highlighted fields.', $e, $t['slug']);
+    [$e, $t] = admt_validate($post, admt_public_categories()); if ($e) return $fail(422, 'Please correct the highlighted fields.', $e, $t['slug']);
     if ($s->get($t['slug']) !== null) return $fail(409, 'That address is already used by another tool (including deleted ones).', ['slug' => 'This address is already in use.'], $t['slug']);
     $t['status'] = 'draft'; $r = $s->create($t, $actor, $note);
     if (!$r['ok']) return $fail($r['error'] === 'exists' ? 409 : 500, $r['error'] === 'exists' ? 'That address is already in use.' : 'The tool could not be saved.', [], $t['slug']);
@@ -344,7 +352,7 @@ function admt_apply(AdmToolStore $s, array $user, string $act, array $post, call
   $expected = (int)($post['version'] ?? -1); $status = (string)$cur['status'];
   if ($act === 'edit') {
     if ($status === 'deleted') return $fail(409, 'A deleted tool cannot be edited. Restore it first.', [], $slug);
-    [$e, $t] = admt_validate($post, $s->categories(), $cur); if ($e) return $fail(422, 'Please correct the highlighted fields.', $e, $slug);
+    [$e, $t] = admt_validate($post, admt_public_categories(), $cur, admt_overlay($slug)['locked']); if ($e) return $fail(422, 'Please correct the highlighted fields.', $e, $slug);
     $t += $cur; $t['status'] = $status; $act2 = 'edit'; $msg = 'edited';
   } elseif ($act === 'restore') {
     if ($status !== 'deleted') return $fail(409, 'Only a deleted tool can be restored.', [], $slug);
