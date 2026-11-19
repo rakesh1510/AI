@@ -1,6 +1,9 @@
-/* graph.js - canvas renderer + UI for the AI Universe graph prototype (SYNTHETIC data only).
+/* graph.js - canvas renderer + UI for the AI Universe graph (prototype page with SYNTHETIC data, production page universe-graph.php with the real read API).
  * Uses d3-force (in layout-worker.js), d3-zoom, d3-drag, d3-quadtree, d3-selection. No framework.
  * Data comes through data-source.js (adapter); this file only sees the canonical node/edge format.
+ * Source selection: window.UNIVERSE_GRAPH_CONFIG (set by the production page) forces the HTTP source and can NOT be changed by URL parameters.
+ * Without it (prototype page) ?source=http picks the HTTP source, anything else the labelled SYNTHETIC source.
+ * Untrusted text (entity names, summaries, source titles) is only ever written with textContent / createTextNode, never innerHTML.
  */
 (function () {
   'use strict';
@@ -8,13 +11,18 @@
 
   /* ---------- config from URL ---------- */
   var P = new URLSearchParams(location.search);
+  var CFG = window.UNIVERSE_GRAPH_CONFIG || null;
+  var IS_HTTP = CFG ? true : P.get('source') === 'http';
+  var SCRIPT_URL = (document.currentScript && document.currentScript.src) || '';
+  var BASE = SCRIPT_URL.replace(/[?#].*$/, '').replace(/[^\/]*$/, ''), BASEQ = (SCRIPT_URL.match(/\?[^#]*/) || [''])[0];
+  var LABEL = IS_HTTP ? '' : 'SYNTHETIC TEST DATA';
   var cfg = {
     size: +P.get('size') || 500,
-    load: P.get('load') === 'progressive' ? 'progressive' : 'all',
-    cluster: P.get('cluster') !== 'off',
+    load: IS_HTTP || P.get('load') === 'progressive' ? 'progressive' : 'all',
+    cluster: IS_HTTP ? false : P.get('cluster') !== 'off',
     // 'public' never renders unverified edges. Review mode can NOT be switched on from the URL (QA finding): it needs a flag that only an
     // authenticated editorial page may set, and a real deployment must also filter on the server (state='verified' AND is_current=1).
-    mode: (window.UNIVERSE_REVIEW_ENABLED === true && P.get('mode') === 'review') ? 'review' : 'public',
+    mode: (!IS_HTTP && window.UNIVERSE_REVIEW_ENABLED === true && P.get('mode') === 'review') ? 'review' : 'public',   // the HTTP source only ever serves verified rows, so it is always public
     bench: P.has('bench'),
     settleCap: +P.get('settleCap') || 0,
     labels: P.get('labels') === 'legacy' ? 'legacy' : 'placed',   // 'legacy' = old midpoint labels, kept only to measure the overlap before/after
@@ -34,17 +42,22 @@
   var isMobile = window.matchMedia('(pointer: coarse)').matches || Math.min(window.innerWidth, screen.width) < 700;
   var LIMITS = {
     desktop: { name: 'desktop', clusterMax: 2500, edgeMax: 9000, budgetLow: 3500, budgetFull: 6000, labelNodeMax: 700, genLabels: 40, selLabels: 40, hoverLabels: 14,
-               maxLoaded: 1e9, layoutMs: 0, expandMax: 400, companyMax: 600, bubbleMax: 1e9 },
+               maxLoaded: 1e9, layoutMs: 0, expandMax: 400, companyMax: 600, bubbleMax: 1e9, initialMax: 400, edgePage: 100 },
     mobile:  { name: 'mobile', clusterMax: 1200, edgeMax: 3000, budgetLow: 600, budgetFull: 1800, labelNodeMax: 300, genLabels: 15, selLabels: 20, hoverLabels: 8,
-               maxLoaded: 6000, layoutMs: 8000, expandMax: 150, companyMax: 200, bubbleMax: 350 }
+               maxLoaded: 6000, layoutMs: 8000, expandMax: 150, companyMax: 200, bubbleMax: 350, initialMax: 150, edgePage: 50 }
   };
   var limMode = P.get('limits') || 'auto';
   var LIM = limMode === 'mobile' ? LIMITS.mobile : (limMode === 'desktop' || limMode === 'off') ? LIMITS.desktop : (isMobile ? LIMITS.mobile : LIMITS.desktop);
 
   /* ---------- visual vocabulary (colours come from the CSS variables, so light and dark share one source) ---------- */
-  var TYPES = DataGen.TYPES;
-  var COL = { company: '#6d28d9', product: '#c2410c', model: '#0b5cad', family: '#15803d', technology: '#a16207' };
-  var BASER = { company: 9, product: 6, model: 4.5, family: 6.5, technology: 5.5 };
+  function apiBase() {
+    var a = CFG ? CFG.api : (P.get('api') || '/universe-api.php');
+    return /^\/[A-Za-z0-9_.\/-]{1,80}$/.test(a) && a.indexOf('//') < 0 ? a : '/universe-api.php';
+  }
+  var source = IS_HTTP ? UniverseData.create({ kind: 'http', api: apiBase() }) : UniverseData.create({ kind: 'synthetic', size: cfg.size, seed: 42 });
+  var TYPES = source.taxonomy.types;
+  var COL = { company: '#6d28d9', product: '#c2410c', model: '#0b5cad', family: '#15803d', technology: '#a16207', version: '#0e7490' };
+  var BASER = { company: 9, product: 6, model: 4.5, family: 6.5, technology: 5.5, version: 4.2 };
   // Only technical_ancestry and product_succession are allowed `branch: true` (elbow/branch-style line).
   var REL = {
     technical_ancestry:     { color: '#0b5cad', width: 2,   dash: [],            branch: true,  directed: true,  desc: 'derived from / built on (branch-style, solid)' },
@@ -52,13 +65,23 @@
     company_ownership:      { color: '#6d28d9', width: 3.2, dash: [],            branch: false, directed: true,  desc: 'owns / acquired (thick straight line)' },
     integration:            { color: '#047857', width: 1.6, dash: [10, 4],       branch: false, directed: true,  desc: 'used by / built into (long dashes, straight)' },
     similarity:             { color: '#6b7280', width: 1.4, dash: [1, 4],        branch: false, directed: false, desc: 'functionally similar, no lineage (dotted, straight)' },
-    historical_association: { color: '#a16207', width: 1.6, dash: [10, 3, 2, 3], branch: false, directed: false, desc: 'past link without ownership (dash-dot, straight)' }
+    historical_association: { color: '#a16207', width: 1.6, dash: [10, 3, 2, 3], branch: false, directed: false, desc: 'past link without ownership (dash-dot, straight)' },
+    // The nine relationship types of the verified ledger (universe-api.php). Each keeps its own colour, width and dash; none is merged into another.
+    developed_by:    { color: '#6d28d9', width: 3.2, dash: [],            branch: false, directed: true, desc: 'developed by a company (thick solid, straight)' },
+    acquired_by:     { color: '#9d174d', width: 3.2, dash: [14, 5],       branch: false, directed: true, desc: 'acquired by a company (thick dashed, straight)' },
+    version_of:      { color: '#0e7490', width: 2.4, dash: [],            branch: false, directed: true, desc: 'a version of a model or product (solid, straight)' },
+    derived_from:    { color: '#0b5cad', width: 2,   dash: [],            branch: true,  directed: true, desc: 'derived from another model (solid, branch-style)' },
+    built_on:        { color: '#4338ca', width: 2.4, dash: [2, 3],        branch: false, directed: true, desc: 'built on another model or product (dotted, straight)' },
+    successor_of:    { color: '#c2410c', width: 2,   dash: [7, 4],        branch: true,  directed: true, desc: 'succeeds an earlier product (dashed, branch-style)' },
+    renamed_from:    { color: '#a16207', width: 1.6, dash: [10, 3, 2, 3], branch: false, directed: true, desc: 'renamed from an earlier name (dash-dot, straight)' },
+    integrates_with: { color: '#047857', width: 1.6, dash: [10, 4],       branch: false, directed: true, desc: 'integrates with (long dashes, straight)' },
+    hosted_on:       { color: '#6b7280', width: 1.4, dash: [1, 4],        branch: false, directed: true, desc: 'hosted on a platform (fine dots, straight)' }
   };
-  var RELS = DataGen.RELS;
+  var RELS = source.taxonomy.rels;
   var PAL = { bg: '#fbfbf8', fg: '#111', halo: '#fff', lblbg: 'rgba(255,255,255,.92)', ring: '#000', ring2: '#f5a623', hi: 'rgba(255,200,0,.6)', syn: 'rgba(138,28,28,.9)' };
   var sprites = {};
   function readTheme() {
-    var cs = getComputedStyle(document.documentElement), g = function (n, d) { return (cs.getPropertyValue(n) || '').trim() || d; };
+    var cs = getComputedStyle($('#ugapp') || document.documentElement), g = function (n, d) { return (cs.getPropertyValue(n) || '').trim() || d; };
     PAL.bg = g('--cv-bg', PAL.bg); PAL.fg = g('--cv-fg', PAL.fg); PAL.halo = g('--cv-halo', PAL.halo); PAL.lblbg = g('--cv-lblbg', PAL.lblbg);
     PAL.ring = g('--cv-ring', PAL.ring); PAL.ring2 = g('--cv-ring2', PAL.ring2); PAL.hi = g('--cv-hi', PAL.hi); PAL.syn = g('--cv-syn', PAL.syn);
     TYPES.forEach(function (t) { COL[t] = g('--c-' + t, COL[t]); });
@@ -83,32 +106,86 @@
     var valid = {}, comps = [], rest = [], stats = { droppedNodes: 0, droppedEdges: 0, badCompany: 0 }, i;
     TYPES.forEach(function (t) { valid[t] = 1; });
     canon.nodes.forEach(function (n) { if (!valid[n.type] || !n.ref) { stats.droppedNodes++; return; } (n.type === 'company' ? comps : rest).push(n); });
-    if (!comps.length) throw new Error('data has no company nodes');
+    if (!comps.length && !IS_HTTP) throw new Error('data has no company nodes');
     var all = comps.concat(rest), byRef = Object.create(null), bySlug = Object.create(null), NCc = comps.length;
-    var nodes = all.map(function (n, k) { byRef[n.ref] = k; var id = n.slug || ('n' + k); bySlug[id] = k; return { i: k, id: id, ref: n.ref, name: String(n.name), type: n.type, c: k }; });
+    var nodes = all.map(function (n, k) { byRef[n.ref] = k; var id = n.slug || ('n' + k); bySlug[id] = k; return { i: k, id: id, ref: n.ref, name: String(n.name), type: n.type, c: k, sum: n.summary || '', vat: n.verified_at || '', net: null, detail: null }; });
     for (i = NCc; i < nodes.length; i++) {
       var ci = byRef[all[i].company];
-      if (ci !== undefined && ci < NCc) nodes[i].c = ci; else { nodes[i].c = 0; stats.badCompany++; }
+      if (ci !== undefined && ci < NCc) nodes[i].c = ci;
+      else if (IS_HTTP) nodes[i].c = -1;   // the real API does not name a company; it is learned from loaded developed_by relationships and never guessed
+      else { nodes[i].c = 0; stats.badCompany++; }
     }
     var edges = [], memTotal = new Int32Array(NCc);
     canon.edges.forEach(function (e) {
       var s = byRef[e.from], t = byRef[e.to];
       if (s === undefined || t === undefined || !REL[e.type]) { stats.droppedEdges++; return; }
       var srcs = e.sources || [];
-      edges.push({ s: s, t: t, rel: e.type, src: srcs[0] ? (lastSeg(srcs[0].url) || srcs[0].publisher || '') : '', date: (srcs[0] && srcs[0].retrieved_at) || null,
+      edges.push({ s: s, t: t, rel: e.type, src: srcs[0] ? (IS_HTTP ? (srcs[0].publisher || lastSeg(srcs[0].url) || '') : (lastSeg(srcs[0].url) || srcs[0].publisher || '')) : '', date: (srcs[0] && srcs[0].retrieved_at) || null,
                    vf: e.valid_from || null, vt: e.valid_to || null, v: e.verified !== false, srcs: srcs });
     });
-    nodes.forEach(function (n) { memTotal[n.c]++; });
-    return { nodes: nodes, edges: edges, NC: NCc, byRef: byRef, bySlug: bySlug, memTotal: memTotal, stats: stats, label: canon.label, pages: canon.pages };
+    nodes.forEach(function (n) { if (n.c >= 0) memTotal[n.c]++; });
+    return { nodes: nodes, edges: edges, NC: NCc, byRef: byRef, bySlug: bySlug, memTotal: memTotal, stats: stats, label: canon.label, pages: canon.pages, total: canon.total, truncated: !!canon.truncated };
   }
 
+  /* ---------- DOM helpers (untrusted text only ever goes through textContent / text nodes) ---------- */
+  function el(tag, attrs, kids) {
+    var e = document.createElement(tag), k;
+    if (attrs) for (k in attrs) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'cls') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    (kids || []).forEach(function (c) { if (c == null || c === false) return; e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return e;
+  }
+  function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); }
+  function safeHref(u) { return typeof u === 'string' && u.length < 2000 && /^https?:\/\//i.test(u) ? u : null; }
+  function day(s) { return s ? String(s).slice(0, 10) : ''; }
+  function errText(err) {
+    var st = err && err.status;
+    if (st === 429) return 'too many requests, wait a minute and try again';
+    if (st === 404) return 'not found (this entity may no longer be verified)';
+    if (st === 503) return 'the data service is temporarily unavailable';
+    if (st >= 400) return 'the server answered with an error (' + st + ')';
+    if (err && err.code === 'bad_response') return 'the server sent data in an unexpected format';
+    if (err && err.code === 'timeout') return 'the request timed out';
+    return 'network error';
+  }
+  function showState(kind, text, retry) {
+    var st = $('#ugstate'), stage0 = $('#stage');
+    if (!st) { st = el('div', { id: 'ugstate' }); stage0.appendChild(st); }
+    clear(st); st.className = 'ugmsg' + (kind === 'error' ? ' err' : ''); st.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    st.appendChild(el('p', { text: text }));
+    if (retry) { var b = el('button', { type: 'button', text: 'Try again' }); b.addEventListener('click', retry); st.appendChild(b); }
+    st.hidden = false;
+    ['#cv', '#zoomctl', '#hud', '#tablewrap'].forEach(function (q) { var x = $(q); if (x) x.hidden = true; });
+    $('#progress').textContent = '';
+    var lv = $('#live'); if (lv) lv.textContent = text;
+  }
+  function hideState() { var st = $('#ugstate'); if (st) st.hidden = true; }
+
   /* ---------- data (through the adapter) ---------- */
-  var t0 = performance.now();
-  var source = UniverseData.create({ kind: 'synthetic', size: cfg.size, seed: 42 });
-  $('#progress').textContent = 'Loading data...';
-  UniverseData.loadAll(source, { pageSize: 10000 }).then(function (canon) {
-    perf.dataGenMs = performance.now() - t0; boot(ingest(canon));
-  }).catch(function (err) { $('#progress').textContent = 'Data load failed: ' + err.message; });
+  var t0 = performance.now(), lifeCtl = typeof AbortController !== 'undefined' ? new AbortController() : null, booted = false;
+  window.addEventListener('pagehide', function () { if (lifeCtl) lifeCtl.abort(); });
+  var appEl = $('#ugapp'); if (appEl && CFG) appEl.hidden = false;   // production page: the app is shown only when scripts run; without JS the server-rendered list stays
+  if (IS_HTTP) {
+    var banner = $('#synBanner');
+    if (banner) { banner.className = 'verified-note'; banner.textContent = 'Live verified data from the read API: only verified, current entities and relationships, each with its source.'; }
+    ['#lblSize', '#lblLoad'].forEach(function (q) { var x = $(q); if (x) x.hidden = true; });
+    var tcap0 = $('#tcap'); if (tcap0) tcap0.textContent = 'Verified entities (same entities as the graph)';
+    var thc = $('#thCo'); if (thc) thc.textContent = 'Developed by (once loaded)';
+    var kn = $('#cv'); if (kn) kn.setAttribute('aria-label', 'Interactive graph of verified AI entities and their sourced relationships');
+  }
+  function startLoad() {
+    $('#progress').textContent = 'Loading data...'; hideState();
+    ['#cv', '#zoomctl', '#hud'].forEach(function (q) { var x = $(q); if (x && view === 'graph') x.hidden = false; });
+    UniverseData.loadAll(source, { pageSize: IS_HTTP ? 100 : 10000, maxNodes: IS_HTTP ? 2000 : 0, signal: lifeCtl && lifeCtl.signal }).then(function (canon) {
+      perf.dataGenMs = performance.now() - t0;
+      if (!canon.nodes.length) { showState('empty', 'No verified data yet. Entities and relationships appear here only after an editor has entered them with a source and a different person has verified them.'); return; }
+      booted = true; boot(ingest(canon));
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return;
+      if (booted) { $('#progress').textContent = 'Data load failed: ' + (err && err.message); return; }
+      showState('error', 'Could not load verified data: ' + errText(err) + '.', startLoad);
+    });
+  }
+  startLoad();
 
   function boot(ing) {
   var nodes = ing.nodes, N = nodes.length, NC = ing.NC, memTotal = ing.memTotal;
@@ -119,7 +196,8 @@
   var typeOn = {}; TYPES.forEach(function (t) { typeOn[t] = true; });
   if (LIM.maxLoaded < N && cfg.load === 'all') { cfg.load = 'progressive'; cfg.autoProgressive = true; }   // hard limit: never push more than maxLoaded nodes to the layout/draw path at once
   /* ---------- loading state (worker index space) ---------- */
-  var wIdx = new Int32Array(N).fill(-1), loadedList = [], loadedEdges = [], edgeLoaded = new Uint8Array(edges.length);
+  var wIdx = new Int32Array(N).fill(-1), loadedList = [], loadedEdges = [], unsent = [], edgeKeys = Object.create(null);
+  if (IS_HTTP && CFG && CFG.staticId) { var sd = document.getElementById(CFG.staticId); if (sd && sd.tagName === 'DETAILS') sd.open = false; }   // the app is up: collapse the plain list
   var worker = null, layoutStart = 0, initDone = false;
   var visNodes = [], visByType = {}, edgesByRel = {}, edgesUnv = [];
   var qt = null, qtDirty = true, clusters = [], clustersDirty = true;
@@ -129,14 +207,15 @@
   function centreOf(c) { var a = c * 2.399963, r = 200 * Math.sqrt(c + 0.5); return [r * Math.cos(a), r * Math.sin(a)]; }
   function hash01(i, s) { var h = Math.imul(i + 1, 2654435761) ^ Math.imul(s + 7, 40503); h ^= h >>> 15; h = Math.imul(h, 2246822519); h ^= h >>> 13; return (h >>> 0) / 4294967296; }
 
-  function sendAdd(ids, first) {
+  function sendAdd(ids, first, near) {
     var m = ids.length, cluster = new Int32Array(m), x = new Float32Array(m), y = new Float32Array(m), tx = new Float32Array(m), ty = new Float32Array(m);
     var j, k, id, nd;
     for (j = 0; j < m; j++) {
       id = ids[j]; nd = nodes[id];
-      var anchor = wIdx[nd.c] >= 0 && nd.c !== id ? nodes[nd.c] : null;
-      var cc = centreOf(nd.c), bx = anchor ? anchor.x : cc[0], by = anchor ? anchor.y : cc[1];
-      var jr = nd.type === 'company' ? 0 : 70 * Math.sqrt(hash01(id, 1)), ja = 6.2832 * hash01(id, 2);
+      var hasNear = near != null && near >= 0 && wIdx[near] >= 0;
+      var anchor = hasNear ? nodes[near] : (nd.c >= 0 && wIdx[nd.c] >= 0 && nd.c !== id ? nodes[nd.c] : null);
+      var cc = centreOf(nd.c >= 0 ? nd.c : NC), bx = anchor ? anchor.x : cc[0], by = anchor ? anchor.y : cc[1];
+      var jr = (nd.type === 'company' && !hasNear ? 0 : (nd.c < 0 && !hasNear ? 24 * Math.sqrt(m) : 70)) * Math.sqrt(hash01(id, 1)), ja = 6.2832 * hash01(id, 2);
       nd.x = bx + jr * Math.cos(ja); nd.y = by + jr * Math.sin(ja);
       wIdx[id] = loadedList.length; loadedList.push(nd);
       cluster[j] = nd.c; x[j] = nd.x; y[j] = nd.y; tx[j] = bx; ty[j] = by;
@@ -146,9 +225,15 @@
       var a = adj[ids[j]];
       for (k = 0; k < a.length; k++) {
         var e = edges[a[k]];
-        if (!edgeLoaded[e.k] && wIdx[e.s] >= 0 && wIdx[e.t] >= 0) { edgeLoaded[e.k] = 1; loadedEdges.push(e); lk.push(wIdx[e.s], wIdx[e.t]); }
+        if (!e.ld && wIdx[e.s] >= 0 && wIdx[e.t] >= 0) { e.ld = 1; loadedEdges.push(e); lk.push(wIdx[e.s], wIdx[e.t]); }
       }
     }
+    for (j = unsent.length - 1; j >= 0; j--) {   // edges that arrived later (HTTP source) and now have both ends in the layout
+      var ue = unsent[j];
+      if (ue.ld) { unsent.splice(j, 1); continue; }
+      if (wIdx[ue.s] >= 0 && wIdx[ue.t] >= 0) { ue.ld = 1; loadedEdges.push(ue); lk.push(wIdx[ue.s], wIdx[ue.t]); unsent.splice(j, 1); }
+    }
+    if (!m && !lk.length) return;
     var ticks = first ? (cfg.size <= 500 ? 300 : cfg.size <= 5000 ? 220 : 120) : 80;
     var msg = { type: first ? 'init' : 'add', cluster: cluster, x: x, y: y, tx: tx, ty: ty, links: Int32Array.from(lk), ticks: ticks, maxMs: LIM.layoutMs };
     if (first) layoutStart = performance.now();
@@ -171,7 +256,8 @@
       if (m.done) onLayoutDone(m);
     };
     var ids = [], c;
-    if (cfg.load === 'progressive') { for (c = 0; c < NC; c++) ids.push(c); } else { for (c = 0; c < N; c++) ids.push(c); }
+    if (IS_HTTP) { for (c = 0; c < N && c < LIM.initialMax; c++) ids.push(c); }   // companies first (ingest order), then the first entities of the list; the rest load when selected
+    else if (cfg.load === 'progressive') { for (c = 0; c < NC; c++) ids.push(c); } else { for (c = 0; c < N; c++) ids.push(c); }
     sendAdd(ids, true);
     if (cfg.settleCap) setTimeout(function () { if (!initDone) worker.postMessage({ type: 'stop' }); }, cfg.settleCap);
   }
@@ -180,7 +266,7 @@
     if (!initDone) {
       initDone = true; perf.settleMs = performance.now() - layoutStart; perf.layoutCapped = !!m.capped;
       if (!hashView && !userMoved) fit(true);
-      announce('Layout finished. ' + fmt(loadedList.length) + ' nodes loaded. SYNTHETIC TEST DATA.' + (cfg.autoProgressive ? ' Large data set on a small screen: overview of companies only; select or zoom into a company to load its nodes.' : ''));
+      announce('Layout finished. ' + fmt(loadedList.length) + ' nodes loaded.' + (LABEL ? ' ' + LABEL + '.' : '') + (IS_HTTP ? ' Select an entity to load its verified relationships.' : '') + (cfg.autoProgressive ? ' Large data set on a small screen: overview of companies only; select or zoom into a company to load its nodes.' : ''));
     }
     var a = performance.now(); ensureQT(); perf.qtBuildMs = performance.now() - a;
     perf.settled = true;
@@ -274,13 +360,13 @@
     switch (t) {
       case 'company': ctx.rect(x - r, y - r, 2 * r, 2 * r); break;
       case 'product': ctx.moveTo(x, y - r * 1.3); ctx.lineTo(x + r * 1.3, y); ctx.lineTo(x, y + r * 1.3); ctx.lineTo(x - r * 1.3, y); ctx.closePath(); break;
-      case 'family': ctx.moveTo(x, y - r * 1.25); ctx.lineTo(x + r * 1.15, y + r * 0.95); ctx.lineTo(x - r * 1.15, y + r * 0.95); ctx.closePath(); break;
+      case 'version': case 'family': ctx.moveTo(x, y - r * 1.25); ctx.lineTo(x + r * 1.15, y + r * 0.95); ctx.lineTo(x - r * 1.15, y + r * 0.95); ctx.closePath(); break;
       case 'technology': for (var q = 0; q < 6; q++) { var a = q * 1.0472; var px = x + r * 1.1 * Math.cos(a), py = y + r * 1.1 * Math.sin(a); if (q) ctx.lineTo(px, py); else ctx.moveTo(px, py); } ctx.closePath(); break;
       default: ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.2832);
     }
   }
   function nodeR(t) { return BASER[t] * Math.max(0.45, Math.min(2.2, Math.sqrt(tr.k))); }
-  function edgeText(e) { return e.rel + ' | ' + e.src + (e.date ? ' | verified ' + e.date : '') + (e.v ? '' : ' | UNVERIFIED'); }
+  function edgeText(e) { return e.rel + ' | ' + e.src + (e.date ? (IS_HTTP ? ' | retrieved ' : ' | verified ') + e.date : '') + (e.v ? '' : ' | UNVERIFIED'); }
   function arrow(x, y, ang, s) {
     ctx.moveTo(x, y); ctx.lineTo(x - s * Math.cos(ang - 0.45), y - s * Math.sin(ang - 0.45)); ctx.lineTo(x - s * Math.cos(ang + 0.45), y - s * Math.sin(ang + 0.45)); ctx.closePath();
   }
@@ -610,7 +696,7 @@
     }
     if (hover >= 0 && hover !== sel && !clustered) drawRings(hover, false);
     if (!clustered) drawRings(sel, true);
-    ctx.font = 'bold 12px system-ui,sans-serif'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = PAL.syn; ctx.fillText('SYNTHETIC TEST DATA', 8, Hh - 42);
+    ctx.font = 'bold 12px system-ui,sans-serif'; ctx.textBaseline = 'alphabetic'; if (LABEL) { ctx.fillStyle = PAL.syn; ctx.fillText(LABEL, 8, Hh - 42); }
     var md = clustered ? 'clustered by company (zoom in or click a cluster)' : (est > LIM.edgeMax ? 'nodes only (edges hidden while zoomed out)' : 'full detail');
     if (md !== lastMode) { lastMode = md; refreshStatus(); }
     perf.renderMode = md;
@@ -737,13 +823,69 @@
 
   /* ---------- selection, panel, progressive loading ---------- */
   var lastFocus = null, limitHit = false, members = null;
-  function loadIds(ids) {   // hard limit: never more than LIM.maxLoaded nodes in the layout/draw path
+  function loadIds(ids, near) {   // hard limit: never more than LIM.maxLoaded nodes in the layout/draw path
     var room = LIM.maxLoaded - loadedList.length;
     if (ids.length > room) { limitHit = true; ids = ids.slice(0, Math.max(0, room)); announce('Loaded-node limit for this screen reached (' + fmt(LIM.maxLoaded) + '). Reload the page to start from the overview again.'); }
-    if (ids.length) { sendAdd(ids, false); rebuildLists(); }
+    if (ids.length || unsent.length) { sendAdd(ids, false, near); rebuildLists(); }
     return ids.length;
   }
+
+  /* ---------- HTTP source: progressive neighbourhood loading (paged, abortable, honest about errors) ---------- */
+  function addEdges(list) {   // canonical edges of one neighbourhood response; unknown endpoints or relationship types are dropped and counted
+    var added = [], dropped = 0;
+    list.forEach(function (ce) {
+      var s = ing.byRef[ce.from], t = ing.byRef[ce.to];
+      if (s === undefined || t === undefined || !REL[ce.type] || RELS.indexOf(ce.type) < 0) { dropped++; return; }
+      var srcs = ce.sources || [], key = s + '|' + t + '|' + ce.type + '|' + (ce.valid_from || '') + '|' + (ce.valid_to || '') + '|' + (srcs[0] ? srcs[0].url : '');
+      if (edgeKeys[key]) return; edgeKeys[key] = 1;
+      var e = { s: s, t: t, rel: ce.type, src: srcs[0] ? (srcs[0].publisher || lastSeg(srcs[0].url) || '') : '', date: (srcs[0] && srcs[0].retrieved_at) || null,
+                vf: ce.valid_from || null, vt: ce.valid_to || null, v: true, srcs: srcs, k: edges.length };
+      edges.push(e); adj[s].push(e.k); adj[t].push(e.k); unsent.push(e); added.push(e);
+      if (ce.type === 'developed_by' && nodes[t].type === 'company' && nodes[s].type !== 'company' && nodes[s].c < 0) nodes[s].c = t;
+    });
+    return { added: added, dropped: dropped };
+  }
+  function companyName(n) {
+    if (!IS_HTTP) return nodes[n.c].name;
+    if (n.type === 'company') return 'n/a (is a company)';
+    var a = adj[n.i];
+    for (var q = 0; q < a.length; q++) { var e = edges[a[q]]; if (e.rel === 'developed_by' && e.s === n.i) return nodes[e.t].name; }
+    return 'not shown (no loaded developed_by relationship)';
+  }
+  function repaintSel(id) { if (sel === id) { renderPanel({}); updateTableSel(); } }
+  function loadDetail(id) {
+    var n = nodes[id]; if (n.detail || n.detailCtl) return;
+    n.detailCtl = lifeCtl ? new AbortController() : null;
+    source.entity(n.slug, { signal: n.detailCtl && n.detailCtl.signal }).then(function (d) { n.detail = d; n.detailCtl = null; repaintSel(id); })
+      .catch(function (err) { n.detailCtl = null; if (err && err.name === 'AbortError') return; n.detail = { error: errText(err) }; repaintSel(id); });
+  }
+  function expandHttp(id, more) {
+    var n = nodes[id]; if (!n || !n.slug) return;
+    if (wIdx[id] < 0) loadIds([id], -1);
+    loadDetail(id);
+    var net = n.net || (n.net = { state: 'idle', total: null, next: 0, dropped: 0, err: '', ctl: null });
+    if (net.state === 'loading') return;
+    if (net.state !== 'idle' && net.state !== 'error' && !more) return;
+    if (net.state === 'done') return;
+    var a0 = performance.now();
+    net.state = 'loading'; net.ctl = lifeCtl ? new AbortController() : null; repaintSel(id);
+    source.neighbourhood(n.ref, { slug: n.slug, offset: net.next, limit: LIM.edgePage, signal: net.ctl && net.ctl.signal }).then(function (r) {
+      net.ctl = null; net.total = r.total_edges; if (r.next_offset != null) net.next = r.next_offset;
+      var res = addEdges(r.edges); net.dropped += res.dropped; net.err = '';
+      var ids = [], seen = {};
+      res.added.forEach(function (e) { [e.s, e.t].forEach(function (o) { if (wIdx[o] < 0 && !seen[o] && ids.length < LIM.expandMax) { seen[o] = 1; ids.push(o); } }); });
+      net.state = r.has_more ? 'more' : 'done';
+      perf.expandAdded = loadIds(ids, id); perf.expandMs = performance.now() - a0;
+      repaintSel(id); refreshTable(); refreshStatus(); markDirty();
+      announce(res.added.length + ' relationships loaded for ' + n.name + (net.state === 'more' ? '. More are available.' : '.'));
+    }).catch(function (err) {
+      net.ctl = null;
+      if (err && err.name === 'AbortError') { net.state = 'idle'; return; }
+      net.state = 'error'; net.err = errText(err); repaintSel(id); announce('Could not load relationships for ' + n.name + ': ' + net.err + '.');
+    });
+  }
   function expand(id) {
+    if (IS_HTTP) { expandHttp(id, false); return; }
     if (cfg.load !== 'progressive') return;
     var a0 = performance.now(), ids = [], seen = {}, q;
     if (wIdx[id] < 0) { ids.push(id); seen[id] = 1; }
@@ -755,19 +897,20 @@
     perf.expandAdded = loadIds(ids); perf.expandMs = performance.now() - a0; refreshStatus();
   }
   function expandCompany(cid) {
-    if (!members) { members = new Array(NC); for (var z = 0; z < NC; z++) members[z] = []; for (var q = 0; q < N; q++) members[nodes[q].c].push(q); }
+    if (!members) { members = new Array(NC); for (var z = 0; z < NC; z++) members[z] = []; for (var q = 0; q < N; q++) if (nodes[q].c >= 0 && members[nodes[q].c]) members[nodes[q].c].push(q); }
     var ids = [], m = members[cid];
     for (var j = 0; j < m.length && ids.length < LIM.companyMax; j++) if (wIdx[m[j]] < 0) ids.push(m[j]);
     perf.expandAdded = loadIds(ids); refreshStatus();
   }
   function select(id, opts) {
     opts = opts || {};
+    if (IS_HTTP && id !== sel && sel >= 0) { var pn0 = nodes[sel]; if (pn0.net && pn0.net.ctl) pn0.net.ctl.abort(); if (pn0.detailCtl) pn0.detailCtl.abort(); }
     if (id !== sel && sel >= 0 && !opts.noPush) { backStack.push(sel); if (backStack.length > 50) backStack.shift(); }
     if (!opts.keepRel) relCursor = -1;
     sel = id; $('#zNext').disabled = id < 0;
     if (id >= 0) { expand(id); if (opts.center) { userMoved = true; applyTransform(viewTransform(Math.max(tr.k, 1.6), nodes[id].x, nodes[id].y), true); } }
     renderPanel(opts); updateTableSel(); scheduleHash(); markDirty();
-    if (id >= 0) announce('Selected ' + nodes[id].name + ', ' + nodes[id].type + ', ' + adj[id].length + ' verified relationships.' + (view === 'graph' ? ' Press Enter to open details.' : ''));
+    if (id >= 0) announce('Selected ' + nodes[id].name + ', ' + nodes[id].type + ', ' + adj[id].length + (IS_HTTP ? ' relationships loaded so far.' : ' verified relationships.') + (view === 'graph' ? ' Press Enter to open details.' : ''));
     else if (opts.fromClose || opts.fromKey) announce('Selection cleared.');
   }
   function swatch(rel) {
@@ -776,29 +919,93 @@
   }
   function typeSwatch(t) {
     var s = 'M10 2h12v12H10z';
-    if (t === 'product') s = 'M16 1l9 8-9 8-9-8z'; else if (t === 'family') s = 'M16 1l9 15H7z'; else if (t === 'technology') s = 'M23 9l-3.5 6h-7L9 9l3.5-6h7z'; else if (t === 'model') s = 'M16 2a7 7 0 1 0 .01 0z';
+    if (t === 'product') s = 'M16 1l9 8-9 8-9-8z'; else if (t === 'family' || t === 'version') s = 'M16 1l9 15H7z'; else if (t === 'technology') s = 'M23 9l-3.5 6h-7L9 9l3.5-6h7z'; else if (t === 'model') s = 'M16 2a7 7 0 1 0 .01 0z';
     return '<svg width="32" height="18" viewBox="0 0 32 18" aria-hidden="true" focusable="false"><path d="' + s + '" style="fill:var(--c-' + t + ')"/></svg>';
+  }
+  function swatchNode(rel) { var t = document.createElement('span'); t.innerHTML = swatch(rel); return t.firstChild; }   // static SVG built only from whitelisted relationship keys
+  function typeSwatchNode(ty) { var t = document.createElement('span'); t.innerHTML = typeSwatch(ty); return t.firstChild; }
+  function dlRow(dl, k, v) {
+    dl.appendChild(el('dt', { text: k })); var d = el('dd');
+    (Array.isArray(v) ? v : [v]).forEach(function (x) { if (x != null) d.appendChild(typeof x === 'string' ? document.createTextNode(x) : x); });
+    dl.appendChild(d); return d;
+  }
+  function sourceNodes(s0) {   // one citation: publisher as an external link (http/https only) plus the retrieval date
+    var href = safeHref(s0.url), label = s0.publisher || s0.url || 'source';
+    var a = href ? el('a', { href: href, rel: 'nofollow noopener', target: '_blank' }, [label, el('span', { cls: 'sr', text: ' (opens in a new tab)' })]) : document.createTextNode(String(label));
+    return [a, ' (retrieved ' + (day(s0.retrieved_at) || 'date not recorded') + ')'];
+  }
+  function citeNode(e) {
+    var c = el('div', { cls: 'cite' });
+    if (!IS_HTTP) {
+      c.appendChild(document.createTextNode('Source: ' + e.src + ' (synthetic citation)')); c.appendChild(el('br'));
+      c.appendChild(document.createTextNode(e.date ? 'Verified: ' + e.date : 'Verification date: not recorded'));
+      if (e.vf || e.vt) { c.appendChild(el('br')); c.appendChild(document.createTextNode('Valid ' + (e.vf || '?') + ' to ' + (e.vt || 'present'))); }
+      return c;
+    }
+    var srcs = (e.srcs || []).slice(0, 5);
+    if (!srcs.length) c.appendChild(document.createTextNode('No source recorded.'));
+    srcs.forEach(function (s0, i) { if (i) c.appendChild(el('br')); c.appendChild(document.createTextNode('Source: ')); sourceNodes(s0).forEach(function (x) { c.appendChild(typeof x === 'string' ? document.createTextNode(x) : x); }); });
+    if ((e.srcs || []).length > 5) { c.appendChild(el('br')); c.appendChild(document.createTextNode((e.srcs.length - 5) + ' more sources not shown.')); }
+    if (e.vf || e.vt) { c.appendChild(el('br')); c.appendChild(document.createTextNode('Valid ' + (e.vf || '?') + ' to ' + (e.vt || 'present'))); }
+    return c;
   }
   function renderPanel(opts) {
     var panel = $('#panel'), lay = $('#layout');
     if (sel < 0) { panel.hidden = true; lay.classList.remove('has-sel'); $('#skipPanel').hidden = true; if (lastFocus && opts && opts.fromClose) { lastFocus.focus(); } return; }
-    var n = nodes[sel], a = adj[sel];
-    $('#pname').textContent = n.name;
-    $('#pdl').innerHTML = '<dt>Type</dt><dd>' + typeSwatch(n.type) + esc(n.type) + '</dd><dt>ID</dt><dd>' + esc(n.id) + '</dd><dt>Company</dt><dd>' + esc(nodes[n.c].name) + '</dd><dt>Relationships</dt><dd>' + a.length + (cfg.mode === 'public' ? ' (verified only)' : ' (review mode)') + '</dd><dt>Data</dt><dd>SYNTHETIC TEST DATA</dd>';
-    var html = '', shown = Math.min(a.length, 120);
-    for (var q = 0; q < shown; q++) {
-      var e = edges[a[q]], out = e.s === sel, o = nodes[out ? e.t : e.s];
-      html += '<li><div class="rel">' + swatch(e.rel) + '<span>' + esc(e.rel) + '</span>' + (e.v ? '' : '<span class="badge">UNVERIFIED</span>') + '</div>' +
-        '<div>' + (out ? 'to ' : 'from ') + '<button class="linkbtn" type="button" data-go="' + o.i + '">' + esc(o.name) + '</button> <small>(' + esc(o.type) + (wIdx[o.i] < 0 ? ', not loaded yet' : '') + ')</small></div>' +
-        '<div class="cite">Source: ' + esc(e.src) + ' (synthetic citation)<br>' + (e.date ? 'Verified: ' + esc(e.date) : 'Verification date: not recorded') +
-        (e.vf || e.vt ? '<br>Valid ' + esc(e.vf || '?') + ' to ' + esc(e.vt || 'present') : '') + '</div></li>';
+    var n = nodes[sel], a = adj[sel], dl = $('#pdl'), ul = $('#edges'), net = n.net, pm = $('#pmore'), pnet = $('#pnet'), hadFocus = document.activeElement === pm, q;
+    $('#pname').textContent = n.name; clear(dl); clear(ul);
+    dlRow(dl, 'Type', [typeSwatchNode(n.type), n.type]);
+    dlRow(dl, 'ID', n.id);
+    if (IS_HTTP) {
+      dlRow(dl, 'Developed by', companyName(n));
+      dlRow(dl, 'Verified', day(n.vat) || 'date not recorded');
+      dlRow(dl, 'Relationships', a.length + ' loaded' + (net && net.total != null ? ' of ' + net.total + ' verified' : ''));
+      var d = n.detail, sd = dlRow(dl, 'Sources', []);
+      if (d && d.sources) {
+        if (!d.sources.length) sd.textContent = 'No source recorded for this entity.';
+        else { var sl = el('ul', { cls: 'srclist' }); d.sources.slice(0, 5).forEach(function (s0) { sl.appendChild(el('li', null, sourceNodes(s0))); }); sd.appendChild(sl); }
+      } else if (d && d.error) sd.textContent = 'Could not load: ' + d.error + '.';
+      else sd.textContent = 'Loading...';
+      dlRow(dl, 'Data', 'Verified, current data from the read API');
+    } else {
+      dlRow(dl, 'Company', companyName(n));
+      dlRow(dl, 'Relationships', a.length + (cfg.mode === 'public' ? ' (verified only)' : ' (review mode)'));
+      dlRow(dl, 'Data', LABEL);
     }
-    if (a.length > shown) html += '<li>' + (a.length - shown) + ' more relationships not listed.</li>';
-    if (!a.length) html += '<li>No verified relationships.</li>';
-    $('#edges').innerHTML = html;
+    var sum = $('#psum'); if (sum) { sum.textContent = IS_HTTP ? (((n.detail && n.detail.summary) || n.sum || '')) : ''; sum.hidden = !sum.textContent; }
+    var note = $('#relnote'); if (note) { note.hidden = !IS_HTTP; note.textContent = IS_HTTP ? 'Only verified, current relationships are listed. The API does not publish a verification date per relationship, so the retrieval date of each source is shown.' : ''; }
+    var order = a.slice();
+    if (IS_HTTP) order.sort(function (x, y) { return (RELS.indexOf(edges[x].rel) - RELS.indexOf(edges[y].rel)) || (x - y); });   // grouped by relationship type, types stay separate
+    var shown = Math.min(order.length, 120);
+    for (q = 0; q < shown; q++) {
+      var e = edges[order[q]], out = e.s === sel, o = nodes[out ? e.t : e.s];
+      ul.appendChild(el('li', null, [
+        el('div', { cls: 'rel' }, [swatchNode(e.rel), el('span', { text: e.rel }), e.v ? null : el('span', { cls: 'badge', text: 'UNVERIFIED' })]),
+        el('div', null, [out ? 'to ' : 'from ', el('button', { cls: 'linkbtn', type: 'button', 'data-go': String(o.i), text: o.name }), ' ', el('small', { text: '(' + o.type + (wIdx[o.i] < 0 ? ', not loaded yet' : '') + ')' })]),
+        citeNode(e)
+      ]));
+    }
+    if (a.length > shown) ul.appendChild(el('li', { text: (a.length - shown) + ' more relationships not listed.' }));
+    var msg = '';
+    if (IS_HTTP && net) {
+      if (net.state === 'loading') msg = 'Loading relationships...';
+      else if (net.state === 'error') msg = 'Could not load relationships: ' + net.err + '.';
+      else if (net.state === 'more') msg = 'Showing ' + a.length + ' loaded relationships of ' + net.total + '.';
+      if (net.dropped) msg += ' ' + net.dropped + ' relationships involve entities that are not in the loaded list and are not shown.';
+    } else if (IS_HTTP) msg = 'Loading relationships...';
+    if (pnet) pnet.textContent = msg;
+    if (!a.length && (!IS_HTTP || (net && net.state === 'done'))) ul.appendChild(el('li', { text: 'No verified relationships.' }));
+    if (pm) {
+      var st = IS_HTTP && net ? net.state : '';
+      pm.hidden = !(st === 'more' || st === 'error' || (st === 'loading' && net.next > 0));
+      pm.textContent = st === 'error' ? 'Try again' : (st === 'loading' ? 'Loading...' : 'Load more relationships');
+      pm.setAttribute('aria-disabled', st === 'loading' ? 'true' : 'false');
+      if (hadFocus && pm.hidden) $('#pname').focus();
+    }
     panel.hidden = false; lay.classList.add('has-sel'); $('#skipPanel').hidden = false;
     if (opts && opts.focus) { lastFocus = document.activeElement; $('#pname').focus(); }
   }
+  if ($('#pmore')) $('#pmore').addEventListener('click', function (ev) { if (ev.currentTarget.getAttribute('aria-disabled') === 'true' || sel < 0) return; expandHttp(sel, true); });
   $('#edges').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-go]'); if (b) select(+b.getAttribute('data-go'), { center: view === 'graph' });
   });
@@ -813,7 +1020,12 @@
     if (sel >= 0) parts.push('sel=' + nodes[sel].id);
     parts.push('k=' + tr.k.toFixed(3), 'x=' + cx.toFixed(1), 'y=' + cy.toFixed(1));
     if (view === 'table') parts.push('view=table');
-    try { history.replaceState(null, '', location.pathname + location.search + '#' + parts.join('&')); } catch (e) { /* ignore */ }
+    var url = location.pathname + location.search;
+    if (CFG && CFG.syncQuery) {   // production page: the selected entity is a shareable ?slug= deep link (the server renders it too)
+      var qp = new URLSearchParams(location.search); if (sel >= 0) qp.set('slug', nodes[sel].id); else qp.delete('slug');
+      var qs = qp.toString(); url = location.pathname + (qs ? '?' + qs : '');
+    }
+    try { history.replaceState(null, '', url + '#' + parts.join('&')); } catch (e) { /* ignore */ }
   }
 
   /* ---------- search ---------- */
@@ -830,7 +1042,8 @@
         var idx = L[i].indexOf(q); if (idx < 0 || (pass === 0) !== (idx === 0)) continue; out.push(i);
       }
     resItems = out;
-    resEl.innerHTML = out.map(function (i, j) { return '<li role="option" id="ro' + j + '" data-i="' + i + '" aria-selected="false">' + esc(nodes[i].name) + ' <small>&nbsp;(' + nodes[i].type + ')</small></li>'; }).join('');
+    clear(resEl);
+    out.forEach(function (i, j) { resEl.appendChild(el('li', { role: 'option', id: 'ro' + j, 'data-i': String(i), 'aria-selected': 'false' }, [nodes[i].name + ' ', el('small', { text: '\u00a0(' + nodes[i].type + ')' })])); });
     resEl.hidden = !out.length; resMsg.hidden = !!out.length;
     var r = qEl.getBoundingClientRect(); resWrap.style.left = r.left + 'px'; resWrap.style.top = (r.bottom + 2) + 'px'; resWrap.style.minWidth = r.width + 'px';
     resWrap.style.display = 'block'; qEl.setAttribute('aria-expanded', out.length ? 'true' : 'false'); resIdx = -1;
@@ -863,15 +1076,17 @@
     renderTable();
   }
   function renderTable() {
-    var from = tpage * PAGE, to = Math.min(tableRows.length, from + PAGE), h = '';
+    var from = tpage * PAGE, to = Math.min(tableRows.length, from + PAGE);
+    clear(tbody);
     for (var q = from; q < to; q++) {
       var n = nodes[tableRows[q]], on = n.i === sel;
-      h += '<tr data-i="' + n.i + '"' + (on ? ' class="sel"' : '') + '><th scope="row"><button class="rowbtn" type="button" data-i="' + n.i + '"' + (on ? ' aria-current="true"' : '') + '>' + esc(n.name) + '</button>' + (on ? '<span class="selmark"> (selected)</span>' : '') + '</th>' +
-        '<td>' + n.type + '</td><td>' + esc(nodes[n.c].name) + '</td><td>' + adj[n.i].length + '</td></tr>';
+      var btn = el('button', { cls: 'rowbtn', type: 'button', 'data-i': String(n.i), text: n.name }); if (on) btn.setAttribute('aria-current', 'true');
+      var th = el('th', { scope: 'row' }, [btn, on ? el('span', { cls: 'selmark', text: ' (selected)' }) : null]);
+      tbody.appendChild(el('tr', on ? { 'data-i': String(n.i), cls: 'sel' } : { 'data-i': String(n.i) }, [th, el('td', { text: n.type }), el('td', { text: companyName(n) }), el('td', { text: String(adj[n.i].length) })]));
     }
-    tbody.innerHTML = h || '<tr class="empty"><td colspan="4">No nodes match the current search and filters.</td></tr>';
+    if (!tableRows.length) tbody.appendChild(el('tr', { cls: 'empty' }, [el('td', { colspan: '4', text: 'No nodes match the current search and filters.' })]));
     var tw0 = $('#tablewrap'); if (tableRows.length) tw0.removeAttribute('tabindex'); else tw0.tabIndex = 0;   // a scrollable region with nothing focusable inside must itself be focusable
-    $('#thRel').textContent = cfg.mode === 'public' ? 'Verified relationships (count)' : 'Relationships (count, includes unverified)';
+    $('#thRel').textContent = IS_HTTP ? 'Verified relationships loaded so far (count)' : (cfg.mode === 'public' ? 'Verified relationships (count)' : 'Relationships (count, includes unverified)');
     var pages = pageCount();
     $('#pageinfo').textContent = tableRows.length ? fmt(tableRows.length) + ' nodes, showing ' + (from + 1) + ' to ' + to + ', page ' + (tpage + 1) + ' of ' + pages : 'No nodes match';
     $('#prev').disabled = tpage === 0; $('#next').disabled = tpage >= pages - 1;
@@ -942,18 +1157,23 @@
   });
 
   var sizeSel = $('#size');
-  DataGen.SIZES.forEach(function (s) { var o = document.createElement('option'); o.value = s; o.textContent = fmt(s) + ' nodes'; if (s === cfg.size) o.selected = true; sizeSel.appendChild(o); });
-  if (DataGen.SIZES.indexOf(cfg.size) < 0) { var o = document.createElement('option'); o.value = cfg.size; o.textContent = fmt(cfg.size) + ' nodes'; o.selected = true; sizeSel.appendChild(o); }
-  $('#load').value = cfg.load;
   function reload(changes) { var p = new URLSearchParams(location.search); Object.keys(changes).forEach(function (k) { p.set(k, changes[k]); }); location.href = location.pathname + '?' + p.toString(); }
-  sizeSel.addEventListener('change', function () { reload({ size: sizeSel.value }); });
-  $('#load').addEventListener('change', function (ev) { reload({ load: ev.target.value }); });
+  if (sizeSel && !IS_HTTP) {   // synthetic-only controls (the prototype page); the production page has neither
+    DataGen.SIZES.forEach(function (s) { var o = document.createElement('option'); o.value = s; o.textContent = fmt(s) + ' nodes'; if (s === cfg.size) o.selected = true; sizeSel.appendChild(o); });
+    if (DataGen.SIZES.indexOf(cfg.size) < 0) { var o = document.createElement('option'); o.value = cfg.size; o.textContent = fmt(cfg.size) + ' nodes'; o.selected = true; sizeSel.appendChild(o); }
+    $('#load').value = cfg.load;
+    sizeSel.addEventListener('change', function () { reload({ size: sizeSel.value }); });
+    $('#load').addEventListener('change', function (ev) { reload({ load: ev.target.value }); });
+  }
+  var srcSel = $('#srcSel');   // prototype page only: choose between the labelled synthetic data and the real read API
+  if (srcSel && !CFG) { srcSel.value = IS_HTTP ? 'http' : 'synthetic'; srcSel.addEventListener('change', function () { reload({ source: srcSel.value }); }); }
 
   (function legend() {
     var h = '';
     RELS.forEach(function (r) { h += '<div class="row">' + swatch(r) + '<span><strong>' + r + '</strong><br><small>' + REL[r].desc + '</small></span></div>'; });
     TYPES.forEach(function (t) { h += '<div class="row">' + typeSwatch(t) + '<span><strong>' + t + '</strong> <small>node</small></span></div>'; });
-    h += '<div class="row"><span><small>Branch-style (elbow) lines are used only by technical_ancestry and product_succession. Relationships that are not verified are never shown in public mode. Zoomed out, nodes are grouped into company clusters; dashed grey bubbles are groups of companies that split when you zoom in.</small></span></div>';
+    var br = RELS.filter(function (r) { return REL[r].branch; });
+    h += '<div class="row"><span><small>Branch-style (elbow) lines are used only by ' + br.join(' and ') + '. Relationships that are not verified are never shown in public mode.' + (cfg.cluster ? ' Zoomed out, nodes are grouped into company clusters; dashed grey bubbles are groups of companies that split when you zoom in.' : '') + '</small></span></div>';
     $('#legend').innerHTML = h;
   })();
   if (window.innerWidth < 700) $('#controls').open = false;
@@ -973,7 +1193,9 @@
   (dm.addEventListener ? dm.addEventListener.bind(dm, 'change') : dm.addListener.bind(dm))(function () { readTheme(); markDirty(); });
 
   function refreshStatus() {
-    var t = fmt(N) + ' nodes, ' + fmt(edges.length) + (cfg.mode === 'public' ? ' verified' : '') + ' relationships (' + fmt(loadedList.length) + ' nodes loaded, ' + cfg.load + (cfg.autoProgressive ? ', automatic on a small screen' : '') + '). SYNTHETIC TEST DATA. View: ' + (perf.renderMode || '') + '.' + (limitHit ? ' Load limit reached.' : '');
+    var t = IS_HTTP
+      ? fmt(N) + ' verified entities listed' + (ing.truncated ? ' (first ' + fmt(N) + ' of ' + fmt(ing.total) + ', the rest is not loaded)' : '') + ', ' + fmt(edges.length) + ' verified relationships loaded so far (' + fmt(loadedList.length) + ' entities drawn). Select an entity to load its relationships. View: ' + (perf.renderMode || '') + '.' + (limitHit ? ' Load limit reached.' : '')
+      : fmt(N) + ' nodes, ' + fmt(edges.length) + (cfg.mode === 'public' ? ' verified' : '') + ' relationships (' + fmt(loadedList.length) + ' nodes loaded, ' + cfg.load + (cfg.autoProgressive ? ', automatic on a small screen' : '') + '). SYNTHETIC TEST DATA. View: ' + (perf.renderMode || '') + '.' + (limitHit ? ' Load limit reached.' : '');
     cv.setAttribute('data-status', t);
     if (!$('#progress').textContent || /nodes, .* relationships \(/.test($('#progress').textContent)) $('#progress').textContent = t;
   }
@@ -1046,13 +1268,14 @@
     source: source,
     setTransformWorld: function (k, wx, wy) { zoomSel.call(zoomB.transform, viewTransform(k, wx, wy)); },
     fit: function () { fit(false); },
-    settledFrameCost: function () { return new Promise(function (res) { clearTimeout(settleTimer); interacting = false; layoutBusy = false; updateLowQ(); var t = performance.now(); markDirty(); requestAnimationFrame(function () { requestAnimationFrame(function () { res({ ms: performance.now() - t, edgesDrawn: perf.edgesDrawn, edgesVisible: perf.edgesVisible, mode: perf.renderMode }); }); }); }); }, checksum: function () { return source.checksum(); }, meta: { size: N, companies: NC }
+    settledFrameCost: function () { return new Promise(function (res) { clearTimeout(settleTimer); interacting = false; layoutBusy = false; updateLowQ(); var t = performance.now(); markDirty(); requestAnimationFrame(function () { requestAnimationFrame(function () { res({ ms: performance.now() - t, edgesDrawn: perf.edgesDrawn, edgesVisible: perf.edgesVisible, mode: perf.renderMode }); }); }); }); }, checksum: function () { return source.checksum ? source.checksum() : null; }, isHttp: IS_HTTP, expandHttp: function (i, more) { expandHttp(i, !!more); }, ingestTotal: { total: ing.total, truncated: ing.truncated }, meta: { size: N, companies: NC }
   };
   $('#progress').textContent = '';
   startWorker(); rebuildLists();
   if (hashView) { var hk = Math.max(0.01, Math.min(16, +H0.k)); applyTransform(viewTransform(hk, +H0.x, +H0.y), false); }
   else fit(false);
-  if (H0.sel && ing.bySlug[H0.sel] !== undefined) select(ing.bySlug[H0.sel], {});
+  var wantSel = CFG && CFG.slug && ing.bySlug[CFG.slug] !== undefined ? CFG.slug : H0.sel;
+  if (wantSel && ing.bySlug[wantSel] !== undefined) select(ing.bySlug[wantSel], {});
   if (view === 'table') setView('table'); else { cv.hidden = false; }
   if (P.get('view') === 'table') { $('#vTable').setAttribute('aria-pressed', 'true'); $('#vGraph').setAttribute('aria-pressed', 'false'); }
   refreshTable(); refreshStatus(); markDirty();
