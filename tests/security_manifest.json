@@ -12,6 +12,7 @@
   "uni_core.php": "lib",
   "scripts/uni_import.php": "cli",
   "universe-api.php": "page",
+  "universe.php": "page",
   "universe-heatmap.php": "page",
   "universe-lineage.php": "page",
   "universe-arena.php": "page",

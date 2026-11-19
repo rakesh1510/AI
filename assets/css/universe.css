@@ -141,3 +141,13 @@ a.uhCell:hover{box-shadow:0 0 0 2px var(--brand)}
 
 @media (max-width:640px){.upDl{grid-template-columns:1fr}.uaEvidence,.uaEditorial,.uaCommunity{padding-left:12px}.ulKind{display:block}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* AI Universe hub (universe.php) */
+.uhubGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px;list-style:none;margin:18px 0;padding:0}
+.uhubCard{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.uhubCard h2{margin:0;font-size:1.25rem}
+.uhubCard h2 a{color:var(--text);text-decoration:none;display:block}
+.uhubCard h2 a:hover,.uhubCard h2 a:focus-visible{color:var(--brand);text-decoration:underline}
+.uhubCard p{margin:0;color:var(--muted)}
+.uhubCard .uhubStatus{margin-top:auto;padding-top:8px;font-weight:700;color:var(--muted)}
+.uhubCard .uhubStatus--ok{color:var(--text)}

@@ -160,6 +160,7 @@ function up_all_releases(PDO $pdo, ?string $slug = null, int $cap = 500): array 
 function up_sitemap_entries(): array {
   $res = up_guard(function (PDO $pdo) {
     $e = [];
+    if (uni_public_entities($pdo, [], 1, 1)['total'] > 0 || uni_public_events($pdo, [], 1, 1)['total'] > 0) $e[] = ['/universe.php', 'weekly', '0.6'];
     $ev = uni_public_events($pdo, [], 1, 1);
     if ($ev['total'] > 0) $e[] = ['/universe-heatmap.php', 'weekly', '0.6'];
     $rels = up_all_releases($pdo, null, 500); $seen = [];

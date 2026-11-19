@@ -40,6 +40,14 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <a href="/leaderboard.php">Leaderboard</a>
       </div>
       <div class="footerCol">
+        <h3>AI Universe</h3>
+        <a href="/universe.php">AI Universe overview</a>
+        <a href="/universe-graph.php">Graph</a>
+        <a href="/universe-heatmap.php">Activity heatmap</a>
+        <a href="/universe-lineage.php">Release lineage</a>
+        <a href="/universe-arena.php">Battle Arena</a>
+      </div>
+      <div class="footerCol">
         <h3>Use cases</h3>
         <a href="/ai-use-case.php?slug=write-blog-posts">AI tools for Writing &amp; content</a>
         <a href="/ai-use-case.php?slug=design-graphics">AI tools for Image &amp; design</a>

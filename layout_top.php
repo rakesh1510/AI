@@ -51,8 +51,16 @@ $__ui_ver = @filemtime(__DIR__ . '/assets/css/ui.css') ?: '1';
 $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 $__built_css = is_file(__DIR__ . '/assets/css/site.min.css') ? (string)@filemtime(__DIR__ . '/assets/css/site.min.css') : '';   // built by scripts/build_assets.php
 $__hide_header_search = !empty($hide_header_search);
-$__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases']];
+$__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases'], ['/universe.php', 'AI Universe']];
 $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
+$__uniExperiences = [['/universe-graph.php', 'Graph'], ['/universe-heatmap.php', 'Heatmap'], ['/universe-lineage.php', 'Lineage'], ['/universe-arena.php', 'Battle Arena']];
+$__curBase = basename($__script);
+$__inUniverse = $__curBase === 'universe.php' || in_array('/' . $__curBase, array_column($__uniExperiences, 0), true);
+$__cur = function (string $href) use ($__curBase, $__inUniverse): string {
+  $p = '/' . $__curBase;
+  if ($p === $href) return ' aria-current="page"';
+  return ($href === '/universe.php' && $__inUniverse) ? ' aria-current="true"' : '';
+};
 ?>
 <!doctype html>
 <html lang="<?= h(locale_split_path((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH))[0]) ?>" dir="<?= h(locale_dir(locale_split_path((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH))[0])) ?>" class="no-js"<?= analytics_enabled() ? ' data-events="1"' : '' ?><?= (isset($theme_lock) && $theme_lock === 'light') ? ' data-theme="light" data-theme-lock="light"' : '' ?>>
@@ -109,11 +117,12 @@ $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recomme
     </a>
 
     <nav class="primaryNav" id="primaryNav" aria-label="Main navigation">
-      <?php foreach ($__nav as [$href, $label]): ?><a href="<?= h($href) ?>"><?= h($label) ?></a><?php endforeach; ?>
+      <?php foreach ($__nav as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
       <div class="moreMenu">
         <button class="moreMenu__btn" type="button" aria-haspopup="true" aria-expanded="false">More <?= ui_icon('arrow', 'caret') ?></button>
         <div class="moreMenu__panel">
-          <?php foreach ($__navMore as [$href, $label]): ?><a href="<?= h($href) ?>"><?= h($label) ?></a><?php endforeach; ?>
+          <?php foreach ($__uniExperiences as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>>AI Universe: <?= h($label) ?></a><?php endforeach; ?>
+          <?php foreach ($__navMore as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
         </div>
       </div>
     </nav>
@@ -129,3 +138,12 @@ $__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recomme
   </div>
 </header>
 <main class="<?= h($main_class ?? 'wrap') ?>" id="main">
+<?php if ($__inUniverse): ?>
+<nav class="uniSubnav" aria-label="AI Universe sections">
+  <a class="uniSubnav__home" href="/universe.php"<?= $__cur('/universe.php') ?>>AI Universe</a>
+  <ul>
+    <?php foreach ($__uniExperiences as [$href, $label]): ?><li><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+</nav>
+<?php endif; ?>

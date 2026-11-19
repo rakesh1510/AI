@@ -2,7 +2,7 @@
     "built": "2026-11-19",
     "sources": {
         "assets/css/style.css": "852c95249e04d540de8e513978c6422e3afaff24",
-        "assets/css/ui.css": "f27df4243d5b134e0b005c659ffe81c95841324b",
+        "assets/css/ui.css": "22df8a557fedc1716dd6a7455bf5ec242965552d",
         "assets/js/app.js": "5e3be3d0c4013a025d1ea94ff20f600ad9745312",
         "assets/js/interactions.js": "55e52b28e92d145bbe17384876073d63409668c3",
         "prototypes/universe-graph/data-source.js": "17dd525005e5c43c5efe9ff32a5ff37b548a1961",
