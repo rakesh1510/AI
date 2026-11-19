@@ -17,6 +17,7 @@ Disallow: /vote_debug.php
 Disallow: /admin-leads.php
 Disallow: /admin-editorial.php
 Disallow: /crm.php
+Disallow: /admin-center.php
 Disallow: /project-inquiry.php
 Disallow: /partner-apply.php
 Disallow: /security.php

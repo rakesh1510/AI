@@ -198,6 +198,12 @@ jobs:
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: node tests/browser_phase6_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p6
 
+      - name: Phase 8A Control Center (authorization matrix, CSRF, no invented figures, audit, axe and responsive browser checks; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: php tests/phase8a_admin_center_test.php
+
       - name: Phase 7 browser tests (heatmap, lineage, arena and editor pages incl. axe, keyboard, 360px, dark, no-JS; own scratch database)
         env:
           NODE_PATH: /tmp/pw/node_modules

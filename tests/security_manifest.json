@@ -27,6 +27,8 @@
   "crm_intake.php": "lib",
   "crm_views.php": "lib",
   "crm.php": "crm_admin",
+  "admin-center.php": "crm_admin",
+  "adm_core.php": "lib",
   "universe-editor.php": "crm_admin",
   "services.php": "page",
   "partners.php": "page",
