@@ -235,6 +235,23 @@ foreach ([[$E, 'empty ledger'], [$N, 'no uni_* tables']] as [$S, $label]) {
 }
 $r = http($N, 'GET', '/universe-lineage.php?entity=modelx'); ok(!preg_match('/Fatal error|Warning:|Notice:|PDOException|SQLSTATE/', $r['body']), 'no database error text on a missing schema');
 
+section('AI Universe hub (universe.php): honest status, navigation, sitemap rules');
+$r = http($A, 'GET', '/universe.php'); $m = meta($r['body']); $txt = main_text($r['body']);
+ok($r['code'] === 200 && indexable($m) && $m['h1'] === 1 && $m['canonical'] === 'https://aihubpedia.com/universe.php' && $m['canon_n'] === 1, 'hub with data: 200, one h1, indexable, self canonical');
+foreach (['/universe-graph.php', '/universe-heatmap.php', '/universe-lineage.php', '/universe-arena.php'] as $u) ok(strpos($r['body'], 'href="' . $u . '"') !== false, "hub links to $u");
+ok(preg_match('/\d+ verified entit/', $txt) === 1 && preg_match('/\d+ verified events?/', $txt) === 1 && preg_match('/\d+ verified releases?/', $txt) === 1, 'hub shows verified counts taken from the ledger');
+ok(strpos($txt, 'leak') === false && stripos($txt, 'proposed') === false, 'hub shows no unverified text');
+ok(substr_count($r['body'], 'aria-current="page"') >= 1 && strpos($r['body'], 'class="primaryNav"') !== false && strpos($r['body'], 'href="/universe.php" aria-current="page"') !== false, 'hub marks itself as the current page in the navigation');
+$r2 = http($A, 'GET', '/universe-heatmap.php');
+ok(strpos($r2['body'], 'class="uniSubnav"') !== false && strpos($r2['body'], 'href="/universe-heatmap.php" aria-current="page"') !== false && strpos($r2['body'], 'href="/universe.php" aria-current="true"') !== false, 'an experience page marks itself and its section in the navigation');
+ok(strpos($sm, '<loc>https://aihubpedia.com/universe.php</loc>') !== false, 'sitemap lists the hub when verified data exists');
+foreach ([[$E, 'empty ledger'], [$N, 'no uni_* tables']] as [$S, $label]) {
+  $r = http($S, 'GET', '/universe.php'); $m = meta($r['body']);
+  ok($r['code'] === 200 && !indexable($m) && $m['h1'] === 1 && substr_count(main_text($r['body']), 'No verified data yet') >= 4 && !preg_match('/Fatal error|Warning:|Notice:|PDOException|SQLSTATE/', $r['body']), "$label: hub says 'No verified data yet' for each experience, noindex, no error");
+}
+ok(strpos($smE, '/universe.php') === false && strpos($smN['body'], '/universe.php') === false, 'sitemap lists the hub neither on an empty ledger nor without the tables');
+foreach (['POST', 'DELETE'] as $mth) ok(http($A, $mth, '/universe.php')['code'] === 405, "hub: $mth is 405");
+
 section('rate limit and headers');
 $R = startServer($root, $names[0], $dbHost, $dbUser, $dbPass, ['AIHUB_UNIVERSE_PAGE_RATE_LIMIT' => '30']); $codes = [];
 for ($i = 0; $i < 40; $i++) $codes[] = http($R, 'GET', '/universe-arena.php')['code'];
