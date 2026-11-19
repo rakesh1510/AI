@@ -366,7 +366,7 @@
     }
   }
   function nodeR(t) { return BASER[t] * Math.max(0.45, Math.min(2.2, Math.sqrt(tr.k))); }
-  function edgeText(e) { return e.rel + ' | ' + e.src + (e.date ? (IS_HTTP ? ' | retrieved ' : ' | verified ') + e.date : '') + (e.v ? '' : ' | UNVERIFIED'); }
+  function edgeText(e) { return e.rel + ' | ' + e.src + (e.date ? (IS_HTTP ? ' | retrieved ' : ' | verified ') + String(e.date).slice(0, 10) : '') + (e.v ? '' : ' | UNVERIFIED'); }
   function arrow(x, y, ang, s) {
     ctx.moveTo(x, y); ctx.lineTo(x - s * Math.cos(ang - 0.45), y - s * Math.sin(ang - 0.45)); ctx.lineTo(x - s * Math.cos(ang + 0.45), y - s * Math.sin(ang + 0.45)); ctx.closePath();
   }
@@ -856,11 +856,11 @@
   function loadDetail(id) {
     var n = nodes[id]; if (n.detail || n.detailCtl) return;
     n.detailCtl = lifeCtl ? new AbortController() : null;
-    source.entity(n.slug, { signal: n.detailCtl && n.detailCtl.signal }).then(function (d) { n.detail = d; n.detailCtl = null; repaintSel(id); })
+    source.entity(n.id, { signal: n.detailCtl && n.detailCtl.signal }).then(function (d) { n.detail = d; n.detailCtl = null; repaintSel(id); })
       .catch(function (err) { n.detailCtl = null; if (err && err.name === 'AbortError') return; n.detail = { error: errText(err) }; repaintSel(id); });
   }
   function expandHttp(id, more) {
-    var n = nodes[id]; if (!n || !n.slug) return;
+    var n = nodes[id]; if (!n || !n.id) return;
     if (wIdx[id] < 0) loadIds([id], -1);
     loadDetail(id);
     var net = n.net || (n.net = { state: 'idle', total: null, next: 0, dropped: 0, err: '', ctl: null });
@@ -869,7 +869,7 @@
     if (net.state === 'done') return;
     var a0 = performance.now();
     net.state = 'loading'; net.ctl = lifeCtl ? new AbortController() : null; repaintSel(id);
-    source.neighbourhood(n.ref, { slug: n.slug, offset: net.next, limit: LIM.edgePage, signal: net.ctl && net.ctl.signal }).then(function (r) {
+    source.neighbourhood(n.ref, { slug: n.id, offset: net.next, limit: LIM.edgePage, signal: net.ctl && net.ctl.signal }).then(function (r) {
       net.ctl = null; net.total = r.total_edges; if (r.next_offset != null) net.next = r.next_offset;
       var res = addEdges(r.edges); net.dropped += res.dropped; net.err = '';
       var ids = [], seen = {};
@@ -951,7 +951,7 @@
   }
   function renderPanel(opts) {
     var panel = $('#panel'), lay = $('#layout');
-    if (sel < 0) { panel.hidden = true; lay.classList.remove('has-sel'); $('#skipPanel').hidden = true; if (lastFocus && opts && opts.fromClose) { lastFocus.focus(); } return; }
+    if (sel < 0) { panel.hidden = true; lay.classList.remove('has-sel'); $('#skipPanel').hidden = true; if (opts && opts.fromClose) { if (lastFocus && lastFocus.isConnected) lastFocus.focus(); if (!document.activeElement || document.activeElement === document.body) { if (view === 'graph') $('#cv').focus(); else $('#tcap').focus(); } } return; }
     var n = nodes[sel], a = adj[sel], dl = $('#pdl'), ul = $('#edges'), net = n.net, pm = $('#pmore'), pnet = $('#pnet'), hadFocus = document.activeElement === pm, q;
     $('#pname').textContent = n.name; clear(dl); clear(ul);
     dlRow(dl, 'Type', [typeSwatchNode(n.type), n.type]);

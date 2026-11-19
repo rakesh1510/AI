@@ -119,6 +119,9 @@ jobs:
       - name: Phase 7 public universe pages over HTTP (heatmap, lineage, arena - verified-only, empty states, escaping, hostile input, sitemap rules)
         run: php tests/phase7_pages_test.php
 
+      - name: Phase 7 graph page tests (universe-graph.php - verified-only data, empty and unavailable states, escaping, hostile parameters, built assets, sitemap)
+        run: php tests/phase7_graph_page_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
@@ -197,6 +200,12 @@ jobs:
           NODE_PATH: /tmp/pw/node_modules
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: node tests/axe_audit.js http://127.0.0.1:8002 --strict
+
+      - name: Phase 7 graph page browser test (real HTTP data source, expand and load more, review mode locked, error and empty states, keyboard, no-JS, axe light and dark desktop and 360px)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_CORE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node prototypes/universe-graph/http-source-test.js --out=/tmp/http-source-results.json
 
       - name: Business report runs against the test database
         run: php scripts/business_report.php --days=1 > /dev/null

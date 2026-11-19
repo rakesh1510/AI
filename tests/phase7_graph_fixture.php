@@ -75,7 +75,7 @@ $tryPort = function (): int { for ($p = 8300; $p <= 8320; $p++) { $s = @stream_s
 $port = $tryPort();
 $mkdir = function (string $p) use (&$tmp): string { $d = sys_get_temp_dir() . '/' . $p . '_' . getmypid(); @mkdir($d, 0700); $tmp[] = $d; return $d; };
 $env = ['AIHUB_DB_HOST' => $dbHost, 'AIHUB_DB_NAME' => $dbName, 'AIHUB_DB_USER' => $user, 'AIHUB_DB_PASS' => $pw, 'AIHUB_FORM_SECRET' => 'fixture-secret-not-for-production',
-  'AIHUB_SECURITY_LOG' => $mkdir('p7gj_log') . '/sec.log', 'AIHUB_RATE_DIR' => $mkdir('p7gj_rate'), 'AIHUB_UNIVERSE_RATE_LIMIT' => '10000'];
+  'PHP_CLI_SERVER_WORKERS' => '6', 'AIHUB_SECURITY_LOG' => $mkdir('p7gj_log') . '/sec.log', 'AIHUB_RATE_DIR' => $mkdir('p7gj_rate'), 'AIHUB_UNIVERSE_RATE_LIMIT' => '10000'];
 $server = proc_open(['php', '-S', "127.0.0.1:$port", '-t', $root, $root . '/tests/router.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $root, $env + getenv());
 for ($i = 0; $i < 60; $i++) { usleep(100000); $c = @fsockopen('127.0.0.1', $port, $en, $es, 0.2); if ($c) { fclose($c); break; } }
 $total = (int)$pdo->query("SELECT COUNT(*) FROM uni_entity WHERE state = 'verified' AND is_current = 1")->fetchColumn();
