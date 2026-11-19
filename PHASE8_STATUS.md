@@ -15,3 +15,7 @@ Branch `feat/aihubpedia-admin-center-phase8` (from the Phase 7 tip `3bee968`). S
 ## Next (needs your approval)
 - 8B Analytics: needs the production `AIHUB_ANALYTICS` status; additive rollup table and `tool_clicks` privacy fix (migration approval required).
 - Then 8D Finance, 8E Advertising/CRM, 8F Operations, 8C Tools, 8G Performance (see the audit order).
+
+## Phase 8B: analytics (PLAN ONLY, awaiting approval; branch `feat/aihubpedia-analytics-phase8b` from 818d93c; no code, no migration)
+Findings: `page_views` (cookie-free, no raw IP, daily rotating hash, bot flag, DNT/GPC get no hash, country only from a CDN header else XX, no device, no session id, no automatic retention); `events` (outbound_click, lead_submit, newsletter_signup/confirmed, wizard_complete; rotating hash, no bot flag); `tool_clicks` (code writes persistent-cookie `visitor_id` + `ip_hash`; repo schema files still show raw `ip_address`/`user_agent`: live columns unconfirmed; lifetime popularity counter, separate from events). No member registration feature exists.
+Plan: additive rollup tables `adm_traffic_daily`, `adm_traffic_dim_daily`, `adm_tool_daily`, `adm_event_daily`, `adm_rollup_run` (rollback = drop); CLI `scripts/adm_rollup.php` (incremental, cron); Control Center `?m=analytics` (presets + custom range, SVG trends, server-side sortable tables, CSV export with formula-injection guard, daily business summary). Metric definitions and optional privacy changes: see the plan message; privacy changes to existing tracking need separate approval.
