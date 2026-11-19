@@ -213,9 +213,9 @@ require __DIR__ . '/layout_top.php';
     <?php endif; ?>
 
     <form method="get" action="/universe-graph.php" class="ugFilter" role="search" aria-label="Filter verified entities">
-      <label for="ug-q">Name contains</label> <input id="ug-q" name="q" type="search" maxlength="80" value="<?= h($fqQ) ?>">
-      <label for="ug-type">Type</label> <select id="ug-type" name="type"><option value="">All types</option><?php foreach (['company' => 'Company', 'product' => 'Product', 'model' => 'Model', 'version' => 'Version'] as $tv => $tl): ?><option value="<?= h($tv) ?>"<?= $fqT === $tv ? ' selected' : '' ?>><?= h($tl) ?></option><?php endforeach; ?></select>
-      <button type="submit">Filter</button><?php if ($fqQ !== '' || $fqT !== ''): ?> <a href="<?= h(ug_url()) ?>">Clear filter</a><?php endif; ?>
+      <label for="ug-q">Name contains</label> <input id="ug-q" name="q" type="search" maxlength="80" style="min-height:44px;min-width:44px;padding:.4rem .8rem;box-sizing:border-box" value="<?= h($fqQ) ?>">
+      <label for="ug-type">Type</label> <select id="ug-type" name="type" style="min-height:44px;min-width:44px;padding:.4rem .8rem;box-sizing:border-box"><option value="">All types</option><?php foreach (['company' => 'Company', 'product' => 'Product', 'model' => 'Model', 'version' => 'Version'] as $tv => $tl): ?><option value="<?= h($tv) ?>"<?= $fqT === $tv ? ' selected' : '' ?>><?= h($tl) ?></option><?php endforeach; ?></select>
+      <button type="submit" style="min-height:44px;min-width:44px;padding:.4rem .8rem;box-sizing:border-box">Filter</button><?php if ($fqQ !== '' || $fqT !== ''): ?> <a href="<?= h(ug_url()) ?>" style="display:inline-block;min-height:44px;line-height:44px;padding:0 .5rem">Clear filter</a><?php endif; ?>
     </form>
     <?php if (!$list['items'] && ($fqQ !== '' || $fqT !== '')): ?><p role="status">No verified entities match this filter.</p><?php endif; ?>
     <?php if ($list['items']): ?>

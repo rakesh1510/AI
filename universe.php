@@ -62,7 +62,7 @@ else {
       [$uhubXs, $x] = up_guard('uhub_extras');
       if ($uhubXs === 'ok' && $x) {
         $o .= '<section class="uhubOverview" aria-labelledby="uhub-browse"><h2 id="uhub-browse">Browse verified entities</h2>'
-          . '<form method="get" action="/universe-graph.php" role="search" aria-label="Search verified entities"><label for="uhub-q">Name contains</label> <input id="uhub-q" name="q" type="search" maxlength="80"> <button type="submit">Search</button></form><ul class="uhubTypes">';
+          . '<form method="get" action="/universe-graph.php" role="search" aria-label="Search verified entities"><label for="uhub-q">Name contains</label> <input id="uhub-q" name="q" type="search" maxlength="80" style="min-height:44px;min-width:44px;padding:.4rem .8rem;box-sizing:border-box"> <button type="submit" style="min-height:44px;min-width:44px;padding:.4rem .8rem;box-sizing:border-box">Search</button></form><ul class="uhubTypes">';
         foreach ($x['types'] as $t => [$l, $n]) if ($n > 0) $o .= '<li><a href="' . up_h('/universe-graph.php?type=' . $t) . '">' . up_h($l) . '</a> (' . number_format($n) . ')</li>';
         $o .= '</ul>';
         if ($x['connected']) { $o .= '<h3>Most connected verified entities</h3><ul class="uhubList">'; foreach ($x['connected'] as $e) $o .= '<li><a href="' . up_h('/universe-graph.php?slug=' . rawurlencode((string)$e['slug'])) . '">' . up_h($e['name']) . '</a> (' . up_h($e['entity_type']) . ', ' . (int)$e['n'] . ' verified ' . ((int)$e['n'] === 1 ? 'relationship' : 'relationships') . ')</li>'; $o .= '</ul>'; }
