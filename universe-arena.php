@@ -24,7 +24,7 @@ function ua_model(PDO $pdo, array $slugs, string $note): array {
     $int = uni_public_edges($pdo, ['entity_slug' => $s, 'edge_type' => 'integrates_with'], 1, 20);
     $extra[$s] = ['latest' => $rel['items'][0] ?? null, 'releases' => $rel['total'], 'developers' => array_values(array_filter($dev['items'], fn($ed) => $ed['from_slug'] === $s)), 'integrations' => $int['items'], 'integrations_total' => $int['total']];
   }
-  return ['mode' => 'compare', 'compare' => $c['entities'], 'extra' => $extra] + $m;
+  return ['mode' => 'compare', 'compare' => $c['entities'], 'fact_matrix' => $c['fact_matrix'] ?? [], 'extra' => $extra] + $m;
 }
 
 function ua_names(array $m): array { return array_map(fn($e) => $e['entity']['name'], $m['compare']); }
