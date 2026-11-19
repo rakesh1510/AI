@@ -7,7 +7,7 @@
         "assets/js/interactions.js": "55e52b28e92d145bbe17384876073d63409668c3",
         "prototypes/universe-graph/data-source.js": "c93919bf744b870f9476af51ba49598d6bbe401b",
         "prototypes/universe-graph/graph.css": "7637c182260c6870f1be2966d1bcddc6fdb1d244",
-        "prototypes/universe-graph/graph.js": "e3297faaec354057630e4acff8038a88224fa85d",
+        "prototypes/universe-graph/graph.js": "1eb69f367a8fb6eb819dfda44dd393eb8a090d26",
         "prototypes/universe-graph/layout-worker.js": "607ce92fe355d33244e8a564a6499539b810dd51",
         "prototypes/universe-graph/vendor/d3-color.LICENSE": "691d0df18abb5d5abbc5fb58891c27cb294fdf92",
         "prototypes/universe-graph/vendor/d3-color.min.js": "e56c0920a9adf1ac7229709d1cefc5cfccf34511",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-18T17:33:57.280Z",
+  "generatedAt": "2026-11-19T13:08:55.371Z",
   "chromium": "153.0.8010.12",
   "axeCore": "4.10.2",
   "runs": [
@@ -32,21 +32,7 @@
       "profile": "desktop",
       "state": "search-results-open",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 5,
-          "targets": [
-            ".chk:nth-child(6)",
-            "#zIn",
-            "#zOut",
-            "#zFit"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 45
     },
     {
@@ -54,18 +40,7 @@
       "profile": "desktop",
       "state": "search-no-matches",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 1,
-          "targets": [
-            ".chk:nth-child(6)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 42
     },
     {
@@ -105,7 +80,20 @@
       "profile": "mobile360",
       "state": "graph-selected-panel-open",
       "violations": [],
-      "incomplete": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 3,
+          "targets": [
+            "#zPick",
+            "#zNext",
+            "#progress"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
       "passes": 43
     },
     {
@@ -121,21 +109,7 @@
       "profile": "mobile360",
       "state": "search-results-open",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 7,
-          "targets": [
-            ".chk:nth-child(2)",
-            ".chk:nth-child(3)",
-            ".chk:nth-child(4)",
-            ".chk:nth-child(5)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 46
     },
     {
@@ -143,19 +117,7 @@
       "profile": "mobile360",
       "state": "search-no-matches",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 2,
-          "targets": [
-            ".chk:nth-child(2)",
-            ".chk:nth-child(3)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 43
     },
     {
@@ -171,7 +133,21 @@
       "profile": "mobile360",
       "state": "table-selected",
       "violations": [],
-      "incomplete": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 27,
+          "targets": [
+            "#pageinfo",
+            "#next",
+            "#tcap",
+            "th[scope=\"col\"]:nth-child(1)"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
       "passes": 47
     },
     {
@@ -211,21 +187,7 @@
       "profile": "desktop",
       "state": "search-results-open",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 5,
-          "targets": [
-            ".chk:nth-child(6)",
-            "#zIn",
-            "#zOut",
-            "#zFit"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 45
     },
     {
@@ -233,18 +195,7 @@
       "profile": "desktop",
       "state": "search-no-matches",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 1,
-          "targets": [
-            ".chk:nth-child(6)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 42
     },
     {
@@ -284,7 +235,20 @@
       "profile": "mobile360",
       "state": "graph-selected-panel-open",
       "violations": [],
-      "incomplete": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 3,
+          "targets": [
+            "#zPick",
+            "#zNext",
+            "#progress"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
       "passes": 43
     },
     {
@@ -300,21 +264,7 @@
       "profile": "mobile360",
       "state": "search-results-open",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 7,
-          "targets": [
-            ".chk:nth-child(2)",
-            ".chk:nth-child(3)",
-            ".chk:nth-child(4)",
-            ".chk:nth-child(5)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 46
     },
     {
@@ -322,19 +272,7 @@
       "profile": "mobile360",
       "state": "search-no-matches",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "help": "Elements must meet minimum color contrast ratio thresholds",
-          "nodes": 2,
-          "targets": [
-            ".chk:nth-child(2)",
-            ".chk:nth-child(3)"
-          ],
-          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
-        }
-      ],
+      "incomplete": [],
       "passes": 43
     },
     {
@@ -350,7 +288,21 @@
       "profile": "mobile360",
       "state": "table-selected",
       "violations": [],
-      "incomplete": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 27,
+          "targets": [
+            "#pageinfo",
+            "#next",
+            "#tcap",
+            "th[scope=\"col\"]:nth-child(1)"
+          ],
+          "summary": "Fix any of the following:\n  Element's background color could not be determined because it is overlapped by another element"
+        }
+      ],
       "passes": 47
     },
     {

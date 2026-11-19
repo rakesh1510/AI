@@ -51,7 +51,7 @@
   {
    "name": "selecting an entity requests only its own neighbourhood page (limit 100) and its detail",
    "ok": true,
-   "detail": "7.0.0.1:8303/universe-api.php?r=entities&page=1&per_page=100 7.0.0.1:8303/universe-api.php?r=entities&page=2&per_page=100 http://127.0.0.1:8303/universe-api.php?r=entity&slug=acme 1:8303/universe-api.php?r=graph&slug=acme&limit=100&offset=0"
+   "detail": "7.0.0.1:8300/universe-api.php?r=entities&page=1&per_page=100 7.0.0.1:8300/universe-api.php?r=entities&page=2&per_page=100 http://127.0.0.1:8300/universe-api.php?r=entity&slug=acme 1:8300/universe-api.php?r=graph&slug=acme&limit=100&offset=0"
   },
   {
    "name": "first neighbourhood page is paged: 100 of 110",
@@ -105,7 +105,7 @@
   {
    "name": "selection is mirrored in a shareable ?slug= URL",
    "ok": true,
-   "detail": "http://127.0.0.1:8303/universe-graph.php?slug=acme#sel=acme&k=1.600&x=-293.1&y=165.5"
+   "detail": "http://127.0.0.1:8300/universe-graph.php?slug=acme#sel=acme&k=1.600&x=-293.1&y=165.5"
   },
   {
    "name": "following a relationship selects the neighbour, loads its neighbourhood and updates the URL",

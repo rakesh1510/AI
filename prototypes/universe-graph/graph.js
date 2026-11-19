@@ -182,15 +182,12 @@
     var thc = $('#thCo'); if (thc) thc.textContent = 'Developed by (once loaded)';
     var kn = $('#cv'); if (kn) kn.setAttribute('aria-label', 'Interactive graph of verified AI entities and their sourced relationships');
   }
-  /* The layout worker is created before the data arrives, so its script is fetched and the d3 modules are parsed while the main thread builds the data. */
-  var earlyWorker = null;
-  try { earlyWorker = new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : '')); } catch (e) { earlyWorker = null; }
   function startLoad() {
     $('#progress').textContent = 'Loading data...'; hideState();
     ['#cv', '#zoomctl', '#hud'].forEach(function (q) { var x = $(q); if (x && view === 'graph') x.hidden = false; });
     UniverseData.loadAll(source, { pageSize: IS_HTTP ? 100 : 10000, maxNodes: IS_HTTP ? 2000 : 0, signal: lifeCtl && lifeCtl.signal }).then(function (canon) {
       perf.dataGenMs = performance.now() - t0;
-      if (!canon.nodes.length) { if (earlyWorker) { earlyWorker.terminate(); earlyWorker = null; } showState('empty', 'No verified data yet. Entities and relationships appear here only after an editor has entered them with a source and a different person has verified them.'); return; }
+      if (!canon.nodes.length) { showState('empty', 'No verified data yet. Entities and relationships appear here only after an editor has entered them with a source and a different person has verified them.'); return; }
       booted = true; boot(ingest(canon));
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return;
@@ -255,7 +252,7 @@
   }
 
   function startWorker() {
-    worker = earlyWorker || new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : '')); earlyWorker = null;   // next to this script (the production page serves it from /assets/universe/)
+    worker = new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : ''));   // next to this script (the production page serves it from /assets/universe/)
     worker.onmessage = function (ev) {
       var m = ev.data; if (m.type !== 'pos') return;
       var p = m.pos, n = Math.min(m.n, loadedList.length);

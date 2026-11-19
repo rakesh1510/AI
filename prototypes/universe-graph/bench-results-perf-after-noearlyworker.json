@@ -1,0 +1,548 @@
+{
+  "generatedAt": "2026-11-19T13:07:36.693Z",
+  "chromium": "153.0.8010.12",
+  "quick": true,
+  "thresholds": {
+    "desktop": 33,
+    "mobile": 50,
+    "hit": 16
+  },
+  "settleCapMs": 20000,
+  "note": "All data SYNTHETIC. Frame time = requestAnimationFrame interval during a scripted 390-frame zoom/pan; first 5 frames dropped.",
+  "calibration": {
+    "mobile": {
+      "mainMs": 140.80000000004657,
+      "workerMs": 55.20000000006985
+    }
+  },
+  "runs": [
+    {
+      "profile": "mobile",
+      "size": 5000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 5000,
+      "edges": 9440,
+      "loadedNodesAtSettle": 5000,
+      "dataGenMs": 54.7,
+      "firstPaintMs": 297.3,
+      "fcpMs": 84,
+      "layoutSettleMs": 3906,
+      "layoutTicks": 220,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 15.4,
+      "heapAfterSettleMB": 10.48,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.71,
+        "p95Ms": 16.8,
+        "maxMs": 33.3,
+        "drawAvgMs": 1.91,
+        "drawP95Ms": 4.3,
+        "byPhaseP95": {
+          "pan-fit": 16.7,
+          "zoom-in": 16.7,
+          "pan-detail": 16.8,
+          "zoom-out": 16.8
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 143,
+            "avgMs": 16.67,
+            "p95Ms": 16.7
+          },
+          "full-detail": {
+            "frames": 241,
+            "avgMs": 16.74,
+            "p95Ms": 16.8
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 18.599999999976717,
+        "edgesDrawn": 527,
+        "edgesVisible": 3188,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 221,
+        "perCallMeanMs": 0.01,
+        "perCallP95Ms": 0.1,
+        "perCallMaxMs": 1,
+        "batchMeanMs": 0.01175,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 44.90000000002328,
+        "edgesDrawn": 227,
+        "edgesVisible": 227,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 13.32,
+        "maxMs": 19.5,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 11.23,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 13.3,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 1
+    },
+    {
+      "profile": "mobile",
+      "size": 5000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 5000,
+      "edges": 9440,
+      "loadedNodesAtSettle": 5000,
+      "dataGenMs": 44.3,
+      "firstPaintMs": 240.2,
+      "fcpMs": 84,
+      "layoutSettleMs": 4007.6,
+      "layoutTicks": 220,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 13.1,
+      "heapAfterSettleMB": 10.15,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.71,
+        "p95Ms": 16.7,
+        "maxMs": 33.4,
+        "drawAvgMs": 1.88,
+        "drawP95Ms": 4.5,
+        "byPhaseP95": {
+          "pan-fit": 16.7,
+          "zoom-in": 16.8,
+          "pan-detail": 16.7,
+          "zoom-out": 16.7
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 143,
+            "avgMs": 16.67,
+            "p95Ms": 16.8
+          },
+          "full-detail": {
+            "frames": 241,
+            "avgMs": 16.74,
+            "p95Ms": 16.7
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 10.600000000093132,
+        "edgesDrawn": 527,
+        "edgesVisible": 3188,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 221,
+        "perCallMeanMs": 0.01,
+        "perCallP95Ms": 0,
+        "perCallMaxMs": 0.8,
+        "batchMeanMs": 0.00685,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 41.70000000006985,
+        "edgesDrawn": 227,
+        "edgesVisible": 227,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 14.04,
+        "maxMs": 20.2,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 10.88,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 13.17,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 2
+    },
+    {
+      "profile": "mobile",
+      "size": 5000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 5000,
+      "edges": 9440,
+      "loadedNodesAtSettle": 5000,
+      "dataGenMs": 56.2,
+      "firstPaintMs": 289.1,
+      "fcpMs": 96,
+      "layoutSettleMs": 4090.5,
+      "layoutTicks": 220,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 10.6,
+      "heapAfterSettleMB": 15.18,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.88,
+        "p95Ms": 16.7,
+        "maxMs": 49.9,
+        "drawAvgMs": 2.17,
+        "drawP95Ms": 4.8,
+        "byPhaseP95": {
+          "pan-fit": 16.7,
+          "zoom-in": 16.7,
+          "pan-detail": 16.7,
+          "zoom-out": 16.8
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 143,
+            "avgMs": 16.67,
+            "p95Ms": 16.7
+          },
+          "full-detail": {
+            "frames": 241,
+            "avgMs": 17.01,
+            "p95Ms": 16.7
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 9,
+        "edgesDrawn": 527,
+        "edgesVisible": 3188,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 221,
+        "perCallMeanMs": 0.01,
+        "perCallP95Ms": 0,
+        "perCallMaxMs": 0.8,
+        "batchMeanMs": 0.00765,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 42.79999999993015,
+        "edgesDrawn": 227,
+        "edgesVisible": 227,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 15.44,
+        "maxMs": 20.4,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 16.83,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 13.34,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 3
+    },
+    {
+      "profile": "mobile",
+      "size": 50000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 50000,
+      "edges": 94012,
+      "loadedNodesAtSettle": 2000,
+      "dataGenMs": 402,
+      "firstPaintMs": 933.9,
+      "fcpMs": 96,
+      "layoutSettleMs": 775.1,
+      "layoutTicks": 120,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 8.8,
+      "heapAfterSettleMB": 49.96,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.75,
+        "p95Ms": 16.8,
+        "maxMs": 33.4,
+        "drawAvgMs": 1.29,
+        "drawP95Ms": 4.2,
+        "byPhaseP95": {
+          "pan-fit": 16.8,
+          "zoom-in": 16.8,
+          "pan-detail": 16.7,
+          "zoom-out": 16.7
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 106,
+            "avgMs": 16.67,
+            "p95Ms": 16.8
+          },
+          "full-detail": {
+            "frames": 278,
+            "avgMs": 16.79,
+            "p95Ms": 16.8
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 17.099999999976717,
+        "edgesDrawn": 534,
+        "edgesVisible": 1071,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 201,
+        "perCallMeanMs": 0.01,
+        "perCallP95Ms": 0,
+        "perCallMaxMs": 1,
+        "batchMeanMs": 0.0106,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 19.5,
+        "edgesDrawn": 274,
+        "edgesVisible": 274,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 15.2,
+        "maxMs": 32.3,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 65.5,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 10.57,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 1
+    },
+    {
+      "profile": "mobile",
+      "size": 50000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 50000,
+      "edges": 94012,
+      "loadedNodesAtSettle": 2000,
+      "dataGenMs": 396.5,
+      "firstPaintMs": 879.7,
+      "fcpMs": 88,
+      "layoutSettleMs": 761.7,
+      "layoutTicks": 120,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 7,
+      "heapAfterSettleMB": 51.2,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.84,
+        "p95Ms": 16.8,
+        "maxMs": 33.4,
+        "drawAvgMs": 1.36,
+        "drawP95Ms": 4.7,
+        "byPhaseP95": {
+          "pan-fit": 16.8,
+          "zoom-in": 16.8,
+          "pan-detail": 16.7,
+          "zoom-out": 16.8
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 106,
+            "avgMs": 16.67,
+            "p95Ms": 16.8
+          },
+          "full-detail": {
+            "frames": 278,
+            "avgMs": 16.91,
+            "p95Ms": 16.8
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 13.600000000093132,
+        "edgesDrawn": 534,
+        "edgesVisible": 1071,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 201,
+        "perCallMeanMs": 0.01,
+        "perCallP95Ms": 0,
+        "perCallMaxMs": 1,
+        "batchMeanMs": 0.00915,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 14.199999999953434,
+        "edgesDrawn": 274,
+        "edgesVisible": 274,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 18.02,
+        "maxMs": 23.6,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 67.16,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 10.51,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 2
+    },
+    {
+      "profile": "mobile",
+      "size": 50000,
+      "variant": "default",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "nodes": 50000,
+      "edges": 94012,
+      "loadedNodesAtSettle": 2000,
+      "dataGenMs": 317.5,
+      "firstPaintMs": 810.5,
+      "fcpMs": 100,
+      "layoutSettleMs": 770.1,
+      "layoutTicks": 120,
+      "layoutCappedAtLimit": false,
+      "quadtreeBuildMs": 5.5,
+      "heapAfterSettleMB": 50.53,
+      "frame": {
+        "frames": 384,
+        "avgMs": 16.8,
+        "p95Ms": 16.8,
+        "maxMs": 33.4,
+        "drawAvgMs": 1.38,
+        "drawP95Ms": 4.2,
+        "byPhaseP95": {
+          "pan-fit": 16.7,
+          "zoom-in": 16.8,
+          "pan-detail": 16.8,
+          "zoom-out": 16.7
+        },
+        "byRenderMode": {
+          "clustered": {
+            "frames": 106,
+            "avgMs": 16.82,
+            "p95Ms": 16.7
+          },
+          "full-detail": {
+            "frames": 278,
+            "avgMs": 16.79,
+            "p95Ms": 16.8
+          }
+        }
+      },
+      "settledRedrawAtFit": {
+        "ms": 22.900000000023283,
+        "edgesDrawn": 534,
+        "edgesVisible": 1071,
+        "mode": "clustered by company (zoom in or click a cluster)"
+      },
+      "hitTest": {
+        "calls": 400,
+        "hitsFound": 201,
+        "perCallMeanMs": 0.02,
+        "perCallP95Ms": 0,
+        "perCallMaxMs": 1.1,
+        "batchMeanMs": 0.01435,
+        "timerResolutionNote": "performance.now is quantised (~0.1 ms); batchMeanMs is the finer figure"
+      },
+      "settledRedrawAtDetail": {
+        "ms": 13.900000000023283,
+        "edgesDrawn": 274,
+        "edgesVisible": 274,
+        "mode": "full detail"
+      },
+      "clickToPaint": {
+        "samples": 5,
+        "meanMs": 16.3,
+        "maxMs": 20.9,
+        "allSelected": true
+      },
+      "heapAfterInteractionMB": 67.06,
+      "heapNote": "main-thread JS heap only (performance.memory); the layout Web Worker heap is not included",
+      "unverifiedDrawnOnCanvas": 0,
+      "pageErrors": [],
+      "wallSeconds": 10.43,
+      "verdict": {
+        "frameP95Threshold": 50,
+        "framePass": true,
+        "hitThreshold": 16,
+        "hitPass": true,
+        "layoutSettledWithinCap": true,
+        "pass": true
+      },
+      "repeat": 3
+    }
+  ]
+}
