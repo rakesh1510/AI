@@ -94,37 +94,47 @@
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   function dur() { return reduced.matches ? 0 : 450; }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function fmt(n) { return n.toLocaleString('en-US'); }
+  function fmt(n) {   // en-US grouping; integers are formatted by hand (the first toLocaleString call initialises ICU, which cost tens of ms before first paint on a throttled phone)
+    if (typeof n === 'number' && n % 1 === 0 && Math.abs(n) < 1e15 && (n !== 0 || 1 / n > 0)) { var a = String(Math.abs(n)), o = '', k = a.length; for (; k > 3; k -= 3) o = ',' + a.slice(k - 3, k) + o; return (n < 0 ? '-' : '') + a.slice(0, k) + o; }
+    return n.toLocaleString('en-US');
+  }
 
   /* ---------- perf / bench record ---------- */
   var perf = { dataGenMs: 0, firstPaint: 0, settled: false, settleMs: 0, layoutTicks: 0, layoutCapped: false, qtBuildMs: 0,
                drawnUnverified: 0, clusterFrames: 0, detailFrames: 0, lastClickMs: 0, expandMs: 0, expandAdded: 0, lastDrawMs: 0, bubblesDrawn: 0 };
 
   /* ---------- canonical data -> internal arrays ---------- */
-  function lastSeg(u) { var m = /([^\/?#]+)\/?(?:[?#].*)?$/.exec(String(u || '')); return m ? m[1] : ''; }
+  var LASTSEG_RE = /([^\/?#]+)\/?(?:[?#].*)?$/;
+  function lastSeg(u) {   // last path segment; the common case (no ? or #) avoids the backtracking regex, which dominated ingest of large loads
+    u = String(u || '');
+    if (u.indexOf('?') >= 0 || u.indexOf('#') >= 0) { var m = LASTSEG_RE.exec(u); return m ? m[1] : ''; }
+    var end = u.length; if (end && u.charCodeAt(end - 1) === 47) end--;
+    return u.slice(u.lastIndexOf('/', end - 1) + 1, end);
+  }
   function ingest(canon) {
     var valid = {}, comps = [], rest = [], stats = { droppedNodes: 0, droppedEdges: 0, badCompany: 0 }, i;
     TYPES.forEach(function (t) { valid[t] = 1; });
-    canon.nodes.forEach(function (n) { if (!valid[n.type] || !n.ref) { stats.droppedNodes++; return; } (n.type === 'company' ? comps : rest).push(n); });
+    for (i = 0; i < canon.nodes.length; i++) { var n0 = canon.nodes[i]; if (!valid[n0.type] || !n0.ref) { stats.droppedNodes++; continue; } (n0.type === 'company' ? comps : rest).push(n0); }
     if (!comps.length && !IS_HTTP) throw new Error('data has no company nodes');
-    var all = comps.concat(rest), byRef = Object.create(null), bySlug = Object.create(null), NCc = comps.length;
-    var nodes = all.map(function (n, k) { byRef[n.ref] = k; var id = n.slug || ('n' + k); bySlug[id] = k; return { i: k, id: id, ref: n.ref, name: String(n.name), type: n.type, c: k, sum: n.summary || '', vat: n.verified_at || '', net: null, detail: null }; });
+    var all = comps.concat(rest), byRef = new Map(), NCc = comps.length;
+    var nodes = all.map(function (n, k) { byRef.set(n.ref, k); var id = n.slug || ('n' + k); return { i: k, id: id, ref: n.ref, name: String(n.name), type: n.type, c: k, sum: n.summary || '', vat: n.verified_at || '', net: null, detail: null }; });
     for (i = NCc; i < nodes.length; i++) {
-      var ci = byRef[all[i].company];
+      var ci = byRef.get(all[i].company);
       if (ci !== undefined && ci < NCc) nodes[i].c = ci;
       else if (IS_HTTP) nodes[i].c = -1;   // the real API does not name a company; it is learned from loaded developed_by relationships and never guessed
       else { nodes[i].c = 0; stats.badCompany++; }
     }
     var edges = [], memTotal = new Int32Array(NCc);
     canon.edges.forEach(function (e) {
-      var s = byRef[e.from], t = byRef[e.to];
+      var s = byRef.get(e.from), t = byRef.get(e.to);
       if (s === undefined || t === undefined || !REL[e.type]) { stats.droppedEdges++; return; }
       var srcs = e.sources || [];
       edges.push({ s: s, t: t, rel: e.type, src: srcs[0] ? (IS_HTTP ? (srcs[0].publisher || lastSeg(srcs[0].url) || '') : (lastSeg(srcs[0].url) || srcs[0].publisher || '')) : '', date: (srcs[0] && srcs[0].retrieved_at) || null,
                    vf: e.valid_from || null, vt: e.valid_to || null, v: e.verified !== false, srcs: srcs });
     });
     nodes.forEach(function (n) { if (n.c >= 0) memTotal[n.c]++; });
-    return { nodes: nodes, edges: edges, NC: NCc, byRef: byRef, bySlug: bySlug, memTotal: memTotal, stats: stats, label: canon.label, pages: canon.pages, total: canon.total, truncated: !!canon.truncated };
+    var slugIdx = null;   // built on first use (deep link at load); a 50,000-entry dictionary is not needed for first paint
+    return { nodes: nodes, edges: edges, NC: NCc, byRef: byRef, get bySlug() { if (!slugIdx) { slugIdx = Object.create(null); for (var q = 0; q < nodes.length; q++) slugIdx[nodes[q].id] = q; } return slugIdx; }, memTotal: memTotal, stats: stats, label: canon.label, pages: canon.pages, total: canon.total, truncated: !!canon.truncated };
   }
 
   /* ---------- DOM helpers (untrusted text only ever goes through textContent / text nodes) ---------- */
@@ -172,12 +182,15 @@
     var thc = $('#thCo'); if (thc) thc.textContent = 'Developed by (once loaded)';
     var kn = $('#cv'); if (kn) kn.setAttribute('aria-label', 'Interactive graph of verified AI entities and their sourced relationships');
   }
+  /* The layout worker is created before the data arrives, so its script is fetched and the d3 modules are parsed while the main thread builds the data. */
+  var earlyWorker = null;
+  try { earlyWorker = new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : '')); } catch (e) { earlyWorker = null; }
   function startLoad() {
     $('#progress').textContent = 'Loading data...'; hideState();
     ['#cv', '#zoomctl', '#hud'].forEach(function (q) { var x = $(q); if (x && view === 'graph') x.hidden = false; });
     UniverseData.loadAll(source, { pageSize: IS_HTTP ? 100 : 10000, maxNodes: IS_HTTP ? 2000 : 0, signal: lifeCtl && lifeCtl.signal }).then(function (canon) {
       perf.dataGenMs = performance.now() - t0;
-      if (!canon.nodes.length) { showState('empty', 'No verified data yet. Entities and relationships appear here only after an editor has entered them with a source and a different person has verified them.'); return; }
+      if (!canon.nodes.length) { if (earlyWorker) { earlyWorker.terminate(); earlyWorker = null; } showState('empty', 'No verified data yet. Entities and relationships appear here only after an editor has entered them with a source and a different person has verified them.'); return; }
       booted = true; boot(ingest(canon));
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return;
@@ -242,7 +255,7 @@
   }
 
   function startWorker() {
-    worker = new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : ''));   // next to this script (the production page serves it from /assets/universe/)
+    worker = earlyWorker || new Worker((BASE ? BASE : '') + 'layout-worker.js' + (BASE ? BASEQ : '')); earlyWorker = null;   // next to this script (the production page serves it from /assets/universe/)
     worker.onmessage = function (ev) {
       var m = ev.data; if (m.type !== 'pos') return;
       var p = m.pos, n = Math.min(m.n, loadedList.length);
@@ -834,7 +847,7 @@
   function addEdges(list) {   // canonical edges of one neighbourhood response; unknown endpoints or relationship types are dropped and counted
     var added = [], dropped = 0;
     list.forEach(function (ce) {
-      var s = ing.byRef[ce.from], t = ing.byRef[ce.to];
+      var s = ing.byRef.get(ce.from), t = ing.byRef.get(ce.to);
       if (s === undefined || t === undefined || !REL[ce.type] || RELS.indexOf(ce.type) < 0) { dropped++; return; }
       var srcs = ce.sources || [], key = s + '|' + t + '|' + ce.type + '|' + (ce.valid_from || '') + '|' + (ce.valid_to || '') + '|' + (srcs[0] ? srcs[0].url : '');
       if (edgeKeys[key]) return; edgeKeys[key] = 1;

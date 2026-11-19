@@ -57,17 +57,28 @@
     var size = opts.size, seed = opts.seed == null ? 42 : opts.seed;
     var raw = null;
     function gen() { if (!raw) raw = DG.generate(size, seed); return raw; }
+    var refs = null, byPage = null, byPageLimit = 0;
+    function refOf(d, i) { if (!refs) { refs = new Array(d.nodes.length); for (var k = 0; k < refs.length; k++) refs[k] = 'syn:' + d.nodes[k].id; } return refs[i]; }
     function toNode(n, d) {
-      var o = { ref: 'syn:' + n.id, slug: n.id, type: n.type, name: n.name };
-      if (n.type !== 'company') o.company = 'syn:' + d.nodes[n.c].id;
+      var o = { ref: refOf(d, n.i), slug: n.id, type: n.type, name: n.name };
+      if (n.type !== 'company') o.company = refOf(d, n.c);
       return o;
     }
     function toEdge(e, d) {
       return {
-        from: 'syn:' + d.nodes[e.s].id, to: 'syn:' + d.nodes[e.t].id, type: e.rel,
+        from: refOf(d, e.s), to: refOf(d, e.t), type: e.rel,
         valid_from: null, valid_to: null, verified: e.v,
         sources: [{ url: 'https://synthetic.invalid/cite/' + e.src, publisher: 'SYNTHETIC', retrieved_at: e.date }]
       };
+    }
+    /* Edges belong to the page holding the later endpoint. One pass buckets them per page (same relative order as a full scan), so a
+       multi-page load does not rescan every edge for every page. Used for page-aligned cursors only; anything else falls back to the scan. */
+    function bucket(d, limit) {
+      if (byPage && byPageLimit === limit) return byPage;
+      var np = Math.ceil(d.nodes.length / limit), i; byPage = new Array(np); byPageLimit = limit;
+      for (i = 0; i < np; i++) byPage[i] = [];
+      for (i = 0; i < d.edges.length; i++) { var e = d.edges[i]; byPage[Math.floor(Math.max(e.s, e.t) / limit)].push(e); }
+      return byPage;
     }
     var adjIdx = null;
     function adjacency(d) {
@@ -83,7 +94,8 @@
       page: function (cursor, limit) {
         var d = gen(), from = cursor ? +cursor : 0, to = Math.min(d.nodes.length, from + limit), nodes = [], edges = [], i;
         for (i = from; i < to; i++) nodes.push(toNode(d.nodes[i], d));
-        for (i = 0; i < d.edges.length; i++) { var e = d.edges[i], m = Math.max(e.s, e.t); if (m >= from && m < to) edges.push(toEdge(e, d)); }
+        if (limit > 0 && from % limit === 0) { var bk = bucket(d, limit)[from / limit] || []; for (i = 0; i < bk.length; i++) edges.push(toEdge(bk[i], d)); }
+        else for (i = 0; i < d.edges.length; i++) { var e = d.edges[i], m = Math.max(e.s, e.t); if (m >= from && m < to) edges.push(toEdge(e, d)); }
         return Promise.resolve({ nodes: nodes, edges: edges, next: to < d.nodes.length ? String(to) : null });
       },
       neighbourhood: function (ref, o) {
