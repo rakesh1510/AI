@@ -56,10 +56,12 @@
       var share = document.getElementById('uh-share'); var newShare = doc.getElementById('uh-share'); if (share && newShare) share.value = newShare.value;
       if (doc.title) document.title = doc.title;
       if (push) history.pushState({ uh: 1 }, '', url);
-      var panel = document.getElementById('day-panel'); panel.scrollIntoView({ block: 'start' }); panel.focus({ preventScroll: true });
+      if (push) { var panel = document.getElementById('day-panel'); panel.scrollIntoView({ block: 'start' }); panel.focus({ preventScroll: true }); }
       return true;
     };
+    var current = location.pathname + location.search;
     var load = function (url, push) {
+      current = url;
       return fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'text/html' } }).then(function (r) { if (!r.ok) throw new Error('status'); return r.text(); }).then(function (text) {
         var doc = new DOMParser().parseFromString(text, 'text/html'); if (!swap(doc, url, push)) throw new Error('markup');
       });
@@ -71,7 +73,7 @@
       var url = a.getAttribute('href').replace(/#.*$/, '');
       load(url, true).catch(function () { window.location.href = a.href; });
     });
-    window.addEventListener('popstate', function (e) { if (e.state && e.state.uh || /[?&]day=/.test(location.search)) load(location.pathname + location.search, false).catch(function () { location.reload(); }); });
+    window.addEventListener('popstate', function () { var now = location.pathname + location.search; if (now === current) return; load(now, false).catch(function () { location.reload(); }); });
   }
 
   /* ---- lineage: show or hide one relationship type on the graph and in the tables ---- */

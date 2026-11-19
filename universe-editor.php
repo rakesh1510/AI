@@ -61,7 +61,7 @@ $title = $uniTitle . ' — AIHubpedia editorial workflow'; $robots = 'noindex, n
 require __DIR__ . '/layout_top.php';
 ?>
 <style>
-.uvMain{margin:18px auto}.uvNav{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}.uvForm .uvFieldset{border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin:0 0 16px}
+main .btn.sm{min-height:44px}.uvMain{margin:18px auto}.uvNav{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}.uvForm .uvFieldset{border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin:0 0 16px}
 .uvFieldset legend{font-weight:700;padding:0 6px}.uvCheck label{display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:8px 0;cursor:pointer}.uvCheck input{width:24px;height:24px;flex:none}
 .uvDl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px}.uvDl dt{font-weight:700}.uvDl dd{margin:0;overflow-wrap:anywhere}.uvSources{list-style:none;padding:0}.uvSource{border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin:0 0 12px;overflow-wrap:anywhere}
 .uvSource blockquote{margin:8px 0;padding:8px 14px;border-left:4px solid var(--brand)}.uvErr{border-color:#b42318}.uvErr:focus{outline:3px solid #b42318;outline-offset:2px}.uvAi{border:2px solid currentColor;font-weight:700}.uvState{font-weight:700}

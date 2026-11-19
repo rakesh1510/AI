@@ -116,6 +116,9 @@ jobs:
       - name: Phase 7 editor and verifier UI over HTTP (authorization matrix, CSRF, maker-checker, AI-assisted review path, escaping, hostile input)
         run: php tests/phase7_editor_http_test.php
 
+      - name: Phase 7 public universe pages over HTTP (heatmap, lineage, arena - verified-only, empty states, escaping, hostile input, sitemap rules)
+        run: php tests/phase7_pages_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 
@@ -182,6 +185,12 @@ jobs:
           NODE_PATH: /tmp/pw/node_modules
           AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
         run: node tests/browser_phase6_test.js http://127.0.0.1:8002 ./ci-screenshots ci-p6
+
+      - name: Phase 7 browser tests (heatmap, lineage, arena and editor pages incl. axe, keyboard, 360px, dark, no-JS; own scratch database)
+        env:
+          NODE_PATH: /tmp/pw/node_modules
+          AXE_PATH: /tmp/pw/node_modules/axe-core/axe.min.js
+        run: node tests/browser_phase7_test.js ./ci-screenshots ci-p7
 
       - name: Accessibility audit with axe-core (light and dark, desktop and mobile; fails on violations)
         env:

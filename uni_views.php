@@ -131,7 +131,7 @@ function uv_item_row_link(string $type, array $r, string $label): string {
 }
 function uv_items_table(PDO $pdo, array $items, string $empty): string {
   if (!$items) return '<p class="small">' . uv_h($empty) . '</p>';
-  $h = '<div class="tableWrap"><table class="pretty"><caption class="sr-only">Items</caption><thead><tr><th scope="col">Type</th><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Flags</th><th scope="col">Proposed</th></tr></thead><tbody>';
+  $h = '<div class="tableWrap" tabindex="0" role="region" aria-label="Items (scrollable)"><table class="pretty"><caption class="sr-only">Items</caption><thead><tr><th scope="col">Type</th><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Flags</th><th scope="col">Proposed</th></tr></thead><tbody>';
   foreach ($items as $it) { [$t, $r] = $it; $h .= '<tr><td>' . uv_h(uv_type_label($t)) . '</td><td>' . uv_item_row_link($t, $r, uv_label($pdo, $t, $r)) . '</td><td>' . uv_state_badge((string)$r['state']) . '</td><td>' . (uv_is_ai($r) ? uv_ai_label() : '') . (!empty($r['_awaiting']) ? ' <span class="badge">Waiting for a second verifier</span>' : '') . '</td><td>' . uv_h($r['proposed_at']) . '</td></tr>'; }
   return $h . '</tbody></table></div>';
 }
@@ -161,7 +161,7 @@ function uv_view_queue(PDO $pdo, array $u): string {
   return '<h2>Review queue</h2><p class="small">Items waiting for review that you did not propose and have not reviewed yet.</p>' . uv_items_table($pdo, $items, 'Nothing is waiting for you.');
 }
 function uv_view_overview(PDO $pdo): string {
-  $h = '<h2>Overview (read-only)</h2><div class="tableWrap"><table class="pretty"><caption class="sr-only">Counts by type and status</caption><thead><tr><th scope="col">Type</th>';
+  $h = '<h2>Overview (read-only)</h2><div class="tableWrap" tabindex="0" role="region" aria-label="Counts (scrollable)"><table class="pretty"><caption class="sr-only">Counts by type and status</caption><thead><tr><th scope="col">Type</th>';
   $states = ['proposed', 'in_review', 'verified', 'rejected', 'superseded']; foreach ($states as $s) $h .= '<th scope="col">' . uv_h(uv_state_label($s)) . '</th>'; $h .= '<th scope="col">Waiting for second verifier</th></tr></thead><tbody>';
   foreach (UV_TYPES as $t) {
     $c = array_fill_keys($states, 0); foreach ($pdo->query('SELECT state, COUNT(*) n FROM ' . uni_table($t) . ' GROUP BY state')->fetchAll(PDO::FETCH_ASSOC) as $r) if (isset($c[$r['state']])) $c[$r['state']] = (int)$r['n'];

@@ -19,13 +19,14 @@
 .upGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px}
 .upField label{display:block;font-weight:600;margin:0 0 4px}
 .upActions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.upPage .btn.sm{min-height:44px}
 .upTabs{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0 0 10px}
 .upTab{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-weight:700;text-decoration:none}
 .upTab:hover{border-color:var(--brand)}
 .upTab[aria-current="page"]{background:var(--surface-3);border:2px solid var(--brand);text-decoration:underline;text-underline-offset:5px}
 .upJump{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:14px 0}
 .upJump a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);text-decoration:none;font-weight:600}
-.upScroll{overflow-x:auto;max-width:100%;margin:10px 0}
+.upScroll{position:relative;overflow-x:auto;max-width:100%;margin:10px 0}
 .upScroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .upTable{width:100%;border-collapse:collapse;font-size:.95rem}
 .upTable caption{text-align:left;font-weight:700;padding:6px 0}
