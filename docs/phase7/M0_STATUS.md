@@ -45,3 +45,9 @@ Prototype findings fixed: `?mode=review` can no longer be switched on from the U
 - Version publish order changed after the QA review: successor verified first, then predecessor superseded, then successor made current.
 - `tests/phase7_service_test.php`: 727 passed, 0 failed on MySQL 8.0.46 (runs the whole suite without triggers and with triggers).
 - Open: concurrent double-review is covered sequentially only (unique review key + row lock); entities have no source table so an entity can be verified without a source; HTTP editor UI and read endpoints not built yet.
+
+## Graph prototype round 2 (accessibility, labels, mobile limits), verified by a second run
+- Accessibility: native table with row headers, skip links, live announcements, keyboard pan/zoom/select, dark theme. axe-core 4.10.2: 0 violation nodes in 32 runs (8 UI states x light/dark x desktop/360px), reproduced independently; keyboard/focus script passes. Not tested: real screen readers, Firefox, WebKit; some contrast results are "incomplete" in axe (not verified by eye).
+- Label collisions: overlapping label pairs 94.8-97.4% before, 0 after (labels are suppressed and counted in a "+N hidden" pill; zero overlap is by construction, not proof of readability).
+- Mobile (4x CPU throttle, headless Chromium, software canvas): 50,000 nodes default frame p95 83.4 ms before, 16.8 ms after, but the default now draws a 2,000-company aggregate overview and loads neighbourhoods progressively; the same code with limits off still fails (83.3 ms). Unclustered 50,000 on mobile: 33.4 ms. First paint regressed (mobile 50,000: about 1.2 s to 1.9-2.0 s) because of the new data adapter; not yet optimised. The CPU throttle does not slow the layout worker; no real devices or GPU measured.
+- The data adapter (`data-source.js`) has a synthetic source; the HTTP source is not implemented yet (next task: connect to `universe-api.php`).
