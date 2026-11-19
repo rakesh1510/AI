@@ -22,7 +22,9 @@ const UNI_SAMPLE_PERCENT = 20;      // afterwards this share (deterministic, by 
 const UNI_MAX_PER_PAGE = 100;
 const UNI_MAX_PAGE = 10000;
 
-function uni_table(string $type): ?string { return ['entity' => 'uni_entity', 'event' => 'uni_event', 'edge' => 'uni_edge', 'release' => 'uni_release'][$type] ?? null; }
+function uni_table(string $type): ?string { return ['entity' => 'uni_entity', 'event' => 'uni_event', 'edge' => 'uni_edge', 'release' => 'uni_release', 'fact' => 'uni_fact'][$type] ?? null; }
+/** Review ledger of a type: facts have their own append-only table (database/phase7_facts.sql) so that the original uni_review CHECK never changes. Whitelisted, never user input. */
+function uni_review_table(string $type): string { return $type === 'fact' ? 'uni_fact_review' : 'uni_review'; }
 function uni_event_types(): array { return ['model_release', 'product_release', 'major_update', 'integration', 'pricing_change', 'launch', 'acquisition', 'announcement']; }
 function uni_edge_types(): array { return ['developed_by', 'version_of', 'derived_from', 'successor_of', 'renamed_from', 'acquired_by', 'integrates_with', 'built_on', 'hosted_on']; }
 function uni_entity_types(): array { return ['company', 'product', 'model', 'version']; }
@@ -133,6 +135,7 @@ function uni_tx(PDO $pdo, callable $fn): array {
 /** Locks and returns one row of a uni table ($type whitelisted), or null. */
 function uni_row(PDO $pdo, string $type, int $id, bool $lock = false): ?array {
   $t = uni_table($type); if ($t === null || $id <= 0) return null;
+  if ($type === 'fact' && !uni_facts_installed($pdo)) return null;
   $s = $pdo->prepare("SELECT * FROM $t WHERE id = ?" . ($lock ? ' FOR UPDATE' : '')); $s->execute([$id]);
   $r = $s->fetch(PDO::FETCH_ASSOC); return $r ?: null;
 }
@@ -178,6 +181,8 @@ function uni_valid_source_count(PDO $pdo, string $type, int $id): int {
     $s = $pdo->prepare('SELECT s.* FROM uni_release r JOIN uni_source s ON s.id = r.source_id WHERE r.id = ?');
   } elseif ($type === 'event' || $type === 'edge' || $type === 'entity') {
     $s = $pdo->prepare($type === 'event' ? 'SELECT s.* FROM uni_event_source l JOIN uni_source s ON s.id = l.source_id WHERE l.event_id = ?' : ($type === 'edge' ? 'SELECT s.* FROM uni_edge_source l JOIN uni_source s ON s.id = l.source_id WHERE l.edge_id = ?' : 'SELECT s.* FROM uni_entity_source l JOIN uni_source s ON s.id = l.source_id WHERE l.entity_id = ?'));
+  } elseif ($type === 'fact') {
+    $s = $pdo->prepare('SELECT s.* FROM uni_fact_source l JOIN uni_source s ON s.id = l.source_id WHERE l.fact_id = ?');
   } else return 0;
   $s->execute([$id]); $n = 0; foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) if (uni_source_valid($r)) $n++;
   return $n;
@@ -186,6 +191,7 @@ function uni_valid_source_count(PDO $pdo, string $type, int $id): int {
 function uni_attach_source(PDO $pdo, int $actorId, string $type, int $targetId, $source): array {
   $actor = uni_actor($pdo, $actorId);
   if (!uni_can_propose($actor)) return [false, 'forbidden'];
+  if ($type === 'fact') return uni_fact_attach_source($pdo, $actorId, $targetId, $source);   // wrapper in the facts section at the end of this file
   if (!in_array($type, ['event', 'edge', 'entity'], true)) return [false, 'type_invalid'];
   return uni_tx($pdo, function () use ($pdo, $actorId, $type, $targetId, $source) {
     $row = uni_row($pdo, $type, $targetId, true);
@@ -370,9 +376,9 @@ function uni_submit_for_review(PDO $pdo, int $actorId, string $type, int $id): a
 }
 /** Deterministic sampling decision for one target, stable over time: rank = position of the target's first accept among all first accepts. */
 function uni_second_review_required(PDO $pdo, string $type, int $id): bool {
-  $f = $pdo->prepare('SELECT MIN(id) FROM uni_review WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $f->execute([$type, $id]); $first = $f->fetchColumn();
+  $f = $pdo->prepare('SELECT MIN(id) FROM ' . uni_review_table($type) . ' WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $f->execute([$type, $id]); $first = $f->fetchColumn();
   if ($first === false || $first === null) return false;
-  $r = $pdo->prepare('SELECT COUNT(*) FROM (SELECT target_type, target_id FROM uni_review WHERE decision = \'accept\' GROUP BY target_type, target_id HAVING MIN(id) <= ?) x'); $r->execute([(int)$first]);
+  $r = $pdo->prepare('SELECT COUNT(*) FROM (SELECT target_type, target_id FROM ' . uni_review_table($type) . ' WHERE decision = \'accept\' GROUP BY target_type, target_id HAVING MIN(id) <= ?) x'); $r->execute([(int)$first]);
   return (int)$r->fetchColumn() <= UNI_SAMPLE_FIRST || (crc32($type . ':' . $id) % 100) < UNI_SAMPLE_PERCENT;
 }
 /** Checks that must hold at the moment of verification (re-read from the database inside the transaction). → null or error code */
@@ -387,6 +393,7 @@ function uni_verify_preconditions(PDO $pdo, string $type, array $row): ?string {
     $p = $pdo->prepare('SELECT p.release_date FROM uni_release_parent l JOIN uni_release p ON p.id = l.parent_release_id WHERE l.release_id = ?'); $p->execute([(int)$row['id']]);
     foreach ($p->fetchAll(PDO::FETCH_COLUMN) as $d) if ($d >= $row['release_date']) return 'parent_not_earlier';
   }
+  if ($type === 'fact') return uni_fact_verify_preconditions($pdo, $row);
   return null;
 }
 /**
@@ -404,10 +411,10 @@ function uni_review(PDO $pdo, int $reviewerId, string $type, int $id, string $de
     $row = uni_row($pdo, $type, $id, true); if (!$row) return [false, 'not_found'];
     if ($row['state'] !== 'in_review') return [false, 'not_in_review'];
     if ((int)$row['proposed_by'] === (int)$reviewer['id']) return [false, 'maker_checker'];
-    $dup = $pdo->prepare('SELECT 1 FROM uni_review WHERE target_type = ? AND target_id = ? AND reviewer_id = ?'); $dup->execute([$type, $id, $reviewer['id']]);
+    $dup = $pdo->prepare('SELECT 1 FROM ' . uni_review_table($type) . ' WHERE target_type = ? AND target_id = ? AND reviewer_id = ?'); $dup->execute([$type, $id, $reviewer['id']]);
     if ($dup->fetchColumn()) return [false, 'already_reviewed'];
     if ($decision === 'accept') { $bad = uni_verify_preconditions($pdo, $type, $row); if ($bad !== null) return [false, $bad]; }
-    $rid = uni_insert($pdo, 'uni_review', ['target_type' => $type, 'target_id' => $id, 'reviewer_id' => (int)$reviewer['id'], 'proposed_by' => (int)$row['proposed_by'], 'decision' => $decision, 'note' => $noteS, 'decided_at' => crm_now()]);
+    $rid = uni_insert($pdo, uni_review_table($type), ['target_type' => $type, 'target_id' => $id, 'reviewer_id' => (int)$reviewer['id'], 'proposed_by' => (int)$row['proposed_by'], 'decision' => $decision, 'note' => $noteS, 'decided_at' => crm_now()]);
     $t = uni_table($type);
     if ($decision === 'reject') {
       $u = $pdo->prepare("UPDATE $t SET state = 'rejected', is_current = 0 WHERE id = ? AND state = 'in_review'"); $u->execute([$id]);
@@ -418,7 +425,7 @@ function uni_review(PDO $pdo, int $reviewerId, string $type, int $id, string $de
       uni_audit($pdo, (int)$reviewer['id'], 'review_needs_source', $type, $id, 'needs a second source');
       return [true, ['state' => 'in_review', 'awaiting_second_review' => false, 'review_id' => $rid]];
     }
-    $a = $pdo->prepare('SELECT COUNT(*) FROM uni_review WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $a->execute([$type, $id]);
+    $a = $pdo->prepare('SELECT COUNT(*) FROM ' . uni_review_table($type) . ' WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $a->execute([$type, $id]);
     $accepts = (int)$a->fetchColumn(); $need = uni_second_review_required($pdo, $type, $id) ? 2 : 1;
     if ($accepts < $need) {
       uni_audit($pdo, (int)$reviewer['id'], 'review_accept_first', $type, $id, 'first accept, second reviewer required');
@@ -458,6 +465,7 @@ function uni_correct(PDO $pdo, int $actorId, string $type, int $id, array $chang
   $actor = uni_actor($pdo, $actorId);
   if (!uni_can_propose($actor)) return [false, 'forbidden'];
   if (uni_table($type) === null) return [false, 'type_invalid'];
+  if ($type === 'fact') return uni_fact_correct($pdo, $actorId, $id, $changes);   // facts section at the end of this file
   $allowed = ['entity' => ['name', 'summary'], 'event' => ['event_type', 'event_date', 'date_precision', 'date_kind', 'title', 'summary'], 'edge' => ['edge_type', 'valid_from', 'valid_to', 'notes'], 'release' => ['version_label', 'release_date', 'date_precision', 'change_set']][$type];
   foreach (array_keys($changes) as $k) if ($k !== 'origin' && !in_array($k, $allowed, true)) return [false, 'field_not_correctable'];
   $origin = uni_pick_origin($changes['origin'] ?? null); if ($origin === null || $origin === 'import') return [false, 'origin_invalid'];
@@ -520,14 +528,15 @@ function uni_correct(PDO $pdo, int $actorId, string $type, int $id, array $chang
 /** Publication state of one item: is it public right now, how many valid sources, accepts, and whether a second review is still needed. Staff-side (shows counts, never identities). */
 function uni_publish_state(PDO $pdo, string $type, int $id): ?array {
   $row = uni_row($pdo, $type, $id); if (!$row) return null;
-  $a = $pdo->prepare('SELECT COUNT(*) FROM uni_review WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $a->execute([$type, $id]); $accepts = (int)$a->fetchColumn();
+  $a = $pdo->prepare('SELECT COUNT(*) FROM ' . uni_review_table($type) . ' WHERE target_type = ? AND target_id = ? AND decision = \'accept\''); $a->execute([$type, $id]); $accepts = (int)$a->fetchColumn();
   return ['state' => $row['state'], 'is_current' => (int)$row['is_current'] === 1, 'public' => $row['state'] === 'verified' && (int)$row['is_current'] === 1, 'version_no' => (int)$row['version_no'],
           'valid_sources' => uni_valid_source_count($pdo, $type, $id), 'accepts' => $accepts, 'second_review_required' => $accepts > 0 ? uni_second_review_required($pdo, $type, $id) : null];
 }
 /** Review queue for verifiers: items in_review that this verifier did not propose and has not reviewed yet. Bounded. */
 function uni_review_queue(PDO $pdo, int $reviewerId, string $type, int $limit = 25): array {
   if (!uni_can_review(uni_actor($pdo, $reviewerId)) || ($t = uni_table($type)) === null) return [false, 'forbidden'];
-  $s = $pdo->prepare("SELECT x.id, x.proposed_at FROM $t x WHERE x.state = 'in_review' AND x.proposed_by <> ? AND NOT EXISTS (SELECT 1 FROM uni_review r WHERE r.target_type = ? AND r.target_id = x.id AND r.reviewer_id = ?) ORDER BY x.id LIMIT ?");
+  if ($type === 'fact' && !uni_facts_installed($pdo)) return [true, []];
+  $s = $pdo->prepare("SELECT x.id, x.proposed_at FROM $t x WHERE x.state = 'in_review' AND x.proposed_by <> ? AND NOT EXISTS (SELECT 1 FROM " . uni_review_table($type) . " r WHERE r.target_type = ? AND r.target_id = x.id AND r.reviewer_id = ?) ORDER BY x.id LIMIT ?");
   $s->bindValue(1, $reviewerId, PDO::PARAM_INT); $s->bindValue(2, $type); $s->bindValue(3, $reviewerId, PDO::PARAM_INT); $s->bindValue(4, max(1, min(100, $limit)), PDO::PARAM_INT); $s->execute();
   return [true, $s->fetchAll(PDO::FETCH_ASSOC)];
 }
@@ -813,9 +822,10 @@ function uni_public_release_diff(PDO $pdo, $slug, $a, $b): array {
 function uni_public_compare(PDO $pdo, array $slugs): array {
   $slugs = array_values(array_unique(array_filter($slugs, 'is_string')));
   if (count($slugs) < 2 || count($slugs) > 4) return ['error' => 'count_invalid'];
-  $out = [];
+  $out = []; $factsBy = [];
   foreach ($slugs as $slug) {
     $e = uni_public_entity_detail($pdo, $slug); if (!$e) return ['error' => 'entity_not_found'];
+    $factsBy[$slug] = uni_public_facts($pdo, $slug);   // verified + current facts only (empty when the facts migration is not installed)
     $rel = uni_public_releases($pdo, ['entity_slug' => $slug], 1, 1); $evs = uni_public_events($pdo, ['entity_slug' => $slug], 1, 1); $price = uni_public_events($pdo, ['entity_slug' => $slug, 'event_type' => 'pricing_change'], 1, 1);
     $dev = uni_public_edges($pdo, ['entity_slug' => $slug, 'edge_type' => 'developed_by'], 1, 20); $int = uni_public_edges($pdo, ['entity_slug' => $slug, 'edge_type' => 'integrates_with'], 1, 20);
     $latest = $rel['items'][0] ?? null; $other = fn($ed) => $ed['from_slug'] === $slug ? ['slug' => $ed['to_slug'], 'name' => $ed['to_name']] : ['slug' => $ed['from_slug'], 'name' => $ed['from_name']];
@@ -832,7 +842,216 @@ function uni_public_compare(PDO $pdo, array $slugs): array {
       'event_count' => $evs['total'] > 0 ? uni_available($evs['total']) : uni_unavailable(),
       'latest_event' => $evs['items'] ? uni_available(['event_type' => $evs['items'][0]['event_type'], 'event_date' => $evs['items'][0]['event_date'], 'title' => $evs['items'][0]['title'], 'sources' => uni_pub_source_brief($evs['items'][0]['sources'])]) : uni_unavailable(),
       'pricing' => $pricing,
-      'integrations' => $int['items'] ? uni_available(array_map($other, $int['items'])) : uni_unavailable()]];
+      'integrations' => $int['items'] ? uni_available(array_map($other, $int['items'])) : uni_unavailable()],
+      'facts' => $factsBy[$slug] ? uni_available($factsBy[$slug]) : uni_unavailable()];   // verified comparison facts: beside "fields" so that the field list stays as it was
   }
-  return ['entities' => $out];
+  return ['entities' => $out, 'fact_matrix' => uni_fact_matrix($factsBy),
+    'fact_notes' => ['No score, rank or winner is computed. A difference is only a difference.', 'Numbers reported under different benchmark versions or conditions are not comparable.', 'A fact marked unavailable has no verified data. Nothing is guessed.']];
+}
+
+// ======================================================================================================================================================
+// ---- FACTS (database/phase7_facts.sql): source-backed, human-verified comparison facts for the Battle Arena. APPEND-ONLY SECTION. ---------------------
+// A fact is one claim about one entity (feature, platform, integration, pricing, benchmark, limit) with a text OR numeric value, an observed date and at
+// least one quoted source. It uses the generic workflow above (uni_submit_for_review, uni_review, uni_row, uni_publish_state, uni_record_conflict) with
+// type 'fact' (table uni_fact, review ledger uni_fact_review) and has its own propose / attach / correct wrappers. There is NO score, rank or winner.
+// ======================================================================================================================================================
+function uni_fact_types(): array { return ['feature', 'platform', 'integration', 'pricing', 'benchmark', 'limit']; }
+/** True when the facts migration is installed (all three tables answer). Facts are optional: when absent, every fact read is empty and every fact write is refused. */
+function uni_facts_installed(PDO $pdo): bool {
+  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  try { $q = $pdo->prepare('SELECT 1 FROM uni_fact f LEFT JOIN uni_fact_source s ON 1 = 0 LEFT JOIN uni_fact_review r ON 1 = 0 LIMIT 1'); $q->execute(); $q->closeCursor(); return true; }
+  catch (PDOException $e) { if (in_array((string)$e->getCode(), ['42S02', '42S22'], true)) return false; throw $e; }
+}
+/** A stored DECIMAL(24,6) string as the shortest exact text ("20.000000" -> "20", "0.500000" -> "0.5"). */
+function uni_fact_num_text($n): ?string {
+  if ($n === null || $n === '') return null;
+  $s = (string)$n; if (strpos($s, '.') !== false) $s = rtrim(rtrim($s, '0'), '.');
+  return $s === '' || $s === '-' || $s === '-0' ? '0' : $s;
+}
+/** Validates and normalises the value fields of a fact. @return array [normalised fields, null] or [null, error code] */
+function uni_fact_normalise(array $in): array {
+  $type = $in['fact_type'] ?? null; $key = uni_str($in['fact_key'] ?? null, 120); $vt = uni_str($in['value_text'] ?? '', 1000, false, true); $unit = uni_str($in['unit'] ?? '', 40, false);
+  $bn = uni_str($in['benchmark_name'] ?? '', 120, false); $bm = uni_str($in['benchmark_metric'] ?? '', 120, false); $bv = uni_str($in['benchmark_version'] ?? '', 80, false); $cond = uni_str($in['conditions'] ?? '', 1000, false, true);
+  if (!is_string($type) || !in_array($type, uni_fact_types(), true)) return [null, 'fact_type_invalid'];
+  if ($key === null || !uni_visible($key)) return [null, 'fact_key_required'];
+  if ($vt === null) return [null, 'value_invalid'];
+  if ($unit === null || $bn === null || $bm === null || $bv === null || $cond === null) return [null, 'field_invalid'];
+  $raw = $in['value_num'] ?? null; $num = null;
+  if ($raw !== null && $raw !== '') {
+    if (is_int($raw)) $raw = (string)$raw;
+    elseif (is_float($raw)) { if (!is_finite($raw) || abs($raw) >= 1e17) return [null, 'value_num_invalid']; $raw = rtrim(rtrim(sprintf('%.6F', $raw), '0'), '.'); }
+    if (!is_string($raw) || !preg_match('/^-?\d{1,17}(\.\d{1,6})?$/D', trim($raw))) return [null, 'value_num_invalid'];
+    $num = trim($raw);
+  }
+  $hasText = uni_visible($vt); if (!$hasText) $vt = '';
+  if ($num !== null && $hasText) return [null, 'value_conflict'];                       // a text value OR a number, never both
+  if ($num === null && !$hasText) return [null, 'value_required'];
+  if ($num === null && $unit !== '') return [null, 'unit_without_number'];
+  if ($num !== null && $unit === '') return [null, 'unit_required'];                    // a number without a unit or currency is meaningless
+  $benchSet = $bn !== '' || $bm !== '' || $bv !== '';
+  if (in_array($type, ['feature', 'platform', 'integration'], true) && $num !== null) return [null, 'value_num_not_allowed'];
+  if ($type === 'pricing' && ($num === null || (float)$num < 0)) return [null, 'pricing_needs_number'];
+  if ($type === 'benchmark') {
+    if ($num === null) return [null, 'benchmark_needs_number'];
+    if ($bn === '') return [null, 'benchmark_name_required']; if ($bm === '') return [null, 'benchmark_metric_required']; if ($bv === '') return [null, 'benchmark_version_required'];
+  } elseif ($benchSet) return [null, 'benchmark_fields_not_allowed'];
+  $pd = uni_parse_date($in['observed_on'] ?? null, isset($in['date_precision']) && is_string($in['date_precision']) ? $in['date_precision'] : null);
+  if ($pd === null || $pd[0] > gmdate('Y-m-d', time() + 86400)) return [null, 'date_invalid'];
+  return [['fact_type' => $type, 'fact_key' => $key, 'value_text' => $vt, 'value_num' => $num, 'unit' => $unit, 'benchmark_name' => $bn, 'benchmark_metric' => $bm, 'benchmark_version' => $bv, 'conditions' => $cond, 'observed_on' => $pd[0], 'date_precision' => $pd[1]], null];
+}
+/** Comparable identity of what a fact claims (value + unit), used for duplicate and difference detection. */
+function uni_fact_signature(array $f): string {
+  return $f['value_num'] !== null && $f['value_num'] !== '' ? 'n:' . uni_fact_num_text($f['value_num']) . '|' . mb_strtolower((string)$f['unit'], 'UTF-8') : 't:' . uni_norm_title((string)$f['value_text']);
+}
+/** Subject of a fact: type + key (+ benchmark name, metric, version, conditions). Two facts with the same subject but another signature are a conflict candidate; the same signature is a duplicate. */
+function uni_fact_subject(array $f): string {
+  return implode('|', [$f['fact_type'], uni_norm_title((string)$f['fact_key']), uni_norm_title((string)$f['benchmark_name']), uni_norm_title((string)$f['benchmark_metric']), uni_norm_title((string)$f['benchmark_version']), uni_norm_title((string)$f['conditions'])]);
+}
+/** Open or verified current facts of the same entity lineage and type: dup = same subject and value, conf = same subject, different value. FLAGS only, nothing is merged or resolved. @return array [dup ids, conflict ids] */
+function uni_find_fact_flags(PDO $pdo, int $entityId, array $f, int $excludeId = 0): array {
+  $s = $pdo->prepare('SELECT x.* FROM uni_entity e JOIN uni_entity l ON l.lineage_key = e.lineage_key JOIN uni_fact x ON x.entity_id = l.id
+                      WHERE e.id = ? AND x.fact_type = ? AND x.state IN (\'proposed\',\'in_review\',\'verified\') AND x.is_current = 1 AND x.id <> ?');
+  $s->execute([$entityId, $f['fact_type'], $excludeId]); $dup = []; $conf = []; $subj = uni_fact_subject($f); $sig = uni_fact_signature($f);
+  foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) { if (uni_fact_subject($r) !== $subj) continue; if (uni_fact_signature($r) === $sig) $dup[] = (int)$r['id']; else $conf[] = (int)$r['id']; }
+  return [$dup, $conf];
+}
+function uni_duplicates_of_fact(PDO $pdo, int $factId): array { $r = uni_row($pdo, 'fact', $factId); return $r ? uni_find_fact_flags($pdo, (int)$r['entity_id'], $r, $factId)[0] : []; }
+/**
+ * @param array $in entity_id, [release_id], fact_type, fact_key, value_text XOR value_num (+ unit), [benchmark_name, benchmark_metric, benchmark_version], [conditions], observed_on, [date_precision], [origin]
+ * @return array [true, ['id'=>int, 'duplicates'=>int[], 'value_conflicts'=>int[]]]. The fact stays a draft until it has a quoted source (uni_fact_attach_source), is submitted and a different verifier accepts it.
+ */
+function uni_propose_fact(PDO $pdo, int $actorId, array $in): array {
+  $actor = uni_actor($pdo, $actorId);
+  if (!uni_can_propose($actor)) return [false, 'forbidden'];
+  $entityId = $in['entity_id'] ?? null; $releaseId = $in['release_id'] ?? null; $origin = uni_pick_origin($in['origin'] ?? null);
+  if (!is_int($entityId) || $entityId <= 0) return [false, 'entity_invalid'];
+  if ($releaseId !== null && (!is_int($releaseId) || $releaseId <= 0)) return [false, 'release_invalid'];
+  [$f, $err] = uni_fact_normalise($in); if ($f === null) return [false, $err];
+  if ($origin === null) return [false, 'origin_invalid'];
+  return uni_tx($pdo, function () use ($pdo, $actor, $entityId, $releaseId, $f, $origin) {
+    if (!uni_facts_installed($pdo)) return [false, 'facts_not_installed'];
+    $ent = uni_entity_live($pdo, $entityId); if (!$ent) return [false, 'entity_not_found'];
+    if ($releaseId !== null) {
+      $rel = uni_row($pdo, 'release', $releaseId); if (!$rel) return [false, 'release_not_found'];
+      $re = uni_entity_live($pdo, (int)$rel['entity_id']); if (!$re || (int)$re['id'] !== (int)$ent['id']) return [false, 'release_entity_mismatch'];
+    }
+    [$dups, $conf] = uni_find_fact_flags($pdo, $entityId, $f);
+    $id = uni_insert($pdo, 'uni_fact', uni_new_row_base($actor, $origin) + $f + ['entity_id' => $entityId, 'release_id' => $releaseId, 'lineage_key' => uni_lineage_key(), 'version_no' => 1, 'supersedes_id' => null, 'is_current' => 1]);
+    uni_audit($pdo, (int)$actor['id'], 'propose', 'fact', $id, 'fact proposed');
+    if ($dups) uni_audit($pdo, (int)$actor['id'], 'duplicate_flag', 'fact', $id, 'possible duplicate (flagged, not merged)', ['duplicates' => $dups]);
+    if ($conf) uni_audit($pdo, (int)$actor['id'], 'conflict_recorded', 'fact', $id, 'same subject, different value', ['kind' => 'value_conflict', 'others' => $conf]);
+    return [true, ['id' => $id, 'duplicates' => $dups, 'value_conflicts' => $conf]];
+  });
+}
+/** Attaches an existing source id (int) or a new source (array, see uni_source_create) to an unverified fact. Sources of verified facts are frozen. Called by uni_attach_source for type 'fact'. */
+function uni_fact_attach_source(PDO $pdo, int $actorId, int $factId, $source): array {
+  $actor = uni_actor($pdo, $actorId);
+  if (!uni_can_propose($actor)) return [false, 'forbidden'];
+  return uni_tx($pdo, function () use ($pdo, $actorId, $factId, $source) {
+    $row = uni_row($pdo, 'fact', $factId, true);
+    if (!$row) return [false, 'not_found'];
+    if (!in_array($row['state'], ['proposed', 'in_review'], true)) return [false, 'target_locked'];
+    if (is_array($source)) { [$ok, $sid] = uni_source_create($pdo, $actorId, $source); if (!$ok) return [false, $sid]; $sid = (int)$sid; }
+    elseif (is_int($source) && $source > 0) $sid = $source;
+    else return [false, 'source_invalid'];
+    $q = $pdo->prepare('SELECT * FROM uni_source WHERE id = ?'); $q->execute([$sid]); $src = $q->fetch(PDO::FETCH_ASSOC);
+    if (!$src || !uni_source_valid($src)) return [false, 'source_invalid'];
+    $dup = $pdo->prepare('SELECT 1 FROM uni_fact_source WHERE fact_id = ? AND source_id = ?'); $dup->execute([$factId, $sid]);
+    if ($dup->fetchColumn()) return [false, 'already_attached'];
+    uni_insert($pdo, 'uni_fact_source', ['fact_id' => $factId, 'source_id' => $sid, 'created_at' => crm_now()]);
+    uni_audit($pdo, (int)$actorId, 'source_attach', 'fact', $factId, 'source attached', ['source_id' => $sid]);
+    return [true, $sid];
+  });
+}
+/** Extra checks at the moment of verification (called from uni_verify_preconditions, inside the review transaction): the entity and a linked release must already be verified. null or error code */
+function uni_fact_verify_preconditions(PDO $pdo, array $row): ?string {
+  $e = uni_entity_live($pdo, (int)$row['entity_id']); if ($e === null || $e['state'] !== 'verified') return 'entity_not_verified';
+  if ($row['release_id'] !== null) { $r = uni_row($pdo, 'release', (int)$row['release_id']); if (!$r || $r['state'] !== 'verified') return 'release_not_verified'; }
+  return null;
+}
+/** New VERSION of a verified fact (or of an unverified import lead), same rules as uni_correct: the old row stays untouched and public until the new one is verified by someone else. Sources are copied. @return array [true, newId] */
+function uni_fact_correct(PDO $pdo, int $actorId, int $id, array $changes): array {
+  $actor = uni_actor($pdo, $actorId);
+  if (!uni_can_propose($actor)) return [false, 'forbidden'];
+  $allowed = ['value_text', 'value_num', 'unit', 'benchmark_name', 'benchmark_metric', 'benchmark_version', 'conditions', 'observed_on', 'date_precision'];
+  foreach (array_keys($changes) as $k) if ($k !== 'origin' && !in_array($k, $allowed, true)) return [false, 'field_not_correctable'];
+  $origin = uni_pick_origin($changes['origin'] ?? null); if ($origin === null || $origin === 'import') return [false, 'origin_invalid'];
+  return uni_tx($pdo, function () use ($pdo, $actor, $id, $changes, $origin) {
+    $old = uni_row($pdo, 'fact', $id, true); if (!$old) return [false, 'not_found'];
+    $importLead = $old['origin'] === 'import' && in_array($old['state'], ['proposed', 'in_review'], true);
+    if ($old['state'] !== 'verified' && !$importLead) return [false, 'not_correctable'];
+    if ((int)$old['is_current'] !== 1) return [false, 'not_current'];
+    $o = $pdo->prepare('SELECT id, version_no FROM uni_fact WHERE lineage_key = ? ORDER BY version_no DESC LIMIT 1 FOR UPDATE'); $o->execute([$old['lineage_key']]); $last = $o->fetch(PDO::FETCH_ASSOC);
+    $open = $pdo->prepare("SELECT 1 FROM uni_fact WHERE lineage_key = ? AND state IN ('proposed','in_review') AND is_current = 0 LIMIT 1"); $open->execute([$old['lineage_key']]);
+    if ($open->fetchColumn()) return [false, 'correction_pending'];
+    $merge = $changes + ['fact_type' => $old['fact_type'], 'fact_key' => $old['fact_key']];
+    foreach (['value_text', 'value_num', 'unit', 'benchmark_name', 'benchmark_metric', 'benchmark_version', 'conditions'] as $k) if (!array_key_exists($k, $merge)) $merge[$k] = $old[$k];
+    $numSet = array_key_exists('value_num', $changes) && $changes['value_num'] !== null && $changes['value_num'] !== ''; $textSet = array_key_exists('value_text', $changes) && trim((string)$changes['value_text']) !== '';
+    if ($numSet && !array_key_exists('value_text', $changes)) $merge['value_text'] = '';                                                   // switching a text fact to a number clears the text (and the reverse)
+    if ($textSet && !array_key_exists('value_num', $changes)) { $merge['value_num'] = null; if (!array_key_exists('unit', $changes)) $merge['unit'] = ''; }
+    $merge['observed_on'] = $changes['observed_on'] ?? $old['observed_on'];
+    $merge['date_precision'] = array_key_exists('date_precision', $changes) ? $changes['date_precision'] : ((array_key_exists('observed_on', $changes) && is_string($changes['observed_on']) && strlen($changes['observed_on']) <= 7) ? null : $old['date_precision']);
+    [$f, $err] = uni_fact_normalise($merge); if ($f === null) return [false, $err];
+    $new = $old; unset($new['id'], $new['current_lineage']);
+    foreach ($f as $k => $v) $new[$k] = $v;
+    foreach (['state' => 'proposed', 'origin' => $origin, 'proposed_by' => (int)$actor['id'], 'proposed_at' => crm_now(), 'verified_by' => null, 'verified_at' => null, 'review_id' => null,
+              'version_no' => (int)$last['version_no'] + 1, 'supersedes_id' => (int)$last['id'], 'is_current' => 0] as $k => $v) $new[$k] = $v;
+    $nid = uni_insert($pdo, 'uni_fact', $new);
+    $pdo->prepare('INSERT INTO uni_fact_source (fact_id, source_id, created_at) SELECT ?, source_id, ? FROM uni_fact_source WHERE fact_id = ?')->execute([$nid, crm_now(), $id]);
+    uni_audit($pdo, (int)$actor['id'], 'correct', 'fact', $nid, 'new version proposed', ['supersedes' => (int)$last['id']]);
+    return [true, $nid];
+  });
+}
+
+// ---- public fact reads (verified + current facts of verified + current entities only; no identities, origin or review notes) ---------------------------
+/** Verified, current facts of one verified entity, each with its sources (url, publisher, retrieved_at, quote) and observation date. $type optionally narrows. Capped at $cap. */
+function uni_public_facts(PDO $pdo, $slug, ?string $type = null, int $cap = 300): array {
+  if (!is_string($slug) || $slug === '' || strlen($slug) > 120 || ($type !== null && !in_array($type, uni_fact_types(), true)) || !uni_facts_installed($pdo)) return [];
+  $cap = max(1, min(500, $cap)); $args = [$slug];
+  $w = "f.state = 'verified' AND f.is_current = 1 AND en.slug = ?"; if ($type !== null) { $w .= ' AND f.fact_type = ?'; $args[] = $type; }
+  $s = $pdo->prepare('SELECT f.id AS _id, f.lineage_key AS ref, f.fact_type, f.fact_key, f.value_text, f.value_num, f.unit, f.benchmark_name, f.benchmark_metric, f.benchmark_version, f.conditions, f.observed_on, f.date_precision, f.verified_at, rc.version_label AS release_label
+    FROM uni_fact f ' . uni_live_entity_join('f', 'entity_id', 'en') . ' LEFT JOIN uni_release ro ON ro.id = f.release_id LEFT JOIN uni_release rc ON rc.lineage_key = ro.lineage_key AND rc.is_current = 1 AND rc.state = \'verified\'' . " WHERE $w ORDER BY f.fact_type, f.fact_key, f.id LIMIT ?");
+  foreach ($args as $i => $a) $s->bindValue($i + 1, $a); $s->bindValue(count($args) + 1, $cap, PDO::PARAM_INT); $s->execute();
+  $rows = $s->fetchAll(PDO::FETCH_ASSOC); if (!$rows) return [];
+  $ids = array_map(fn($r) => (int)$r['_id'], $rows); $src = [];
+  $q = $pdo->prepare('SELECT l.fact_id AS k, s.url, s.publisher, s.retrieved_at, s.quote FROM uni_fact_source l JOIN uni_source s ON s.id = l.source_id WHERE l.fact_id IN (' . implode(',', array_fill(0, count($ids), '?')) . ') ORDER BY s.id');
+  $q->execute($ids); foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) { $k = (int)$r['k']; unset($r['k']); $src[$k][] = $r; }
+  $out = [];
+  foreach ($rows as $r) {
+    $bench = $r['fact_type'] === 'benchmark' ? ['name' => $r['benchmark_name'], 'metric' => $r['benchmark_metric'], 'version' => $r['benchmark_version']] : null;
+    $out[] = ['ref' => $r['ref'], 'fact_type' => $r['fact_type'], 'fact_key' => $r['fact_key'], 'value_text' => $r['value_text'] !== '' ? $r['value_text'] : null, 'value_num' => uni_fact_num_text($r['value_num']), 'unit' => $r['unit'] !== '' ? $r['unit'] : null,
+      'benchmark' => $bench, 'conditions' => $r['conditions'] !== '' ? $r['conditions'] : null, 'observed_on' => $r['observed_on'], 'date_precision' => $r['date_precision'], 'release' => $r['release_label'], 'verified_at' => $r['verified_at'], 'sources' => $src[(int)$r['_id']] ?? []];
+  }
+  return $out;
+}
+function uni_pub_fact_signature(array $f): string { return uni_fact_signature(['value_num' => $f['value_num'], 'unit' => (string)$f['unit'], 'value_text' => (string)$f['value_text']]); }
+/**
+ * Per fact type, the rows (one per subject: key, or benchmark name + metric) of a side-by-side table: cells[slug] = the verified facts of that entity for that row ([] = unavailable, never filled in).
+ * differs: at least two entities have data and their reported values differ (a plain flag: nobody wins). comparable (benchmarks only): false when versions or conditions differ,
+ * in which case differs stays false and the numbers must not be compared. complete: every compared entity has data. No score, rank or winner is computed here or anywhere.
+ * @param array $factsBySlug slug => list of uni_public_facts rows
+ */
+function uni_fact_matrix(array $factsBySlug): array {
+  $slugs = array_keys($factsBySlug); $out = [];
+  foreach (uni_fact_types() as $type) {
+    $rows = [];
+    foreach ($factsBySlug as $slug => $facts) foreach ($facts as $f) {
+      if ($f['fact_type'] !== $type) continue;
+      $k = uni_norm_title((string)$f['fact_key']) . ($type === 'benchmark' ? '|' . uni_norm_title((string)$f['benchmark']['name']) . '|' . uni_norm_title((string)$f['benchmark']['metric']) : '');
+      if (!isset($rows[$k])) { $rows[$k] = ['key' => $f['fact_key'], 'benchmark' => $f['benchmark'] ? ['name' => $f['benchmark']['name'], 'metric' => $f['benchmark']['metric']] : null, 'cells' => array_fill_keys($slugs, [])]; }
+      $rows[$k]['cells'][$slug][] = $f;
+    }
+    $list = [];
+    foreach ($rows as $r) {
+      $with = array_filter($r['cells'], fn($c) => $c !== []); $sigs = [];
+      foreach ($with as $c) { $x = array_map('uni_pub_fact_signature', $c); sort($x); $sigs[] = implode('||', $x); }
+      $comparable = true;
+      if ($type === 'benchmark') { $ctx = []; foreach ($with as $c) foreach ($c as $f) $ctx[uni_norm_title((string)$f['benchmark']['version']) . '|' . uni_norm_title((string)($f['conditions'] ?? ''))] = true; $comparable = count($ctx) <= 1; }
+      $r['differs'] = $comparable && count($with) >= 2 && count(array_unique($sigs)) > 1; $r['comparable'] = $comparable; $r['complete'] = count($with) === count($slugs);
+      $list[] = $r;
+    }
+    usort($list, fn($a, $b) => strcasecmp((string)$a['key'], (string)$b['key']) ?: strcmp((string)json_encode($a['benchmark']), (string)json_encode($b['benchmark'])));
+    $out[$type] = ['rows' => $list];
+  }
+  return $out;
 }

@@ -10,9 +10,11 @@ require_once __DIR__ . '/uni_core.php';
 require_once __DIR__ . '/crm_views.php';
 
 const UV_TYPES = ['entity', 'event', 'edge', 'release'];
+/** Item types the editor offers: the four ledger types, plus 'fact' once the facts migration (database/phase7_facts.sql) is installed. */
+function uv_types(PDO $pdo): array { return uni_facts_installed($pdo) ? array_merge(UV_TYPES, ['fact']) : UV_TYPES; }
 
 function uv_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-function uv_type_label(string $t): string { return ['entity' => 'Entity', 'event' => 'Event', 'edge' => 'Relationship (edge)', 'release' => 'Release'][$t] ?? $t; }
+function uv_type_label(string $t): string { return ['entity' => 'Entity', 'event' => 'Event', 'edge' => 'Relationship (edge)', 'release' => 'Release', 'fact' => 'Comparison fact'][$t] ?? $t; }
 function uv_state_label(string $s): string { return ['proposed' => 'Proposed (draft)', 'in_review' => 'In review', 'verified' => 'Verified', 'rejected' => 'Rejected', 'superseded' => 'Superseded'][$s] ?? $s; }
 function uv_post_str(array $p, string $k): string { $v = $p[$k] ?? ''; return is_string($v) ? $v : ''; }
 function uv_int($v): int { return is_string($v) && ctype_digit($v) && strlen($v) <= 10 ? (int)$v : 0; }
@@ -41,14 +43,23 @@ function uv_error_labels(): array {
     'note_required' => 'A note is mandatory for every decision.', 'note_invalid' => 'The note is not valid text or is too long.', 'checklist_required' => 'Confirm that you opened the original source before accepting.', 'human_check_required' => 'Confirm that you checked the AI-assisted claim yourself.',
     'decision_invalid' => 'Choose accept, reject or needs second source.', 'not_in_review' => 'This item is not waiting for review.', 'already_reviewed' => 'You already reviewed this item.', 'entity_not_verified' => 'The entity must be verified first.',
     'event_not_verified' => 'The related event must be verified first.', 'import_cannot_be_verified' => 'Imported leads cannot be verified.', 'duplicate_current' => 'A current version already exists.', 'db_rule' => 'The database refused this change.', 'db_constraint' => 'The database refused this change.',
-    'reference_invalid' => 'A referenced item does not exist.', 'error' => 'Not saved because of a server error.', 'parent_not_earlier' => 'A parent release must be earlier.', 'hash_invalid' => 'Invalid source hash.'];
+    'reference_invalid' => 'A referenced item does not exist.', 'error' => 'Not saved because of a server error.', 'parent_not_earlier' => 'A parent release must be earlier.', 'hash_invalid' => 'Invalid source hash.',
+    'facts_not_installed' => 'Comparison facts are not installed on this database yet.', 'fact_type_invalid' => 'Choose a fact type.', 'fact_key_required' => 'Enter what the fact is about (for example the feature name).',
+    'value_invalid' => 'The text value is not valid text or is too long.', 'value_required' => 'Enter a text value or a number with its unit.', 'value_conflict' => 'Enter either a text value or a number, not both.',
+    'value_num_invalid' => 'The number is not valid (digits, optional minus sign and up to six decimals).', 'unit_required' => 'A number needs a unit or currency (for example USD per month, or %).', 'unit_without_number' => 'A unit only belongs with a number.',
+    'value_num_not_allowed' => 'Features, platforms and integrations take a text value, not a number.', 'pricing_needs_number' => 'A price needs a number (0 or more) and its currency or unit.', 'benchmark_needs_number' => 'A benchmark needs the reported number and its unit.',
+    'benchmark_name_required' => 'Enter the benchmark name.', 'benchmark_metric_required' => 'Enter the benchmark metric.', 'benchmark_version_required' => 'Enter the benchmark version.', 'benchmark_fields_not_allowed' => 'Benchmark name, metric and version belong to benchmark facts only.',
+    'field_invalid' => 'One of the text fields is not valid or is too long.', 'release_invalid' => 'The related release must be a number or empty.', 'release_not_found' => 'That release does not exist.', 'release_entity_mismatch' => 'That release belongs to another entity.', 'release_not_verified' => 'The related release must be verified first.'];
 }
 function uv_error_text(string $code): string { return uv_error_labels()[$code] ?? 'Not saved: ' . str_replace('_', ' ', preg_replace('/[^a-z_]/', '', $code) ?? '') . '.'; }
 function uv_error_field(string $code, string $type = ''): string {
   $m = ['url_invalid' => 'src_url', 'publisher_required' => 'src_publisher', 'quote_required' => 'src_quote', 'retrieved_at_invalid' => 'src_retrieved', 'origin_invalid' => 'origin', 'slug_invalid' => 'slug', 'slug_taken' => 'slug', 'name_required' => 'name',
     'entity_type_invalid' => 'entity_type', 'summary_invalid' => 'summary', 'entity_invalid' => $type === 'edge' ? 'from_entity_id' : 'entity_id', 'entity_not_found' => $type === 'edge' ? 'from_entity_id' : 'entity_id', 'event_type_invalid' => 'event_type',
-    'date_kind_invalid' => 'date_kind', 'title_required' => 'title', 'date_invalid' => $type === 'release' ? 'release_date' : 'event_date', 'edge_type_invalid' => 'edge_type', 'self_edge' => 'to_entity_id', 'edge_exists' => 'edge_type', 'notes_invalid' => 'notes',
-    'validity_invalid' => 'valid_to', 'label_required' => 'version_label', 'event_invalid' => 'event_id', 'event_not_found' => 'event_id', 'note_required' => 'note', 'note_invalid' => 'note', 'checklist_required' => 'opened_source', 'human_check_required' => 'human_checked', 'decision_invalid' => 'decision'];
+    'date_kind_invalid' => 'date_kind', 'title_required' => 'title', 'date_invalid' => $type === 'release' ? 'release_date' : ($type === 'fact' ? 'observed_on' : 'event_date'), 'edge_type_invalid' => 'edge_type', 'self_edge' => 'to_entity_id', 'edge_exists' => 'edge_type', 'notes_invalid' => 'notes',
+    'validity_invalid' => 'valid_to', 'label_required' => 'version_label', 'event_invalid' => 'event_id', 'event_not_found' => 'event_id', 'note_required' => 'note', 'note_invalid' => 'note', 'checklist_required' => 'opened_source', 'human_check_required' => 'human_checked', 'decision_invalid' => 'decision',
+    'fact_type_invalid' => 'fact_type', 'fact_key_required' => 'fact_key', 'value_invalid' => 'value_text', 'value_required' => 'value_text', 'value_conflict' => 'value_text', 'value_num_invalid' => 'value_num', 'unit_required' => 'unit', 'unit_without_number' => 'unit', 'value_num_not_allowed' => 'value_num',
+    'pricing_needs_number' => 'value_num', 'benchmark_needs_number' => 'value_num', 'benchmark_name_required' => 'benchmark_name', 'benchmark_metric_required' => 'benchmark_metric', 'benchmark_version_required' => 'benchmark_version', 'benchmark_fields_not_allowed' => 'benchmark_name', 'field_invalid' => 'conditions',
+    'release_invalid' => 'release_id', 'release_not_found' => 'release_id', 'release_entity_mismatch' => 'release_id'];
   return $m[$code] ?? '';
 }
 
@@ -107,14 +118,15 @@ function uv_label(PDO $pdo, string $type, array $r): string {
   if ($type === 'entity') return (string)$r['name'];
   if ($type === 'event') return (string)$r['title'];
   if ($type === 'release') return (string)$r['version_label'];
+  if ($type === 'fact') return (string)$r['fact_type'] . ': ' . (string)$r['fact_key'];
   return uv_entity_name($pdo, $r['from_entity_id']) . ' ' . str_replace('_', ' ', (string)$r['edge_type']) . ' ' . uv_entity_name($pdo, $r['to_entity_id']);
 }
 function uv_sources(PDO $pdo, string $type, array $row): array {
   if ($type === 'release') { $s = $pdo->prepare('SELECT * FROM uni_source WHERE id = ?'); $s->execute([(int)$row['source_id']]); }
-  else { $lk = ['entity' => ['uni_entity_source', 'entity_id'], 'event' => ['uni_event_source', 'event_id'], 'edge' => ['uni_edge_source', 'edge_id']][$type]; $s = $pdo->prepare("SELECT s.* FROM {$lk[0]} l JOIN uni_source s ON s.id = l.source_id WHERE l.{$lk[1]} = ? ORDER BY s.id"); $s->execute([(int)$row['id']]); }
+  else { $lk = ['entity' => ['uni_entity_source', 'entity_id'], 'event' => ['uni_event_source', 'event_id'], 'edge' => ['uni_edge_source', 'edge_id'], 'fact' => ['uni_fact_source', 'fact_id']][$type]; $s = $pdo->prepare("SELECT s.* FROM {$lk[0]} l JOIN uni_source s ON s.id = l.source_id WHERE l.{$lk[1]} = ? ORDER BY s.id"); $s->execute([(int)$row['id']]); }
   return $s->fetchAll(PDO::FETCH_ASSOC);
 }
-function uv_reviews(PDO $pdo, string $type, int $id): array { $s = $pdo->prepare('SELECT decision, note, decided_at FROM uni_review WHERE target_type = ? AND target_id = ? ORDER BY id'); $s->execute([$type, $id]); return $s->fetchAll(PDO::FETCH_ASSOC); }
+function uv_reviews(PDO $pdo, string $type, int $id): array { $s = $pdo->prepare('SELECT decision, note, decided_at FROM ' . uni_review_table($type) . ' WHERE target_type = ? AND target_id = ? ORDER BY id'); $s->execute([$type, $id]); return $s->fetchAll(PDO::FETCH_ASSOC); }
 function uv_item_ai(PDO $pdo, string $type, array $row, array $sources): bool { if (uv_is_ai($row)) return true; foreach ($sources as $s) if (uv_is_ai($s)) return true; return false; }
 
 // ---- views -----------------------------------------------------------------------------------------------------------------------------
@@ -137,7 +149,7 @@ function uv_items_table(PDO $pdo, array $items, string $empty): string {
 }
 function uv_collect(PDO $pdo, string $where, array $args, int $limit = 50): array {
   $out = [];
-  foreach (UV_TYPES as $t) { $s = $pdo->prepare('SELECT * FROM ' . uni_table($t) . " WHERE $where ORDER BY id DESC LIMIT " . (int)$limit); $s->execute($args); foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) $out[] = [$t, $r]; }
+  foreach (uv_types($pdo) as $t) { $s = $pdo->prepare('SELECT * FROM ' . uni_table($t) . " WHERE $where ORDER BY id DESC LIMIT " . (int)$limit); $s->execute($args); foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $r) $out[] = [$t, $r]; }
   usort($out, fn($a, $b) => strcmp((string)$b[1]['proposed_at'], (string)$a[1]['proposed_at']) ?: ((int)$b[1]['id'] <=> (int)$a[1]['id']));
   return $out;
 }
@@ -156,16 +168,16 @@ function uv_view_mine(PDO $pdo, array $u): string {
 }
 function uv_view_queue(PDO $pdo, array $u): string {
   $items = [];
-  foreach (UV_TYPES as $t) { [$ok, $rows] = uni_review_queue($pdo, (int)$u['id'], $t, 25); if (!$ok) continue; foreach ($rows as $q) { $r = uni_row($pdo, $t, (int)$q['id']); if ($r) { $ps = uni_publish_state($pdo, $t, (int)$r['id']); $r['_awaiting'] = $ps && $ps['accepts'] > 0; $items[] = [$t, $r]; } } }
+  foreach (uv_types($pdo) as $t) { [$ok, $rows] = uni_review_queue($pdo, (int)$u['id'], $t, 25); if (!$ok) continue; foreach ($rows as $q) { $r = uni_row($pdo, $t, (int)$q['id']); if ($r) { $ps = uni_publish_state($pdo, $t, (int)$r['id']); $r['_awaiting'] = $ps && $ps['accepts'] > 0; $items[] = [$t, $r]; } } }
   usort($items, fn($a, $b) => (int)$a[1]['id'] <=> (int)$b[1]['id']);
   return '<h2>Review queue</h2><p class="small">Items waiting for review that you did not propose and have not reviewed yet.</p>' . uv_items_table($pdo, $items, 'Nothing is waiting for you.');
 }
 function uv_view_overview(PDO $pdo): string {
   $h = '<h2>Overview (read-only)</h2><div class="tableWrap" tabindex="0" role="region" aria-label="Counts (scrollable)"><table class="pretty"><caption class="sr-only">Counts by type and status</caption><thead><tr><th scope="col">Type</th>';
   $states = ['proposed', 'in_review', 'verified', 'rejected', 'superseded']; foreach ($states as $s) $h .= '<th scope="col">' . uv_h(uv_state_label($s)) . '</th>'; $h .= '<th scope="col">Waiting for second verifier</th></tr></thead><tbody>';
-  foreach (UV_TYPES as $t) {
+  foreach (uv_types($pdo) as $t) {
     $c = array_fill_keys($states, 0); foreach ($pdo->query('SELECT state, COUNT(*) n FROM ' . uni_table($t) . ' GROUP BY state')->fetchAll(PDO::FETCH_ASSOC) as $r) if (isset($c[$r['state']])) $c[$r['state']] = (int)$r['n'];
-    $w = $pdo->prepare("SELECT COUNT(*) FROM " . uni_table($t) . " x WHERE x.state = 'in_review' AND EXISTS (SELECT 1 FROM uni_review r WHERE r.target_type = ? AND r.target_id = x.id AND r.decision = 'accept')"); $w->execute([$t]);
+    $w = $pdo->prepare("SELECT COUNT(*) FROM " . uni_table($t) . " x WHERE x.state = 'in_review' AND EXISTS (SELECT 1 FROM " . uni_review_table($t) . " r WHERE r.target_type = ? AND r.target_id = x.id AND r.decision = 'accept')"); $w->execute([$t]);
     $h .= '<tr><th scope="row">' . uv_h(uv_type_label($t)) . '</th>'; foreach ($states as $s) $h .= '<td>' . $c[$s] . '</td>'; $h .= '<td>' . (int)$w->fetchColumn() . '</td></tr>';
   }
   $h .= '</tbody></table></div><h2>Latest items</h2>' . uv_items_table($pdo, array_slice(uv_collect($pdo, '1 = 1', [], 10), 0, 20), 'No items yet.');
@@ -174,9 +186,9 @@ function uv_view_overview(PDO $pdo): string {
 /** New-proposal chooser and the four forms. $o: old values, bad fields, act. */
 function uv_view_new(PDO $pdo, string $type, array $o): string {
   $h = '<h2>New proposal</h2><nav aria-label="Proposal type" class="uvNav">';
-  foreach (UV_TYPES as $t) $h .= '<a class="btn sm' . ($t === $type ? '' : ' secondary') . '" href="/universe-editor.php?v=new&amp;t=' . $t . '"' . ($t === $type ? ' aria-current="page"' : '') . '>' . uv_h(uv_type_label($t)) . '</a>';
+  $types = uv_types($pdo); foreach ($types as $t) $h .= '<a class="btn sm' . ($t === $type ? '' : ' secondary') . '" href="/universe-editor.php?v=new&amp;t=' . $t . '"' . ($t === $type ? ' aria-current="page"' : '') . '>' . uv_h(uv_type_label($t)) . '</a>';
   $h .= '</nav>';
-  if (!in_array($type, UV_TYPES, true)) return $h . '<p class="small">Choose what you want to propose.</p>';
+  if (!in_array($type, $types, true)) return $h . '<p class="small">Choose what you want to propose.</p>';
   $o = uv_scope($o, 'propose'); $ents = uv_entity_options($pdo);
   $inner = '';
   if ($type === 'entity') $inner = uv_select('entity_type', 'Entity type', array_combine(uni_entity_types(), array_map('ucfirst', uni_entity_types())), $o + ['required' => true]) . uv_input('slug', 'Slug', $o + ['required' => true, 'max' => 120, 'hint' => 'Lower-case letters, digits, dot, dash, underscore. Not rewritten, refused if invalid.']) . uv_input('name', 'Name', $o + ['required' => true, 'max' => 190]) . uv_area('summary', 'Summary (optional)', $o + ['max' => 500, 'hint' => 'Up to 500 characters.']);
@@ -187,6 +199,14 @@ function uv_view_new(PDO $pdo, string $type, array $o): string {
     . uv_select('to_entity_id', 'To entity', $ents, $o + ['required' => true]) . uv_input('valid_from', 'Valid from (optional)', $o + ['max' => 10, 'hint' => 'YYYY, YYYY-MM or YYYY-MM-DD.']) . uv_input('valid_to', 'Valid to (optional)', $o + ['max' => 10]) . uv_area('notes', 'Notes (optional)', $o + ['max' => 500, 'hint' => 'Internal, never shown publicly.']);
   if ($type === 'release') $inner = uv_select('entity_id', 'Entity', $ents, $o + ['required' => true]) . uv_input('version_label', 'Version label', $o + ['required' => true, 'max' => 80]) . uv_input('release_date', 'Release date', $o + ['required' => true, 'max' => 10, 'hint' => 'YYYY-MM-DD, YYYY-MM or YYYY.'])
     . uv_input('event_id', 'Related event number (optional)', $o + ['max' => 10, 'hint' => 'The number of an existing event.']);
+  if ($type === 'fact') $inner = uv_select('entity_id', 'Entity', $ents, $o + ['required' => true]) . uv_select('fact_type', 'Fact type', array_combine(uni_fact_types(), array_map('ucfirst', uni_fact_types())), $o + ['required' => true])
+    . uv_input('fact_key', 'What the fact is about', $o + ['required' => true, 'max' => 120, 'hint' => 'For example "Voice mode", "iOS app", "Pro plan, monthly" or "Context window". Use the same wording for the same thing on every entity so the table lines up.'])
+    . '<fieldset class="uvFieldset"><legend>Value (a text OR a number with its unit, never both)</legend>' . uv_area('value_text', 'Text value', $o + ['max' => 1000, 'hint' => 'For features, platforms, integrations and limits that are not numbers.'])
+    . uv_input('value_num', 'Number', $o + ['max' => 24, 'hint' => 'Digits with an optional minus sign and up to six decimals. Required for pricing and benchmarks.']) . uv_input('unit', 'Unit or currency', $o + ['max' => 40, 'hint' => 'Required with a number, for example "USD per month", "%", "tokens".']) . '</fieldset>'
+    . '<fieldset class="uvFieldset"><legend>Benchmark details (benchmark facts only)</legend>' . uv_input('benchmark_name', 'Benchmark name', $o + ['max' => 120]) . uv_input('benchmark_metric', 'Metric', $o + ['max' => 120, 'hint' => 'For example "pass@1" or "accuracy".'])
+    . uv_input('benchmark_version', 'Benchmark version', $o + ['max' => 80, 'hint' => 'Required for benchmarks: results of different versions are never comparable.']) . '</fieldset>'
+    . uv_area('conditions', 'Conditions (optional)', $o + ['max' => 1000, 'hint' => 'How the figure was obtained: prompt setting, region, plan, hardware. Different conditions are shown as not comparable.'])
+    . uv_input('observed_on', 'Date the source states or you observed it', $o + ['required' => true, 'max' => 10, 'hint' => 'YYYY-MM-DD, YYYY-MM or YYYY (the precision you can prove).']) . uv_input('release_id', 'Related release number (optional)', $o + ['max' => 10, 'hint' => 'The number of an existing release of the same entity.']);
   $inner .= uv_origin_select('origin', 'Origin of this proposal', ['required' => true] + $o) . uv_source_fields($o);
   return $h . '<section class="panel">' . uv_form('propose', ['t' => $type], '<fieldset class="uvFieldset"><legend>' . uv_h(uv_type_label($type)) . ' proposal</legend>' . $inner . '</fieldset>', 'Save draft') . '</section>';
 }
@@ -201,11 +221,16 @@ function uv_view_item(PDO $pdo, array $u, string $type, array $row, array $o = [
   if ($type === 'entity') $dl += ['Entity type' => $row['entity_type'], 'Slug' => $row['slug'], 'Summary' => $row['summary']];
   if ($type === 'event') $dl += ['Entity' => uv_entity_name($pdo, $row['entity_id']), 'Event type' => $row['event_type'], 'Date' => $row['event_date'] . ' (' . $row['date_precision'] . ', ' . $row['date_kind'] . ')', 'Title' => $row['title'], 'Summary' => $row['summary']];
   if ($type === 'edge') $dl += ['From' => uv_entity_name($pdo, $row['from_entity_id']), 'Relationship' => $row['edge_type'], 'To' => uv_entity_name($pdo, $row['to_entity_id']), 'Valid from' => $row['valid_from'] ?? '', 'Valid to' => $row['valid_to'] ?? '', 'Notes' => $row['notes']];
+  if ($type === 'fact') $dl += ['Entity' => uv_entity_name($pdo, $row['entity_id']), 'Fact type' => $row['fact_type'], 'About' => $row['fact_key'], 'Text value' => $row['value_text'], 'Number' => uni_fact_num_text($row['value_num']) ?? '', 'Unit' => $row['unit'], 'Benchmark' => trim($row['benchmark_name'] . ' / ' . $row['benchmark_metric'] . ' / ' . $row['benchmark_version'], ' /'), 'Conditions' => $row['conditions'], 'Observed' => $row['observed_on'] . ' (' . $row['date_precision'] . ')', 'Related release' => $row['release_id'] ?? ''];
   if ($type === 'release') $dl += ['Entity' => uv_entity_name($pdo, $row['entity_id']), 'Version' => $row['version_label'], 'Date' => $row['release_date'] . ' (' . $row['date_precision'] . ')', 'Related event' => $row['event_id'] ?? ''];
   $h .= '<dl class="uvDl">'; foreach ($dl as $k => $v) $h .= '<dt>' . uv_h($k) . '</dt><dd>' . uv_h($v) . '</dd>'; $h .= '</dl>';
   if ($type === 'event') {
     $d = uni_duplicates_of_event($pdo, $id); if ($d) $h .= '<div class="noteBox" role="note"><strong>Possible duplicate (flagged, not merged):</strong> same entity, date and title as event ' . implode(', ', array_map(fn($x) => '<a href="/universe-editor.php?v=item&amp;t=event&amp;id=' . (int)$x . '">#' . (int)$x . '</a>', $d)) . '.</div>';
     foreach (uni_conflicts($pdo, 'event', $id) as $c) { $dd = $c['detail']; if (($dd['kind'] ?? '') === 'date_conflict') $h .= '<div class="noteBox" role="note"><strong>Possible date conflict:</strong> the same title exists on another date (event ' . implode(', ', array_map(fn($x) => '<a href="/universe-editor.php?v=item&amp;t=event&amp;id=' . (int)$x . '">#' . (int)$x . '</a>', (array)($dd['others'] ?? []))) . '). Resolve it by review, nothing is merged automatically.</div>'; }
+  }
+  if ($type === 'fact') {
+    $d = uni_duplicates_of_fact($pdo, $id); if ($d) $h .= '<div class="noteBox" role="note"><strong>Possible duplicate (flagged, not merged):</strong> same entity, subject and value as fact ' . implode(', ', array_map(fn($x) => '<a href="/universe-editor.php?v=item&amp;t=fact&amp;id=' . (int)$x . '">#' . (int)$x . '</a>', $d)) . '.</div>';
+    foreach (uni_conflicts($pdo, 'fact', $id) as $c) { $dd = $c['detail']; if (($dd['kind'] ?? '') === 'value_conflict') $h .= '<div class="noteBox" role="note"><strong>Possible value conflict:</strong> the same subject has a different value in fact ' . implode(', ', array_map(fn($x) => '<a href="/universe-editor.php?v=item&amp;t=fact&amp;id=' . (int)$x . '">#' . (int)$x . '</a>', (array)($dd['others'] ?? []))) . '. Resolve it by review with the sources, nothing is merged automatically.</div>'; }
   }
   if ($ps) { $h .= '<p>' . uv_h((string)$ps['valid_sources']) . ' valid source(s). ' . ($ps['accepts'] > 0 ? 'Accepts so far: ' . (int)$ps['accepts'] . '. ' . ($ps['second_review_required'] ? 'This item is sampled for a second review: a second, different verifier must also accept.' : 'One accept is enough for this item.') : 'Items selected by the sampling rule need two different verifiers; you learn this after the first accept.') . '</p>'; }
   $h .= '<h3>Sources</h3>' . ($sources ? '<ul class="uvSources">' . implode('', array_map('uv_source_block', $sources)) . '</ul>' : '<p class="small">No source yet.</p>');
@@ -214,7 +239,7 @@ function uv_view_item(PDO $pdo, array $u, string $type, array $row, array $o = [
   if ($r === 'verifier') {
     if ($mine) $h .= '<div class="noteBox" role="note">You proposed this item, so you cannot review it. A different verifier must.</div>';
     elseif ($row['state'] === 'in_review') {
-      $done = (int)$pdo->query('SELECT COUNT(*) FROM uni_review WHERE target_type = ' . $pdo->quote($type) . ' AND target_id = ' . $id . ' AND reviewer_id = ' . (int)$u['id'])->fetchColumn();
+      $done = (int)$pdo->query('SELECT COUNT(*) FROM ' . uni_review_table($type) . ' WHERE target_type = ' . $pdo->quote($type) . ' AND target_id = ' . $id . ' AND reviewer_id = ' . (int)$u['id'])->fetchColumn();
       $h .= $done ? '<div class="noteBox" role="note">You already reviewed this item.</div>' : uv_review_form($type, $id, $ai, $o);
     } else $h .= '<p class="small">This item is not waiting for review.</p>';
   }
@@ -231,6 +256,7 @@ function uv_correct_fields(string $type, array $o): string {
   if ($type === 'entity') return uv_input('name', 'New name', $o + ['max' => 190]) . uv_area('summary', 'New summary', $o + ['max' => 500]);
   if ($type === 'event') return uv_input('title', 'New title', $o + ['max' => 255]) . uv_input('event_date', 'New date', $o + ['max' => 10, 'hint' => 'YYYY-MM-DD, YYYY-MM or YYYY.']) . uv_area('summary', 'New summary', $o + ['max' => 1000]);
   if ($type === 'edge') return uv_input('valid_from', 'New valid from', $o + ['max' => 10]) . uv_input('valid_to', 'New valid to', $o + ['max' => 10]) . uv_area('notes', 'New notes', $o + ['max' => 500]);
+  if ($type === 'fact') return uv_area('value_text', 'New text value', $o + ['max' => 1000]) . uv_input('value_num', 'New number', $o + ['max' => 24]) . uv_input('unit', 'New unit or currency', $o + ['max' => 40]) . uv_input('benchmark_version', 'New benchmark version', $o + ['max' => 80]) . uv_area('conditions', 'New conditions', $o + ['max' => 1000]) . uv_input('observed_on', 'New observation date', $o + ['max' => 10, 'hint' => 'YYYY-MM-DD, YYYY-MM or YYYY.']);
   return uv_input('version_label', 'New version label', $o + ['max' => 80]) . uv_input('release_date', 'New release date', $o + ['max' => 10, 'hint' => 'YYYY-MM-DD, YYYY-MM or YYYY.']);
 }
 function uv_review_form(string $type, int $id, bool $ai, array $o): string {
@@ -253,7 +279,7 @@ function uv_handle_post(PDO $pdo, array $u, array $p): array {
   if (!in_array($act, ['propose', 'attach_source', 'submit', 'correct', 'review'], true)) return $fail('forbidden');
   if (in_array($act, ['propose', 'attach_source', 'submit', 'correct'], true) && !$isEditor) return $fail('forbidden');
   if ($act === 'review' && !$isVerifier) return $fail('forbidden');
-  if (!in_array($type, UV_TYPES, true)) return $fail('type_invalid');
+  if (!in_array($type, uv_types($pdo), true)) return $fail('type_invalid');
   $originOk = fn(string $o) => in_array($o, ['human', 'ai_assisted'], true);
   $src = ['url' => uv_post_str($p, 'src_url'), 'publisher' => uv_post_str($p, 'src_publisher'), 'retrieved_at' => uv_post_str($p, 'src_retrieved'), 'quote' => uv_post_str($p, 'src_quote'), 'origin' => uv_post_str($p, 'src_origin') ?: 'human'];
   if ($act === 'propose') {
@@ -269,9 +295,11 @@ function uv_handle_post(PDO $pdo, array $u, array $p): array {
       }
       if ($type === 'entity') [$ok, $res] = uni_propose_entity($pdo, $uid, ['entity_type' => $s('entity_type'), 'slug' => $s('slug'), 'name' => $s('name'), 'summary' => $s('summary'), 'origin' => $origin]);
       elseif ($type === 'event') [$ok, $res] = uni_propose_event($pdo, $uid, ['entity_id' => $n('entity_id'), 'event_type' => $s('event_type'), 'date_kind' => $s('date_kind'), 'event_date' => $s('event_date'), 'title' => $s('title'), 'summary' => $s('summary'), 'origin' => $origin]);
+      elseif ($type === 'fact') [$ok, $res] = uni_propose_fact($pdo, $uid, ['entity_id' => $n('entity_id'), 'release_id' => $s('release_id') === '' ? null : $n('release_id'), 'fact_type' => $s('fact_type'), 'fact_key' => $s('fact_key'), 'value_text' => $s('value_text'), 'value_num' => $s('value_num') === '' ? null : $s('value_num'),
+        'unit' => $s('unit'), 'benchmark_name' => $s('benchmark_name'), 'benchmark_metric' => $s('benchmark_metric'), 'benchmark_version' => $s('benchmark_version'), 'conditions' => $s('conditions'), 'observed_on' => $s('observed_on'), 'origin' => $origin]);
       else [$ok, $res] = uni_propose_edge($pdo, $uid, ['from_entity_id' => $n('from_entity_id'), 'to_entity_id' => $n('to_entity_id'), 'edge_type' => $s('edge_type'), 'valid_from' => $s('valid_from') === '' ? null : $s('valid_from'), 'valid_to' => $s('valid_to') === '' ? null : $s('valid_to'), 'notes' => $s('notes'), 'origin' => $origin]);
       if (!$ok) return [false, $res];
-      $id = $type === 'event' ? (int)$res['id'] : (int)$res;
+      $id = in_array($type, ['event', 'fact'], true) ? (int)$res['id'] : (int)$res;
       [$ok2, $why] = uni_attach_source($pdo, $uid, $type, $id, $src); return $ok2 ? [true, $id] : [false, $why];
     });
     return $r[0] ? $item($type, (int)$r[1], 'created') : $fail((string)$r[1]);
@@ -285,7 +313,7 @@ function uv_handle_post(PDO $pdo, array $u, array $p): array {
   }
   if ($act === 'correct') {
     $origin = uv_post_str($p, 'origin') ?: 'human'; if (!$originOk($origin)) return $fail('origin_invalid');
-    $fields = ['entity' => ['name', 'summary'], 'event' => ['title', 'event_date', 'summary'], 'edge' => ['valid_from', 'valid_to', 'notes'], 'release' => ['version_label', 'release_date']][$type]; $ch = ['origin' => $origin];
+    $fields = ['entity' => ['name', 'summary'], 'event' => ['title', 'event_date', 'summary'], 'edge' => ['valid_from', 'valid_to', 'notes'], 'release' => ['version_label', 'release_date'], 'fact' => ['value_text', 'value_num', 'unit', 'benchmark_name', 'benchmark_metric', 'benchmark_version', 'conditions', 'observed_on']][$type]; $ch = ['origin' => $origin];
     foreach ($fields as $f) { $v = uv_post_str($p, $f); if (trim($v) !== '') $ch[$f] = $v; }
     $r = uni_correct($pdo, $uid, $type, $id, $ch); return $r[0] ? $item($type, (int)$r[1], 'corrected') : $fail((string)$r[1]);
   }

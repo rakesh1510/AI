@@ -44,7 +44,7 @@ if ($uniBody === '') {   // GET views, and the re-render of a refused POST
   $pre = uv_error_summary($uniErrors) . uv_flash(is_string($_GET['m'] ?? null) ? $_GET['m'] : '');
   if ($want !== '' && $want !== $uniRole) { $uniStatus = 403; $uniTitle = 'Not allowed'; $uniBody = '<section class="panel"><h2>Not allowed</h2><p>Your role does not have this page.</p></section>'; }
   elseif ($uniView === 'item') {
-    $iid = uv_int($uniQuery['id'] ?? null); $row = in_array($uniType, UV_TYPES, true) && $iid > 0 ? uni_row($pdo, $uniType, $iid) : null;
+    $iid = uv_int($uniQuery['id'] ?? null); $row = in_array($uniType, uv_types($pdo), true) && $iid > 0 ? uni_row($pdo, $uniType, $iid) : null;
     $seen = $row && ($uniRole !== 'editor' || (int)$row['proposed_by'] === (int)$uniUser['id'] || ($row['state'] === 'verified' && (int)$row['is_current'] === 1));   // an editor sees own items and verified ones
     if (!$seen) { $uniStatus = 404; $uniTitle = 'Not found'; $uniBody = $pre . '<section class="panel"><h2>Not found</h2><p>That item does not exist or is not available to you.</p></section>'; }
     else { $uniTitle = 'Item'; $uniBody = $pre . uv_view_item($pdo, $uniUser, $uniType, $row, $o); }

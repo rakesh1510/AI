@@ -136,6 +136,8 @@ a.uhCell:hover{box-shadow:0 0 0 2px var(--brand)}
 .uaChange{margin:14px 0}
 .uaChange summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700}
 .upCorner{width:120px}
+.uaFact+.uaFact{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border,#c8cde0)}.uaFactValue{font-weight:700;margin:0 0 4px}
+.uaDiff>th,.uaDiff>td{border-left:4px solid var(--brand)}.uaDiffFlag{display:inline-block;font-size:.85em;font-weight:700;border:1px solid currentColor;border-radius:8px;padding:1px 8px;margin-top:4px}.uaNoCompare{font-style:italic}
 
 @media (max-width:640px){.upDl{grid-template-columns:1fr}.uaEvidence,.uaEditorial,.uaCommunity{padding-left:12px}.ulKind{display:block}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

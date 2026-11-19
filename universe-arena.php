@@ -36,6 +36,29 @@ function ua_table(array $m, string $caption, array $rows): string {
   return $o . '</tbody></table></div>';
 }
 function ua_release_source(?array $rel): array { return $rel ? [['url' => $rel['source_url'], 'publisher' => $rel['source_publisher'], 'retrieved_at' => $rel['source_retrieved_at']]] : []; }
+/** One verified fact as a cell fragment: value (+ unit), benchmark metric / version, conditions, release, observation date and its sources with retrieval date. */
+function ua_fact_html(array $f): string {
+  $val = $f['value_num'] !== null ? $f['value_num'] . ' ' . (string)$f['unit'] : (string)$f['value_text'];
+  $o = '<div class="uaFact"><p class="uaFactValue">' . up_h($val) . '</p>';
+  if ($f['benchmark']) $o .= '<p class="upMeta">Benchmark: ' . up_h($f['benchmark']['name']) . ' · Metric: ' . up_h($f['benchmark']['metric']) . ' · Version: ' . up_h($f['benchmark']['version']) . '</p>';
+  if ($f['conditions'] !== null) $o .= '<p class="upMeta">Conditions: ' . up_h($f['conditions']) . '</p>';
+  if ($f['release'] !== null) $o .= '<p class="upMeta">Release: ' . up_h($f['release']) . '</p>';
+  return $o . '<p class="upMeta">As of ' . up_time_tag($f['observed_on'], $f['date_precision']) . '</p>' . up_sources_html($f['sources']) . '</div>';
+}
+/** Side-by-side table of the verified fact rows of one type. A row that has data for no entity is never produced; a cell without verified data reads "Unavailable: no verified data". Differences are flagged in words, nobody wins. */
+function ua_fact_section(array $m, string $type, string $caption, string $emptyLabel): string {
+  $rows = $m['fact_matrix'][$type]['rows'] ?? [];
+  if (!$rows) return ua_table($m, $caption, [$emptyLabel => fn($s, $f) => up_na($emptyLabel)]);
+  $o = '<div class="upScroll uaScroll" role="region" tabindex="0" aria-label="' . up_h($caption) . ' (scrolls sideways on small screens)"><table class="upTable uaTable"><caption>' . up_h($caption) . '</caption><thead>' . ua_cols($m) . '</thead><tbody>';
+  foreach ($rows as $r) {
+    $label = up_h($r['key']) . ($r['benchmark'] ? '<br><span class="upMeta">' . up_h($r['benchmark']['name']) . ' · ' . up_h($r['benchmark']['metric']) . '</span>' : '');
+    $flag = !$r['comparable'] ? '<br><span class="uaDiffFlag uaNoCompare">Different benchmark version or conditions: not comparable</span>' : ($r['differs'] ? '<br><span class="uaDiffFlag">Values differ between entities</span>' : '');
+    $o .= '<tr' . ($r['differs'] ? ' class="uaDiff"' : '') . '><th scope="row">' . $label . $flag . '</th>';
+    foreach ($m['compare'] as $e) { $cell = $r['cells'][$e['entity']['slug']] ?? []; $o .= '<td>' . ($cell ? implode('', array_map('ua_fact_html', $cell)) : up_na($r['key'])) . '</td>'; }
+    $o .= '</tr>';
+  }
+  return $o . '</tbody></table></div>';
+}
 function ua_from_release(array $m, string $key): callable {
   return function (string $slug, array $f) use ($m, $key) {
     $rel = $m['extra'][$slug]['latest']; $cs = $rel['change_set'] ?? null;
@@ -85,11 +108,12 @@ function ua_render_compare(array $m, string $shareUrl): string {
     $p = $f['pricing']; if (!$p['available']) return up_na('pricing'); $v = $p['value'];
     if ($v['from'] === 'latest_release_change_set') return '<p>' . up_h(up_value_text($v['value'])) . '</p><p class="upMeta">Recorded in the latest verified release</p>' . up_sources_html(ua_release_source($m['extra'][$s]['latest']));
     return '<p>' . up_h($v['title']) . '</p><p class="upMeta">Pricing change · ' . up_time_tag($v['date'], 'day') . '</p>' . up_sources_html($v['sources']);
-  }]) . '</section>';
-  $o .= '<section aria-labelledby="ua-feat-h"><h3 id="ua-feat-h">Features</h3>' . ua_table($m, 'Features', ['Features' => ua_from_release($m, 'features')]) . '</section>';
-  $o .= '<section aria-labelledby="ua-plat-h"><h3 id="ua-plat-h">Platforms</h3>' . ua_table($m, 'Platforms', ['Platforms' => ua_from_release($m, 'platforms')]) . '</section>';
-  $o .= '<section aria-labelledby="ua-int-h"><h3 id="ua-int-h">Integrations</h3>' . ua_table($m, 'Integrations', ['Integrations' => fn($s, $f) => ua_edge_list($m['extra'][$s]['integrations'], $s, $m['extra'][$s]['integrations_total'])]) . '</section>';
-  $o .= '<section aria-labelledby="ua-bench-h"><h3 id="ua-bench-h">Benchmarks</h3><p>Benchmark results appear only as the figure a verified source reports. AIHubpedia adds no score, rank or winner. If a cell is unavailable, there is no verified benchmark evidence for it.</p>' . ua_table($m, 'Benchmarks', ['Benchmarks' => ua_from_release($m, 'benchmarks')]) . '</section></section>';
+  }]) . '<h4>Verified pricing facts</h4><p class="upMeta">Each price states its currency or unit and its source. Prices from different dates or plans are separate rows.</p>' . ua_fact_section($m, 'pricing', 'Verified pricing facts', 'pricing facts') . '</section>';
+  $o .= '<section aria-labelledby="ua-feat-h"><h3 id="ua-feat-h">Features</h3>' . ua_fact_section($m, 'feature', 'Features', 'features') . '<p class="upMeta">Also recorded in the latest verified release (free-form release notes, shown as recorded; they are not part of the fact comparison above).</p>' . ua_table($m, 'Features recorded in release notes', ['Features' => ua_from_release($m, 'features')]) . '</section>';
+  $o .= '<section aria-labelledby="ua-plat-h"><h3 id="ua-plat-h">Platforms</h3>' . ua_fact_section($m, 'platform', 'Platforms', 'platforms') . '<p class="upMeta">Also recorded in the latest verified release (free-form release notes, shown as recorded; they are not part of the fact comparison above).</p>' . ua_table($m, 'Platforms recorded in release notes', ['Platforms' => ua_from_release($m, 'platforms')]) . '</section>';
+  $o .= '<section aria-labelledby="ua-int-h"><h3 id="ua-int-h">Integrations</h3>' . ua_table($m, 'Integrations', ['Integrations' => fn($s, $f) => ua_edge_list($m['extra'][$s]['integrations'], $s, $m['extra'][$s]['integrations_total'])]) . '<h4>Verified integration facts</h4>' . ua_fact_section($m, 'integration', 'Verified integration facts', 'integration facts') . '</section>';
+  $o .= '<section aria-labelledby="ua-lim-h"><h3 id="ua-lim-h">Limits</h3>' . ua_fact_section($m, 'limit', 'Limits', 'limits') . '</section>';
+  $o .= '<section aria-labelledby="ua-bench-h"><h3 id="ua-bench-h">Benchmarks</h3><p>A benchmark appears only as the figure a verified source reports, with its metric, benchmark version and conditions. AIHubpedia adds no score, rank or winner. <strong>Numbers from different conditions, versions or dates are not comparable.</strong> If a cell is unavailable, there is no verified benchmark evidence for it.</p>' . ua_fact_section($m, 'benchmark', 'Benchmarks', 'benchmarks') . '<p class="upMeta">Also recorded in the latest verified release (free-form release notes, shown as recorded; they are not part of the fact comparison above).</p>' . ua_table($m, 'Benchmarks recorded in release notes', ['Benchmarks' => ua_from_release($m, 'benchmarks')]) . '</section></section>';
   $o .= '<section class="uaEditorial" aria-labelledby="ua-ed-h"><h2 id="ua-ed-h">Editorial analysis</h2><p class="upBadge">Editorial opinion, not a verified fact</p><div class="upEmpty"><p>No editorial analysis has been published for this comparison yet. When it exists it will be written by AIHubpedia editors, labelled as opinion, and kept apart from the verified evidence above.</p></div></section>';
   $o .= '<section class="uaCommunity" aria-labelledby="ua-com-h"><h2 id="ua-com-h">Community opinion</h2><p class="upBadge">Community opinion, not a verified fact</p><div class="upEmpty"><p>No community opinion has been collected for these entities yet. Nothing is shown here until real, moderated contributions exist.</p></div></section>';
   $o .= '<section class="upShare" aria-labelledby="ua-share-h"><h2 id="ua-share-h">Share this comparison</h2><div class="upCopy"><label for="ua-share">Address of this comparison</label><input class="input" id="ua-share" type="text" readonly value="' . up_h($shareUrl) . '"><button class="btn secondary js-only" type="button" data-copy-from="ua-share">Copy link</button></div><p class="upMeta upCopied" role="status" aria-live="polite" data-copy-status></p></section>';
