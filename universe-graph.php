@@ -57,7 +57,7 @@ if ($detail) $crumbs[] = [(string)$detail['name'], null];
 $jsonld = [seo_breadcrumb_node($crumbs)];
 $cfg = ['api' => '/universe-api.php', 'slug' => $detail ? $slug : null, 'syncQuery' => true, 'staticId' => 'uni-static'];
 $asset = function (string $f): string { return '/assets/universe/' . $f . '?v=' . (@filemtime(__DIR__ . '/assets/universe/' . $f) ?: 1); };
-if ($state === 'ok') $head_extra = '<link rel="stylesheet" href="' . h($asset('graph.css')) . '">';
+if ($state === 'ok') $head_extra = '<link rel="stylesheet" href="' . h($asset('graph.css')) . '">' . "\n" . '<style>html.js #ugapp[hidden]{display:block;visibility:hidden;min-height:688px}</style>';   /* reserves the app height while it is hidden, so revealing it does not shift the list below (CLS) */
 require __DIR__ . '/layout_top.php';
 ?>
 <?= render_breadcrumbs($crumbs) ?>
