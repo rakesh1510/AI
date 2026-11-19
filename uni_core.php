@@ -426,6 +426,15 @@ function uni_review(PDO $pdo, int $reviewerId, string $type, int $id, string $de
     }
     // finalize. A successor version is verified FIRST (is_current stays 0), then the live version is retired (the database refuses to retire a
     // verified row that has no verified successor), then the successor becomes current (UNIQUE current_lineage / slug / edge triple).
+    if ($type === 'edge') {   // an endpoint entity may have been superseded since the edge was proposed: verify the edge against the LIVE rows of both lineages
+      $ea = uni_entity_live($pdo, (int)$row['from_entity_id']); $eb = uni_entity_live($pdo, (int)$row['to_entity_id']);
+      if ($ea === null || $eb === null || $ea['state'] !== 'verified' || $eb['state'] !== 'verified') return [false, 'entity_not_verified'];
+      if ((int)$ea['id'] !== (int)$row['from_entity_id'] || (int)$eb['id'] !== (int)$row['to_entity_id']) {
+        $x = $pdo->prepare("SELECT 1 FROM uni_edge WHERE from_entity_id = ? AND to_entity_id = ? AND edge_type = ? AND is_current = 1 AND state <> 'rejected' AND id <> ?"); $x->execute([(int)$ea['id'], (int)$eb['id'], $row['edge_type'], $id]);
+        if ($x->fetchColumn()) return [false, 'edge_exists'];
+        $pdo->prepare("UPDATE uni_edge SET from_entity_id = ?, to_entity_id = ? WHERE id = ? AND state = 'in_review'")->execute([(int)$ea['id'], (int)$eb['id'], $id]);
+      }
+    }
     $isSuccessor = (int)$row['version_no'] > 1 || $row['supersedes_id'] !== null;
     $u = $pdo->prepare("UPDATE $t SET state = 'verified', verified_by = ?, verified_at = ?, review_id = ?, is_current = " . ($isSuccessor ? '0' : '1') . " WHERE id = ? AND state = 'in_review'");
     $u->execute([(int)$reviewer['id'], crm_now(), $rid, $id]);

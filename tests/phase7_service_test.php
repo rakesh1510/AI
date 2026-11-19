@@ -233,6 +233,14 @@ function suite(PDO $pdo, string $mode, string $H): void {
   // entity rename: events and edges keep resolving through the lineage
   $cn = uni_correct($pdo, $ed1, 'entity', $co, ['name' => "Acme Renamed $run"]); good($cn, 'entity correction'); uni_submit_for_review($pdo, $ed1, 'entity', (int)$cn[1]); $r = uni_review($pdo, $v1, 'entity', (int)$cn[1], 'accept'); if ($r[0] && $r[1]['awaiting_second_review']) uni_review($pdo, $v2, 'entity', (int)$cn[1], 'accept');
   ok($state('entity', (int)$cn[1]) === 'verified' && $state('entity', $co) === 'superseded', 'entity renamed through a verified new version'); $pub = uni_public_events($pdo, ['entity_slug' => "acme-$run"]); ok($pub['total'] >= 1 && $pub['items'][0]['entity_name'] === "Acme Renamed $run", 'events of the old entity row resolve to the new live version');
+  // an edge proposed BEFORE one of its entities is superseded, then reviewed AFTER: verified against the live rows, endpoints re-pointed (no db_rule in trigger mode)
+  { $sa = $newEntity("sup-a-$run"); $sb = $newEntity("sup-b-$run"); foreach ([$sa, $sb] as $se) $publish('entity', $se, $ed1);
+    $se1 = uni_propose_edge($pdo, $ed1, ['from_entity_id' => $sa, 'to_entity_id' => $sb, 'edge_type' => 'built_on']); good($se1, 'propose edge before supersede'); $sedge = (int)$se1[1]; uni_attach_source($pdo, $ed1, 'edge', $sedge, $src()); uni_submit_for_review($pdo, $ed1, 'edge', $sedge);
+    $sc = uni_correct($pdo, $ed1, 'entity', $sa, ['name' => "Sup A renamed $run"]); good($sc, 'correct entity'); $publish('entity', (int)$sc[1], $ed1);
+    ok($state('entity', $sa) === 'superseded', 'the edge endpoint entity is now superseded');
+    $r = uni_review($pdo, $v1, 'edge', $sedge, 'accept'); if ($r[0] && ($r[1]['awaiting_second_review'] ?? false)) $r = uni_review($pdo, $v2, 'edge', $sedge, 'accept');
+    ok($r[0] === true && $state('edge', $sedge) === 'verified', 'the edge verifies against the live entity rows (' . json_encode($r[1]) . ')');
+    ok((int)val($pdo, 'SELECT from_entity_id FROM uni_edge WHERE id = ?', [$sedge]) === (int)$sc[1], 'its endpoint was re-pointed to the live version of the entity'); }
   no(uni_propose_entity($pdo, $ed1, ['entity_type' => 'company', 'slug' => "acme-$run", 'name' => 'Clash']), 'slug_taken', 'a live slug cannot be taken twice');
   if ($mode === 'triggers') {
     ok(dbRefuses($pdo, "UPDATE uni_event SET title = 'tampered' WHERE id = ?", [$e1b]), 'trigger mode: a raw UPDATE of a verified row is refused by the database too');
@@ -266,7 +274,8 @@ function suite(PDO $pdo, string $mode, string $H): void {
   $evs = uni_public_events($pdo, [], 1, 100); $titles = array_column($evs['items'], 'title');
   ok(!in_array('Ghost proposed event', $titles, true) && !in_array('Event to be rejected', $titles, true) && !in_array('Event of an unverified entity', $titles, true) && !in_array('Imported lead', $titles, true) && in_array('Imported lead, checked by a human', $titles, true) && !in_array('Acme launches Model One', $titles, true), 'public events exclude unverified, rejected, superseded rows and events of unverified entities');
   foreach ($evs['items'] as $it) { ok(count($it['sources']) >= 1 && isset($it['sources'][0]['quote'], $it['sources'][0]['retrieved_at'], $it['sources'][0]['url']), 'every public event ships its sources: ' . $it['title']); }
-  $edg = uni_public_edges($pdo, [], 1, 100); ok($edg['total'] === 1 && $edg['items'][0]['from_slug'] === "beta-$run" && count($edg['items'][0]['sources']) === 1, 'public edges: only the verified edge between two verified entities');
+  $edg = uni_public_edges($pdo, [], 1, 100); $others = array_values(array_filter($edg['items'], fn($x) => $x['from_slug'] !== "sup-a-$run")); ok(count($others) === 1 && $others[0]['from_slug'] === "beta-$run" && count($others[0]['sources']) === 1 && $edg['total'] === 2, 'public edges: only the verified edge between two verified entities (plus the re-pointed superseded-endpoint edge)');
+  ok(count(array_filter($edg['items'], fn($x) => $x['from_slug'] === "sup-a-$run")) === 1, 'the edge re-pointed after an entity was superseded is public through the live entity');
   $rls = uni_public_releases($pdo, [], 1, 100); $lab = array_column($rls['items'], 'version_label'); $v2r = array_values(array_filter($rls['items'], fn($x) => $x['version_label'] === 'v2.0'))[0] ?? null;
   ok($rls['total'] === 2 && in_array('v1.0', $lab, true) && in_array('v2.0', $lab, true) && !in_array('v3.0', $lab, true), 'public releases: only verified releases');
   ok($v2r !== null && count($v2r['parents']) === 1 && $v2r['parents'][0]['version_label'] === 'v1.0' && isset($v2r['parents'][0]['source_url']) && $v2r['change_set'] === null, 'a release lists its verified parents with the link source');
