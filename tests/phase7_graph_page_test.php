@@ -266,7 +266,7 @@ ok(stripos($html, 'SQLSTATE') === false && stripos($html, 'p7gr_does_not_exist')
 $admin->exec("CREATE DATABASE IF NOT EXISTS `{$dbEmpty}_n` CHARACTER SET utf8mb4"); $tmpDb = $dbEmpty . '_n';
 register_shutdown_function(function () use ($admin, $tmpDb) { try { $admin->exec("DROP DATABASE IF EXISTS `$tmpDb`"); } catch (Throwable $e) {} });
 $portN = freePort($portX + 1, 8320); startServer($root, $portN, $mk($tmpDb, 'd'));
-[$st, , $html] = get("http://127.0.0.1:$portN", '/universe-graph.php'); ok($st === 503 && stripos(robotsOf($html), 'noindex') !== false, "missing Phase 7 tables: 503 noindex (got $st)");
+[$st, , $html] = get("http://127.0.0.1:$portN", '/universe-graph.php'); ok($st === 200 && stripos(robotsOf($html), 'noindex') !== false && strpos($html, 'No verified data yet') !== false && stripos($html, 'SQLSTATE') === false, "missing Phase 7 tables (additive migration not applied yet): honest empty state, 200, noindex, never a 5xx (got $st)");
 
 section('sitemap and robots rules');
 [$st, , $xml] = get($B, '/sitemap.xml');

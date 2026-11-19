@@ -40,8 +40,8 @@ try {
     else $graph = uni_public_graph($pdo, $slug, UG_EDGES_SHOWN, 0, null);
   }
 } catch (Throwable $e) {
-  sec_log_exception($e, 'universe-graph');
-  $state = 'unavailable'; $status = 503;
+  if ($e instanceof PDOException && in_array((string)$e->getCode(), ['42S02', '42S22'], true)) { $state = 'empty'; $status = 200; $list = ['items' => [], 'total' => 0, 'has_more' => false]; }   /* the additive ledger migration is not installed yet: honest empty state, never a 5xx */
+  else { sec_log_exception($e, 'universe-graph'); $state = 'unavailable'; $status = 503; }
 }
 if ($status !== 200) http_response_code($status);
 
