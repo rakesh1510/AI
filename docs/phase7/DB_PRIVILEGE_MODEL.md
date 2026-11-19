@@ -37,6 +37,8 @@ Why this exists: the cross-table rules of the provenance ledger are enforced by 
 9. Foreign-key checks need no REFERENCES or SELECT privilege on the referenced table (the INSERT-only importer inserts rows pointing at `crm_users` and `uni_review`).
 10. Error 1419 beats error 1142 for `CREATE TRIGGER` by the application account on a binary-logging server: it is refused either way and no trigger is created.
 
+> Consolidated and extended in `docs/phase7/SECURITY_AND_PRIVILEGES.md` (threat model, enforcement table, deployment checklist) and `docs/phase7/IMPORTER.md`. Finding 7's tightest importer profile (no `state`/`version_no`/`is_current`/`supersedes_id` columns) works for raw SQL but **not** through the service layer, which writes those columns; the shipped importer uses the grant in SECURITY_AND_PRIVILEGES.md (no `verified_by`, `verified_at`, `review_id`; CHECK constraints then make verified rows impossible), plus SELECT where the service reads.
+
 ## Accounts and exact GRANT statements
 
 Replace `uni_db`, the host part and the passwords. Table-level grants are NOT removed when a table is dropped, so re-run the GRANTs after a rollback and re-create.

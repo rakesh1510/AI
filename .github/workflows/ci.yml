@@ -113,6 +113,9 @@ jobs:
       - name: Phase 7 database privilege model (least-privilege app, importer, public and migrator accounts; TRUNCATE needs DROP; triggers fire without SUPER)
         run: php tests/phase7_privilege_test.php
 
+      - name: Phase 7 importer tests (CLI only, dry run default, proposed import rows only, hostile input, idempotent, least-privilege account)
+        run: php tests/phase7_import_test.php
+
       - name: Phase 7 editor and verifier UI over HTTP (authorization matrix, CSRF, maker-checker, AI-assisted review path, escaping, hostile input)
         run: php tests/phase7_editor_http_test.php
 

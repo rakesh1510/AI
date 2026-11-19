@@ -481,6 +481,11 @@ function uni_correct(PDO $pdo, int $actorId, string $type, int $id, array $chang
       if (!is_string($et) || !in_array($et, uni_edge_types(), true)) return [false, 'edge_type_invalid']; if ($nt === null) return [false, 'notes_invalid'];
       if ($vf !== null && $pf === null || $vt !== null && $pt === null) return [false, 'date_invalid']; if ($pf && $pt && $pt[0] < $pf[0]) return [false, 'validity_invalid'];
       $new['edge_type'] = $et; $new['notes'] = $nt; $new['valid_from'] = $pf[0] ?? null; $new['valid_to'] = $pt[0] ?? null;
+      // Re-point the endpoints at the LIVE rows of both entity lineages: the old rows may have been superseded since, and the trigger that guards
+      // verification (phase7_triggers.sql) demands that the endpoint rows themselves are verified (the service check above is lineage based).
+      $ea = uni_entity_live($pdo, (int)$old['from_entity_id']); $eb = uni_entity_live($pdo, (int)$old['to_entity_id']);
+      if (!$ea || !$eb) return [false, 'entity_not_found'];
+      $new['from_entity_id'] = (int)$ea['id']; $new['to_entity_id'] = (int)$eb['id'];
     } else {
       $lb = uni_str($v('version_label', $old['version_label']), 80); $cs = array_key_exists('change_set', $changes) ? $changes['change_set'] : ($old['change_set'] === null ? null : json_decode((string)$old['change_set'], true));
       $pd = uni_parse_date($v('release_date', $old['release_date']), array_key_exists('date_precision', $changes) ? $changes['date_precision'] : ((array_key_exists('release_date', $changes) && is_string($changes['release_date']) && strlen($changes['release_date']) <= 7) ? null : $old['date_precision']));

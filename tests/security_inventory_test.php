@@ -16,6 +16,7 @@ function code_only(string $file, bool $noStrings = false): string { $o = ''; for
 section('Endpoint inventory: every PHP file is classified');
 $man = json_decode((string)file_get_contents(__DIR__ . '/security_manifest.json'), true)['files'];
 $files = array_map('basename', glob($root . '/*.php'));
+foreach (array_keys($man) as $mk) if (str_starts_with($mk, 'scripts/') && is_file("$root/$mk")) $files[] = $mk;   // CLI scripts are classified only when listed here (kind 'cli' is then enforced for them)
 sort($files);
 $unclassified = array_values(array_diff($files, array_keys($man)));
 $ghost = array_values(array_diff(array_keys($man), $files));

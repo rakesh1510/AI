@@ -1,0 +1,21 @@
+{
+  "format": "aihubpedia-import-v1",
+  "synthetic": true,
+  "description": "SYNTHETIC TEST DATA ONLY. Every company, product, date, URL and quote below is invented for the importer tests. It makes no claim about any real organisation and must never be imported into a real ledger.",
+  "sources": [
+    {"id": "s1", "url": "https://example.test/synthetic/orbitlab-about", "publisher": "Example Test Publisher (synthetic)", "retrieved_at": "2025-01-15 09:30:00", "quote": "SYNTHETIC: Orbit Lab Example Inc. is a fictional company used for tests."},
+    {"id": "s2", "url": "https://example.test/synthetic/orbit-one-launch", "publisher": "Example Test Publisher (synthetic)", "retrieved_at": "2025-01-16", "quote": "SYNTHETIC: Orbit One is a fictional model announced in a fictional press release."}
+  ],
+  "entities": [
+    {"entity_type": "company", "slug": "synthetic-orbit-lab", "name": "Synthetic Orbit Lab (fictional)", "summary": "Invented company for importer tests.", "sources": ["s1"]},
+    {"entity_type": "model", "slug": "synthetic-orbit-one", "name": "Synthetic Orbit One (fictional)", "summary": "Invented model for importer tests.", "sources": ["s2"]},
+    {"entity_type": "product", "slug": "synthetic-orbit-chat", "name": "Synthetic Orbit Chat (fictional)", "sources": ["s1", "s2"]}
+  ],
+  "events": [
+    {"entity": "synthetic-orbit-one", "event_type": "model_release", "event_date": "2024-06", "title": "Synthetic Orbit One announced (fictional)", "summary": "Invented event.", "sources": ["s2"]},
+    {"entity": "synthetic-orbit-lab", "event_type": "launch", "event_date": "2023-03-14", "date_kind": "ga", "title": "Synthetic Orbit Lab opens (fictional)", "sources": ["s1"]}
+  ],
+  "edges": [
+    {"from": "synthetic-orbit-one", "to": "synthetic-orbit-lab", "edge_type": "developed_by", "notes": "Invented relationship.", "sources": ["s1", "s2"]}
+  ]
+}
