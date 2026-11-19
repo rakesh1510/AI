@@ -55,7 +55,7 @@ $bad = login($base, $own, 't8owner', 'wrong-password-xx'); $r = http('GET', "$ba
 $r = http('GET', "$base/admin-center.php?m=finance"); ok(stripos($r['body'], 'Planned for Phase') === false, 'anonymous cannot open a module page');
 
 section('authorization matrix: navigation and tiles per role');
-$exp = ['owner' => ['CRM and leads', 'AI Universe review', 'Legacy admin', 'Analytics', 'AI tool management', 'Finance and revenue', 'Advertising', 'Operations', 'Performance', 'System health'], 'sales' => ['CRM and leads', 'Advertising'], 'viewer' => ['CRM and leads'], 'editor' => ['AI Universe review'], 'verifier' => ['AI Universe review']];
+$exp = ['owner' => ['CRM and leads', 'AI Universe review', 'Legacy admin', 'Analytics', 'AI tool management', 'Finance and revenue', 'Advertising', 'Operations', 'Performance', 'System health'], 'sales' => ['CRM and leads', 'Advertising'], 'viewer' => ['CRM and leads'], 'editor' => ['AI Universe review', 'AI tool management'], 'verifier' => ['AI Universe review']];
 $all = ['CRM and leads', 'AI Universe review', 'Legacy admin', 'Analytics', 'AI tool management', 'Finance and revenue', 'Advertising', 'Operations', 'Performance', 'System health'];
 foreach ($exp as $role => $has) { $r = $page($role); ok($r['code'] === 200, "$role gets the overview (HTTP {$r['code']})"); foreach ($all as $label) { $present = stripos($r['body'], $label) !== false; $want = in_array($label, $has, true); ok($present === $want, "$role " . ($want ? 'sees' : 'does not see') . " '$label'"); } }
 $r = $page('editor'); ok(stripos($r['body'], 'Recurring revenue') === false && stripos($r['body'], 'Verified entities') !== false, 'an editor sees AI Universe tiles and no revenue');

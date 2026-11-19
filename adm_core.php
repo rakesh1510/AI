@@ -12,10 +12,10 @@ const ADM_REPORT_CURRENCY = 'EUR';
 /** Control Center permissions per CRM role. Deliberately separate from crm_roles() (Phase 6/7 tests assert that list). Unknown roles get nothing. */
 function adm_role_perms(): array {
   return [
-    'owner'    => ['center', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'finance', 'advertising', 'operations', 'performance'],
+    'owner'    => ['center', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'tools_publish', 'finance', 'advertising', 'operations', 'performance'],
     'sales'    => ['center', 'crm', 'advertising'],
     'viewer'   => ['center', 'crm'],
-    'editor'   => ['center', 'universe'],
+    'editor'   => ['center', 'universe', 'tools'],
     'verifier' => ['center', 'universe'],
   ];
 }
@@ -29,7 +29,7 @@ function adm_modules(): array {
     'universe'    => ['label' => 'AI Universe review', 'href' => '/universe-editor.php', 'perm' => 'universe', 'live' => true, 'group' => 'Business', 'note' => 'Propose, adopt and independently verify AI Universe records.'],
     'legacy'      => ['label' => 'Legacy admin', 'href' => '/admin.php', 'perm' => 'legacy', 'live' => true, 'group' => 'Business', 'note' => 'Submissions, featured plans, leads and editorial pages. Uses its own sign-in until they move here.'],
     'analytics'   => ['label' => 'Analytics', 'href' => '/admin-center.php?m=analytics', 'perm' => 'analytics', 'live' => true, 'internal' => true, 'group' => 'Growth', 'note' => 'Visitors, page views, tool clicks, sources, countries and conversions.'],
-    'tools'       => ['label' => 'AI tool management', 'phase' => '8C', 'perm' => 'tools', 'group' => 'Growth', 'scope' => ['Add, edit, publish, unpublish and soft-delete tools with restore', 'Search, filters, bulk actions, categories and tags', 'Submission moderation and featured placements']],
+    'tools'       => ['label' => 'AI tool management', 'href' => '/admin-center.php?m=tools', 'live' => true, 'internal' => true, 'perm' => 'tools', 'group' => 'Growth', 'scope' => ['Add, edit, publish, unpublish and soft-delete tools with restore', 'Search, filters, bulk actions, categories and tags', 'Submission moderation and featured placements']],
     'finance'     => ['label' => 'Finance and revenue', 'phase' => '8D', 'perm' => 'finance', 'group' => 'Money', 'scope' => ['Income and expense entries, invoices and payment status (paid, pending, refunded, overdue)', 'Monthly recurring revenue, profit and loss, CSV export', 'EUR primary reporting currency with later multi-currency support']],
     'advertising' => ['label' => 'Advertising', 'phase' => '8E', 'perm' => 'advertising', 'group' => 'Money', 'scope' => ['Advertiser profiles, campaigns, featured listing subscriptions, sponsored newsletter bookings', 'Renewal tracking and follow-up reminders', 'Outbound messages only after human approval']],
     'operations'  => ['label' => 'Operations', 'phase' => '8F', 'perm' => 'operations', 'group' => 'Operations', 'scope' => ['AI Universe verification progress (independent human review is unchanged)', 'Development phases and tasks, release history', 'Error monitoring, backup status and system health']],
@@ -120,6 +120,7 @@ function adm_css(): string {
     . '.scroll{overflow-x:auto}.sec h2{font-size:1.15rem;margin:1.2rem 0 .2rem}'
     . 'th a,.admLink{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 .25rem}.admMain{min-width:0}.admMain input[type=date]{max-width:100%}'
     . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admSide{padding:8px}.admSide ul{display:flex;flex-wrap:wrap;gap:4px}.admSide h2{display:none}.admMain{padding:14px}}'
+    . (function_exists('admt_css') ? admt_css() : '')
     . '@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}';
 }
 

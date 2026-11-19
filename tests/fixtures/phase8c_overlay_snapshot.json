@@ -1,0 +1,3569 @@
+{
+    "note": "Public resolution of every tools.json record through the UNCHANGED overlay code (catalog_overlay_tool) at commit 6ae055a. Regenerate only when an editorial change to the overlay files is intended: php tests/phase8c_overlay_regression_test.php --write",
+    "count": 509,
+    "tools": {
+        "40h": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "5596f252ac0dde4f70bd44eee717676d4b7d974b"
+        },
+        "6000-thoughts": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "method": "rule",
+            "curated": false,
+            "fields": "dc0c7233b020dbd098c16558560d48a9d805f7b9"
+        },
+        "abby": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "960c40924c9682f7e0ee77a86c1c153493167aeb"
+        },
+        "accio": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "2918c99ad512c14f50a32af362dce721e1194d73"
+        },
+        "accountabilabuddy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b6fe020079463c13276dbb7d044b8b7d5f90232a"
+        },
+        "addy-ai": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "2af0e77334559ec8ca9e387d64b3ac28e43eb757"
+        },
+        "afforai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "c1358a6286be4f57267504c45bd97849472ef6ab"
+        },
+        "agent-herbie": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "method": "rule",
+            "curated": false,
+            "fields": "e27e248358ee16611ccf7889feeb92a481ed31bb"
+        },
+        "agentgpt": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "method": "rule",
+            "curated": false,
+            "fields": "36816e0e1eddca58f374d9d7f0d193e13e8daefe"
+        },
+        "ai-credit-repair": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b231463b5988178aed099d9fb39c2e46b507b445"
+        },
+        "ai-diary": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "6fe6fb6c907f7e41e79d4321dfff152d1d50a79e"
+        },
+        "ai-lawyer": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "c5a026786be265cb90470f013085829d67cb736b"
+        },
+        "ai-ls": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "70d8fcca1d4473f2999f69cf571d06b3db4645c1"
+        },
+        "ai-perfect-assistant": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "ac66843826171a97306aed33751be85276f93165"
+        },
+        "ai-phone": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "01f7cdf24c31c8cfad92ce967b2fc2ae027ac068"
+        },
+        "ai-swot-analysis": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c4cc0d364c97853d36cc6bd82d8d9eb6158b3041"
+        },
+        "aiapply": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "b14bb270a04a54113c95c0bbe9906dadd38fdd9a"
+        },
+        "aibert": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "ad9428cec2a8a67961c79defb16933f7d66b66ed"
+        },
+        "aichatting": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "method": "rule",
+            "curated": false,
+            "fields": "69bf44c6a0ef19d325a0c6cc7237f331517f56bd"
+        },
+        "aicogni": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "54586ea0e41ba49f0b506772329fa94fb505a9c3"
+        },
+        "aidaptive": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "13b2da06434b14e951a057c52ca14425f587cecc"
+        },
+        "aithor": {
+            "category": "Writing",
+            "subcategory": "Grammar, editing & rewriting",
+            "method": "rule",
+            "curated": false,
+            "fields": "2ec04675e7afbcbbf8e4c88a61b2afd52e4efbb5"
+        },
+        "akela-hub": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "9302a4dc3155890c3b9d4c5553c80ef01937d134"
+        },
+        "albertbro": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "43fa54c6b7bca2079d4f9069502cc0573e21b087"
+        },
+        "alice": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "cc4a8d5a9ecb8cf2042dbb5d063b5d67b0705baa"
+        },
+        "altindex": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "c40c63b14e7a5f109c8c5f61f91a0d1ce255b310"
+        },
+        "amazon-bedrock": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "8825c0682d3e1a5f3c45173061b44a60f1eb587a"
+        },
+        "amazon-comprehend": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "d817fdfb19dfc8ba377c8d70b742150fbde381d2"
+        },
+        "amie": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "aa56200bcd8f0edb303ee0f278c1427b2b7d7d37"
+        },
+        "amlgo-labs": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "11cb7085d723e8a61d4b37f1e85af389447530cc"
+        },
+        "amply-discovery": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "778aeab899d0a7deecba49f5d8f81483b3d5c03b"
+        },
+        "antispace": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "3e3523e36840f334173b1edb260c0e644c554e27"
+        },
+        "archive-intel": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "d44c83fe49715d2f56436fe5accb49ba932b5d88"
+        },
+        "ask-layla": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "28d9aaf4f5494220e7c4bb3f879310286d265744"
+        },
+        "ask-seneca": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "6df3860c8ff92312c423d83a13463b72e2cd1e2c"
+        },
+        "assisterr": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "d57a451003e279bb79750e66b08bd7a3a54dcca4"
+        },
+        "athena": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1cfe27f17f3cff54991f40059885bebacbb17847"
+        },
+        "atlan": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "dbc59e4dca7ae24863f5016e5295ee3efb63e4ed"
+        },
+        "audio-diary": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "8eb7f87e5df3ed883abe90852fb81ba54895efe4"
+        },
+        "augurisk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "37582536175a405accad02d17d55ed2edbc8a060"
+        },
+        "auri-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "c605e1e79f5fd583fabbdb4dd3e310cc07fb9247"
+        },
+        "aurora": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "dfa907c71e5e6e7df059eaf16d4fc260b896f333"
+        },
+        "autoeasy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c37e5a85b1012fd993b1f47515c3499c54ec2d7b"
+        },
+        "ayanza": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "9c1516472f8551ed796db78afffdb041595bde87"
+        },
+        "ayfie": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "3c16cff74255acce4c3186dd779b254e1cd2ce66"
+        },
+        "base64-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "e1738d19e548744153e001ee3270fb11e5101e34"
+        },
+        "baseplate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "591f7660d0ce3eefc3173a4cd9aeaaf056321c26"
+        },
+        "be-my-chef": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "0e0eaf1ea9fdadb6f977d9a139d5eb2116d73b9d"
+        },
+        "beam": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "f85bb13e221c3ee3cfafb044de6ba9c8fed78218"
+        },
+        "beebee-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "ec0e0b39a9b51b1563c3b245062dc91946b1d8cd"
+        },
+        "beedone": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b3121e6ae4d70cfb4928199cc22487f1919d03c5"
+        },
+        "beeyond-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "57abdd5d111c5517742eae868c013b79c90da043"
+        },
+        "beforesunset": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "cc6c9c5d97dc1cd19845b1419f9d48b29ddc81fd"
+        },
+        "beloga": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "d8ceb08ef4d545c0af2370ed5f15988846dad407"
+        },
+        "besty-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "6807b71e09d266e34ca665c5de969c01b2ab6373"
+        },
+        "bible-chat": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "961c21c7ceaac79f18f6ab687cfd60a247a7db9b"
+        },
+        "bioptimus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b0c6362306badd693d84ce2326438836ece8e881"
+        },
+        "bioraptor": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c6b7e49a4da74291b0062ac22d2ad34fbec9b9ce"
+        },
+        "blaze-sql": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "method": "rule",
+            "curated": false,
+            "fields": "ab9102ae2518cd50eb075807e84c9e5b512c70e3"
+        },
+        "block-survey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "fe5ab2aacf0a8ced58b894d736b029fc9f7b1f09"
+        },
+        "bluedot": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "6cc296dca7f8629e9dad023260520c9b65b2c46f"
+        },
+        "bluewhite": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "94272dbad410fb8b0d00b05b02f5d1febfa235bb"
+        },
+        "boba": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "abe014c6d1586c5c5ecb4132101c2f98fbeb9591"
+        },
+        "book-summaries": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1dd4ac25fe2e2228bf9a3e32bcf98c3056822c29"
+        },
+        "botly": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "bce5211b6df7d35eb8d8ddbd686a1933a4980faa"
+        },
+        "bottell": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "36c717125434cf72748cd3c762c69ebb1d2ed1ad"
+        },
+        "bottr": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "54127c7da37f3bf98590e77aca8af1031e4b5dd3"
+        },
+        "brainypdf": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "f528654798101c2416ca4ba5ac74ebedbf89be71"
+        },
+        "brand24": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "7b611fa6d6fee5917232dfc5ac51119304383f3e"
+        },
+        "brandwatch": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "55cdf75297fc30891411c62c88594ecb53585bcc"
+        },
+        "braudit": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "b361e5a072e9879bec47b7c0049427596651b0cb"
+        },
+        "bricklayer-ai": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "1eacb12983638d4b3d0970ae73b5d8d1c13a6479"
+        },
+        "bridgewise": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "method": "rule",
+            "curated": false,
+            "fields": "9bcdc7a8d5496037a5fed885c625ff265a2d0317"
+        },
+        "browse-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "d913746bb66a4bb5111bb7ddf181f885adc132d0"
+        },
+        "browsegpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "31fbcf27c1f80d4f3e20fdc0c04b8aca46d043ad"
+        },
+        "caktus": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "b448f3a3f5b8762073537feb273a9b83a7032f1a"
+        },
+        "call-annie": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "5ff833b90a269a2c1ec09cc40cc6a251478de691"
+        },
+        "canva-ai": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "method": "editorial",
+            "curated": true,
+            "fields": "53dc6f85bbdc611c19e2e2d115ffe1c852c1eb05"
+        },
+        "canyon": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "81e0fb12b2c01fcf9dbd8e23aa59f34644a20111"
+        },
+        "casetext": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "bec596c8bb1faa5c1628c67b4601f65f9f05abec"
+        },
+        "casper-ai": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "308baa258e3e70be6617737c4c0ebdb04c08749b"
+        },
+        "cebra": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "6aeaa3b6968186a859c85755e624c555db766cf1"
+        },
+        "chadview": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "716f3dd146d543625be115e657c50e999975348d"
+        },
+        "chandu": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "6b1345df3cd709b637168835ba18612e3ddf03fe"
+        },
+        "character-ai": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "method": "editorial",
+            "curated": true,
+            "fields": "a855caedba7b512cbf60361255f95a0f58b19e93"
+        },
+        "chartpixel": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "4654cb7db2a7e080c20bdf173f5bc20f49567b47"
+        },
+        "chatgpt": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "739f1344bfb1a19901de5ef01841dff1e6040ba9"
+        },
+        "chaton": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "92d0946fef28e9952ca079ae32cddaad2bc0783f"
+        },
+        "chatpdf": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "editorial",
+            "curated": true,
+            "fields": "a33dd06c5e555974327d5cc92622e180060e3939"
+        },
+        "chatshape": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "d274a92fd3daadb372d3f14e1c3c600f03e9a32c"
+        },
+        "chatwithpdf": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "cb2151f529600ec82d2bc2e7a63ba443f78fd3ab"
+        },
+        "cheatgpt": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "2b85fb1d06a424c67b940c67cf235ac6f29fa10c"
+        },
+        "chemix": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "60740317f53253e8f7c56a16dfec054092b84fd7"
+        },
+        "circleback-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "d7f8816129353f65313d3dc3fe56c593bf4eee8c"
+        },
+        "cityswift": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5b803c5d81ba7734fb474a155fe634e93a43c210"
+        },
+        "clara": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "b23177a4c6bd6bf8d4491b6f3f42a52c80c1d31b"
+        },
+        "claude": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "272340468bca457ead6360403d1917a45ae02393"
+        },
+        "clearword": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "323f4033a76615c5cdb83dddc7488840afb4f1e8"
+        },
+        "climate-policy-radar": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1e2c3de1c7a8d85db3e4de5ebe300d2f171bd4e7"
+        },
+        "clockk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "9ced9e7071be3c2711f9f3084d4c79ab02d23ac2"
+        },
+        "clonedub": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "e7c12d195131056dfd27e0a5016bb0ad37713f3e"
+        },
+        "clonemyvoice-io": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "98abf5f2d332c7135309c419cd50603b99aacb03"
+        },
+        "cm3leon-by-meta": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "59b9e539f374154d81ccd2e61823b5e9fb0dbefb"
+        },
+        "codegeex": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "148fac8095fe675e5e7e2432dbaacdb02f1e0158"
+        },
+        "cody": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "103bd298fd1cab6d9cf71e63c5b768c793889790"
+        },
+        "columbo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "06822a412c1fdfd1b8ad61e58ae62061424f6484"
+        },
+        "consensus": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "f77444c8371cd7002a811bcc315779e8f257e4a3"
+        },
+        "content-at-scale": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "method": "rule",
+            "curated": false,
+            "fields": "b10807d8154ef344023fb08468436827c4961386"
+        },
+        "contify-news-api": {
+            "category": "Coding",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "769d8deead615b6bb491c66bf7d2baae7409f7e7"
+        },
+        "conversai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "5d79cd1a1ca729fb70d358d5bb714464267bde81"
+        },
+        "copilot": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "f07ebcd78816829cb5858aa075db5ceae0973ef0"
+        },
+        "copilot-for-microsoft-365": {
+            "category": "Productivity",
+            "subcategory": "Workplace AI suites",
+            "method": "editorial",
+            "curated": true,
+            "fields": "1b629b53f1b06b56aed714548d2185b0bd3220b3"
+        },
+        "copilot2trip": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "db108a61fc7bd70f9c0de52aa9db3bda081c818f"
+        },
+        "corelight": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "df5b6cb01b34a63dbe96b7ed6d15ac56ed2187ad"
+        },
+        "corelogic": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "22d0c4ab34b1e1b108fe0cc86936afb01f0dfdea"
+        },
+        "corpora": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "89dbd009c5c36ed447ac784e429dac3d4c09772e"
+        },
+        "cronbot-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "cab7afe9d3b7c724147cba64e4ea3f9c9183a565"
+        },
+        "culturepulse-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "631e94fff3583f163566dd712d47f51588c8e900"
+        },
+        "cxcortex": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "b6a701605e02f2b958946670f27eb0876eed1a8b"
+        },
+        "cyclops": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "525981e352dc7c97cb720488642aa5f99eab4cb3"
+        },
+        "cyvl-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "0a6852eb7634736f5f4c8eb3d0b60e308f7210d0"
+        },
+        "dailybot-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "91273edd716f985f991c3370a6422c904f166071"
+        },
+        "danelfin": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "759c5c280d0ae550eadf22197a56f211b3dee9a5"
+        },
+        "danti": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "5bc790e47801ed43a5b5e16ff91b59f7accd539e"
+        },
+        "dashworks": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "f99eaa8b2645de058b2cb00c8c4f372a3c830bd7"
+        },
+        "datologyai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "93ab45b33b96df359ed5cf5c7a5c4fb107a80e8e"
+        },
+        "deepl-translator": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "99665fbe9ccd669388ee970db9dff5f0e2ea9d0f"
+        },
+        "deepnote": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "d1ca7f9bb231a04cd1104f251189d845188c9e57"
+        },
+        "deepseek": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "a87ae48e999314c1e4855df2138941b288070e51"
+        },
+        "definely": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "5f0ec1d8b163c18f4272ddc891675abe454f53f8"
+        },
+        "deli": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e14f09e6291be43612485e626a492d7e75cf4556"
+        },
+        "desksense": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "86f3967c3460f108be6f52dfaebcba5b27458f91"
+        },
+        "dewey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "fea5bb60992f2d564fb93b4ab7c98ae0d3f3a93f"
+        },
+        "dexa-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "fc612056609d2e31233b6cf14dcf87ee1fbaffe1"
+        },
+        "dishgen": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "699af0f5492c491e298f01f43ffc5e07c9587c45"
+        },
+        "distributional": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "11921fadbf831cae4b8b2c4109b7f8dfaac9f480"
+        },
+        "divedeck-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "4a0a7253389a898ba10f58aaae6f260cc18bff35"
+        },
+        "documind": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "ca4808f7e03fc74675cb2a9ddcbf24ae40b1daea"
+        },
+        "docus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e2db09878782aa6532877af6f42fb2399b7dc99b"
+        },
+        "dola": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "dbfd53f2ebd332762ef27921f23a30f3409b60f0"
+        },
+        "dr-muscle": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "94f2d08a8e3ba6f3eadbebd4799dd14018743223"
+        },
+        "dream-decoder": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "40283b88b1f0fb9c1c9bdb7c399b70160bf07bdd"
+        },
+        "dreamgift": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "e420abdf772243c9d5ed54e99bc87df23d352862"
+        },
+        "dreamt": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "54d60feb553d3de405ca2f03f66b9dee42da49bc"
+        },
+        "dressx-me": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "268481f5eb9f57b2264d3d26b6566e6babea8661"
+        },
+        "drugcard": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "2c92dbe48536b5fa017b15e42652b2c6c9e26787"
+        },
+        "echofox": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "5db9d6aaeb6a4b2aea817d63e607008256a84261"
+        },
+        "eesel-app": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b400c961c52c2e8775f3ecd7ce290a89d5b474f6"
+        },
+        "elicit": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "19943cbe788a35187736f8463d22fdb6d6676136"
+        },
+        "embra": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "6a37b18cda58500b06fbc50f1e5e68011a8b4890"
+        },
+        "empy-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "a1e45ba17e3ade5ef002d30103c66cef6a49c3ae"
+        },
+        "endgame": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "eb63782b49b5863d059cd1e229b788d73f68b3c0"
+        },
+        "essence-app": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "91e8de239522c613e7a57f6fa229a12d97ea7215"
+        },
+        "eve-legal": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "df44ddf1088250e357e58cdec4d0ca2dae19a317"
+        },
+        "evenup-law": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "5adbdc4a7afd60ab791fd7fc591c80c9f725e3c3"
+        },
+        "everlaw": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "cd03812f902b1a70a71a1edd544285cabe571184"
+        },
+        "existential": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "fc461ab541a8d65da9c5a5b799df68a3f0c7e409"
+        },
+        "facecheck-id": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "85da7a3558da42aeea77cdf72f4939033a507793"
+        },
+        "fairgen": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "344bd0af1e2fc67363deeccebc16abc1380381e5"
+        },
+        "faqx": {
+            "category": "Business",
+            "subcategory": "Customer support",
+            "method": "rule",
+            "curated": false,
+            "fields": "1318e22a070f51556be3c7cb76b26a06cbc999e4"
+        },
+        "filegpt": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "6dd85196d01578b2f02b1aed88d968aec4c6ff85"
+        },
+        "find-your-next-book": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "42fe680105ca1135f0f267802893b3545a93d2be"
+        },
+        "findgiftsfor": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "6a1aa111b9e0869b7076ac79069cdba5d7fbe3d5"
+        },
+        "finding-words": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "4450a42161c1319ea815a8c2d7d3c085b8c02ac3"
+        },
+        "fireflies-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "editorial",
+            "curated": true,
+            "fields": "fa98d5e0fdfa16361c3b85efb173498af5a45495"
+        },
+        "flash": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "017b1844e6392a2ff2363c2bf3d7bc27637cdbe9"
+        },
+        "fluent": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "32a0ff72d2731893b12b82481ad042e4d81af7b2"
+        },
+        "focusbuddy": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "2aeff7d49f54c1c58e091f8cb5790e00ae7e3434"
+        },
+        "foodai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "376e5d750737d9b03a794900bca0c502b410ef07"
+        },
+        "forefront-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "4f2918285713c069b51344b44884917c8b158f84"
+        },
+        "fork": {
+            "category": "Marketing",
+            "subcategory": "Sales & lead generation",
+            "method": "rule",
+            "curated": false,
+            "fields": "75f6de532f7440486c89d4ad6aa55d277b878f99"
+        },
+        "free-ai-resume-generator": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "7c22267e36106d936ec1fe700c172e6e95c8a16c"
+        },
+        "friend": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "2a9e3c93a3229ac4d653c432c1077cd477d4385b"
+        },
+        "gajix": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "52988c455795e05592da4681014247fe2f096519"
+        },
+        "gemini": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "4d5e40fb5a87d1cb672998ee9ceb6de25f87a824"
+        },
+        "genei": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "ad94f3975d9e3647471d05176ae17b7094621da9"
+        },
+        "genesy-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "d1166e84633eb16264fa2656705ba5aa58ba7257"
+        },
+        "genius-pdf": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "e035473cfbfb6c2ed3688e4b18fa5318d27a2484"
+        },
+        "genspark-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5d0540fb2cbacbe1e7c20f3e428eb368287f49af"
+        },
+        "gift-ideas-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "cbdf56724365602c5d51717879b05fcc95a9e81b"
+        },
+        "gift-matchr": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "12bb8f8645481602eeeb26cfc4590226a486e84e"
+        },
+        "gifthuntr": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "bce76c9f50e1a507bf72333a2faf394482caf726"
+        },
+        "glass-it-price-tracker": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "d25b57cb8485c7361083e90e931be234e2981818"
+        },
+        "glean": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "21728dcd261c69313e93826a02f2fa41d8db6f23"
+        },
+        "glimpse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "abb1992d57144b10133bceb7f26e4f0c4e646e72"
+        },
+        "glowup-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "2283e6af002fc69cba631804bbdfb37e80975a6c"
+        },
+        "gnbly": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "34e1e83bb8665cf1f702016ac8dd58f68941e3ae"
+        },
+        "gnomi-app": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "5e37c6e3cff51675b72950d73438b9cbaaea5db9"
+        },
+        "gnothiai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "cbf8ba3dddb7de0a5f2026529cbc8fef90d77022"
+        },
+        "godmode": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b4f6190e18ce7bf4bcf59defc0ceb8afc13bb36e"
+        },
+        "goheather": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "4998a8fde80945395f7a9184ce592f47e21d806c"
+        },
+        "goodfriend-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "31e5fc6b720982ea76ceb4f2ab2dfdd5bdc1bfee"
+        },
+        "google-cloud-vision-ai": {
+            "category": "Image",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "b0aa49763d182d9f72a23b9c45a11d8e92061db5"
+        },
+        "goreply": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "3a4c7fd51f0afcdd12a7dbd1075d751372af731a"
+        },
+        "gptconsole": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "447f2686505d96e4fd020b84f75e89e066464e3b"
+        },
+        "gptgo": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "d0c572213a9427f000fadcb51e6aee52a5e747ca"
+        },
+        "gptgo-chrome-extension": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "8771ae8f934940b993c01af9bc2f4885b884fb0b"
+        },
+        "grammarly": {
+            "category": "Writing",
+            "subcategory": "Grammar, editing & rewriting",
+            "method": "editorial",
+            "curated": true,
+            "fields": "2a364c524daefba065347b9b8a5b9822d9ea775d"
+        },
+        "greynights": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "method": "rule",
+            "curated": false,
+            "fields": "e9aa84e1cb99f64e0178e82dd8f30215f3ec949e"
+        },
+        "guidie": {
+            "category": "Audio",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "18f0112cf4e9ce5ea911f8ff79ab14ceb612c4f8"
+        },
+        "gymbuddy-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "376c8650530fd4151bf36966eeff5d0c4b1a4b47"
+        },
+        "halcyon": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "1dfd51948b4e51f8ca7963dd0ea9bc8f273315a6"
+        },
+        "harvey": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "51d30615cc1ad015b5b8deda133193803ff0bb07"
+        },
+        "healthsage-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "081134e0ca2fe542dd36c9392395ebfa8d99c6f0"
+        },
+        "hebbia": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "62be0100240adbcab87c2083b897c9276796825d"
+        },
+        "hedy": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "fc6ee6f57a840bfd421a9a17ebaa0bda415c10c6"
+        },
+        "heex-technologies": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "2754e1843d09386090f51f784f14b45972cc2a0a"
+        },
+        "heuristica": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "2290eee58b0d55f0dbc6cd81d67f87a74ece82ae"
+        },
+        "hey-internet": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "478511c4c624d8682f7a0f190fcdadf9a7e627f1"
+        },
+        "heyday": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "ea463042c8950976b1ff2269423c1a5a410ae477"
+        },
+        "hints": {
+            "category": "Audio",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "cdcaa8397865a8561580d27c309d3501fa0d2d46"
+        },
+        "hippocratic-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "1078b4b49368e7dade1a8db6e0421c92ca2e2bd5"
+        },
+        "hoopsai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "3367c399525c6176b7b28d7792eff0c6dbbf6dc8"
+        },
+        "hume-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a84860b09d6a939928e4732c9cbbd63ec264e495"
+        },
+        "iask-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b863e58f7c7c127cc1e09e00f895aff28d0772a8"
+        },
+        "ifttt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c8d6b291b91abfbc05dd7900a3a467694f333068"
+        },
+        "imbue": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "method": "rule",
+            "curated": false,
+            "fields": "e0960f23a45acda396b1fc38a4d2d8c78f32a853"
+        },
+        "imean-ai-builder": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "dac01956e61399f90d14bb7aed1f9081ff808e3c"
+        },
+        "immersive-translate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b70423b658fc953586ebae9585ffbf6b01d98dc5"
+        },
+        "immunai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "9289e639ef26b4540ad2d01d567e1064cf62b3fe"
+        },
+        "impulse-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "8c05b4a6b4292d46e3502de72d2ebf4d11420911"
+        },
+        "inference-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "019588d0cc6be2073d9c76df449c52d7756661df"
+        },
+        "insight-journal": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "99ea766052689e72d6805ca08a13a0c12f142ccb"
+        },
+        "insula": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e55b389ac892433d09699d23d8a2a4ad2e5cc18f"
+        },
+        "insummary": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "55180a4e21d21e5e24dc4f357e5cb45f5e0a6b28"
+        },
+        "intellibizzai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "30323197b517c890b573c28bb1d0b2926effd42a"
+        },
+        "intuition-robotics": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "method": "rule",
+            "curated": false,
+            "fields": "fdbd634a544a21fd3ce5784e061984403aa09296"
+        },
+        "iplan-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "24d48249799e678a987fe66196146528bb89ec90"
+        },
+        "ipscreener": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "388d95a7bcd535573d9ac430e5301fc25137d850"
+        },
+        "iris-ai": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "8b1682e31781e9e366eb8d035f22f6fb9d0f6a0f"
+        },
+        "jace": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "b688685ab731fe10a934c4ad55f33585ccb57b83"
+        },
+        "jenni": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a0e3a31c0a56192cca8b5e673bd8ab0d6370af9a"
+        },
+        "jigso": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "570cb9cc416ab5c8edadd0b2336ecbbbf8f43652"
+        },
+        "jua-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "9ca378c9ebbea35f9c7c9d9ddaaaf4eb9287463f"
+        },
+        "julius-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "eee2e8a2b3f13ef3147078aa8352405ab8c2fc9c"
+        },
+        "juno-research": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "07822baed0c728cf823d9a9bd8d35df5e192bee2"
+        },
+        "katch": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "42bd366ff18bf892becdde34aee9d95c1d0f9921"
+        },
+        "keyword-discovery": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "method": "rule",
+            "curated": false,
+            "fields": "3b3adce3c42101f7683a63ec2eabeca769d531cc"
+        },
+        "keywords-everwhere": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "method": "rule",
+            "curated": false,
+            "fields": "36b114fa5b91b8f0139c0812d43edc445ea90d14"
+        },
+        "keywordsearch": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "method": "rule",
+            "curated": false,
+            "fields": "70fb68f8b137d8bf44611ff9a9fee67953d35a0e"
+        },
+        "kintext": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "c9364190cd9b3373f6235f817f16b96d5d8203df"
+        },
+        "kippy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "89e1c3af767319c1618af4212337547e40762ede"
+        },
+        "kira-systems": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "fd17526ed3191503854e6615f86ae9836e46d2d0"
+        },
+        "knowbase-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "0e3cd2701406c2603e92b8cbd27de14bdf453eb8"
+        },
+        "komo-search": {
+            "category": "Research",
+            "subcategory": "AI search & answers",
+            "method": "rule",
+            "curated": false,
+            "fields": "364795d6b8c5bdaf0781e4e615a88da0ab4cdc63"
+        },
+        "laion": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "method": "rule",
+            "curated": false,
+            "fields": "5e411215db1f807cbea9093f52cec1e37e88b901"
+        },
+        "lancedb": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1e496903dc16d9cd4a8d173189d616439bfeb3fc"
+        },
+        "langotalk": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "7f75dca775e2af4fa330ec6ec3e4ef0a1d628952"
+        },
+        "latitude-io": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "99a3226ec60e6173e66d2a85e931154a1ea3c10a"
+        },
+        "leash-biosciences": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "42628753229d84e749da082a4bbe7b9398b6e07c"
+        },
+        "letterpal": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "method": "rule",
+            "curated": false,
+            "fields": "b48199647dd28cea800bc55ea77e5bf57dda4c16"
+        },
+        "lex-machina": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "854cac280bce368b418235565be2686a5116e1f6"
+        },
+        "leya-law": {
+            "category": "Business",
+            "subcategory": "Legal & compliance",
+            "method": "rule",
+            "curated": false,
+            "fields": "9151864dadb43f7d6d7dadf98ab6e6ed2269d1b6"
+        },
+        "libretto": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "71c070005099d431350f0428d88145fda73e284a"
+        },
+        "lighthearted-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e46e29bf71c142877aaa660d0f492bc01bcc113f"
+        },
+        "lightpdf-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "46b35bccca397f3da980c347c8084859b378cb74"
+        },
+        "liner-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "e0146bbb072e0be4ee3edb0c9b07440ded96f722"
+        },
+        "littlecook-io": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "4ca94b94998a66d8cfe1b1ccc86c13b190f5f30e"
+        },
+        "lookup": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "16aae7f3b6919bc745bcc44febf44c3b34fc7abe"
+        },
+        "looq-ai": {
+            "category": "Image",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "daabf269ee00fc87c7bdd79582177c4f3bc7458c"
+        },
+        "loti": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "42cbcfebb62ebd6771de6af1e41210484989497a"
+        },
+        "luzia": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ffa6916410b926393dafbf893e3d2b246ba4d417"
+        },
+        "magai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "d60341a4f7409da49ae313ddac9252db1e911ad8"
+        },
+        "magicmate": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a334a55d316c54b7461f42671562be2033bfb854"
+        },
+        "mailmaestro": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "aecb657db6ca875594817171e8b583cd9f1a1008"
+        },
+        "manifold": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "f73fbc705cbd3f221a3c92736ebdca3e3c6ee8d9"
+        },
+        "mapdeduce": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "d4b676d268a13f2648e8ceb2acb2bccd68b2fb89"
+        },
+        "marcus-aurelius-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "8c5285bb6f52b68ffdf957bb9c43409c56a563a8"
+        },
+        "marketalerts-ai": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "6516b86c20399aa0bc1940ff68c2c87982197d24"
+        },
+        "marketmuse": {
+            "category": "Marketing",
+            "subcategory": "SEO & content strategy",
+            "method": "editorial",
+            "curated": true,
+            "fields": "a045edbdfc402cb8ebcbd569b168069ac07bb01a"
+        },
+        "martin": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "450e95fc6c5842b48e9c173da993de6ff3aee165"
+        },
+        "maxai-me": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "d504f82b3520a9a4f965159ceeda5100f52e6d31"
+        },
+        "mayday": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "1127658a753fda4fd17ff4bfba2bfd0ccb26875c"
+        },
+        "meetgeek": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "6455e82cc87195b516ac798bb7bc45c3739f25f4"
+        },
+        "memoryplugin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "7193264637e29ead76eaf9a8cd2651b2ef3ac3fd"
+        },
+        "mental-models-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1373208a462b58139fe81fa9eee4e0aab03d82b8"
+        },
+        "metaforms": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "1a730536af1cfa271972ae620928f152a795aa67"
+        },
+        "microsoft-bing": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "3f80983d9d605f6b3f749c82fbf682e7c3d8eee9"
+        },
+        "microsoft-knowledge-exploration": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "801ec8deb9d90988544bb2f1b343b14b409b0b39"
+        },
+        "mindgrasp-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "683644cae2f2d605ff7ee7ee70090b1bbf056b69"
+        },
+        "mindguide": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "1f1bfb45f7c7885373284fe3461810a077e51ff4"
+        },
+        "mindverse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "8306ad60053f63c8a661f0bb0bc09dfb8f106e5b"
+        },
+        "mindy": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "e82037278261f6d95952d92529f49b1a85b617a2"
+        },
+        "minuteslink": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "866c7e7c8a0b8e3a83f35789cd418a708ec1ed72"
+        },
+        "miri": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "9dd302b27ca5499b68bb466b4121669d0c04fba5"
+        },
+        "mlcode": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "3cf2bedd6b19b18dc9a0a40907b14eef0d65696a"
+        },
+        "mobilegpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "7964ddd64c248a484b7efa5568094cb8535a1ad4"
+        },
+        "monica": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "method": "rule",
+            "curated": false,
+            "fields": "d40dc0323dd2e3cea6b9ef739739440a117a6929"
+        },
+        "moodfood": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1bb106d20a068475d437a83ac1d82ed7e65c73c2"
+        },
+        "motion": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "editorial",
+            "curated": true,
+            "fields": "d9aaa113abcf993ba2611be4ec4346e0b1457e09"
+        },
+        "multiverse-computing": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "94932821cd7c97e7d8f74f34cd6ce8332d95abbd"
+        },
+        "mymemo-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "6a1f035c96253eb29a5ecc4f0d5e17874700bc06"
+        },
+        "mymind": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "2087c02e2f2eb89f41089c44709d173cd59ea92a"
+        },
+        "myndmap": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "50f55de016757674d1afc5e5f5529cb6c5a132c8"
+        },
+        "mypeas-ai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "b81b61e5751a238257e9fdd9ec3d7d091bcadb8d"
+        },
+        "myreport": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "50ab21d201589a20f60044cc479b3a5a7d478c49"
+        },
+        "myst-news": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "bd5f799af58061f4bcb76663c71609690ff2e2f8"
+        },
+        "nabla-bio": {
+            "category": "Design",
+            "subcategory": "Graphic & UI design",
+            "method": "rule",
+            "curated": false,
+            "fields": "8fcff4ec08287c547420bf273a8fbb548167d22d"
+        },
+        "nack": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "eb8244e8d00ddc0fd5a07ea5add2e98b06cb6bfe"
+        },
+        "natix-network": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "17605d811adda5c9ac8ec7cc2ee8951fe849e05a"
+        },
+        "neevaai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ecc33a5f57997b3f82ff15c8776bea84d840f38d"
+        },
+        "networkai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "0f2fb6b77e91940b777c3cad306e96872af51ce3"
+        },
+        "nex": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "a52f62160d9f1cda7207a0591bc08ad1b8453c79"
+        },
+        "nextthreebooks": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "c4e0ef5d982446a64175d770756cc8426243e62b"
+        },
+        "nightcap": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "31ee11c9e37729ff629ae917f315ade6ffd9cf8f"
+        },
+        "nobleai": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "5354c9601e3b25a71feb0f74682c0e59a737f3dc"
+        },
+        "noowai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "6116c3df82a05ca65217244ca6019d5f640d0ae3"
+        },
+        "notability-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "9eda9a111b986026ec375de23f87398ecf38c3b1"
+        },
+        "notebooklm": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "editorial",
+            "curated": true,
+            "fields": "d2d37f4b95c845c738bd6d5b2de3a144cb508d38"
+        },
+        "obituary-writer": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "method": "rule",
+            "curated": false,
+            "fields": "37d128e0465b5a7305f9310bb3d8e0eea5e8a6e6"
+        },
+        "ocient": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "f9705426a1d317e831e41630c98c89572035fbd8"
+        },
+        "ohai-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "38899507fd9b1cf9987440ae93e8ac9aa9277588"
+        },
+        "olympia": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "b49a200aceaca26e8aa1cf9d7c50dd15a747e9e4"
+        },
+        "openread": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "dda8ba66efbebae7dccda906f4592753cc0da874"
+        },
+        "orygo-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "4e2032e31b705641fe2ccfa16c5273aa2ca44590"
+        },
+        "oso-ai": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "f5925f47c8efad0ad5b5d3db4ac3fc2bfaf12bd7"
+        },
+        "osum": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "ea202692a52030286c07a3bff6db7bbdb8af070e"
+        },
+        "otio-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "314a50910977c7a2a997c6fbaf8eea742b5a83d3"
+        },
+        "otter-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "editorial",
+            "curated": true,
+            "fields": "9ab339debc82effd69912e22325cafe198165743"
+        },
+        "outread": {
+            "category": "Audio",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "149e335a33529f722c5f23e4b39da8c8ba5c5c95"
+        },
+        "packpack": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "2ec82b01a24ee75c658dda858a41ab4ac8b9f0f6"
+        },
+        "panda-chat": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "64050cd03a8ac962f9d25c0fb1e4bd9323e546e4"
+        },
+        "paperbrain": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "6cb763b08ffdd656955c59bb5571cc6b31f2b6a5"
+        },
+        "paperpal": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "52125e1917345315ad380266f31258e977a970dc"
+        },
+        "papers-gpt": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "f7e2b3e4f5cf189628b2bba51d7a4512dea188f5"
+        },
+        "papers-pro": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "6117b881fef9f6ae3d0bd61988023180dac16ef8"
+        },
+        "parthean": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "2024827d9b11be364153a7377fd64abc6df27e44"
+        },
+        "pathfinder": {
+            "category": "Lifestyle",
+            "subcategory": "Entertainment & personal",
+            "method": "rule",
+            "curated": false,
+            "fields": "3bb5abc0bf3a5fd2197e7490a1c414a6b7e54f8d"
+        },
+        "pdf-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "295da17a4dfd4232c53959f332e4f53e0d1ce886"
+        },
+        "pdf-flex": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "b399a34c517cf3ac87a78da31a523f89484ffc48"
+        },
+        "pdf-pals": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "6582b2de5f141067db096741fb252ce5442cec34"
+        },
+        "pdfgpt": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "bbcff285060ab24c798b3d2f493b905d0a1e9a9f"
+        },
+        "pearl": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "f666e51aaba9feba72fd8e92a175083a44e074d3"
+        },
+        "penny-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "d28f8d6e131584c8fc17557f0e71b2b6ea19ea86"
+        },
+        "perfectessaywriter": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "method": "rule",
+            "curated": false,
+            "fields": "0c416d9d6c382613940eb1ef467eaf83f64c763c"
+        },
+        "perigon": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "9353478b037f4e31e8a3e031d65fa4928419e00f"
+        },
+        "perplexity": {
+            "category": "Research",
+            "subcategory": "AI search & answers",
+            "method": "editorial",
+            "curated": true,
+            "fields": "0d731aef4568f819c580c55ba61a73e79e0f5bb0"
+        },
+        "pi": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "editorial",
+            "curated": true,
+            "fields": "e504a77c8ee782cb0b573dfa82a14734736c9199"
+        },
+        "picogrid": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "0a0d944359254a70e6befee1f020a490aff72097"
+        },
+        "pienso": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "3dbfe85c21d18e20e3504b5bbd9658e14495496e"
+        },
+        "plantrips": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "70f6eb83a39921cbad56fe9cefc621e4019231f4"
+        },
+        "plicanta": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "ef2c60736481d64732b361f6a8c076caec26c297"
+        },
+        "poised": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ec573d4065f88f7f542632381a9989fe7d943295"
+        },
+        "practicetalking": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "c5f595d7bcd749cc9892b0b2f51fe2e4801a8d25"
+        },
+        "preemptive-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "491e8516c26083c899cb6eff389ef66fc65ce493"
+        },
+        "presto": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "d036b9f1b42a2f43eb0cc0c1f8b04e3db8286259"
+        },
+        "price-per-token": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "dec016cdb7ce961dfd1c0aa47af3ed15adbbe3e6"
+        },
+        "prime-intellect": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b89b6303eb4df1e7ee638a154192116bd5b8193a"
+        },
+        "profluent-bio": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "76eec5fad29d44e8234b51c1945b1f78af013e7c"
+        },
+        "promptinterface-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ff7a164f090b56872a66ecfd36183c16edc938ce"
+        },
+        "proscia": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5d14ee07926afebfa1216cb900c5195bc0fea2e6"
+        },
+        "prototext": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "062f069d1a514d45738f99594d7a8b97e535d8ff"
+        },
+        "qashboard": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "527a4cfe54e6e0a4aa75eb14fc7dfdbabc8d98ca"
+        },
+        "qonqur": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "7262a0b452a46ed7fe83345145f07a38058ea16d"
+        },
+        "qoves": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1adcdc50d8861ab87157402b28d6b8e01f0d7b71"
+        },
+        "quantplus": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "590e0f272d92ef58811309cab9fe3fc16a7cdc8c"
+        },
+        "quivr": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "575c6fd8f85188a338fbd5a2e20713cb448ee8ed"
+        },
+        "qureight": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "65758b2a07f7f4aa7067c085abf48d1b343fd40d"
+        },
+        "r1-by-rabbit": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "2d2f8341f643f51197c1fd0ef52b122e1f0dceee"
+        },
+        "rebeccai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "29003a77c897076dc761b79512cbbd0932ac0e5e"
+        },
+        "recall": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "2d8295f3ddd551d834d96926b1e403f06d9a9951"
+        },
+        "recapext": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "2bb0c53b655d63b09e762e2124242d96b704cd25"
+        },
+        "reclaim-ai": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "91aa08e240927b0b65587e6a834bf5cc55308dae"
+        },
+        "reflect-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "0d0e112e935cdaa9ee3d9ea207997a4652ec3a1c"
+        },
+        "relativity": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b475865ddf455492260817eb064a2611d032072a"
+        },
+        "replika": {
+            "category": "Chatbots",
+            "subcategory": "Companions & character chat",
+            "method": "rule",
+            "curated": false,
+            "fields": "c51b9f2adc9800c9ebe32064d4a4e4f41e4fb226"
+        },
+        "researchrabbit": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "430809dc7c1e9aa0519658f3549c5141e814d50a"
+        },
+        "reshape-biotech": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "bc1c4870856e5aa5f3c79e2fcd4522a1d3a203e2"
+        },
+        "resign-ai": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "3604a62de829616755906bb4b273a6be466873a1"
+        },
+        "resoomer": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "5047774b5cf581465d9cc5bcb66620b49e879503"
+        },
+        "responsiv": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "76cd807be94b65ad9279721052063e3237a3bd9a"
+        },
+        "resume-worded": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "04d0b0f52b1229072789aae341ccab0b9094aec2"
+        },
+        "resumecheck": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "f42d9c6a81ac3a074a6c47a5e47bdcc2799a4663"
+        },
+        "resumetrick": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "f7b8f5f003c0509e0906211f06564838b8849388"
+        },
+        "rewind": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "9b598b5abcc36ddca60bf54a46e35b1257181139"
+        },
+        "rhetorai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "2e35a4431975d4c52bd8d630413fb50be63d4486"
+        },
+        "rightjoin": {
+            "category": "Business",
+            "subcategory": "HR & careers",
+            "method": "rule",
+            "curated": false,
+            "fields": "316c8674c98b7c4674ee78b7649b2b445b85af6f"
+        },
+        "rizemail": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "0ea7374bb36941ffa7f1573f49b103ba444cef21"
+        },
+        "roamaround": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "92b3a686e3865187c89650be4c15682437966991"
+        },
+        "role-model-ai": {
+            "category": "Image",
+            "subcategory": "Image generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "87d7b13848c6ba55fa3975eb83892ff2376db2de"
+        },
+        "rose-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5511ed81ad8bfd4fa120c5643a4dd67cab522ce1"
+        },
+        "run": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "111a31bbf480f1f64aa42891ecc46d026a260289"
+        },
+        "ruru": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "41dc0000c8239135e6d6d8f99930b5efcd6635fd"
+        },
+        "s10-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "179132be879f208e0cafe4baa599187a86707a0e"
+        },
+        "safebet": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "992faa1c21ee843c914fe7df00f624778deeab8f"
+        },
+        "sagen-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "b2338968fd8d14460984676375d1c87693cb2db9"
+        },
+        "sanctum-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "fc794b08581465de64175fef59faab9123f0d68c"
+        },
+        "saveday": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "154328c1f99558b7c8abc90240df54a50da4177f"
+        },
+        "scholarcy": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "14e3c8b0d07c1252efe87af10639edbb61736d66"
+        },
+        "schoolai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "b71d220e76e8d4aa85d1ee681265e3e133bac750"
+        },
+        "scispace": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "223212defeb46a8df925cd88076efeb049edf001"
+        },
+        "scite": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "175ada9725cc6751b0011c8679802662d32496b9"
+        },
+        "screenapp": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "e98f75e94150c2fa6c6bc44e9b2b623f5e8b3c53"
+        },
+        "screentime": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "14d2cfee8541d2b8adad92203b1f78dd2b6563f0"
+        },
+        "seance-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "77f2c24f49d3f1f2571774ff2b0c51fd34f2a2f7"
+        },
+        "seeker": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "57f7aa1cb9aafd6efadb2fbdcd6390d34155b6dc"
+        },
+        "selfgazer": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "fcb548b93b7db65b1c07dc415963d17378541007"
+        },
+        "sermongpt": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "8f876c5a881759a79457756e02d4c874771e7c72"
+        },
+        "shako": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "9be0d986de737405c07af623f56f6dd6f711b21d"
+        },
+        "shield-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "92f9253c3ec62baef4e9d56682a0d23cf0959f02"
+        },
+        "shop-guru-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "3f05c67c9dff4abd95f98ac8f2757251db9c6d61"
+        },
+        "sidekick": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "8fd6dca9852783d14002d0ab4c377227d6d6c9dd"
+        },
+        "sider": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "e4584aaac986bd2406a51de1274a3ae814ce75e9"
+        },
+        "signapse": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a4ba174668c5a6bc02ee90d798cb1672d1aa2971"
+        },
+        "siteexplainer": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "2b9d3a9546c9a41df1b6165ed69dd6556358e92b"
+        },
+        "sixty": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "2839f6c054186183914ba328031b66555db7332b"
+        },
+        "skoot": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "626a362aa7024591376ecf1bb741e63563206aac"
+        },
+        "slated": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "d0bd2c7f50c17a1c68c4ada15d1fcc59efac9c86"
+        },
+        "sobrief": {
+            "category": "Audio",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "9045357d75bd34b6567fb1f29116a7c827e1fde6"
+        },
+        "socratic-by-google": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "fee2599db3776db26353e917737fa7baa9e38caa"
+        },
+        "sona": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "468a5432a48c195d03d19375c58c8dc5a94db05b"
+        },
+        "sonix": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "editorial",
+            "curated": true,
+            "fields": "d8e7af16c809b1c5d61f9358fb7b981bbecc692d"
+        },
+        "spatial-touch": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "f4f5e40667f6506cb33c1f1454055934ee12ffb1"
+        },
+        "spellar-ai": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "a99fafb51d07e95506ab675bb088281341f3e7b6"
+        },
+        "spindoc": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "8f362544bf51817684ad30c54277dbaabd8b314f"
+        },
+        "splitjoin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a9f7ea4099f33f8a34796290c45f49065f53c77b"
+        },
+        "squad-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5312a9ae6c3f230e24a7013a4ed47e479e1d431a"
+        },
+        "stellar": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "50c2326c2702ed27cb128e4f5171caed59f6dd9c"
+        },
+        "stellaris-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "f42297c857966a6e324d8c3afe229e2366bb7340"
+        },
+        "stratup-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "d1cb0a452724a6b168b5bd3a4a767abdaf8abe51"
+        },
+        "streaming-options": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "02fb9fb597805bb0c2748d96daf84149d9935b71"
+        },
+        "studyable": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "9f07b381b77071e0b9e9ee4dd6a951d468aaf138"
+        },
+        "studyx": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "2132021a865e244d25c28e1a843cf9cab91fcb0b"
+        },
+        "suggest-gift": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "c826e077c22a241f403eb032c77672f9e2ecb797"
+        },
+        "summit": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "b75642263a00540ed53686d74b70a4b71f27f934"
+        },
+        "summraiz": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "6883f7af999ac951a2a16fe903047cebeaccc288"
+        },
+        "superagent": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "8fea6717f8c01101f51f4301dc1936c8923c4e1f"
+        },
+        "superagi": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "method": "rule",
+            "curated": false,
+            "fields": "36f71950f47274a1902300cbd4d4604f2ebce7f8"
+        },
+        "superagi-cloud": {
+            "category": "Automation",
+            "subcategory": "AI agents",
+            "method": "rule",
+            "curated": false,
+            "fields": "e6e5f12af72d20b8206434ce6f3fd2ee7b7f54f8"
+        },
+        "supermemory": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a2c556e34f537c24d17f755b74d5ec568c61fbe6"
+        },
+        "swifty": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "de5a0554c77114d9ecf3367ce64eb16963981bc5"
+        },
+        "taiga": {
+            "category": "Coding",
+            "subcategory": "Code assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "cfdf90e96b2c4870178a4e18a264453ec7543406"
+        },
+        "tailor": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "83434f026d8851e1383ba74b135989a3ae37fd6a"
+        },
+        "talknotes": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "636149648a75a0b50db0df21770a09c924c40471"
+        },
+        "talktohim": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "919d0932a3ce223cfb53a72cd15f474ccb35aa54"
+        },
+        "taranify": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "02cfe92e17c47f1df50880d7caa1cf200fcb3692"
+        },
+        "tarot-master": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "27b5beee5d1f42b72fbee22c385878bfee9e84dc"
+        },
+        "teamsmart-ai": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "bde066a2db611687b9f529a4aa27853affcbf1ec"
+        },
+        "tenorshare-ai": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "b843afb917debafe18aa1de68e7f5262f6853352"
+        },
+        "tensorflow": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "f56106b27cd433f9a3406b890e97bb3f35da640b"
+        },
+        "text2sql": {
+            "category": "Coding",
+            "subcategory": "Data & SQL",
+            "method": "rule",
+            "curated": false,
+            "fields": "1c31868806a8c929e234647f6624352e6ba3bfe2"
+        },
+        "theb-ai": {
+            "category": "Coding",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "b9be5e2b05f00edc203c92b0dd9d59ef245e7b0c"
+        },
+        "thegist": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "79dc4dfd673a4833142a187346fb27725143c6f7"
+        },
+        "thema": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "29a30b8daa94525b332a2a52977798394bc864c6"
+        },
+        "thinkforce": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "4c4906535ccd69e7074abea88cad597f0135d619"
+        },
+        "thunderbit": {
+            "category": "Coding",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "ae6fda972e4dc3728378c0893e597b9891b25a3a"
+        },
+        "tidalflow": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "1784f21235a54afee6c0499fc7614cdd443e9296"
+        },
+        "tierra-biosciences": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "cceba40b74853dca32914b36ccfee5abbfea6fe8"
+        },
+        "timemaster": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e861d7f119cfb4afd584e71ce49f779fc237f489"
+        },
+        "timeos": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "919915238aaebcc6afcdbe07c29def5825efdcbb"
+        },
+        "timetics": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "2b8e51a8148c0d7594901157ed1adf650cc8bd93"
+        },
+        "tinywow": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ef9762c25b2bfc1f117d63da2b2f48a3b54c0cd8"
+        },
+        "tipis-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e34831704dae73d0c53832d58fd53503fcddbf3c"
+        },
+        "tldr-this": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "851ec6317c84de644f3c5f9e52a1a9951217b360"
+        },
+        "todo-is": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c4e494666817ea2fa68c5a058ce6d75fd7cc505d"
+        },
+        "together-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "c1372e2d4facd42d6e9b824479177273fc2c08e4"
+        },
+        "tomorrow-io": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "4c296639546a6e6bf0db5d7831c48cd4de4563a3"
+        },
+        "topcreator": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "16f98e4bdd84247262ff6daa090db468dfaca41e"
+        },
+        "torq": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "4cba394030953e2f158b94a15a153077a1a0f292"
+        },
+        "traivl": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1358480c3f845568d976bf8b862f1bf181b24de9"
+        },
+        "transcript-lol": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "5290b1deac3c922b29f9efb3c86435a31f10886c"
+        },
+        "travel-plan-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "8a542dc500c260606ac4479f62702e98ec6eef92"
+        },
+        "travelnaut": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "766fd21b017940e84e026edbd4ca2c8c50a8a1ed"
+        },
+        "trendspider": {
+            "category": "Business",
+            "subcategory": "Finance & accounting",
+            "method": "rule",
+            "curated": false,
+            "fields": "8ae8b2458f30f2fdb3c394648c34253d693ce0b6"
+        },
+        "trint": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "editorial",
+            "curated": true,
+            "fields": "adb70856d7b0e8582bf99ac80d62a3bfa895b04f"
+        },
+        "triv-ai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "bb21671546bf15200b22e038a5d279235251db5a"
+        },
+        "tuliaa": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "08328afbc9cb6cab7c3d212b896955bb9f080131"
+        },
+        "turbo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "58f29d815933e49c34cc8095b72c91f25fefe19c"
+        },
+        "turnitin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a68083331754db0c6cd18a8339bf6d4efe763d30"
+        },
+        "tutorai": {
+            "category": "Research",
+            "subcategory": "Learning & education",
+            "method": "rule",
+            "curated": false,
+            "fields": "25b77a3c93e74cf51989f13a2b09ff8022252941"
+        },
+        "twin": {
+            "category": "Automation",
+            "subcategory": "Workflow automation",
+            "method": "rule",
+            "curated": false,
+            "fields": "24a2cfcf4bb1acfa4ae093a3f41a22b16d9bc9fd"
+        },
+        "typingmind": {
+            "category": "Chatbots",
+            "subcategory": "General AI assistants",
+            "method": "rule",
+            "curated": false,
+            "fields": "1c88875f11a484c173764bf8f3483bb5a42f55c3"
+        },
+        "unlearn-ai": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "10e0147326143b1d105c926e25f32231d52f98b8"
+        },
+        "unreal-speech": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "2fc1cba5414353d09305a3154a8492d82745e11b"
+        },
+        "unriddle": {
+            "category": "Research",
+            "subcategory": "Academic & scientific research",
+            "method": "rule",
+            "curated": false,
+            "fields": "8ace6ae2e8bd152b67d7e554cb92f8ce69891afd"
+        },
+        "unstructured-technologies": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "96f1e2648b3ccce570b09f38210584b84b6dc5e0"
+        },
+        "upwin": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "a9f62443294745cd4fe7aac32cdcdebbb23eb152"
+        },
+        "upword": {
+            "category": "Productivity",
+            "subcategory": "Notes & documents",
+            "method": "rule",
+            "curated": false,
+            "fields": "df1129103c7fb2dca56c3c5d711ad2702ce06708"
+        },
+        "usertesting-ai": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "8e7c7781ca23ab8ed11a53d1731203a134a1112d"
+        },
+        "vacay": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "163707fb8b99e46045a240011aeaa874c9cbb084"
+        },
+        "venturekit": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "e52d4cc887684c5199af150109245898f7714a19"
+        },
+        "verbaly": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "364e676aeab9d92abb552afc5261e682974c841b"
+        },
+        "vetted": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "2d908b3ef21fe787e36d94691a7642cfbe204be9"
+        },
+        "viableview": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "91e122e20dac66aa5f29023c7192fe27193c78a4"
+        },
+        "vibrato": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "c3bbcff5de45d6ab1721d4e8d8e32a5a4297bb83"
+        },
+        "vizologi": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "aadf573d70d1dd3f26cda298e17f2b40ad0bab24"
+        },
+        "waitroom": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "e398de75a0acdb6f25091230026fe5e9c32a607c"
+        },
+        "wanderboat": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "2169e25f51203b4499c85262fd7b33083357ae70"
+        },
+        "wandergenie": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "388bc977abc923798474aef2339db1729425865d"
+        },
+        "watchnow-ai": {
+            "category": "Video",
+            "subcategory": "Video generation & editing",
+            "method": "rule",
+            "curated": false,
+            "fields": "d4a0b050b261158c8ba25086be89ad06b896581e"
+        },
+        "waverly": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "657a85fec5ed7c96905f300177754609224a4dc5"
+        },
+        "we-write-cards": {
+            "category": "Writing",
+            "subcategory": "",
+            "method": "source",
+            "curated": false,
+            "fields": "77b193990194c7e00c5b54ba9378765983d084fb"
+        },
+        "wellpin": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "509540985969482c61b4d3ec9072cf9bcbb8a87e"
+        },
+        "whatdo": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "ba7522c626043ff56201de1a754e0d200030740a"
+        },
+        "whoop": {
+            "category": "Lifestyle",
+            "subcategory": "Health & wellness",
+            "method": "rule",
+            "curated": false,
+            "fields": "7bbc3fd742368b1cebca252eb4a331d64db015e7"
+        },
+        "wisetalk": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "fa82ebd35e8946a8a7e7941393d4703f1dbe185c"
+        },
+        "woord": {
+            "category": "Audio",
+            "subcategory": "Voice & speech",
+            "method": "rule",
+            "curated": false,
+            "fields": "c67ce74e9b5122771bfc7c37e00629f065bfadc7"
+        },
+        "writerzen": {
+            "category": "Writing",
+            "subcategory": "Copywriting & content creation",
+            "method": "rule",
+            "curated": false,
+            "fields": "dd588eafad893e1e644d0e5facdd7ea53f12a631"
+        },
+        "wtf-does-this-company-do": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "77624a18e49665f8fb850b385fef419e7f2e45fb"
+        },
+        "xembly": {
+            "category": "Productivity",
+            "subcategory": "Email & scheduling",
+            "method": "rule",
+            "curated": false,
+            "fields": "78a15633556f1bc01adbd19382a7db498f51bcb9"
+        },
+        "yobi": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "122456d9614d72341ebc1bdfc77bc8578ac3bf91"
+        },
+        "yoodli-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "c805f9dfb401b8abf44c96ae02b30469fa2199ba"
+        },
+        "you": {
+            "category": "Research",
+            "subcategory": "AI search & answers",
+            "method": "editorial",
+            "curated": true,
+            "fields": "2b7d428d7432a7e6e3d9c477eac6cb2602e513b8"
+        },
+        "you-got-cooking": {
+            "category": "Lifestyle",
+            "subcategory": "Travel & shopping",
+            "method": "rule",
+            "curated": false,
+            "fields": "7d0f9faa00005db7e344b41f6f69eaa591949e00"
+        },
+        "youism-ai": {
+            "category": "Business",
+            "subcategory": "Business intelligence & operations",
+            "method": "rule",
+            "curated": false,
+            "fields": "5660261258c41340b5d5d448c3762cb099857a3d"
+        },
+        "zipzap": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "d1c8cbc8acbdb178bf8e3351a472366cbee419c8"
+        },
+        "zivy": {
+            "category": "Other",
+            "subcategory": "Unclassified",
+            "method": "source",
+            "curated": false,
+            "fields": "1c8cbefc6a56c6ea8c359e3809585eb4504d1d54"
+        },
+        "zoom-ai-companion": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "70f1780e0eb46635cfee49de26df0f2a8b09546b"
+        },
+        "zoom-iq": {
+            "category": "Productivity",
+            "subcategory": "Meetings & transcription",
+            "method": "rule",
+            "curated": false,
+            "fields": "63582fe508bce4241259fa0376ce5d9084cf9200"
+        }
+    }
+}
