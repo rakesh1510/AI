@@ -103,7 +103,9 @@ foreach ($seed as $o) {
 $modelEntity = function (string $id, string $body, array $meta) use ($b, &$companies): ?string {
   $m = json_decode($body, true); if (!is_array($m) || ($m['id'] ?? '') !== $id) return null;
   $sid = $b->source($meta, $body, 'Hugging Face Hub API', '"id":"' . $id . '"'); if ($sid === null) return null;
-  $slug = col_slug(str_replace('/', '-', $id)); $b->entity('model', $slug, $id, '', [$sid]); return $slug;
+  $slug = col_slug(str_replace('/', '-', $id));
+  if (!$b->hasEntity($slug)) { $b->entity('model', $slug, $id, '', [$sid]); $b->review[] = ['kind' => 'entity', 'record' => $slug, 'claim' => "Model repository '$id' exists on the Hugging Face Hub", 'source_url' => $meta['url'], 'quote' => '"id":"' . $id . '"', 'check' => 'Open the URL and confirm the repository id.']; }
+  return $slug;
 };
 foreach ($seed as $o) {
   $hf = (string)($o['hf'] ?? ''); $company = $companies[strtolower($hf)] ?? null; if ($company === null) continue;
@@ -115,7 +117,6 @@ foreach ($seed as $o) {
     if ($cm !== 200) { $b->skip($id, "hf_model_http_$cm"); continue; }
     $m = json_decode($bm, true); $slug = $modelEntity($id, $bm, $mm);
     if ($slug === null) { $b->skip($id, 'model_quote_not_in_capture'); continue; }
-    $b->review[] = ['kind' => 'entity', 'record' => $slug, 'claim' => "Model repository '$id' exists on the Hugging Face Hub", 'source_url' => $mm['url'], 'quote' => '"id":"' . $id . '"', 'check' => 'Open the URL and confirm the repository id.'];
     if (strcasecmp((string)($m['author'] ?? ''), $hf) === 0) {
       $sid = $b->source($mm, $bm, 'Hugging Face Hub API', '"author":"' . $m['author'] . '"');
       if ($sid !== null) { $b->edgeAdd($slug, 'developed_by', $company, "Hub namespace '$hf' is mapped to this company by the AIHubpedia seed list; the verifier must confirm the namespace belongs to the company (e.g. on the organisation's official site).", [$sid]);
@@ -136,7 +137,8 @@ foreach ($seed as $o) {
       if ($cb !== 200) { $b->skip("$id base $base", "hf_base_http_$cb"); continue; }
       $bslug = $modelEntity($base, $bb, $mb); if ($bslug === null) { $b->skip("$id base $base", 'base_quote_not_in_capture'); continue; }
       $bauth = (string)(json_decode($bb, true)['author'] ?? '');
-      if (isset($companies[strtolower($bauth)]) && ($sidA = $b->source($mb, $bb, 'Hugging Face Hub API', '"author":"' . $bauth . '"')) !== null) $b->edgeAdd($bslug, 'developed_by', $companies[strtolower($bauth)], "Hub namespace '$bauth' is mapped to this company by the AIHubpedia seed list; the verifier must confirm it.", [$sidA]);
+      if (isset($companies[strtolower($bauth)]) && ($sidA = $b->source($mb, $bb, 'Hugging Face Hub API', '"author":"' . $bauth . '"')) !== null) { $b->edgeAdd($bslug, 'developed_by', $companies[strtolower($bauth)], "Hub namespace '$bauth' is mapped to this company by the AIHubpedia seed list; the verifier must confirm it.", [$sidA]);
+        $b->review[] = ['kind' => 'edge', 'record' => "$bslug developed_by " . $companies[strtolower($bauth)], 'claim' => "Base model published under the Hub namespace '$bauth', mapped to the company", 'source_url' => $mb['url'], 'quote' => '"author":"' . $bauth . '"', 'check' => "Confirm that Hugging Face namespace '$bauth' is operated by this company (official website or organisation page), then confirm the author field."]; }
       $sidT = $b->source($mm, $bm, 'Hugging Face Hub API', '"' . $tag . '"');
       if ($sidT !== null) { $b->edgeAdd($slug, 'derived_from', $bslug, 'Hugging Face model metadata tag base_model:finetune (fine-tuned from the base model).', [$sidT]);
         $b->review[] = ['kind' => 'edge', 'record' => "$slug derived_from $bslug", 'claim' => "'$id' is a fine-tune of '$base' according to the repository metadata", 'source_url' => $mm['url'], 'quote' => '"' . $tag . '"', 'check' => 'Open the model card on the Hub, confirm the base model statement (technical ancestry), and that the base repository id is correct.']; }
@@ -159,6 +161,7 @@ if (col_flag('directory')) {
 // ---- output ----
 $doc = ['format' => 'aihubpedia-import-v1', 'sources' => $b->sources, 'entities' => $b->entities, 'events' => $b->events, 'edges' => $b->edges];
 file_put_contents("$out/import.json", json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+$seenRv = []; $b->review = array_values(array_filter($b->review, function ($r) use (&$seenRv) { $k = $r['kind'] . '|' . $r['record']; if (isset($seenRv[$k])) return false; $seenRv[$k] = true; return true; }));   /* one line per record */
 $fh = fopen("$out/review_batch.csv", 'w'); fputcsv($fh, ['kind', 'record', 'claim', 'source_url', 'quote', 'what_the_verifier_must_check']); foreach ($b->review as $r) fputcsv($fh, [$r['kind'], $r['record'], $r['claim'], $r['source_url'], $r['quote'], $r['check']]); fclose($fh);
 $rep = ['mode' => $replay ? 'replay' : 'live', 'organisations_in_seed' => count($seed), 'companies' => count(array_filter($b->entities, fn($e) => $e['entity_type'] === 'company')), 'models' => count(array_filter($b->entities, fn($e) => $e['entity_type'] === 'model')), 'events' => count($b->events), 'edges' => count($b->edges), 'sources' => count($b->sources), 'skipped' => $b->skipped];
 file_put_contents("$out/run_report.json", json_encode($rep, JSON_PRETTY_PRINT) . "\n");

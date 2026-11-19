@@ -17,7 +17,10 @@ function ul_model(PDO $pdo, array $P): array {
       $by[$s]['count']++; if ($r['release_date'] < $by[$s]['first']) $by[$s]['first'] = $r['release_date']; if ($r['release_date'] > $by[$s]['last']) $by[$s]['last'] = $r['release_date'];
     }
     usort($by, fn($a, $b) => strcasecmp($a['name'], $b['name']));
-    return ['status' => 200, 'mode' => 'index', 'families' => $by];
+    /* documented ancestry and succession between verified entities (verified, current edges only); shown even when no formal release exists */
+    $j = uni_live_entity_join('ed', 'from_entity_id', 'fe') . ' ' . uni_live_entity_join('ed', 'to_entity_id', 'te');
+    $q = $pdo->query("SELECT fe.slug AS from_slug, fe.name AS from_name, ed.edge_type, te.slug AS to_slug, te.name AS to_name FROM uni_edge ed $j WHERE ed.state = 'verified' AND ed.is_current = 1 AND ed.edge_type IN ('derived_from','successor_of','renamed_from') ORDER BY te.name, fe.name LIMIT 200");
+    return ['status' => 200, 'mode' => 'index', 'families' => $by, 'ancestry' => $q->fetchAll(PDO::FETCH_ASSOC)];
   }
   if (!up_slug_ok($P['entity'])) return ['status' => 400, 'error' => 'parameter_invalid'];
   $ent = uni_public_entity($pdo, $P['entity']); if ($ent === null) return ['status' => 404, 'error' => 'entity_not_found'];
@@ -197,10 +200,20 @@ function ul_count(int $n): string { return $n . ($n === 1 ? ' item' : ' items');
 function ul_render_index(array $m): string {
   $o = '<div class="upPage ulPage"><h1>AI Tool Lineage</h1><p class="upLead">Git-style release histories of AI models and products. Each release has a date and a source; relationships between releases and between products are drawn only when a source documents them, and each kind of relationship is kept separate.</p>';
   $o .= '<section aria-labelledby="ul-fam-h"><h2 id="ul-fam-h">Families with a verified release history</h2>';
-  if (!$m['families']) return $o . '</section><section class="upEmpty"><h2>No verified releases yet</h2><p>No release has been verified so far, so there is no lineage to show. Nothing is guessed or filled in.</p></section></div>';
+  if (!$m['families'] && !($m['ancestry'] ?? [])) return $o . '</section><section class="upEmpty"><h2>No verified releases yet</h2><p>No release has been verified so far, so there is no lineage to show. Nothing is guessed or filled in.</p></section></div>';
+  if (!$m['families']) { $o = substr($o, 0, (int)strrpos($o, '<section aria-labelledby="ul-fam-h">')); return $o . ul_render_ancestry($m['ancestry'] ?? []) . ul_legend(false) . '</div>'; }
   $o .= '<div class="upScroll" role="region" tabindex="0" aria-label="Families table"><table class="upTable"><caption>Model families and products with verified releases</caption><thead><tr><th scope="col">Family or product</th><th scope="col">Verified releases</th><th scope="col">First release</th><th scope="col">Latest release</th></tr></thead><tbody>';
   foreach ($m['families'] as $f) $o .= '<tr><th scope="row"><a href="' . up_h(up_url(UL_SCRIPT, ['entity' => $f['slug']])) . '">' . up_h($f['name']) . '</a></th><td>' . $f['count'] . '</td><td>' . up_h($f['first']) . '</td><td>' . up_h($f['last']) . '</td></tr>';
-  return $o . '</tbody></table></div></section>' . ul_legend(false) . '</div>';
+  $o .= '</tbody></table></div></section>';
+  return $o . ul_render_ancestry($m['ancestry'] ?? []) . ul_legend(false) . '</div>';
+}
+/** Documented relationships between verified entities (each is a verified edge with its own source on the entity page). */
+function ul_render_ancestry(array $rows): string {
+  if (!$rows) return '';
+  $kind = ['derived_from' => 'is derived from (technical ancestry)', 'successor_of' => 'succeeds (product succession)', 'renamed_from' => 'was renamed from'];
+  $o = '<section aria-labelledby="ul-anc-h"><h2 id="ul-anc-h">Documented ancestry and succession</h2><div class="upScroll" role="region" tabindex="0" aria-label="Ancestry table"><table class="upTable"><caption>Verified relationships between models and products (each cites its source on the model page)</caption><thead><tr><th scope="col">Model or product</th><th scope="col">Relationship</th><th scope="col">Related model or product</th></tr></thead><tbody>';
+  foreach ($rows as $r) $o .= '<tr><th scope="row"><a href="' . up_h(up_url(UL_SCRIPT, ['entity' => $r['from_slug']])) . '">' . up_h($r['from_name']) . '</a></th><td>' . up_h($kind[$r['edge_type']] ?? $r['edge_type']) . '</td><td><a href="' . up_h(up_url(UL_SCRIPT, ['entity' => $r['to_slug']])) . '">' . up_h($r['to_name']) . '</a></td></tr>';
+  return $o . '</tbody></table></div></section>';
 }
 function ul_render_entity(array $m): string {
   $ent = $m['entity']; $lin = $m['lineage']; $name = $ent['name']; $hasRel = (bool)$m['releases']; $hasEdges = (bool)$lin['entity_edges'];

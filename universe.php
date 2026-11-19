@@ -8,9 +8,10 @@ require_once __DIR__ . '/uni_pages.php';
 
 const UHUB_SCRIPT = 'universe.php';
 
-/** Verified counts for the four experiences. @return array{entities:int,events:int,releases:int} */
+/** Verified counts for the four experiences. @return array{entities:int,events:int,releases:int,ancestry:int} */
 function uhub_counts(PDO $pdo): array {
-  return ['entities' => (int)uni_public_entities($pdo, [], 1, 1)['total'], 'events' => (int)uni_public_events($pdo, [], 1, 1)['total'], 'releases' => (int)uni_public_releases($pdo, [], 1, 1)['total']];
+  return ['entities' => (int)uni_public_entities($pdo, [], 1, 1)['total'], 'events' => (int)uni_public_events($pdo, [], 1, 1)['total'], 'releases' => (int)uni_public_releases($pdo, [], 1, 1)['total'],
+    'ancestry' => (int)$pdo->query("SELECT COUNT(*) FROM uni_edge ed " . uni_live_entity_join('ed', 'from_entity_id', 'fe') . ' ' . uni_live_entity_join('ed', 'to_entity_id', 'te') . " WHERE ed.state = 'verified' AND ed.is_current = 1 AND ed.edge_type IN ('derived_from','successor_of','renamed_from')")->fetchColumn()];
 }
 /** Verified-only overview: counts by type, latest verified events, most connected entities (by verified relationships; a mechanical count, not an editorial pick). */
 function uhub_extras(PDO $pdo): array {
@@ -31,7 +32,7 @@ function uhub_cards(?array $c): array {
     ['/universe-heatmap.php', 'Activity heatmap', 'A calendar of verified releases, launches and updates by day. Days without verified activity stay empty.',
       $c && $c['events'] > 0 ? uhub_plural($c['events'], 'verified event', 'verified events') : $none, $c && $c['events'] > 0],
     ['/universe-lineage.php', 'Release lineage', 'Release histories of AI models and products with dates and sources. Technical ancestry and product succession are kept apart.',
-      $c && $c['releases'] > 0 ? uhub_plural($c['releases'], 'verified release', 'verified releases') : $none, $c && $c['releases'] > 0],
+      $c && $c['releases'] > 0 ? uhub_plural($c['releases'], 'verified release', 'verified releases') : ($c && ($c['ancestry'] ?? 0) > 0 ? uhub_plural((int)$c['ancestry'], 'documented ancestry or succession link', 'documented ancestry or succession links') : $none), $c && ($c['releases'] > 0 || ($c['ancestry'] ?? 0) > 0)],
     ['/universe-arena.php', 'Battle Arena', 'Compare two to four products or models side by side. Missing data is marked unavailable and no winner is declared.',
       $c && $c['entities'] >= 2 ? 'Ready: ' . number_format($c['entities']) . ' verified entities to compare' : ($c && $c['entities'] === 1 ? 'Needs at least two verified entities (1 so far)' : $none), $c && $c['entities'] >= 2],
   ];

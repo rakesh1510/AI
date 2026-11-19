@@ -1,0 +1,38 @@
+[
+    {
+        "company": "meta-platforms",
+        "directory_slug": "cm3leon-by-meta",
+        "directory_name": "CM3leon by Meta",
+        "directory_website": "https://ai.meta.com"
+    },
+    {
+        "company": "microsoft",
+        "directory_slug": "copilot-for-microsoft-365",
+        "directory_name": "Copilot for Microsoft 365",
+        "directory_website": "https://adoption.microsoft.com"
+    },
+    {
+        "company": "microsoft",
+        "directory_slug": "microsoft-knowledge-exploration",
+        "directory_name": "Microsoft Knowledge Exploration",
+        "directory_website": "https://www.microsoft.com"
+    },
+    {
+        "company": "microsoft",
+        "directory_slug": "copilot",
+        "directory_name": "Microsoft Copilot",
+        "directory_website": "https://copilot.microsoft.com/"
+    },
+    {
+        "company": "openai",
+        "directory_slug": "chatgpt",
+        "directory_name": "ChatGPT",
+        "directory_website": "https://chat.openai.com/"
+    },
+    {
+        "company": "deepseek",
+        "directory_slug": "deepseek",
+        "directory_name": "DeepSeek",
+        "directory_website": "https://www.deepseek.com/"
+    }
+]
