@@ -8,6 +8,8 @@ Plain static files, no framework, no build step.
 |---|---|
 | `index.html` | page shell, styles, controls, legend, table, side panel |
 | `graph.js` | canvas renderer, d3-zoom/d3-drag, quadtree hit-test, search, filters, table, panel, deep links, progressive loading, clustering, benchmark hooks |
+| `data-source.js` | data adapter: canonical node/edge format, paged `page()` and `neighbourhood()` interface, synthetic implementation, documented (not implemented) HTTP contract |
+| `a11y-test.js`, `label-metrics.js`, `summarize-bench.js` | axe-core + keyboard run, edge-label overlap measurement, benchmark summary table |
 | `layout-worker.js` | d3-force simulation in a Web Worker (an extra file beyond the requested list; a worker needs its own script) |
 | `data-gen.js` | deterministic seeded generator for 500 / 5,000 / 50,000 nodes (also loads in Node) |
 | `bench.js` | Playwright/Chromium benchmark and conformance checks; writes `bench-results.json` and the table below |
@@ -17,6 +19,44 @@ Plain static files, no framework, no build step.
 Run: `python3 -m http.server 8000`, then open `http://localhost:8000/index.html?size=5000`. Benchmark: `node bench.js` (about 25 min; `--quick` caps layout at 20 s; `--checks-only` runs just the conformance checks).
 
 URL parameters: `size=500|5000|50000`, `load=all|progressive`, `cluster=off`, `view=table`, `mode=review`. Deep link hash: `#sel=n123&k=1.750&x=120.0&y=-80.0` (selected node, zoom, view centre in world coordinates; `&view=table`). Links are reproducible for the same size/load settings because the data and the force tick count are deterministic.
+
+## Phase 7 follow-up (accessibility, label placement, mobile limits)
+
+All numbers below were produced by the scripts in this folder on the same headless-Chromium/software-canvas setup as above (`--quick`, 20 s layout cap). Result files: `bench-results-phase7b-before.json` (code at the start of this task, 3 runs per configuration), `bench-results-phase7b-after.json`, `bench-results-phase7b-after-limits-off.json`, `bench-results-phase7b-checks.json`, `bench-results-label-overlap.json`, `a11y-results.json`. Older result files are unchanged.
+
+### Accessibility
+* Table is a native `<table>` (no `role=grid`): caption, `th scope=col`, `th scope=row` holding one button per row (opens details), `aria-current` plus visible "(selected)" text, empty result is a normal row with `colspan`. Column header "Links" is now "Verified relationships (count)". Up/Down/Home/End/PageUp/PageDown move between row buttons (convenience, not a grid model).
+* Focus: after paging the focus stays on the pager button (or moves to the other one when it becomes disabled); PageUp/PageDown from a row focuses the first row; closing details returns focus to the row button. One `role=status` live region announces result counts (debounced), paging, view switches, selection and search results. Search "No matches" is a message, not a fake option.
+* Skip links (controls, graph/table, details); they do not change the URL hash. Switching table/graph keeps the selection (table jumps to the page holding it; graph recentres if it is off screen).
+* Graph without a pointer: arrows pan, +/- zoom, 0 fit, Enter select centre node / open details, N / Shift+N cycle nodes, ] / [ cycle related nodes, B back, Esc clear; on-screen buttons for zoom, fit, select centre, next related. Reduced motion unchanged (0 ms transitions). Colour is never the only cue (shapes, dashes, widths, text, selection ring, "(selected)", dashed outline for grouped bubbles). Light and dark themes share CSS variables with the canvas.
+* axe-core 4.10.2 (all rules plus target-size), Chromium, 8 UI states x light/dark x desktop 1280 / mobile 360: **0 violations in 32 runs**. Incomplete (axe could not decide, not verified by a person): colour contrast on a few filter labels and zoom buttons in the "search results open" states (the open results list overlaps them) and on filter labels in the "no matches" state. Keyboard/focus script (`a11y-results.json` -> `keyboard`): all checks true. Not tested: real screen readers, Firefox/WebKit.
+
+### Edge-label placement
+Labels are placed on a grid occupancy map in priority order: selected node's edges (by neighbour degree), hovered node's edges, high-degree edges when zoomed in (k >= 2.5), then node names. Candidate positions slide along the edge and above/below/beside; leader lines connect displaced labels; if the full text does not fit the compact text (relationship type) is tried; labels that do not fit are not drawn and a "+N edge labels hidden, see details" pill is shown (the details panel lists every relationship). No labels while moving. `?labels=legacy` restores the old placement only for measurement.
+Measured (`label-metrics.js`, zoom 2.5, 10 top-degree hubs and 10 mid-degree nodes per cell, labels of the whole frame): legacy placement 94.8 to 97.4 % of labels overlapped another label (about 1,700 to 4,300 overlapping pairs per 10 frames); new placement 0 overlapping pairs and 0 labels over a neighbour glyph in all 16 cells, with 38 to 152 labels per 10 frames hidden. Zero overlap is guaranteed by the placement test, so it shows the metric works, not that every label is readable; readability of the compact labels and the hidden-label pill were not user-tested.
+
+### Mobile limits, aggregation, level of detail
+Limits apply when `pointer: coarse` or width < 700 (override `?limits=mobile|desktop|off`): clusters above 1,200 estimated visible nodes (desktop 2,500); at most 350 bubbles drawn, more are merged into dashed grid "super-nodes" that split on zoom; edges 600 while moving / 1,800 at rest, none above 3,000 visible nodes; at most 6,000 nodes loaded (larger data sets start in progressive mode with company overview only; clicking a company bubble loads up to 200 members, selecting a node up to 150 neighbours); layout wall-clock cap 8 s; no text (labels, cluster names) while moving. Progressive loading via the adapter's `neighbourhood()` is implemented in the synthetic source but graph.js currently loads all pages first and expands from memory.
+
+### Benchmark before / after (frame p95 in ms, per run of 3; limit 33 desktop, 50 mobile)
+| Profile | Nodes | Variant | Before (3 runs) | After (3 runs) |
+|---|---|---|---|---|
+| desktop | 500 / 5,000 / 50,000 | default | 16.7-16.8 | 16.7-16.8 |
+| desktop | 50,000 | no-clustering | 100 / 100 / 100 (fail) | 83.4 x3 (fail) |
+| desktop | 50,000 | progressive | 16.8 x3 | 16.7 / 16.7 / 16.8 |
+| mobile | 500 | default | 16.7 x3 | 16.7 x3 |
+| mobile | 5,000 | default | 33.4 / 33.4 / 33.3 | 16.8 / 16.7 / 16.8 |
+| mobile | 50,000 | default | 83.4 x3 (fail) | 16.8 x3 (pass) |
+| mobile | 50,000 | no-clustering | 450 / 433 / 433 (fail) | 33.4 x3 (pass) |
+| mobile | 50,000 | progressive | 50 x3 (at limit) | 16.8 x3 |
+| mobile | 50,000 | limits-off (new code, desktop limits) | n/a | 83.3 x3 (fail) |
+
+Read with care:
+* Mobile 50,000 "default" and "no-clustering" now run in automatic progressive mode: they draw the 2,000-company overview (plus whatever the user expands), not 50,000 nodes. The `limits-off` row is the like-for-like check: with the limits disabled the same code still fails at 83.3 ms, so the improvement comes from the limits, not from other changes.
+* Frame times are 60 Hz quantised and were identical across the 3 runs, so the three-run variance is about zero at this resolution; it says nothing about real phones or GPUs (the 4x throttle only slows the main thread; the worker is not throttled).
+* Regression: first paint is later because of the adapter (canonical conversion plus ingest on the main thread): mobile 50,000 median 1,235 -> 1,934 ms, desktop 50,000 230 -> 464 ms, mobile 5,000 400 -> 493 ms. Not optimised.
+* Desktop 50,000 without clustering still fails (unsupported configuration).
+* Layout settle on mobile 50,000 falls from 20 s (cap) to about 1.2 s only because the overview has 2,000 nodes.
 
 ## Vendored libraries
 

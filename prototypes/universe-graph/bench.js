@@ -144,7 +144,7 @@ async function checks(browser, base) {
   // select a node so the panel is open, then audit target sizes in both views
   const nid = await page.evaluate(() => { const A = GraphApp.adj(); const i = A.findIndex(a => a.length > 3); GraphApp.select(i, {}); return i; });
   const targets = async () => page.evaluate(() => {
-    const sel = 'button, select, summary, input[type=search], label.chk, [role=option], tbody tr[data-i], .linkbtn';
+    const sel = 'button, select, summary, input[type=search], label.chk, [role=option], tbody tr[data-i], .linkbtn, a.skip';
     return Array.from(document.querySelectorAll(sel)).filter(e => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden'; })
       .map(e => { const r = e.getBoundingClientRect(); return { el: e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.split(' ')[0] : ''), w: Math.round(r.width), h: Math.round(r.height) }; });
   });
@@ -157,7 +157,7 @@ async function checks(browser, base) {
   C.syntheticLabelVisibleTable = await page.evaluate(() => { const e = document.querySelector('.syn'); return e.getBoundingClientRect().width > 0; });
   // keyboard in table
   await page.evaluate(() => { GraphApp.select(-1, {}); });
-  await page.focus('tbody tr[tabindex="0"]');
+  await page.focus('tbody .rowbtn');
   await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown');
   const focusedI = await page.evaluate(() => +document.activeElement.getAttribute('data-i'));
   await page.keyboard.press('Enter');
@@ -165,7 +165,7 @@ async function checks(browser, base) {
   C.tableKeyboard = { arrowDownTwiceFocusedRowIndex: focusedI, enterSelected: kb.sel, selectionMatchesFocusedRow: kb.sel === focusedI, panelOpened: kb.panelVisible, focusMovedToPanelHeading: kb.focusId === 'pname' };
   await page.keyboard.press('Tab'); // focus close button next
   C.tableKeyboard.tabReachesCloseButton = await page.evaluate(() => document.activeElement.id === 'pclose');
-  C.tableAria = await page.evaluate(() => ({ role: document.querySelector('#tbl').getAttribute('role'), label: !!document.querySelector('#tbl').getAttribute('aria-label'), rowsWithLabel: document.querySelectorAll('tbody tr[aria-label]').length, canvasLabel: !!document.querySelector('#cv').getAttribute('aria-label') }));
+  C.tableAria = await page.evaluate(() => ({ explicitRoleOnTable: document.querySelector('#tbl').getAttribute('role'), hasCaption: !!document.querySelector('#tbl caption'), colHeadersWithScope: document.querySelectorAll('thead th[scope=col]').length, rowHeadersWithScope: document.querySelectorAll('tbody th[scope=row]').length, rowsWithRoleAttr: document.querySelectorAll('tbody tr[role]').length, canvasLabel: !!document.querySelector('#cv').getAttribute('aria-label') }));
   // edge UI rules
   C.edgePanel = await page.evaluate(() => {
     const li = Array.from(document.querySelectorAll('#edges li')).filter(l => l.querySelector('.rel'));
