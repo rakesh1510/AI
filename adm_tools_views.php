@@ -2,6 +2,7 @@
 if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly
 // Phase 8C (M2-M3): AI tool management screens for the Control Center. Pure rendering over an AdmToolStore, so previews and tests need no database.
 require_once __DIR__ . '/adm_tools_core.php';
+require_once __DIR__ . '/adm_tools_screens.php';
 
 function admt_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function admt_url(array $p = []): string { return '/admin-center.php?' . http_build_query(['m' => 'tools'] + array_filter($p, fn($v) => $v !== '' && $v !== null && $v !== false)); }
@@ -11,7 +12,7 @@ function admt_css(): string {
   return '.tHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}.tBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:.5rem 1rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;text-decoration:none;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 14px -8px rgba(16,32,63,.35);transition:transform .15s,box-shadow .15s}'
     . '.tBtn:hover{transform:translateY(-1px);box-shadow:0 8px 18px -8px rgba(16,32,63,.45)}.tBtn.primary{background:linear-gradient(180deg,var(--brand),#0847c4);border-color:transparent;color:#fff}.tBtn.danger{border-color:#b42318;color:#b42318}'
     . '@media (prefers-color-scheme:dark){.tBtn.primary{color:#06142e;background:linear-gradient(180deg,#7db1ff,var(--brand))}.tBtn.danger{border-color:#ff8a80;color:#ff8a80}}'
-    . '.tTabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:0;list-style:none}.tTabs a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 .9rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none}.tTabs a[aria-current=true]{background:var(--brand);color:var(--brandInk);border-color:transparent;font-weight:600}'
+    . '.tTabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:0;list-style:none}.tTabs a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 .9rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);text-decoration:none}.tTabs a[aria-current=true],.tTabs a[aria-current=page]{background:var(--brand);color:var(--brandInk);border-color:transparent;font-weight:600}'
     . '.tFilter{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 24px -18px rgba(16,32,63,.5)}'
     . '.tFilter label,.tForm label{display:grid;gap:4px;font-size:.88rem;color:var(--muted);font-weight:600}.tFilter input,.tFilter select,.tForm input,.tForm select,.tForm textarea{min-height:44px;padding:.5rem .65rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;width:100%}.tForm textarea{min-height:96px}'
     . '.tFilter .chk{display:flex;align-items:center;gap:8px;min-height:44px}.tFilter .chk input{width:22px;min-height:22px}'
@@ -23,7 +24,11 @@ function admt_css(): string {
     . '.tActions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.tActions form{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tForm{display:grid;gap:14px;max-width:820px}.tForm .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}'
     . '.err{color:#b42318;font-size:.85rem;font-weight:600}@media (prefers-color-scheme:dark){.err{color:#ff8a80}}.flash{border:1px solid var(--ok);border-left-width:6px;border-radius:10px;padding:10px 14px;background:var(--surface);margin:10px 0}.flash.bad{border-color:#b42318}'
     . '.pager{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.tHist{list-style:none;margin:0;padding:0;display:grid;gap:8px}.tHist li{border-left:3px solid var(--line);padding-left:12px}'
-    . '@media (max-width:600px){.tDetail dl{grid-template-columns:minmax(0,1fr)}.tDetail dt{margin-top:6px}}';
+    . '.tSub{margin-top:0}.tRows{list-style:none;margin:0;padding:0;display:grid;gap:10px}.tRow{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}.tRow>div{min-width:0;overflow-wrap:anywhere}'
+    . '.tInline{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin:0}.tInline label{display:grid;gap:4px;font-size:.85rem;color:var(--muted);font-weight:600}.tInline input{min-height:44px;padding:.4rem .6rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit}.tChips{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 12px}'
+    . '.selBox{position:absolute;top:6px;right:6px;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;cursor:pointer}.selBox input{width:22px;height:22px}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}'
+    . '.bulkBar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin:14px 0;box-shadow:0 -10px 24px -16px rgba(16,32,63,.55)}.bulkBar label{display:grid;gap:4px;font-size:.85rem;color:var(--muted);font-weight:600}.bulkBar select,.bulkBar input{min-height:44px;padding:.4rem .6rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}'
+    . '@media (max-width:600px){.tDetail dl{grid-template-columns:minmax(0,1fr)}.tDetail dt{margin-top:6px}.bulkBar{position:static}}';
 }
 
 function admt_flash(?string $msg, bool $bad = false): string { return $msg ? '<p class="flash' . ($bad ? ' bad' : '') . '" role="' . ($bad ? 'alert' : 'status') . '">' . admt_h($msg) . '</p>' : ''; }
@@ -103,9 +108,19 @@ function admt_list_view(AdmToolStore $s, array $user, array $get, ?string $flash
   $o .= '</select></label><label class="chk"><input type="checkbox" name="featured" value="1"' . (!empty($get['featured']) ? ' checked' : '') . '> Featured only</label><label class="chk"><input type="checkbox" name="incomplete" value="1"' . (!empty($get['incomplete']) ? ' checked' : '') . '> Missing required fields</label><button class="tBtn primary" type="submit">Apply</button></form>';
   $o .= '<p class="small" role="status">' . adm_n($L['total']) . ' tool' . ($L['total'] === 1 ? '' : 's') . ' found.</p>';
   if (!$L['rows']) return $o . '<div class="panel"><h2>No tools match</h2><p>Try clearing the search or filters.</p></div>';
+  $bulk = adm_can($role, 'tools_publish');
+  if ($bulk) $o .= '<form method="post" action="/admin-center.php?m=tools" aria-label="Select tools for a bulk action">' . admt_csrf() . '<input type="hidden" name="act" value="tool_bulk_review"><p class="small">Select up to ' . ADMT_BULK_MAX . ' tools on this page, choose an action at the bottom and review it before anything changes.</p>';
   $o .= '<ul class="toolCards">';
-  foreach ($L['rows'] as $t) { $m = admt_readiness($t); $o .= '<li class="toolCard"><h3><a href="' . admt_h(admt_url(['view' => 'detail', 'slug' => $t['slug']])) . '">' . admt_h($t['name']) . '</a></h3><div>' . admt_chip((string)$t['status']) . ((int)($t['featured_level'] ?? 0) > 0 ? ' <span class="badge">Featured</span>' : '') . '</div><div class="meta">' . admt_h($t['category'] ?: 'No category') . ' · <code>' . admt_h($t['slug']) . '</code></div>' . ($m ? '<div class="warn">Missing: ' . admt_h(implode(', ', $m)) . '</div>' : '') . '<div class="meta">Updated ' . admt_h($t['updated_at']) . '</div></li>'; }
-  $o .= '</ul><nav class="pager" aria-label="Pages">';
+  foreach ($L['rows'] as $t) { $m = admt_readiness($t); $o .= '<li class="toolCard">' . ($bulk ? '<label class="selBox"><input type="checkbox" name="sel[]" value="' . admt_h($t['slug']) . '"><span class="sr">Select ' . admt_h($t['name']) . '</span></label><input type="hidden" name="ver[' . admt_h($t['slug']) . ']" value="' . (int)($t['_version'] ?? 0) . '">' : '') . '<h3><a href="' . admt_h(admt_url(['view' => 'detail', 'slug' => $t['slug']])) . '">' . admt_h($t['name']) . '</a></h3><div>' . admt_chip((string)$t['status']) . ((int)($t['featured_level'] ?? 0) > 0 ? ' <span class="badge">Featured</span>' : '') . '</div><div class="meta">' . admt_h($t['category'] ?: 'No category') . ' · <code>' . admt_h($t['slug']) . '</code></div>' . ($m ? '<div class="warn">Missing: ' . admt_h(implode(', ', $m)) . '</div>' : '') . '<div class="meta">Updated ' . admt_h($t['updated_at']) . '</div></li>'; }
+  $o .= '</ul>';
+  if ($bulk) {
+    $o .= '<div class="bulkBar" role="group" aria-label="Bulk actions for the selected tools"><label>Action<select name="op">';
+    foreach (ADMT_BULK_OPS as $k => $l) $o .= '<option value="' . $k . '">' . admt_h($l) . '</option>';
+    $o .= '</select></label><label>Category (for Set category)<select name="category"><option value="">Choose…</option>';
+    foreach ($s->categories() as $c) $o .= '<option>' . admt_h($c) . '</option>';
+    $o .= '</select></label><label>Tag (for Add or Remove tag)<input type="text" name="tag" maxlength="30"></label><button class="tBtn primary" type="submit">Review change</button></div></form>';
+  }
+  $o .= '<nav class="pager" aria-label="Pages">';
   $q = array_diff_key($get, ['page' => 1, 'view' => 1, 'slug' => 1, 'msg' => 1, 'm' => 1]);
   if ($L['page'] > 1) $o .= '<a class="tBtn" href="' . admt_h(admt_url($q + ['page' => $L['page'] - 1])) . '">Previous</a>';
   $o .= '<span>Page ' . $L['page'] . ' of ' . $L['pages'] . '</span>';
@@ -117,19 +132,32 @@ function admt_list_view(AdmToolStore $s, array $user, array $get, ?string $flash
 function admt_body(AdmToolStore $s, array $user, array $get, ?array $form = null, array $errs = [], ?string $top = null): string {
   $role = (string)($user['role'] ?? ''); if (!adm_can($role, 'tools')) return '<h1>Not allowed</h1>';
   $flash = isset($get['msg']) && is_string($get['msg']) ? (admt_messages()[$get['msg']] ?? null) : null; $view = (string)($get['view'] ?? 'list'); $slug = is_string($get['slug'] ?? null) ? $get['slug'] : '';
-  if ($view === 'new') return admt_form($s, $user, null, $form ?? [], $errs, $top);
-  if ($view === 'edit') { $t = admt_valid_slug($slug) ? $s->get($slug) : null; if ($t === null || $t['status'] === 'deleted') return '<h1>Tool not found</h1><p><a class="admLink" href="' . admt_h(admt_url()) . '">Back to the tool list</a></p>'; return admt_form($s, $user, $t, $form ?? $t, $errs, $top); }
-  if ($view === 'detail') return ($top ? admt_flash($top, true) : '') . admt_detail($s, $user, $slug, $flash);
-  return ($top ? admt_flash($top, true) : '') . admt_list_view($s, $user, $get, $flash);
+  $nav = admt_subnav($s, $view);
+  if ($view === 'new') return $nav . admt_form($s, $user, null, $form ?? [], $errs, $top);
+  if ($view === 'edit') { $t = admt_valid_slug($slug) ? $s->get($slug) : null; if ($t === null || $t['status'] === 'deleted') return $nav . '<h1>Tool not found</h1><p><a class="admLink" href="' . admt_h(admt_url()) . '">Back to the tool list</a></p>'; return $nav . admt_form($s, $user, $t, $form ?? $t, $errs, $top); }
+  if ($view === 'detail') return $nav . ($top ? admt_flash($top, true) : '') . admt_detail($s, $user, $slug, $flash);
+  if ($view === 'categories') return $nav . admt_categories_view($s, $user, $flash, $top);
+  if ($view === 'submissions') return $nav . admt_submissions_view($s, $user, $get, $flash, $top);
+  if ($view === 'submission') return $nav . admt_submission_view($s, $user, (int)($get['id'] ?? 0), $form ?? [], $errs, $top);
+  if ($view === 'featured') return $nav . admt_featured_view($s, $user, $flash, $top, $form ?? [], $errs);
+  return $nav . ($top ? admt_flash($top, true) : '') . admt_list_view($s, $user, $get, $flash);
 }
 
-/** POST entry used by admin-center.php after the CSRF check. Writes through the store, audits, then redirects (303) or re-renders with errors. */
+/** POST entry used by admin-center.php after the CSRF check. Writes through the store, audits, then redirects (303) or re-renders (errors, or the bulk review page). */
 function admt_handle_post(AdmToolStore $s, array $user, array $post, callable $audit): array {
   $act = is_string($post['act'] ?? null) ? substr($post['act'], 5) : '';
   $r = admt_apply($s, $user, $act, $post, $audit);
-  if ($r['ok']) return ['redirect' => admt_url(['view' => 'detail', 'slug' => $r['slug'], 'msg' => $r['msg']]), 'code' => 303];
-  $slug = (string)($r['slug'] ?? ''); $view = $act === 'create' ? 'new' : ($act === 'edit' ? 'edit' : 'detail');
-  return ['code' => $r['code'], 'form' => $act === 'create' || $act === 'edit' ? admt_validate($post, $s->categories(), $act === 'edit' ? $s->get($slug) : null)[1] : null, 'errs' => $r['errors'], 'top' => $r['errors']['_'] ?? $r['msg'], 'get' => ['m' => 'tools', 'view' => $view, 'slug' => $slug]];
+  if ($r['ok'] && isset($r['review'])) return ['code' => 200, 'review' => $r['review'], 'top' => null];
+  if ($r['ok']) return ['redirect' => admt_url(($r['goto'] ?? ['view' => 'detail', 'slug' => $r['slug']]) + ['msg' => $r['msg']]), 'code' => 303];
+  if (isset($r['review'])) return ['code' => $r['code'], 'review' => $r['review'], 'top' => $r['msg']];
+  $slug = (string)($r['slug'] ?? ''); $get = $r['get'] ?? ['view' => $act === 'create' ? 'new' : ($act === 'edit' ? 'edit' : 'detail'), 'slug' => $slug];
+  $form = in_array($act, ['create', 'edit'], true) ? admt_validate($post, $s->categories(), $act === 'edit' ? $s->get($slug) : null)[1] : (isset($r['get']) ? $post : null);
+  return ['code' => $r['code'], 'form' => $form, 'errs' => $r['errors'], 'top' => $r['errors']['_'] ?? $r['msg'], 'get' => ['m' => 'tools'] + $get];
+}
+/** Page body for a handle_post result that did not redirect. */
+function admt_render_result(AdmToolStore $s, array $user, array $res): string {
+  if (isset($res['review'])) return admt_subnav($s, 'bulk') . admt_bulk_review_view($s, $res['review'], $res['top']);
+  return admt_body($s, $user, $res['get'], $res['form'], $res['errs'], $res['top']);
 }
 
 /** Honest state when the content tables or the Phase 8C migration are not installed on this server: read-only, nothing is changed. */

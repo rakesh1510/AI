@@ -17,7 +17,7 @@ if ($method === 'POST') {
     $store = new AdmToolPdoStore($pdo);
     $res = admt_handle_post($store, $user, $_POST, fn(string $a, string $slug, string $sum) => adm_audit($pdo, $user, $a, $slug . ' ' . $sum));
     if (isset($res['redirect'])) { header('Location: ' . sec_safe_local_path((string)$res['redirect'], '/admin-center.php?m=tools'), true, 303); exit; }
-    adm_page($user, 'tools', 'AI tool management', admt_body($store, $user, $res['get'], $res['form'], $res['errs'], $res['top']), $res['code']); exit;
+    adm_page($user, 'tools', 'AI tool management', admt_render_result($store, $user, $res), $res['code']); exit;
   }
   http_response_code(400); exit('Unknown action.');
 }

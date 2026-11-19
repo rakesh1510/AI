@@ -32,6 +32,8 @@
   "adm_analytics.php": "lib",
   "adm_tools_core.php": "lib",
   "adm_tools_views.php": "lib",
+  "adm_tools_ops.php": "lib",
+  "adm_tools_screens.php": "lib",
   "scripts/adm_rollup.php": "cli",
   "universe-editor.php": "crm_admin",
   "services.php": "page",
