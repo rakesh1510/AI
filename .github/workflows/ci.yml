@@ -128,6 +128,9 @@ jobs:
       - name: Phase 7 facts tests (source-backed comparison facts - migration, rollback, invariants, service layer, compare API and arena, editor; trigger and no-trigger modes)
         run: php tests/phase7_facts_test.php
 
+      - name: Phase 7 public-source path (collector replay, importer, human adoption, independent verification, public pages; synthetic data)
+        run: php tests/phase7_collect_test.php
+
       - name: Catalogue audit (fails on invalid reviewed profiles)
         run: php scripts/audit_catalog.php
 

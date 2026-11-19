@@ -23,6 +23,8 @@ $slug = null; $slugBad = false;
 if ($slugRaw !== null && $slugRaw !== '') {
   if (is_string($slugRaw) && preg_match('/^[a-z0-9._-]{2,120}$/D', $slugRaw)) $slug = $slugRaw; else $slugBad = true;
 }
+$fqQ = (isset($_GET['q']) && is_string($_GET['q'])) ? trim(mb_substr($_GET['q'], 0, 80, 'UTF-8')) : '';
+$fqT = (isset($_GET['type']) && is_string($_GET['type']) && in_array($_GET['type'], ['company', 'product', 'model', 'version'], true)) ? $_GET['type'] : '';
 $pageNo = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => UNI_MAX_PAGE]]);
 if ($pageNo === false) $pageNo = 1;
 
@@ -30,8 +32,11 @@ $state = 'ok'; $status = 200;
 $list = ['items' => [], 'total' => 0, 'has_more' => false]; $detail = null; $graph = null;
 try {
   $pdo = db();
-  $list = uni_public_entities($pdo, [], $pageNo, UG_PER_PAGE);
-  if ($list['total'] === 0) { $state = 'empty'; }
+  $list = uni_public_entities($pdo, ['q' => $fqQ, 'type' => $fqT], $pageNo, UG_PER_PAGE);
+  if ($list['total'] === 0) {
+    if (($fqQ !== '' || $fqT !== '') && uni_public_entities($pdo, [], 1, 1)['total'] > 0) { $list['page'] = 1; }   /* the ledger has data but the filter matches nothing: keep the page, show "no match" */
+    else { $state = 'empty'; }
+  }
   elseif ($list['items'] === []) { $state = 'notfound'; $status = 404; }   // page number beyond the last page
   if ($state === 'ok' && $slugBad) { $state = 'notfound'; $status = 404; }
   if ($state === 'ok' && $slug !== null) {
@@ -207,6 +212,12 @@ require __DIR__ . '/layout_top.php';
       </section>
     <?php endif; ?>
 
+    <form method="get" action="/universe-graph.php" class="ugFilter" role="search" aria-label="Filter verified entities">
+      <label for="ug-q">Name contains</label> <input id="ug-q" name="q" type="search" maxlength="80" value="<?= h($fqQ) ?>">
+      <label for="ug-type">Type</label> <select id="ug-type" name="type"><option value="">All types</option><?php foreach (['company' => 'Company', 'product' => 'Product', 'model' => 'Model', 'version' => 'Version'] as $tv => $tl): ?><option value="<?= h($tv) ?>"<?= $fqT === $tv ? ' selected' : '' ?>><?= h($tl) ?></option><?php endforeach; ?></select>
+      <button type="submit">Filter</button><?php if ($fqQ !== '' || $fqT !== ''): ?> <a href="<?= h(ug_url()) ?>">Clear filter</a><?php endif; ?>
+    </form>
+    <?php if (!$list['items'] && ($fqQ !== '' || $fqT !== '')): ?><p role="status">No verified entities match this filter.</p><?php endif; ?>
     <?php if ($list['items']): ?>
     <h2 id="ugList">Verified entities (<?= (int)$list['total'] ?>)</h2>
     <div style="overflow-x:auto"><table class="pretty">
@@ -219,8 +230,8 @@ require __DIR__ . '/layout_top.php';
       </tbody>
     </table></div>
     <nav aria-label="Entity list pages" class="pager">
-      <?php if ($list['page'] > 1): ?><a rel="prev" href="<?= h(ug_url(['slug' => $slug, 'page' => $list['page'] - 1])) ?>">Previous page</a><?php endif; ?>
-      <?php if ($list['has_more']): ?><a rel="next" href="<?= h(ug_url(['slug' => $slug, 'page' => $list['page'] + 1])) ?>">Next page</a><?php endif; ?>
+      <?php if ($list['page'] > 1): ?><a rel="prev" href="<?= h(ug_url(['slug' => $slug, 'q' => $fqQ, 'type' => $fqT, 'page' => $list['page'] - 1])) ?>">Previous page</a><?php endif; ?>
+      <?php if ($list['has_more']): ?><a rel="next" href="<?= h(ug_url(['slug' => $slug, 'q' => $fqQ, 'type' => $fqT, 'page' => $list['page'] + 1])) ?>">Next page</a><?php endif; ?>
     </nav>
     <?php endif; ?>
   </details>

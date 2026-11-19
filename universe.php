@@ -12,6 +12,14 @@ const UHUB_SCRIPT = 'universe.php';
 function uhub_counts(PDO $pdo): array {
   return ['entities' => (int)uni_public_entities($pdo, [], 1, 1)['total'], 'events' => (int)uni_public_events($pdo, [], 1, 1)['total'], 'releases' => (int)uni_public_releases($pdo, [], 1, 1)['total']];
 }
+/** Verified-only overview: counts by type, latest verified events, most connected entities (by verified relationships; a mechanical count, not an editorial pick). */
+function uhub_extras(PDO $pdo): array {
+  $types = []; foreach (['company' => 'Companies', 'product' => 'Products', 'model' => 'Models', 'version' => 'Versions'] as $t => $l) $types[$t] = [$l, (int)uni_public_entities($pdo, ['type' => $t], 1, 1)['total']];
+  $recent = uni_public_events($pdo, [], 1, 8)['items'];
+  $j = uni_live_entity_join('ed', 'from_entity_id', 'fe') . ' ' . uni_live_entity_join('ed', 'to_entity_id', 'te'); $w = "WHERE ed.state = 'verified' AND ed.is_current = 1";
+  $s = $pdo->query("SELECT slug, name, entity_type, COUNT(*) AS n FROM (SELECT fe.slug, fe.name, fe.entity_type FROM uni_edge ed $j $w UNION ALL SELECT te.slug, te.name, te.entity_type FROM uni_edge ed $j $w) x GROUP BY slug, name, entity_type ORDER BY n DESC, name LIMIT 8");
+  return ['types' => $types, 'recent' => $recent, 'connected' => $s->fetchAll(PDO::FETCH_ASSOC)];
+}
 function uhub_plural(int $n, string $one, string $many): string { return number_format($n) . ' ' . ($n === 1 ? $one : $many); }
 
 /** The four experiences with an honest status. $c is null while the ledger is empty or not installed. */
@@ -48,7 +56,20 @@ else {
       $o .= '<li class="uhubCard"><h2 id="uhub-h' . $i . '"><a href="' . up_h($href) . '">' . up_h($name) . '</a></h2><p>' . up_h($desc) . '</p>'
         . '<p class="uhubStatus' . ($has ? ' uhubStatus--ok' : '') . '"><span class="sr">Status: </span>' . up_h($status) . '</p></li>';
     }
-    $o .= '</ul><section class="upNotes" aria-labelledby="uhub-how"><h2 id="uhub-how">How the data is verified</h2><p>One person enters a fact with a source and the date it was retrieved; a different person verifies it. Only verified, current facts appear here. <a href="/methodology.php">Read the methodology</a>.</p></section></div>';
+    $o .= '</ul>';
+    if ($uhubData) {
+      [$uhubXs, $x] = up_guard('uhub_extras');
+      if ($uhubXs === 'ok' && $x) {
+        $o .= '<section class="uhubOverview" aria-labelledby="uhub-browse"><h2 id="uhub-browse">Browse verified entities</h2>'
+          . '<form method="get" action="/universe-graph.php" role="search" aria-label="Search verified entities"><label for="uhub-q">Name contains</label> <input id="uhub-q" name="q" type="search" maxlength="80"> <button type="submit">Search</button></form><ul class="uhubTypes">';
+        foreach ($x['types'] as $t => [$l, $n]) if ($n > 0) $o .= '<li><a href="' . up_h('/universe-graph.php?type=' . $t) . '">' . up_h($l) . '</a> (' . number_format($n) . ')</li>';
+        $o .= '</ul>';
+        if ($x['connected']) { $o .= '<h3>Most connected verified entities</h3><ul class="uhubList">'; foreach ($x['connected'] as $e) $o .= '<li><a href="' . up_h('/universe-graph.php?slug=' . rawurlencode((string)$e['slug'])) . '">' . up_h($e['name']) . '</a> (' . up_h($e['entity_type']) . ', ' . (int)$e['n'] . ' verified ' . ((int)$e['n'] === 1 ? 'relationship' : 'relationships') . ')</li>'; $o .= '</ul>'; }
+        if ($x['recent']) { $o .= '<h3>Recent verified events</h3><ul class="uhubList">'; foreach ($x['recent'] as $e) $o .= '<li><time datetime="' . up_h(substr((string)$e['event_date'], 0, 10)) . '">' . up_h(substr((string)$e['event_date'], 0, 10)) . '</time> ' . up_h($e['title']) . ' <span class="small">(' . up_h((string)($e['entity_name'] ?? '')) . ')</span></li>'; $o .= '</ul>'; }
+        $o .= '</section>';
+      }
+    }
+    $o .= '<section class="upNotes" aria-labelledby="uhub-how"><h2 id="uhub-how">How the data is verified</h2><p>One person enters a fact with a source and the date it was retrieved; a different person verifies it. Only verified, current facts appear here. <a href="/methodology.php">Read the methodology</a>.</p></section></div>';
     $uhubBody = $o;
     if ($uhubData) $jsonld = [['@type' => 'WebPage', '@id' => $canonical . '#webpage', 'url' => $canonical, 'name' => 'AI Universe', 'description' => $meta_desc, 'isPartOf' => ['@id' => site_url('/#website')]], up_crumbs([['Home', '/'], ['AI Universe', '/' . UHUB_SCRIPT]])];
   }
