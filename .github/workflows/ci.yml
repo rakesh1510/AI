@@ -55,11 +55,12 @@ jobs:
       - name: Analytics salt (no visitor hash without a strong salt; tracking off by default)
         run: php tests/analytics_salt_test.php
 
-      - name: Phase 8C tool management (database-free; M1-M7 covering validation, permissions, lifecycle, categories, tags, bulk, submissions, featured, rendering, category safeguards and the 509-tool regression, migration and guard checks)
+      - name: Phase 8C tool management (database-free; M1-M7 covering validation, permissions, lifecycle, categories, tags, bulk, submissions, featured, rendering, category safeguards and the 509-tool regression, Phase 8D finance logic, migration and guard checks)
         run: |
           php tests/phase8c_tools_test.php
           php tests/phase8c_tools_m4_m7_test.php
           php tests/phase8c_category_safeguards_test.php
+          php tests/phase8d_finance_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
         run: |
@@ -68,6 +69,11 @@ jobs:
           npx playwright install --with-deps chromium
           cd "$GITHUB_WORKSPACE" && php tests/adm_tools_preview.php /tmp/p8c_preview
           NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_phase8c_preview_test.js /tmp/p8c_preview
+
+      - name: Phase 8D Finance screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
+        run: |
+          php tests/adm_finance_preview.php /tmp/p8d_preview
+          NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_phase8c_preview_test.js /tmp/p8d_preview
 
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php
