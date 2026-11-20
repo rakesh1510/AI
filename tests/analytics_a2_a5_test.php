@@ -86,6 +86,8 @@ $P0 = anz_body(new AdmAnMemoryStore([], $traffic, $toolDaily, $dims, null, null)
 $x = anz_body($store, ['view' => 'tools', 'q' => '<script>alert(1)</script>', 'cat' => '"><b>', 'sort' => "'; DROP", 'top' => '9999', 'tool' => '../../etc'], $cat, $NOW); ok(strpos($x, '<script>alert') === false && strpos($x, '<b>') === false, 'hostile filter values are escaped or ignored');
 // ---- exports
 $rng = anz_range(['range' => 'month'], $TODAY, '2026-09-20'); $E = fn($k, $g = []) => anz_export($store, $k, $rng, $g, $cat, $TODAY);
+$leg = [['day' => '2026-11-18', 'tool_slug' => 'chatgpt', 'records' => 10, 'probable_duplicates' => 4], ['day' => '2026-11-19', 'tool_slug' => 'claude', 'records' => 6, 'probable_duplicates' => 0]]; $store = new AdmAnMemoryStore([], $traffic, $toolDaily, $dims, ['count' => 7, 'last_view' => '2026-11-20 11:58:00'], $pl, $leg);
+$E = fn($k, $g = []) => anz_export($store, $k, $rng, $g, $cat, $TODAY);
 foreach (array_keys(anz_export_names()) as $k) { $e = $E($k); ok($e !== null && strpos($e[0], '.csv') !== false && substr($e[1], 0, 3) === "\xEF\xBB\xBF", "export $k works"); }
 $e = $E('visitors_daily'); ok(substr_count($e[1], "\r\n") === 21 && strpos($e[1], 'not_people') !== false, 'daily export: header plus 20 days, columns say "not people"');
 $e = $E('tools_all', ['q' => 'claude']); ok(substr_count($e[1], "\r\n") === 2 && strpos($e[1], 'Claude') !== false && strpos($e[1], 'ChatGPT') === false, 'tool export respects the search');
@@ -102,4 +104,14 @@ ok(strpos($src, 'user_agent') === false && strpos($src, 'HTTP_USER_AGENT') === f
 ok(substr_count(file_get_contents($root . '/adm_an2_store.php'), 'prepare(') >= 3 && strpos(file_get_contents($root . '/adm_an2_store.php'), '$_GET') === false, 'queries use bound parameters; the store never reads the request');
 ok(strpos($src, 'returning_visit') === false, 'the dashboard does not use the returning-visit event');
 $cssA = anz_css(); ok(strpos($cssA, '#fff') === false && strpos($cssA, 'var(--surface)') !== false, 'dashboard styles use the shell colour tokens (light and dark)');
+// ---- legacy click records (old lifetime table): separate, labelled, never merged
+$L = anz_legacy_summary($leg); ok($L['records'] === 16 && $L['probable_duplicates'] === 4 && $L['net'] === 12 && $L['first_day'] === '2026-11-18' && $L['tools'][0]['slug'] === 'chatgpt' && $L['dup_known'] === true, 'legacy summary: records, probable duplicates, net, first day, ranking');
+$LV = anz_body($store, ['view' => 'legacy', 'range' => 'month'], $cat, $NOW); $lt = strip_tags($LV);
+ok(strpos($LV, 'Legacy click records') !== false && strpos($lt, 'not comparable') !== false && strpos($lt, 'no page views and no visitors') !== false && strpos($lt, 'written twice') !== false || strpos($lt, 'written twice') !== false || strpos($LV, 'twice') !== false, 'legacy view explains it has no visitors or page views and may contain duplicates and bots');
+ok(strpos($LV, '16') !== false && strpos($LV, 'Probable duplicate records') !== false && strpos($LV, 'Estimate') !== false, 'legacy cards show records and the duplicate estimate labelled Estimate');
+$LN = anz_body(new AdmAnMemoryStore([], $traffic, $toolDaily, $dims, null, null, null), ['view' => 'legacy'], $cat, $NOW); ok(strpos($LN, 'not available on this server') !== false, 'legacy view: honest message when the old table is missing');
+ok(anz_export($store, 'legacy_clicks', $rng, [], $cat, $TODAY)[1] !== '' && strpos(anz_export($store, 'legacy_clicks', $rng, [], $cat, $TODAY)[1], 'not_visitors_not_page_views') !== false && anz_export(new AdmAnMemoryStore([], $traffic), 'legacy_clicks', $rng, [], $cat, $TODAY) === null, 'legacy export is labelled and unavailable without the table');
+$nodup = anz_legacy_summary([['day' => '2026-11-18', 'tool_slug' => 'a', 'records' => 3, 'probable_duplicates' => 0, 'dup_known' => false]]); ok($nodup['dup_known'] === false, 'duplicate estimate is marked unknown when the database cannot compute it');
+$srcAll = file_get_contents($root . '/adm_an2_views.php') . file_get_contents($root . '/adm_an2_core.php'); ok(strpos($srcAll, 'anz_legacy_summary') !== false && strpos(file_get_contents($root . '/adm_an2_store.php'), 'tool_clicks') !== false && substr_count(file_get_contents($root . '/adm_an2_store.php'), 'tool_clicks') <= 4, 'only the legacy method reads tool_clicks (read-only)');
+ok(strpos(file_get_contents($root . '/adm_an2_store.php'), 'COUNT(DISTINCT visitor_id') === false && strpos(file_get_contents($root . '/adm_an2_store.php'), 'DISTINCT visitor_id') === false, 'legacy cookie values are never counted as visitors');
 echo "$pass passed, $fail failed\n"; exit($fail ? 1 : 0);

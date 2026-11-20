@@ -26,6 +26,8 @@ interface AdmAnStore {
   public function activeNow(): ?array;
   /** Featured placements (Phase 8C): tool_slug, level, starts_on, ends_on, status. null = not installed. */
   public function placements(): ?array;
+  /** Legacy lifetime click records (tool_clicks), per day and tool: day, tool_slug, records, probable_duplicates. null = the table is missing. NOT visitors, NOT page views. */
+  public function legacyClicks(string $from, string $to): ?array;
 }
 
 function anz_days_between(string $from, string $to): int { return (int)((strtotime($to . ' UTC') - strtotime($from . ' UTC')) / 86400) + 1; }
@@ -167,7 +169,7 @@ function anz_device_label(string $k): string { return ['mobile' => 'Mobile', 'ta
 /** In-memory store: the test double and the source for static previews (same semantics as the database store). */
 final class AdmAnMemoryStore implements AdmAnStore {
   /** @param array $traffic day => [views_human, visitors, sessions, views_no_id]; $toolDaily day => slug => [views, outbound, affiliate, sponsored]; $dims dim => day => key => [views, visitor_days] */
-  public function __construct(private array $status = [], private array $traffic = [], private array $toolDaily = [], private array $dims = [], private ?array $active = null, private ?array $placements = null) {}
+  public function __construct(private array $status = [], private array $traffic = [], private array $toolDaily = [], private array $dims = [], private ?array $active = null, private ?array $placements = null, private ?array $legacy = null) {}
   public function status(): array { return $this->status + ['storage' => true, 'tracking' => true, 'first_day' => $this->traffic ? min(array_keys($this->traffic)) : null, 'last_day' => $this->traffic ? max(array_keys($this->traffic)) : null, 'last_run' => null, 'raw_rows' => (bool)$this->traffic, 'device_col' => isset($this->dims['device'])]; }
   public function traffic(string $from, string $to): array { $o = []; ksort($this->traffic); foreach ($this->traffic as $d => $r) if ($d >= $from && $d <= $to) $o[] = ['day' => $d, 'views_human' => $r[0], 'visitors' => $r[1], 'sessions' => $r[2], 'views_no_id' => $r[3] ?? 0]; return $o; }
   public function dim(string $dim, string $from, string $to, int $limit): array {
@@ -184,4 +186,22 @@ final class AdmAnMemoryStore implements AdmAnStore {
   }
   public function activeNow(): ?array { return $this->active; }
   public function placements(): ?array { return $this->placements; }
+  public function legacyClicks(string $from, string $to): ?array { if ($this->legacy === null) return null; return array_values(array_filter($this->legacy, fn($r) => $r['day'] >= $from && $r['day'] <= $to)); }
+}
+
+/**
+ * Legacy click records (tool_clicks, March 2026 onwards in production) summarised for display. These are the OLD lifetime counter rows: written before the single-count fix, not bot-filtered,
+ * with no page-view or visitor meaning. "Probable duplicates" = a record from the same browser cookie and tool within 10 seconds of the previous one (the old double write). Never merged with new counts.
+ * @return array{records:int,probable_duplicates:int,net:int,days:array,tools:array,first_day:?string,last_day:?string}
+ */
+function anz_legacy_summary(array $rows): array {
+  $o = ['records' => 0, 'probable_duplicates' => 0, 'dup_known' => true, 'net' => 0, 'days' => [], 'tools' => [], 'first_day' => null, 'last_day' => null];
+  foreach ($rows as $r) {
+    $n = (int)$r['records']; $d = (int)$r['probable_duplicates']; if (array_key_exists('dup_known', $r) && !$r['dup_known']) $o['dup_known'] = false; $o['records'] += $n; $o['probable_duplicates'] += $d;
+    $o['days'][$r['day']] = $o['days'][$r['day']] ?? ['day' => $r['day'], 'records' => 0, 'probable_duplicates' => 0]; $o['days'][$r['day']]['records'] += $n; $o['days'][$r['day']]['probable_duplicates'] += $d;
+    $o['tools'][$r['tool_slug']] = $o['tools'][$r['tool_slug']] ?? ['slug' => $r['tool_slug'], 'records' => 0, 'probable_duplicates' => 0]; $o['tools'][$r['tool_slug']]['records'] += $n; $o['tools'][$r['tool_slug']]['probable_duplicates'] += $d;
+  }
+  ksort($o['days']); $o['days'] = array_values($o['days']); $o['tools'] = array_values($o['tools']); usort($o['tools'], fn($a, $b) => [$b['records'], $a['slug']] <=> [$a['records'], $b['slug']]);
+  $o['net'] = $o['records'] - $o['probable_duplicates']; if ($o['days']) { $o['first_day'] = $o['days'][0]['day']; $o['last_day'] = $o['days'][count($o['days']) - 1]['day']; }
+  return $o;
 }

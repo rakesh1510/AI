@@ -28,6 +28,22 @@ final class AdmAnPdoStore implements AdmAnStore {
       return ['count' => (int)$q->fetchColumn(), 'last_view' => (string)$last];
     } catch (Throwable $e) { return null; }
   }
+  public function legacyClicks(string $from, string $to): ?array {
+    try {
+      if (!adma_table($this->pdo, 'tool_clicks')) return null;
+      $prevTz = (string)$this->pdo->query('SELECT @@session.time_zone')->fetchColumn(); $this->pdo->query("SET time_zone = '+00:00'");   // days are UTC days; restored below
+      $lo = $from . ' 00:00:00'; $hi = anz_add_days($to, 1) . ' 00:00:00'; $buf = anz_add_days($from, -1) . ' 00:00:00';
+      try {
+        $q = $this->pdo->prepare("SELECT d AS day, tool_slug, COUNT(*) records, SUM(dup) probable_duplicates FROM (SELECT DATE(created_at) d, created_at, tool_slug, CASE WHEN visitor_id <> '' AND TIMESTAMPDIFF(SECOND, LAG(created_at) OVER (PARTITION BY visitor_id, tool_slug ORDER BY created_at, id), created_at) <= 10 THEN 1 ELSE 0 END dup FROM tool_clicks WHERE created_at >= ? AND created_at < ?) t WHERE created_at >= ? GROUP BY d, tool_slug ORDER BY d, tool_slug");
+        $q->execute([$buf, $hi, $lo]);
+      } catch (Throwable $e) {   // no window functions: counts without the duplicate estimate (reported as zero probable duplicates is wrong, so mark with -1)
+        $q = $this->pdo->prepare("SELECT DATE(created_at) day, tool_slug, COUNT(*) records, -1 probable_duplicates FROM tool_clicks WHERE created_at >= ? AND created_at < ? GROUP BY DATE(created_at), tool_slug ORDER BY 1, 2"); $q->execute([$lo, $hi]);
+      }
+      $out = array_map(fn($r) => ['day' => (string)$r['day'], 'tool_slug' => (string)$r['tool_slug'], 'records' => (int)$r['records'], 'probable_duplicates' => max(0, (int)$r['probable_duplicates']), 'dup_known' => (int)$r['probable_duplicates'] >= 0], $q->fetchAll(PDO::FETCH_ASSOC));
+      try { $this->pdo->query("SET time_zone = " . $this->pdo->quote($prevTz)); } catch (Throwable $e) {}
+      return $out;
+    } catch (Throwable $e) { try { if (isset($prevTz)) $this->pdo->query("SET time_zone = " . $this->pdo->quote($prevTz)); } catch (Throwable $e2) {} return null; }
+  }
   public function placements(): ?array {
     try { if (!adma_table($this->pdo, 'adm_tool_feature')) return null; return $this->pdo->query('SELECT tool_slug, level, starts_on, ends_on, status FROM adm_tool_feature ORDER BY starts_on DESC, id DESC LIMIT 300')->fetchAll(PDO::FETCH_ASSOC); } catch (Throwable $e) { return null; }
   }

@@ -14,6 +14,7 @@
   "scripts/uni_adopt.php": "cli",
   "scripts/uni_import.php": "cli",
   "scripts/analytics_purge.php": "cli",
+  "scripts/analytics_verify.php": "cli",
   "universe-api.php": "page",
   "universe.php": "page",
   "universe-heatmap.php": "page",
