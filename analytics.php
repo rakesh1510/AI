@@ -57,6 +57,17 @@ function analytics_classify_referrer(string $referrer, string $ownHost = 'aihubp
   return ['class' => 'other', 'host' => $host];
 }
 
+/**
+ * Coarse device class from the user agent: 'mobile', 'tablet' or 'desktop' ('' for bots, empty agents and opted-out requests).
+ * ONE word is stored; the user-agent string itself is never stored, and no browser version, OS version or screen data is used, so this cannot fingerprint anyone.
+ */
+function analytics_classify_device(string $ua): string {
+  $ua = trim($ua); if ($ua === '' || analytics_classify_agent($ua)['is_bot']) return '';
+  if (preg_match('/iPad|Tablet|PlayBook|Kindle|Silk\/|Nexus (7|9|10)|SM-T\d|Tab\b/i', $ua) || (stripos($ua, 'Android') !== false && stripos($ua, 'Mobile') === false)) return 'tablet';
+  if (preg_match('/Mobi|iPhone|iPod|Windows Phone|BlackBerry|Opera Mini/i', $ua)) return 'mobile';
+  return 'desktop';
+}
+
 function analytics_page_type(string $script): string {
   $base = basename($script);
   $map = ['index.php' => 'home', 'tool.php' => 'tool', 'category.php' => 'category', 'categories.php' => 'category_index', 'compare.php' => 'compare', 'comparisons.php' => 'compare_index',
@@ -92,11 +103,18 @@ function analytics_build_row(array $server, array $get, int $status, int $ts, st
     'page_type' => analytics_page_type((string)($server['SCRIPT_NAME'] ?? '')), 'status' => $status,
     'referrer_class' => $ref['class'], 'referrer_host' => substr($ref['host'], 0, 120), 'country' => $country,
     'visitor_hash' => ($agent['is_bot'] || $optOut) ? '' : analytics_visitor_hash($ip, $ua, analytics_hash_period($ts)),
+    'device' => $optOut ? '' : analytics_classify_device($ua),
     'is_bot' => $agent['is_bot'] ? 1 : 0, 'bot_type' => $agent['type'], 'bot_name' => substr($agent['name'], 0, 40),
   ];
 }
 
+/** True when page_views has the optional device column (database/analytics_a4_device.sql). Until an administrator adds it, nothing about devices is written and nothing breaks. */
+function analytics_device_column_ready(PDO $pdo): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try { $q = $pdo->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'page_views' AND COLUMN_NAME = 'device' LIMIT 1"); return $ok = (bool)($q && $q->fetchColumn()); } catch (Throwable $e) { return $ok = false; }
+}
 function analytics_insert(PDO $pdo, array $row): void {
+  if (array_key_exists('device', $row) && !analytics_device_column_ready($pdo)) unset($row['device']);
   $cols = array_keys($row);
   $stmt = $pdo->prepare('INSERT INTO page_views (' . implode(',', $cols) . ') VALUES (' . implode(',', array_map(fn($c) => ':' . $c, $cols)) . ')');
   $stmt->execute($row);

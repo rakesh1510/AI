@@ -293,11 +293,7 @@
   })();
 
   /* ---------- Outbound click attribution ---------- */
-  on(d, 'click', function (e) {
-    var a = e.target.closest && e.target.closest('a[href*="redirect.php?id="]'); if (!a) return;
-    var m = /[?&]id=([^&]+)/.exec(a.getAttribute('href') || ''); if (!m) return;
-    track('outbound_click', decodeURIComponent(m[1]), { affiliate: a.getAttribute('data-affiliate') === '1' ? 'yes' : 'no', placement: a.getAttribute('data-placement') || 'link' });
-  });
+  // Analytics A1: removed. Outbound clicks are counted once on the server (redirect.php); a second browser event double-counted them.
 
   /* ---------- Motion: tilt, parallax, reveal (skipped for reduced motion / touch) ---------- */
   if (!reduced) {
