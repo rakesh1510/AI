@@ -13,7 +13,7 @@ const ADM_REPORT_CURRENCY = 'EUR';
 /** Control Center permissions per CRM role. Deliberately separate from crm_roles() (Phase 6/7 tests assert that list). Unknown roles get nothing. */
 function adm_role_perms(): array {
   return [
-    'owner'    => ['center', 'account', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'tools_publish', 'finance', 'advertising', 'operations', 'performance'],
+    'owner'    => ['center', 'account', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'tools_publish', 'finance', 'advertising', 'operations', 'performance', 'access'],
     'sales'    => ['center', 'account', 'crm', 'advertising'],
     'viewer'   => ['center', 'account', 'crm'],
     'editor'   => ['center', 'account', 'universe', 'tools'],
@@ -30,6 +30,7 @@ function adm_modules(): array {
     'crm'         => ['label' => 'CRM and leads', 'href' => '/admin-center.php?m=crm', 'perm' => 'crm', 'live' => true, 'internal' => true, 'group' => 'Business', 'note' => 'Leads, pipeline, proposals, contracts, campaigns, partners.'],
     'universe'    => ['label' => 'AI Universe review', 'href' => '/admin-center.php?m=universe', 'perm' => 'universe', 'live' => true, 'internal' => true, 'group' => 'Business', 'note' => 'Propose, adopt and independently verify AI Universe records.'],
     'editorial'   => ['label' => 'Tool profile verification', 'href' => '/admin-center.php?m=editorial', 'perm' => 'universe', 'live' => true, 'internal' => true, 'group' => 'Business', 'note' => 'Evidence ledger, research notes and independent verification of tool profiles. Replaces the shared-password editorial page.'],
+    'access'      => ['label' => 'Users, roles and audit', 'href' => '/admin-center.php?m=access', 'perm' => 'access', 'live' => true, 'internal' => true, 'group' => 'Operations', 'note' => 'Read-only user list, role matrix, audit log and system health.'],
     'legacy'      => ['label' => 'Legacy admin', 'href' => '/admin.php', 'perm' => 'legacy', 'live' => true, 'group' => 'Business', 'note' => 'Submissions, featured plans, leads and editorial pages. Uses its own sign-in until they move here.'],
     'analytics'   => ['label' => 'Analytics', 'href' => '/admin-center.php?m=analytics', 'perm' => 'analytics', 'live' => true, 'internal' => true, 'group' => 'Growth', 'note' => 'Visitors, page views, tool clicks, sources, countries and conversions.'],
     'tools'       => ['label' => 'AI tool management', 'href' => '/admin-center.php?m=tools', 'live' => true, 'internal' => true, 'perm' => 'tools', 'group' => 'Growth', 'scope' => ['Add, edit, publish, unpublish and soft-delete tools with restore', 'Search, filters, bulk actions, categories and tags', 'Submission moderation and featured placements']],

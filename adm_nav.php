@@ -19,7 +19,7 @@ function adm_nav_groups(): array {
     ['id' => 'money', 'label' => 'Money', 'items' => [['mod' => 'finance', 'children' => [
       $v('Overview', 'view', ''), $v('Revenue', 'view', 'revenue'), $v('Advertising and sponsorship', 'view', 'advertising'), $v('Projects and retainers', 'view', 'projects'),
       $v('Expenses and profit', 'view', 'expenses'), $v('Refunds and credits', 'view', 'refunds'), $v('Targets', 'view', 'targets'), $v('Exports', 'view', 'exports')]]]],
-    ['id' => 'ops', 'label' => 'Operations', 'items' => [['mod' => 'operations'], ['mod' => 'performance']]],
+    ['id' => 'ops', 'label' => 'Operations', 'items' => [['mod' => 'operations'], ['mod' => 'performance'], ['mod' => 'access', 'children' => [$v('Users and roles', 'view', ''), $v('Audit log', 'view', 'audit'), $v('System health', 'view', 'health')]]]],
     ['id' => 'account', 'label' => 'Account', 'items' => [['mod' => 'account']]],
   ];
 }

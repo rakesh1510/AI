@@ -40,6 +40,7 @@
   "adm_crm.php": "lib",
   "adm_universe.php": "lib",
   "adm_editorial.php": "lib",
+  "adm_access.php": "lib",
   "adm_finance_core.php": "lib",
   "adm_finance_store.php": "lib",
   "adm_finance_charts.php": "lib",
