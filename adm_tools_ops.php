@@ -4,7 +4,7 @@ if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) 
 // Every action here is OWNER-ONLY ('tools_publish', owner decision D2). Nothing sends email, takes payment or contacts anyone.
 require_once __DIR__ . '/adm_tools_core.php';
 
-const ADMT_OPS = ['category_add', 'category_rename', 'category_delete', 'tag_rename', 'bulk_review', 'bulk_apply', 'submission_approve', 'submission_reject', 'submission_needs_info', 'feature_add', 'feature_cancel'];
+const ADMT_OPS = ['category_add', 'category_rename', 'category_delete', 'tag_rename', 'bulk_review', 'bulk_apply', 'submission_approve', 'submission_reject', 'submission_needs_info', 'submission_record_payment', 'feature_add', 'feature_cancel'];
 const ADMT_BULK_OPS = ['publish' => 'Publish', 'unpublish' => 'Unpublish', 'delete' => 'Move to trash', 'restore' => 'Restore', 'set_category' => 'Set category', 'add_tag' => 'Add tag', 'remove_tag' => 'Remove tag'];
 const ADMT_BULK_MAX = 100;
 function admt_today(): string { return (string)($GLOBALS['ADMT_TODAY_OVERRIDE'] ?? gmdate('Y-m-d')); }   // tests only; never set from a request
@@ -116,6 +116,15 @@ function admt_apply_ops(AdmToolStore $s, array $user, string $act, array $post, 
       $r = $s->bulkUpdate($plan['items'], $op === 'set_category' ? 'edit' : $op, $actor, 'bulk ' . $op); if (!$r['ok']) return $fail(409, 'A tool changed while saving. Nothing was changed; reload and try again.');
       foreach ($plan['items'] as $i) $audit('tool_bulk_' . $op, $i['slug'], 'bulk of ' . count($plan['items']));
       return $ok('bulk', ['view' => 'list']);
+    case 'submission_record_payment':   // U4: owner only (perm above). Manual confirmation that money was RECEIVED; never implies bank verification; audited; never reversed here
+      $id = (int)($post['id'] ?? 0); $sub = $id > 0 ? $s->submission($id) : null; $get = ['view' => 'submission', 'id' => (string)$id];
+      if ($sub === null) return $fail(404, 'Submission not found.', [], ['view' => 'submissions']);
+      if (($post['confirm'] ?? '') !== '1') return $fail(422, 'Tick the confirmation box: you are confirming that you received this payment yourself.', [], $get);
+      $ref = admt_text($post['note'] ?? '', 200);
+      $r = $s->recordPayment($id);
+      if (!$r['ok']) { $m = ['missing' => [404, 'Submission not found.'], 'decided' => [409, 'This submission has already been decided; payment can no longer be recorded here.'], 'not_required' => [409, 'This plan has no price, so no payment is needed.'], 'already_paid' => [409, 'Payment is already recorded for this submission.']][$r['error']] ?? [500, 'Could not record the payment.']; return $fail($m[0], $m[1], [], $get); }
+      $audit('tool_submission_payment_recorded', '#' . $id, 'recorded as received by ' . $actor . ' (manual confirmation, not bank-verified; price ' . (int)$sub['price'] . ' ' . admt_text($sub['currency'] ?? '', 8) . ')' . ($ref !== '' ? ' ref: ' . $ref : ''));
+      return $ok('sub_paid', $get);
     case 'submission_approve': case 'submission_reject': case 'submission_needs_info':
       $id = (int)($post['id'] ?? 0); $sub = $id > 0 ? $s->submission($id) : null; $get = ['view' => 'submission', 'id' => (string)$id];
       if ($sub === null) return $fail(404, 'Submission not found.', [], ['view' => 'submissions']);

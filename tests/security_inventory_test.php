@@ -42,7 +42,7 @@ foreach ($man as $f => $k) {
       ok(preg_match('/form_token_valid\(|lead_validate\(|newsletter_valid_token\(|project_validate\(|partner_validate\(/', $src) === 1, "token endpoint $f validates its secret token");
       break;
     case 'crm_admin':
-      ok(preg_match('/crm_gate\(/', $src) === 1, "CRM page $f calls crm_gate() before output");
+      ok(preg_match('/crm_gate\(|adm_gate\(/', $src) === 1, "CRM page $f calls crm_gate() or the Control Center gate adm_gate() before output");
       $firstOut = strpos($src, 'crm_gate('); ok(!preg_match('/(echo|print|\?>\s*<)/', substr($src, 0, $firstOut)) || strpos(substr($src, 0, $firstOut), '?>') === false, "CRM page $f produces no output before the gate");
       ok(strpos($src, 'crm_csrf_ok(') !== false, "CRM page $f checks the CSRF token on POST");
       ok(strpos($src, "\$_GET['pass']") === false && !preg_match('/password\s*=\s*[\'"][^\'"]+[\'"]/', $src), "CRM page $f has no URL password and no default credential");
@@ -61,7 +61,7 @@ foreach ($man as $f => $k) {
       break;
     case 'lib':
       ok(strpos($raw, 'include-only: never executable directly') !== false, "library $f refuses direct execution even if web-server rules are missing");
-      ok(strpos($raw, 'Location:') === false || in_array($f, ['layout_top.php', 'admin_auth.php', 'crm_views.php'], true), "library $f sends no redirects (admin_auth and crm_views redirect only to a validated local path)");
+      ok(strpos($raw, 'Location:') === false || in_array($f, ['layout_top.php', 'admin_auth.php', 'crm_views.php', 'adm_auth.php'], true), "library $f sends no redirects (admin_auth, crm_views and adm_auth redirect only to a validated local path)");
       break;
     case 'redirect':
       ok(preg_match('/sec_safe_local_path\(|sec_safe_external_url\(|http_build_query|urlencode\(/', $src) === 1 || $f === 'vote-tool.php', "redirect endpoint $f builds its target safely");

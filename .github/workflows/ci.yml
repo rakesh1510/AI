@@ -61,6 +61,12 @@ jobs:
           php tests/phase8c_tools_m4_m7_test.php
           php tests/phase8c_category_safeguards_test.php
           php tests/phase8d_finance_test.php
+          php tests/unified_admin_u1_test.php
+          php tests/unified_admin_u2_test.php
+          php tests/unified_admin_u3_test.php
+          php tests/unified_admin_u4_test.php
+          php tests/unified_admin_u5_test.php
+          php tests/unified_admin_u6_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
         run: |
@@ -74,6 +80,11 @@ jobs:
         run: |
           php tests/adm_finance_preview.php /tmp/p8d_preview
           NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_phase8c_preview_test.js /tmp/p8d_preview
+
+      - name: Unified admin shell on synthetic data (axe, overflow, 44px targets, drawer and keyboard behaviour; no database)
+        run: |
+          php tests/adm_shell_preview.php /tmp/u1_preview
+          NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_unified_shell_test.js /tmp/u1_preview
 
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php

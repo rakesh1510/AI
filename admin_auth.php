@@ -78,9 +78,19 @@ function admin_csrf_ok(?array $post = null): bool {
  * Gate for admin pages. Renders the login form (or a "disabled" notice) and exits unless an authenticated session exists.
  * Pages must call this before producing output. Uses layout_top/bottom for presentation.
  */
+/** U4 (decision D2): the owner can retire the shared-password pages with AIHUB_LEGACY_ADMIN=off AFTER a working personal owner login is confirmed. Default is on: nothing changes until the setting exists. */
+function admin_legacy_retired(): bool { return function_exists('sec_setting') && strtolower(trim(sec_setting('AIHUB_LEGACY_ADMIN', 'legacy_admin'))) === 'off'; }
 function admin_require(string $title = 'Admin'): void {
   header('Cache-Control: no-store');
   header('X-Robots-Tag: noindex, nofollow');
+  if (admin_legacy_retired()) {
+    http_response_code(410);
+    $GLOBALS['title'] = $title . ' — AIHubpedia'; $robots = 'noindex, nofollow';
+    require __DIR__ . '/layout_top.php';
+    echo '<section class="panel"><h1>This admin page has moved</h1><p>The shared-password admin pages have been retired. Sign in with your personal account at <a href="/admin-center.php">the Control Center</a>.</p></section>';
+    require __DIR__ . '/layout_bottom.php';
+    exit;
+  }
   if (!admin_enabled()) {
     http_response_code(503);
     $GLOBALS['title'] = $title . ' — AIHubpedia'; $robots = 'noindex, nofollow'; /* local variable: this function includes the layout, which reads $robots from the including scope */
