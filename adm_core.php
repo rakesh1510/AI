@@ -30,7 +30,7 @@ function adm_modules(): array {
     'legacy'      => ['label' => 'Legacy admin', 'href' => '/admin.php', 'perm' => 'legacy', 'live' => true, 'group' => 'Business', 'note' => 'Submissions, featured plans, leads and editorial pages. Uses its own sign-in until they move here.'],
     'analytics'   => ['label' => 'Analytics', 'href' => '/admin-center.php?m=analytics', 'perm' => 'analytics', 'live' => true, 'internal' => true, 'group' => 'Growth', 'note' => 'Visitors, page views, tool clicks, sources, countries and conversions.'],
     'tools'       => ['label' => 'AI tool management', 'href' => '/admin-center.php?m=tools', 'live' => true, 'internal' => true, 'perm' => 'tools', 'group' => 'Growth', 'scope' => ['Add, edit, publish, unpublish and soft-delete tools with restore', 'Search, filters, bulk actions, categories and tags', 'Submission moderation and featured placements']],
-    'finance'     => ['label' => 'Finance and revenue', 'phase' => '8D', 'perm' => 'finance', 'group' => 'Money', 'scope' => ['Income and expense entries, invoices and payment status (paid, pending, refunded, overdue)', 'Monthly recurring revenue, profit and loss, CSV export', 'EUR primary reporting currency with later multi-currency support']],
+    'finance'     => ['label' => 'Finance and revenue', 'href' => '/admin-center.php?m=finance', 'live' => true, 'internal' => true, 'perm' => 'finance', 'group' => 'Money', 'scope' => ['Income and expense entries, invoices and payment status (paid, pending, refunded, overdue)', 'Monthly recurring revenue, profit and loss, CSV export', 'EUR primary reporting currency with later multi-currency support']],
     'advertising' => ['label' => 'Advertising', 'phase' => '8E', 'perm' => 'advertising', 'group' => 'Money', 'scope' => ['Advertiser profiles, campaigns, featured listing subscriptions, sponsored newsletter bookings', 'Renewal tracking and follow-up reminders', 'Outbound messages only after human approval']],
     'operations'  => ['label' => 'Operations', 'phase' => '8F', 'perm' => 'operations', 'group' => 'Operations', 'scope' => ['AI Universe verification progress (independent human review is unchanged)', 'Development phases and tasks, release history', 'Error monitoring, backup status and system health']],
     'performance' => ['label' => 'Performance', 'phase' => '8G', 'perm' => 'performance', 'group' => 'Operations', 'scope' => ['Core Web Vitals (LCP, INP, CLS) and database and cache performance', 'Search Console where authorized', 'Scheduled business reports and operational alerts']],
@@ -121,6 +121,7 @@ function adm_css(): string {
     . 'th a,.admLink{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 .25rem}.admMain{min-width:0}.admMain input[type=date]{max-width:100%}'
     . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admSide{padding:8px}.admSide ul{display:flex;flex-wrap:wrap;gap:4px}.admSide h2{display:none}.admMain{padding:14px}}'
     . (function_exists('admt_css') ? admt_css() : '')
+    . (function_exists('admf_css') ? admf_css() : '')
     . '@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}';
 }
 

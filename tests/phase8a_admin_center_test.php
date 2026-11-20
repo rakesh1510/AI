@@ -61,7 +61,7 @@ foreach ($exp as $role => $has) { $r = $page($role); ok($r['code'] === 200, "$ro
 $r = $page('editor'); ok(stripos($r['body'], 'Recurring revenue') === false && stripos($r['body'], 'Verified entities') !== false, 'an editor sees AI Universe tiles and no revenue');
 $r = $page('viewer'); ok(stripos($r['body'], 'Recurring revenue') !== false && stripos($r['body'], 'Verified entities') === false, 'a viewer sees CRM tiles and no AI Universe tiles');
 foreach (['finance' => ['sales', 'viewer', 'editor', 'verifier'], 'operations' => ['sales', 'viewer', 'editor', 'verifier'], 'analytics' => ['sales', 'viewer', 'editor', 'verifier'], 'advertising' => ['viewer', 'editor', 'verifier']] as $mod => $denied) foreach ($denied as $role) { $r = $page($role, "?m=$mod"); ok($r['code'] === 403 && stripos($r['body'], 'Planned for Phase') === false, "$role is refused $mod (403)"); }
-$r = $page('owner', '?m=finance'); ok($r['code'] === 200 && stripos($r['body'], 'Planned for Phase 8D') !== false && stripos($r['body'], 'Nothing is collected or shown here yet') !== false, 'a planned module says it is planned and shows no data');
+$r = $page('owner', '?m=operations'); ok($r['code'] === 200 && stripos($r['body'], 'Planned for Phase 8F') !== false && stripos($r['body'], 'Nothing is collected or shown here yet') !== false, 'a planned module says it is planned and shows no data');
 $r = $page('sales', '?m=advertising'); ok($r['code'] === 200 && stripos($r['body'], 'Phase 8E') !== false, 'sales may open the advertising placeholder');
 $r = $page('owner', '?m=crm'); ok($r['code'] === 302 && $r['loc'] === '/crm.php', 'existing tools open on their own pages');
 $r = $page('owner', '?m=nope'); ok($r['code'] === 404, 'an unknown module is a 404');
