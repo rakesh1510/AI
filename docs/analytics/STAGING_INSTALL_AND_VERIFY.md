@@ -18,6 +18,36 @@ SHOW GRANTS FOR CURRENT_USER();
 ```
 Expected before install: the five `adm_*` tables absent (that is why the dashboard says "Analytics storage is not installed"); `page_views` and `events` present (else apply `database/phase2_analytics.sql` and `database/phase3_business.sql` first, each after review); `tool_clicks` has `visitor_id` and `ip_hash`. Record the three row counts. Also: `php scripts/db_preflight.php` if it is part of your release routine (read-only).
 
+
+## 1b. Schema compatibility verification (read-only; run in addition to section 1)
+```sql
+-- The click table must accept the privacy-fixed insert (empty visitor_id and ip_hash). Look for NOT NULL without default is fine; a UNIQUE key involving visitor_id or ip_hash is NOT.
+SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tool_clicks' ORDER BY ordinal_position;
+SHOW INDEX FROM tool_clicks;
+SELECT index_name, non_unique, GROUP_CONCAT(column_name ORDER BY seq_in_index) cols FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'tool_clicks' GROUP BY index_name, non_unique;
+-- page_views and events shapes expected by the collectors and the rollup
+SELECT table_name, column_name, column_type FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name IN ('page_views','events') ORDER BY table_name, ordinal_position;
+SELECT @@sql_mode, @@version, @@character_set_database, @@collation_database;
+```
+Pass criteria: no UNIQUE index on `tool_clicks` that includes `visitor_id` or `ip_hash` (it would reject the second anonymous click of a tool and silently under-count; if one exists, stop and report: the index must be handled by an approved migration first); `tool_clicks` has `visitor_id` and `ip_hash` columns (the application treats a table without them as "interactions unavailable"); `page_views` and `events` have the columns listed in `database/phase2_analytics.sql` and `phase3_business.sql`; MySQL 8.0+.
+Application-level check (no writes): `php scripts/db_preflight.php`.
+
+## 1c. UTC date verification (read-only first)
+```bash
+php -r 'echo date_default_timezone_get(), " | local: ", date("c"), " | UTC: ", gmdate("c"), "\n";'      # on the web server and on the cron host
+```
+```sql
+SELECT @@global.time_zone AS global_tz, @@session.time_zone AS session_tz, NOW() AS db_now, UTC_TIMESTAMP() AS utc_now;
+```
+The collectors, the rollup and the dashboard now all use UTC (`gmdate`), so the PHP and database timezone settings no longer affect analytics days. After step 6 (test traffic) confirm: `SELECT viewed_at, day, UTC_TIMESTAMP() FROM page_views ORDER BY id DESC LIMIT 3;` shows `viewed_at` equal to `utc_now` within seconds and `day` equal to the UTC date (also when the local date differs: test between 00:00 and the local midnight if the server is not on UTC). Note: `tool_clicks.created_at` is a database TIMESTAMP (session timezone) and is used only for the lifetime counter and the retention cut-off, not for daily reports.
+**Correction procedure if rows written before this change carry local days (only possible if tracking was ever enabled):** do not edit live data. Report counts per day; the owner approves either (a) leaving history as is and noting the cut-over date, or (b) a one-off, backed-up `UPDATE` converting days, followed by `php scripts/adm_rollup.php --since-first`. Not needed if the raw tables are empty (the expected case).
+
+## 1d. Privacy-fix verification (after step 6)
+```sql
+SELECT COUNT(*) AS rows_after_fix, SUM(visitor_id <> '') AS with_visitor_id, SUM(ip_hash <> '') AS with_ip_hash FROM tool_clicks WHERE created_at >= '<timestamp of the first test click>';  -- both sums must be 0
+```
+In the browser developer tools (Application, Cookies) confirm that following an outbound link creates no `aih_visitor` cookie (only voting does).
+
 ## 2. Create the reporting tables (additive, idempotent)
 ```bash
 mysql DBNAME < database/phase8b_analytics.sql      # five new tables; no existing table is touched
@@ -47,7 +77,7 @@ The rollup account also needs SELECT on `page_views`, `events`. The retention sc
 
 ## 6. Enable tracking on staging (separate approval, test traffic only)
 Set in the staging environment (not in the repository): `AIHUB_ANALYTICS=1`, `AIHUB_ANALYTICS_SALT=<32+ random characters>` (`openssl rand -hex 32`). Browse staging yourself on a phone, a tablet and a desktop browser, open a tool page, click a tool's outbound link **once**, double-click another, and visit with Do-Not-Track on.
-Check in SQL:
+Check in SQL (privacy-fixed behaviour included):
 ```sql
 SELECT day, path, page_type, device, visitor_hash <> '' AS has_hash FROM page_views ORDER BY id DESC LIMIT 20;   -- no IP, no user agent; device is one word
 SELECT COUNT(*) FROM events WHERE name = 'outbound_click' AND day = CURDATE();                                 -- one per real click; the double click is one
@@ -58,8 +88,8 @@ Expect: Do-Not-Track visits have an empty hash and empty device; the single clic
 ## 7. Rollup schedule
 Administrator installs (the application never does): hourly `7 * * * * cd /path/to/app && php scripts/adm_rollup.php >> /var/log/aihub-rollup.log 2>&1` and a nightly safety run `37 2 * * * ... php scripts/adm_rollup.php --days=3`. One-time back-fill from real rows only: `php scripts/adm_rollup.php --since-first`. Check `SELECT * FROM adm_rollup_run ORDER BY id DESC LIMIT 5;` shows `ok`.
 
-## 8. Retention (only after the owner decides the periods; see PRIVACY_AND_RETENTION.md)
-Dry run first, always: `php scripts/analytics_purge.php --raw-days=N --id-days=M` (prints counts, changes nothing). `--apply` only after a backup and written approval of N and M. No default exists.
+## 8. Retention (NOT part of the installation; see RETENTION_AND_CLEANUP_PLAN.md)
+Approved proposal for development planning: raw 90 days, rollups 13 months, identifiers blanked (existing) or not collected (new). Deletion is NOT enabled. Dry run only after validation: `php scripts/analytics_purge.php --raw-days=90 --id-days=30 --rollup-days=396` (no `--apply`). It refuses to delete raw rows for days without a rollup.
 
 ## 9. Reconcile
 Pick one test day. Dashboard "page views" for that day must equal `SELECT COUNT(*) FROM page_views WHERE day = 'D' AND is_bot = 0 AND status < 400`; daily visitors must equal `SELECT COUNT(DISTINCT visitor_hash) ... AND visitor_hash <> ''`; outbound clicks must equal the `events` count with `prop2 IN ('sponsored','organic')`. Export each CSV and compare totals with the screen.

@@ -1,4 +1,24 @@
-# Analytics: privacy and retention assessment (design for review; nothing here is a legal opinion or an automatic authorisation)
+# Analytics: privacy and retention assessment (updated after decision D4: option B approved and implemented)
+
+## Update: what changed (commit after `f1cff38`)
+- **Option B implemented.** Following an outbound link now sets **no cookie** and stores **no visitor identifier and no IP hash**. `record_click()` writes `visitor_id = ''` and `ip_hash = ''` (the columns must still exist because the current table shape requires them; nothing is stored in them) and no longer calls the cookie function. The vote feature keeps its own cookie, set only when someone votes. Tests: `tests/analytics_privacy_test.php`.
+- **Hashed IP storage reviewed and eliminated where possible.** `tool_clicks.ip_hash` served no reporting purpose and abuse prevention does not use it: the inflation guard (20 per 10 minutes per tool and network) and the 5-second duplicate guard use short-lived counters in the server's private rate-limit directory, keyed by a salted HMAC of the network address and the tool, and are never stored with the click or in the database. Those counters remain (necessary for abuse prevention, expire within the window, no database copy). The rotating `visitor_hash` on page views is unchanged (cookie-less, daily, salted, no IP stored).
+- **No alternative persistent identifier introduced.** The click path reads no cookie, sets none, hashes no IP into storage, and the user agent is read once only to exclude bots and is never stored.
+- **Historical records are not touched.** Existing `tool_clicks` rows (if any) keep whatever identifiers they have until a cleanup is separately approved; see `RETENTION_AND_CLEANUP_PLAN.md`. Nothing was deleted or altered.
+- **UTC everywhere.** Page views and events are now stamped with UTC dates and times (`gmdate`), the active-visitor window is computed in UTC, and reports were already UTC. If a server was set to another timezone, rows written earlier would carry local days; see "Timezone" in `STAGING_INSTALL_AND_VERIFY.md` (a documented correction needing your approval before any live data is changed). No tracking has been enabled, so no such rows are known to exist.
+
+## Approved retention policy (for development planning; deletion not enabled)
+| Data | Approved proposal | Mechanism |
+|---|---|---|
+| Raw analytics rows (`page_views`, `events`) | **90 days** | `scripts/analytics_purge.php --raw-days=90`, dry run by default |
+| Aggregated, non-identifying reports (`adm_*` rollups) | **13 months (about 396 days)** | `--rollup-days=396`, never below 365 |
+| Persistent click identifiers | **Not collected any more.** Existing ones are blanked on a schedule to be decided (proposal: 30 days) | `--id-days=M` blanks `visitor_id` and `ip_hash` on old `tool_clicks` rows; rows (counts) stay |
+| Rate-limit counters | Window length (10 minutes) | automatic expiry |
+Safety rule built into the script: raw rows are **refused deletion** while any older day has no rollup row, so history cannot be lost by deleting too early. 90 days is feasible operationally because the rollup runs hourly and the dashboard history comes from rollups; 13 months supports year-on-year comparison. **Validation required before enabling deletion:** counsel's confirmation that 90 days and 13 months suit the stated purposes and the privacy notice; confirmation that no legal or contractual duty requires keeping raw data longer (for example affiliate-program audit terms: check each program's agreement); confirmation of backup rotation (deleted rows persist in backups until they rotate).
+
+---
+(The assessment below is the original version from `f1cff38`; where it conflicts with this update, this update governs.)
+
 
 Decision D4: review existing cookies, hashed IPs and retention, and propose minimisation, deletion and a defensible retention policy. **13 months is a proposed maximum for review, not authorised.** Nothing below is switched on, scheduled or deleted. Counsel should review before production use.
 
