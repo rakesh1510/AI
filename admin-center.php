@@ -11,6 +11,7 @@ require_once __DIR__ . '/adm_crm.php';
 require_once __DIR__ . '/adm_universe.php';
 require_once __DIR__ . '/adm_editorial.php';
 require_once __DIR__ . '/adm_access.php';
+require_once __DIR__ . '/adm_advertising.php';
 require_once __DIR__ . '/adm_auth.php';
 require_once __DIR__ . '/adm_account.php';
 $user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
@@ -79,6 +80,10 @@ crm_session_start();
 if (empty($_SESSION['adm_view_at']) || time() - (int)$_SESSION['adm_view_at'] > 1800) { $_SESSION['adm_view_at'] = time(); adm_audit($pdo, $user, 'admin_center_view', 'overview opened'); }   // one audit row per 30 minutes, not per page load
 if ($m === 'dashboard') adm_page($user, 'dashboard', 'Overview', adm_dashboard_body($pdo, $user));
 elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', adma_body($pdo, $_GET));
+elseif ($m === 'advertising') {   // U6: read-only hub over existing records (CRM campaigns, 8C placements, paid submissions); the tool-management views are owner only
+  $camps = (array)adm_safe(fn() => crm_campaigns_list($pdo, '', 200), []); $toolsOk = adm_can((string)$user['role'], 'tools_publish') && AdmToolPdoStore::ready($pdo); $ts = $toolsOk ? new AdmToolPdoStore($pdo) : null;
+  adm_page($user, 'advertising', 'Advertising', admv_body($user, $_GET, $camps, $ts ? $ts->placements() : null, $ts ? array_values(array_filter($ts->submissions(), fn($x) => (int)$x['price'] > 0)) : null));
+}
 elseif ($m === 'access') adm_page($user, 'access', 'Users, roles and audit', admx_body(new AdmAccessPdoStore($pdo), adm_health($pdo), $_GET));
 elseif ($m === 'editorial') { $r = admed_run($user, 'GET', $_GET, []); adm_page($user, 'editorial', 'Tool profile verification', $r['body'], (int)$r['status']); }
 elseif ($m === 'universe') { $r = admu_run($pdo, $user, 'GET', $_GET, []); adm_page($user, 'universe', 'AI Universe review', admu_compose($r['body']), (int)$r['status']); }

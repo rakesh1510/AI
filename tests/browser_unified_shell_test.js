@@ -37,7 +37,7 @@ const shotNames = { 'shell-owner-staging': ['desktop', 'tablet', 'mobile'], 'she
       if (name === 'desktop') {
         check(!(await page.locator('#admMenuBtn').isVisible()), `${tag}: no Menu button on desktop`);
         const g = page.locator('details.admGroup[data-group="money"] > summary'); await g.click(); check(await page.evaluate(() => !document.querySelector('details.admGroup[data-group="money"]').open), `${tag}: a group collapses`);
-        await page.reload(); await page.waitForTimeout(80); const kept = await page.evaluate(() => !document.querySelector('details.admGroup[data-group="money"]').open); check(kept, `${tag}: the collapsed state is remembered in this browser`);
+        await page.waitForFunction(() => { try { return (localStorage.getItem('aihubAdmGroups') || '').indexOf('money') !== -1; } catch (e) { return true; } }, null, { timeout: 3000 }).catch(() => {}); await page.reload(); await page.waitForTimeout(80); const kept = await page.evaluate(() => !document.querySelector('details.admGroup[data-group="money"]').open); check(kept, `${tag}: the collapsed state is remembered in this browser`);
         await page.locator('details.admGroup[data-group="money"] > summary').click(); await page.waitForTimeout(100); await page.reload(); await page.waitForTimeout(60); check(await page.evaluate(() => document.querySelector('details.admGroup[data-group="money"]').open), `${tag}: a group can be opened again`);
       }
     }

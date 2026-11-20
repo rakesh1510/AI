@@ -58,6 +58,6 @@ function admc_css(): string {
     . '.admCrm .tableWrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:0 0 14px}.admCrm .tableWrap:focus-visible{outline:3px solid var(--brand);outline-offset:2px}'
     . '.admCrm .table{width:100%;border-collapse:collapse;font-size:.94rem}.admCrm .table th,.admCrm .table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.admCrm .table th{background:var(--bg);white-space:nowrap}'
     . '.admCrm .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}'
-    . '.admCrm .table a,.admEd a:not(.btn){display:inline-flex;align-items:center;min-height:44px;min-width:44px}'
+    . '.admCrm .table a,.admEd a:not(.btn),.admAdv a:not(.btn),.admAcc a:not(.btn){display:inline-flex;align-items:center;min-height:44px;min-width:44px}'
     . '.admCrm .crmNav{display:flex;flex-wrap:wrap;gap:6px}.admCrm a:not(.btn){color:var(--brand)}';
 }
