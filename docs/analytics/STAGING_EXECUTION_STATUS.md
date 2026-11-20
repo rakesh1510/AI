@@ -1,5 +1,7 @@
 # Staging installation (aihub_phase6_test): execution status
 
+> **Update:** the first run on staging stopped because `tool_clicks` does not exist there. The installer now supports that case (creates an empty five-column table, never copies production data). Use `STAGING_RERUN_COMMANDS.md`. The text below is the earlier status.
+
 **Status: NOT EXECUTED. Blocked: this environment has no network path or credentials for your staging database.** No `AIHUB_DB_*` variable, no `config.local.php`, no MySQL client configuration and no reachable database host exist here, and I did not ask for or accept database credentials in chat. Therefore none of the following could be confirmed: that `aihub_phase6_test` is isolated from `aihub`, the exact MySQL version, the account's privileges, the existing tables, or migration compatibility. Nothing was installed on staging, nothing was touched on production, and no record anywhere was changed.
 
 ## What was prepared so the administrator can run steps 1 to 6 safely: `scripts/analytics_staging_install.sh`

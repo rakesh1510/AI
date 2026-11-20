@@ -4,6 +4,8 @@ Facts confirmed by the owner: database `aihub`, MySQL 8.4.10; `tool_clicks` has 
 **Hard rules:** nothing below runs without the owner's written approval of each GATE; tracking stays OFF; no cron; no deployment from here; no statement in `database/analytics_install/` deletes, truncates, updates or alters `tool_clicks` (asserted by the rehearsal). Run staging first with the same commands (`aihub_phase6_test`).
 Notation: `DBH`, `DBU` are the host and an administrator user; the application user is separate. Replace `aihub` with `aihub_phase6_test` for the staging run.
 
+> **Staging note (added after the first staging run):** `aihub_phase6_test` has no `tool_clicks` table (no historical clicks). The staging installer therefore creates it EMPTY with the five production columns (`03_tool_clicks_if_missing.sql`, additive and idempotent) and never copies production data. Production already has the table (71,502 rows) and **must not** be given this file: nothing in the production steps below creates or alters `tool_clicks`. See `STAGING_RERUN_COMMANDS.md` for the staging commands.
+
 ## GATE 0: code (separate approval; not part of the database work)
 The privacy fix and single-count fix must be deployed before tracking is enabled, otherwise old code keeps writing identifiers and double counts. Deployment of the branch `feat/aihubpedia-analytics` (and its parents) is a separate approved release; this runbook does not deploy. After deployment, `php scripts/analytics_verify.php --phase=pre` confirms the code (steps below).
 
