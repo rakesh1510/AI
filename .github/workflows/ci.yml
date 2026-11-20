@@ -62,6 +62,7 @@ jobs:
           php tests/phase8c_category_safeguards_test.php
           php tests/phase8d_finance_test.php
           php tests/unified_admin_u1_test.php
+          php tests/unified_admin_u2_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
         run: |

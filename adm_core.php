@@ -27,7 +27,7 @@ function adm_modules(): array {
   return [
     'account'     => ['label' => 'Account and password', 'href' => '/admin-center.php?m=account', 'live' => true, 'internal' => true, 'perm' => 'account', 'group' => 'Account', 'note' => 'Who you are signed in as, your modules, and your password.'],
     'dashboard'   => ['label' => 'Overview', 'href' => '/admin-center.php', 'perm' => 'center', 'live' => true, 'group' => 'Control Center'],
-    'crm'         => ['label' => 'CRM and leads', 'href' => '/crm.php', 'perm' => 'crm', 'live' => true, 'group' => 'Business', 'note' => 'Leads, pipeline, proposals, contracts, campaigns, partners.'],
+    'crm'         => ['label' => 'CRM and leads', 'href' => '/admin-center.php?m=crm', 'perm' => 'crm', 'live' => true, 'internal' => true, 'group' => 'Business', 'note' => 'Leads, pipeline, proposals, contracts, campaigns, partners.'],
     'universe'    => ['label' => 'AI Universe review', 'href' => '/universe-editor.php', 'perm' => 'universe', 'live' => true, 'group' => 'Business', 'note' => 'Propose, adopt and independently verify AI Universe records.'],
     'legacy'      => ['label' => 'Legacy admin', 'href' => '/admin.php', 'perm' => 'legacy', 'live' => true, 'group' => 'Business', 'note' => 'Submissions, featured plans, leads and editorial pages. Uses its own sign-in until they move here.'],
     'analytics'   => ['label' => 'Analytics', 'href' => '/admin-center.php?m=analytics', 'perm' => 'analytics', 'live' => true, 'internal' => true, 'group' => 'Growth', 'note' => 'Visitors, page views, tool clicks, sources, countries and conversions.'],
@@ -131,6 +131,7 @@ function adm_css(): string {
     . '@media (prefers-color-scheme:dark){.admErr,.admAuth .err{color:#ff8a80}.panel.admErr{border-left-color:#ff8a80}}'
     . (function_exists('admt_css') ? admt_css() : '')
     . (function_exists('admf_css') ? admf_css() : '')
+    . (function_exists('admc_css') ? admc_css() : '')
     . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admMain{padding:14px}.admSide{padding:8px}'
     . '.js .admMenuBtn{display:inline-flex;align-items:center;gap:6px}.js .admSide{position:fixed;inset:0 auto 0 0;width:min(88vw,320px);z-index:50;transform:translateX(-104%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s;box-shadow:0 0 40px rgba(0,0,0,.5);padding-top:8px}'
     . '.js .admNavOpen .admSide{transform:none;visibility:visible;transition:transform .2s ease}.js .admSideHead{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 8px;font-weight:700}.js .admScrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:45;opacity:0;pointer-events:none;transition:opacity .2s}.js .admNavOpen .admScrim{opacity:1;pointer-events:auto}.js .admNavOpen{overflow:hidden}}'
