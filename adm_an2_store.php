@@ -23,8 +23,8 @@ final class AdmAnPdoStore implements AdmAnStore {
     try {
       if (!function_exists('analytics_enabled') || !analytics_enabled() || !adma_table($this->pdo, 'page_views')) return null;
       $last = $this->pdo->query("SELECT MAX(viewed_at) FROM page_views WHERE is_bot = 0 AND status < 400")->fetchColumn();
-      if (!$last || strtotime((string)$last) < time() - 86400) return null;   // no recorded human activity in the last day: do not show a number
-      $q = $this->pdo->prepare("SELECT COUNT(DISTINCT visitor_hash) FROM page_views WHERE viewed_at >= ? AND is_bot = 0 AND status < 400 AND visitor_hash <> ''"); $q->execute([date('Y-m-d H:i:s', time() - ANZ_ACTIVE_WINDOW_MIN * 60)]);
+      if (!$last || strtotime((string)$last . ' UTC') < time() - 86400) return null;   // no recorded human activity in the last day: do not show a number
+      $q = $this->pdo->prepare("SELECT COUNT(DISTINCT visitor_hash) FROM page_views WHERE viewed_at >= ? AND is_bot = 0 AND status < 400 AND visitor_hash <> ''"); $q->execute([gmdate('Y-m-d H:i:s', time() - ANZ_ACTIVE_WINDOW_MIN * 60)]);
       return ['count' => (int)$q->fetchColumn(), 'last_view' => (string)$last];
     } catch (Throwable $e) { return null; }
   }

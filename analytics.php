@@ -86,7 +86,7 @@ function analytics_visitor_hash(string $ip, string $ua, string $period): string 
 
 /** Period used for the rotating hash: 'day' (default) or 'week' (set AIHUB_ANALYTICS_HASH_WINDOW=week for weekly uniques). */
 function analytics_hash_period(int $ts): string {
-  return getenv('AIHUB_ANALYTICS_HASH_WINDOW') === 'week' ? date('o-\WW', $ts) : date('Y-m-d', $ts);
+  return getenv('AIHUB_ANALYTICS_HASH_WINDOW') === 'week' ? gmdate('o-\WW', $ts) : gmdate('Y-m-d', $ts);   // UTC, like every report
 }
 
 /** Build the row to store for the current request (pure function of its inputs, easy to test). */
@@ -99,7 +99,7 @@ function analytics_build_row(array $server, array $get, int $status, int $ts, st
   if (!preg_match('/^[A-Z]{2}$/', $country)) $country = 'XX';
   $ip = sec_client_ip($server);
   return [
-    'viewed_at' => date('Y-m-d H:i:s', $ts), 'day' => date('Y-m-d', $ts), 'path' => substr($path, 0, 190),
+    'viewed_at' => gmdate('Y-m-d H:i:s', $ts), 'day' => gmdate('Y-m-d', $ts), 'path' => substr($path, 0, 190),
     'page_type' => analytics_page_type((string)($server['SCRIPT_NAME'] ?? '')), 'status' => $status,
     'referrer_class' => $ref['class'], 'referrer_host' => substr($ref['host'], 0, 120), 'country' => $country,
     'visitor_hash' => ($agent['is_bot'] || $optOut) ? '' : analytics_visitor_hash($ip, $ua, analytics_hash_period($ts)),

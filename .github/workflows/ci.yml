@@ -69,6 +69,7 @@ jobs:
           php tests/unified_admin_u6_test.php
           php tests/analytics_a1_test.php
           php tests/analytics_a2_a5_test.php
+          php tests/analytics_privacy_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
         run: |
