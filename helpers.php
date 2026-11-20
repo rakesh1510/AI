@@ -318,6 +318,19 @@ function interaction_tables_exist(){
   } catch(Throwable $e){ return $checked = false; }
 }
 
+/**
+ * True when outbound clicks can be written to `tool_clicks` (database reachable and the table has the visitor_id and ip_hash columns). Independent of tool_votes: counting a click needs nothing from
+ * the voting table, and a missing tool_votes must not silently stop click recording (it did on staging).
+ */
+function tool_clicks_writable(): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try {
+    if (!(db_connection_available() && function_exists('db') && db_table_exists('tool_clicks'))) return $ok = false;
+    $pdo = db(); foreach (['visitor_id', 'ip_hash', 'tool_slug'] as $c) if (!db_column_exists($pdo, 'tool_clicks', $c)) return $ok = false;
+    return $ok = true;
+  } catch (Throwable $e) { return $ok = false; }
+}
+
 /** True when writes to the interaction tables can succeed (database configured, reachable and in the current shape). */
 function interactions_writable(): bool {
   try { return db_connection_available() && function_exists('db') && interaction_tables_exist(); } catch(Throwable $e){ return false; }

@@ -12,7 +12,12 @@ require_once __DIR__ . '/security.php';
  * - Recording happens after the response is built and can never break a page.
  */
 
-function analytics_enabled(): bool { return getenv('AIHUB_ANALYTICS') === '1'; }
+/**
+ * Tracking switch. Read through sec_setting(): the environment variable AIHUB_ANALYTICS first, then the private config file key `analytics` (config.local.php or AIHUB_CONFIG_FILE).
+ * Root cause of the staging "tracking is off" symptom: this used getenv() only, and PHP-FPM does not pass a shell's variables to its workers (clear_env), so a value that "worked" in a root shell
+ * was never visible to the web server and no config-file value could enable it. Accepts exactly '1' or 'true' (anything else, including an empty or missing value, is OFF: the default).
+ */
+function analytics_enabled(): bool { return in_array(strtolower(sec_setting('AIHUB_ANALYTICS', 'analytics')), ['1', 'true'], true); }
 
 /** @return array{is_bot:bool,type:string,name:string} */
 function analytics_classify_agent(string $ua): array {
@@ -77,16 +82,16 @@ function analytics_page_type(string $script): string {
 }
 
 /** True only when AIHUB_ANALYTICS_SALT is a secret of at least 32 characters. There is no default salt: without one no visitor hash exists. */
-function analytics_salt_ok(): bool { $s = getenv('AIHUB_ANALYTICS_SALT'); return is_string($s) && strlen($s) >= 32 && stripos($s, 'default') === false; }   // the former public placeholder contains 'default' and is rejected
+function analytics_salt_ok(): bool { $s = sec_setting('AIHUB_ANALYTICS_SALT', 'analytics_salt'); return strlen($s) >= 32 && stripos($s, 'default') === false; }   // environment first, then config key `analytics_salt` (the same key security.php already uses)   // the former public placeholder contains 'default' and is rejected
 function analytics_visitor_hash(string $ip, string $ua, string $period): string {
   if (!analytics_salt_ok()) return '';   // missing or weak salt: never record a visitor hash (a public default would make hashes reversible)
-  $salt = (string)getenv('AIHUB_ANALYTICS_SALT');
+  $salt = sec_setting('AIHUB_ANALYTICS_SALT', 'analytics_salt');
   return substr(hash('sha256', $salt . '|' . $period . '|' . $ip . '|' . $ua), 0, 16);
 }
 
 /** Period used for the rotating hash: 'day' (default) or 'week' (set AIHUB_ANALYTICS_HASH_WINDOW=week for weekly uniques). */
 function analytics_hash_period(int $ts): string {
-  return getenv('AIHUB_ANALYTICS_HASH_WINDOW') === 'week' ? gmdate('o-\WW', $ts) : gmdate('Y-m-d', $ts);   // UTC, like every report
+  return sec_setting('AIHUB_ANALYTICS_HASH_WINDOW', 'analytics_hash_window') === 'week' ? gmdate('o-\WW', $ts) : gmdate('Y-m-d', $ts);   // UTC, like every report
 }
 
 /** Build the row to store for the current request (pure function of its inputs, easy to test). */

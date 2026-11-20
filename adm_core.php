@@ -93,6 +93,9 @@ function adm_health(PDO $pdo): array {
   $h[] = ['Database', adm_safe(fn() => (bool)$pdo->query('SELECT 1')->fetchColumn(), false) ? 'Reachable' : 'Not reachable', true];
   $h[] = ['CRM schema', function_exists('crm_tables_ready') && adm_safe(fn() => crm_tables_ready(), false) ? 'Installed' : 'Missing', true];
   $h[] = ['AI Universe schema', adm_safe(fn() => $pdo->query('SELECT 1 FROM uni_entity LIMIT 1') !== false, false) ? 'Installed' : 'Not installed', null];
+  $e = function_exists('adm_env') ? adm_env() : null; $h[] = ['Environment label (AIHUB_ENV_LABEL)', $e ? ($e['key'] === 'unset' ? 'NOT SET: banner shows "ENVIRONMENT NOT SET"' : $e['label']) : 'unknown', $e && $e['key'] !== 'unset' ? true : null];
+  $cf = getenv('AIHUB_CONFIG_FILE') ?: __DIR__ . '/config.local.php'; $h[] = ['Private config file (read by this web worker)', is_file($cf) ? (is_readable($cf) ? 'Found and readable' : 'Found but NOT readable by the web server user') : 'Not found', is_file($cf) && is_readable($cf) ? true : false];
+  $h[] = ['Web worker user', function_exists('posix_getpwuid') ? (posix_getpwuid(posix_geteuid())['name'] ?? 'unknown') : 'unknown', null];
   $an = function_exists('analytics_enabled') ? analytics_enabled() : false;
   $h[] = ['Visitor tracking (AIHUB_ANALYTICS)', $an ? 'Enabled on this server' : 'Not enabled on this server', null];
   if ($an) $h[] = ['Visitor hash salt (AIHUB_ANALYTICS_SALT)', function_exists('analytics_salt_ok') && analytics_salt_ok() ? 'Set (strong)' : 'WARNING: missing or shorter than 32 characters - no visitor hashes are recorded', null];

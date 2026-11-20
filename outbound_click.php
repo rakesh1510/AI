@@ -18,7 +18,7 @@ if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) 
  * @return string        counted | bot | prefetch | head | duplicate | rate_limited | unavailable
  */
 function outbound_click_record(string $id, array $tool, array $server, array $io = []): string {
-  $limit = $io['limit'] ?? 'sec_rate_limited'; $writable = $io['writable'] ?? 'interactions_writable';
+  $limit = $io['limit'] ?? 'sec_rate_limited'; $writable = $io['writable'] ?? 'tool_clicks_writable';
   $click = $io['click'] ?? 'record_click';
   $event = $io['event'] ?? fn(string $i, string $aff, string $place) => event_record_server('outbound_click', $i, $aff, $place);
   if (strtoupper((string)($server['REQUEST_METHOD'] ?? 'GET')) === 'HEAD') return 'head';
