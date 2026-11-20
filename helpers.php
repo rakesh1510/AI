@@ -318,6 +318,19 @@ function interaction_tables_exist(){
   } catch(Throwable $e){ return $checked = false; }
 }
 
+/**
+ * True when outbound clicks can be written to `tool_clicks` (database reachable and the table has the visitor_id and ip_hash columns). Independent of tool_votes: counting a click needs nothing from
+ * the voting table, and a missing tool_votes must not silently stop click recording (it did on staging).
+ */
+function tool_clicks_writable(): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try {
+    if (!(db_connection_available() && function_exists('db') && db_table_exists('tool_clicks'))) return $ok = false;
+    $pdo = db(); foreach (['visitor_id', 'ip_hash', 'tool_slug'] as $c) if (!db_column_exists($pdo, 'tool_clicks', $c)) return $ok = false;
+    return $ok = true;
+  } catch (Throwable $e) { return $ok = false; }
+}
+
 /** True when writes to the interaction tables can succeed (database configured, reachable and in the current shape). */
 function interactions_writable(): bool {
   try { return db_connection_available() && function_exists('db') && interaction_tables_exist(); } catch(Throwable $e){ return false; }
@@ -469,22 +482,23 @@ function tool_url($t){
 // ----------------------
 // Click tracking + trending
 // ----------------------
-function record_click(string $toolId): int
+function record_click(string $toolId, ?PDO $pdo = null): int
 {
+    // Analytics privacy (decision D4, option B): an outbound click stores NO visitor identifier and NO IP hash, and sets NO cookie.
+    // visitor_id and ip_hash are written as empty strings only because the current table shape requires the columns to exist.
+    // Abuse prevention does not need them: it uses short-lived rate-limit counters in outbound_click.php (never stored with the click).
     $toolId = trim($toolId);
     if ($toolId === '') {
         return 0;
     }
 
-    $pdo = db();
-    $visitor = get_visitor_id();
-    $ipHash = get_ip_hash();
+    $pdo = $pdo ?? db();
 
     $stmt = $pdo->prepare("
         INSERT INTO tool_clicks (tool_slug, visitor_id, ip_hash, created_at)
-        VALUES (?, ?, ?, NOW())
+        VALUES (?, '', '', CURRENT_TIMESTAMP)
     ");
-    $stmt->execute([$toolId, $visitor, $ipHash]);
+    $stmt->execute([$toolId]);
 
     $count = $pdo->prepare("
         SELECT COUNT(*) FROM tool_clicks WHERE tool_slug = ?

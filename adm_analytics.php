@@ -16,6 +16,7 @@ const ADMA_CONVERSIONS = ['lead_submit' => 'Inquiry forms submitted', 'newslette
 function adma_table(PDO $pdo, string $t): bool {
   try { $s = $pdo->prepare('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?'); $s->execute([$t]); return (bool)$s->fetchColumn(); } catch (Throwable $e) { return false; }
 }
+function adma_column(PDO $pdo, string $t, string $c): bool { try { $q = $pdo->prepare('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'); $q->execute([$t, $c]); return (bool)$q->fetchColumn(); } catch (Throwable $e) { return false; } }
 function adma_storage_ready(PDO $pdo): bool { foreach (['adm_traffic_daily', 'adm_traffic_dim_daily', 'adm_tool_daily', 'adm_event_daily', 'adm_rollup_run'] as $t) if (!adma_table($pdo, $t)) return false; return true; }
 
 /* ===================================================== rollup (CLI and tests) ===================================================== */
@@ -42,6 +43,7 @@ function adma_rollup_day(PDO $pdo, string $day): int {
           $s = $pdo->prepare("SELECT $col k, COUNT(*) v, COUNT(DISTINCT NULLIF(visitor_hash,'')) u FROM page_views WHERE $human $extra GROUP BY k ORDER BY v DESC, k LIMIT $limit"); $s->execute([$day]);
           foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $x) { $dim->execute([$day, $name, substr((string)$x['k'], 0, 190), $x['v'], $x['u']]); $n++; }
         };
+        if (adma_column($pdo, 'page_views', 'device')) $dimQ('device', 'device', 10, " AND device <> ''");
         $dimQ('page', 'path', 300); $dimQ('referrer', 'referrer_class', 40); $dimQ('refhost', 'referrer_host', 50, " AND referrer_host <> ''"); $dimQ('country', 'country', 300); $dimQ('ptype', 'page_type', 60);
         $top = (int)$pdo->query("SELECT COALESCE(SUM(views),0) FROM adm_traffic_dim_daily WHERE day = " . $pdo->quote($day) . " AND dim = 'page'")->fetchColumn();
         if ((int)$r['vh'] > $top) { $dim->execute([$day, 'page', '(other pages)', (int)$r['vh'] - $top, 0]); $n++; }   // so the table always reconciles to the day's total
@@ -51,9 +53,9 @@ function adma_rollup_day(PDO $pdo, string $day): int {
     }
     $tool = $tool ?? [];
     if ($hasEv) {
-      $ec = $pdo->prepare("SELECT ref, COUNT(*) c, COALESCE(SUM(prop1 = 'yes'),0) a, COALESCE(SUM(prop2 = 'sponsored'),0) s FROM events WHERE day = ? AND name = 'outbound_click' AND ref <> '' GROUP BY ref"); $ec->execute([$day]);
+      $ec = $pdo->prepare("SELECT ref, COUNT(*) c, COALESCE(SUM(prop1 = 'yes'),0) a, COALESCE(SUM(prop2 = 'sponsored'),0) s FROM events WHERE day = ? AND name = 'outbound_click' AND prop2 IN ('sponsored','organic') AND ref <> '' GROUP BY ref"); $ec->execute([$day]);
       foreach ($ec->fetchAll(PDO::FETCH_ASSOC) as $x) { $k = substr((string)$x['ref'], 0, 120); $tool[$k] = ($tool[$k] ?? ['v' => 0]) + ['c' => 0, 'a' => 0, 's' => 0]; $tool[$k]['c'] = (int)$x['c']; $tool[$k]['a'] = (int)$x['a']; $tool[$k]['s'] = (int)$x['s']; }
-      $es = $pdo->prepare("SELECT name, CASE WHEN name = 'outbound_click' THEN '' ELSE ref END r, COUNT(*) c, COUNT(DISTINCT NULLIF(visitor_hash,'')) v FROM events WHERE day = ? GROUP BY name, r"); $es->execute([$day]);
+      $es = $pdo->prepare("SELECT name, CASE WHEN name = 'outbound_click' THEN '' ELSE ref END r, COUNT(*) c, COUNT(DISTINCT NULLIF(visitor_hash,'')) v FROM events WHERE day = ? AND (name <> 'outbound_click' OR prop2 IN ('sponsored','organic')) GROUP BY name, r"); $es->execute([$day]);
       $ei = $pdo->prepare('INSERT INTO adm_event_daily (day, name, ref, events, visitors) VALUES (?,?,?,?,?)');
       foreach ($es->fetchAll(PDO::FETCH_ASSOC) as $x) { $ei->execute([$day, $x['name'], substr((string)$x['r'], 0, 80), $x['c'], $x['v']]); $n++; }
       if ($hasPv) {   // same-day, first-touch attribution through the shared rotating hash (visitors with no hash are '(no visitor id)')

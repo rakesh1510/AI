@@ -67,60 +67,6 @@ document.addEventListener('click', async function (event) {
     return;
   }
 
-  const toolLink = event.target.closest('a[href*="redirect.php?id="]');
-  if (toolLink) {
-    const currentHref = toolLink.getAttribute('href') || '';
-    if (currentHref.includes('tracked=1')) return;
-
-    event.preventDefault();
-
-    const url = new URL(currentHref, window.location.href);
-    const toolId = url.searchParams.get('id');
-    if (!toolId) return;
-
-    const card = toolLink.closest('.card, .tool-card, .toolCard');
-    const clickCount = card ? card.querySelector('.js-click-count') : null;
-
-    const body = new URLSearchParams();
-    body.set('id', toolId);
-
-    try {
-      const response = await fetch('/track-click.php', {
-        method: 'POST',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-Token': csrfToken(),
-          'Accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
-        body: body.toString(),
-        keepalive: true
-      });
-
-      const text = await response.text();
-
-      if (response.ok) {
-        try {
-          const data = JSON.parse(text);
-          if (data.success && clickCount) {
-            clickCount.textContent = data.clicks ?? 0;
-          }
-        } catch (e) {
-          console.error('Invalid JSON from track-click.php:', text);
-        }
-      } else {
-        console.error('Track click HTTP error:', response.status, text);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-
-    url.searchParams.set('tracked', '1');
-
-    if (toolLink.getAttribute('target') === '_blank') {
-      window.open(url.toString(), '_blank', 'noopener');
-    } else {
-      window.location.href = url.toString();
-    }
-  }
+  // Outbound tool links are counted ONCE, on the server, by redirect.php. This script no longer intercepts them (a second count here double-counted every click).
+  // (Analytics A1.) The visible click counter refreshes on the next page load.
 });

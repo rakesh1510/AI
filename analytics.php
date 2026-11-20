@@ -12,7 +12,12 @@ require_once __DIR__ . '/security.php';
  * - Recording happens after the response is built and can never break a page.
  */
 
-function analytics_enabled(): bool { return getenv('AIHUB_ANALYTICS') === '1'; }
+/**
+ * Tracking switch. Read through sec_setting(): the environment variable AIHUB_ANALYTICS first, then the private config file key `analytics` (config.local.php or AIHUB_CONFIG_FILE).
+ * Root cause of the staging "tracking is off" symptom: this used getenv() only, and PHP-FPM does not pass a shell's variables to its workers (clear_env), so a value that "worked" in a root shell
+ * was never visible to the web server and no config-file value could enable it. Accepts exactly '1' or 'true' (anything else, including an empty or missing value, is OFF: the default).
+ */
+function analytics_enabled(): bool { return in_array(strtolower(sec_setting('AIHUB_ANALYTICS', 'analytics')), ['1', 'true'], true); }
 
 /** @return array{is_bot:bool,type:string,name:string} */
 function analytics_classify_agent(string $ua): array {
@@ -57,6 +62,17 @@ function analytics_classify_referrer(string $referrer, string $ownHost = 'aihubp
   return ['class' => 'other', 'host' => $host];
 }
 
+/**
+ * Coarse device class from the user agent: 'mobile', 'tablet' or 'desktop' ('' for bots, empty agents and opted-out requests).
+ * ONE word is stored; the user-agent string itself is never stored, and no browser version, OS version or screen data is used, so this cannot fingerprint anyone.
+ */
+function analytics_classify_device(string $ua): string {
+  $ua = trim($ua); if ($ua === '' || analytics_classify_agent($ua)['is_bot']) return '';
+  if (preg_match('/iPad|Tablet|PlayBook|Kindle|Silk\/|Nexus (7|9|10)|SM-T\d|Tab\b/i', $ua) || (stripos($ua, 'Android') !== false && stripos($ua, 'Mobile') === false)) return 'tablet';
+  if (preg_match('/Mobi|iPhone|iPod|Windows Phone|BlackBerry|Opera Mini/i', $ua)) return 'mobile';
+  return 'desktop';
+}
+
 function analytics_page_type(string $script): string {
   $base = basename($script);
   $map = ['index.php' => 'home', 'tool.php' => 'tool', 'category.php' => 'category', 'categories.php' => 'category_index', 'compare.php' => 'compare', 'comparisons.php' => 'compare_index',
@@ -66,16 +82,16 @@ function analytics_page_type(string $script): string {
 }
 
 /** True only when AIHUB_ANALYTICS_SALT is a secret of at least 32 characters. There is no default salt: without one no visitor hash exists. */
-function analytics_salt_ok(): bool { $s = getenv('AIHUB_ANALYTICS_SALT'); return is_string($s) && strlen($s) >= 32 && stripos($s, 'default') === false; }   // the former public placeholder contains 'default' and is rejected
+function analytics_salt_ok(): bool { $s = sec_setting('AIHUB_ANALYTICS_SALT', 'analytics_salt'); return strlen($s) >= 32 && stripos($s, 'default') === false; }   // environment first, then config key `analytics_salt` (the same key security.php already uses)   // the former public placeholder contains 'default' and is rejected
 function analytics_visitor_hash(string $ip, string $ua, string $period): string {
   if (!analytics_salt_ok()) return '';   // missing or weak salt: never record a visitor hash (a public default would make hashes reversible)
-  $salt = (string)getenv('AIHUB_ANALYTICS_SALT');
+  $salt = sec_setting('AIHUB_ANALYTICS_SALT', 'analytics_salt');
   return substr(hash('sha256', $salt . '|' . $period . '|' . $ip . '|' . $ua), 0, 16);
 }
 
 /** Period used for the rotating hash: 'day' (default) or 'week' (set AIHUB_ANALYTICS_HASH_WINDOW=week for weekly uniques). */
 function analytics_hash_period(int $ts): string {
-  return getenv('AIHUB_ANALYTICS_HASH_WINDOW') === 'week' ? date('o-\WW', $ts) : date('Y-m-d', $ts);
+  return sec_setting('AIHUB_ANALYTICS_HASH_WINDOW', 'analytics_hash_window') === 'week' ? gmdate('o-\WW', $ts) : gmdate('Y-m-d', $ts);   // UTC, like every report
 }
 
 /** Build the row to store for the current request (pure function of its inputs, easy to test). */
@@ -88,15 +104,22 @@ function analytics_build_row(array $server, array $get, int $status, int $ts, st
   if (!preg_match('/^[A-Z]{2}$/', $country)) $country = 'XX';
   $ip = sec_client_ip($server);
   return [
-    'viewed_at' => date('Y-m-d H:i:s', $ts), 'day' => date('Y-m-d', $ts), 'path' => substr($path, 0, 190),
+    'viewed_at' => gmdate('Y-m-d H:i:s', $ts), 'day' => gmdate('Y-m-d', $ts), 'path' => substr($path, 0, 190),
     'page_type' => analytics_page_type((string)($server['SCRIPT_NAME'] ?? '')), 'status' => $status,
     'referrer_class' => $ref['class'], 'referrer_host' => substr($ref['host'], 0, 120), 'country' => $country,
     'visitor_hash' => ($agent['is_bot'] || $optOut) ? '' : analytics_visitor_hash($ip, $ua, analytics_hash_period($ts)),
+    'device' => $optOut ? '' : analytics_classify_device($ua),
     'is_bot' => $agent['is_bot'] ? 1 : 0, 'bot_type' => $agent['type'], 'bot_name' => substr($agent['name'], 0, 40),
   ];
 }
 
+/** True when page_views has the optional device column (database/analytics_a4_device.sql). Until an administrator adds it, nothing about devices is written and nothing breaks. */
+function analytics_device_column_ready(PDO $pdo): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try { $q = $pdo->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'page_views' AND COLUMN_NAME = 'device' LIMIT 1"); return $ok = (bool)($q && $q->fetchColumn()); } catch (Throwable $e) { return $ok = false; }
+}
 function analytics_insert(PDO $pdo, array $row): void {
+  if (array_key_exists('device', $row) && !analytics_device_column_ready($pdo)) unset($row['device']);
   $cols = array_keys($row);
   $stmt = $pdo->prepare('INSERT INTO page_views (' . implode(',', $cols) . ') VALUES (' . implode(',', array_map(fn($c) => ':' . $c, $cols)) . ')');
   $stmt->execute($row);

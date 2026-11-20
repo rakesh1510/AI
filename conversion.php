@@ -260,7 +260,7 @@ function event_normalize(array $in, bool $fromClient = true): ?array {
 function event_insert(PDO $pdo, array $row, string $visitorHash = '', bool $returning = false, ?int $ts = null): void {
   $ts = $ts ?? time();
   $pdo->prepare('INSERT INTO events (occurred_at, day, name, page_type, ref, prop1, prop2, visitor_hash, returning_user) VALUES (?,?,?,?,?,?,?,?,?)')
-      ->execute([date('Y-m-d H:i:s', $ts), date('Y-m-d', $ts), $row['name'], $row['page_type'] ?? '', $row['ref'] ?? '', $row['prop1'] ?? '', $row['prop2'] ?? '', $visitorHash, $returning ? 1 : 0]);
+      ->execute([gmdate('Y-m-d H:i:s', $ts), gmdate('Y-m-d', $ts), $row['name'], $row['page_type'] ?? '', $row['ref'] ?? '', $row['prop1'] ?? '', $row['prop2'] ?? '', $visitorHash, $returning ? 1 : 0]);
 }
 
 /** Record a server-side business event (no personal data). Never throws. */
