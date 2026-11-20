@@ -14,7 +14,7 @@ function adm_nav_groups(): array {
       $v('Tasks', 'v', 'tasks'), $v('Campaigns', 'v', 'campaigns'), $v('Partners', 'v', 'partners'), $v('Prospects', 'v', 'prospects'), $v('Outreach drafts', 'v', 'outreach')]]]],
     ['id' => 'content', 'label' => 'Content and catalogue', 'items' => [
       ['mod' => 'tools', 'children' => [$v('Tools', 'view', ''), $v('Categories and tags', 'view', 'categories'), $v('Submissions', 'view', 'submissions'), $v('Featured', 'view', 'featured')]],
-      ['mod' => 'universe'], ['mod' => 'legacy']]],
+      ['mod' => 'universe'], ['mod' => 'editorial'], ['mod' => 'legacy']]],
     ['id' => 'growth', 'label' => 'Growth', 'items' => [['mod' => 'analytics'], ['mod' => 'advertising']]],
     ['id' => 'money', 'label' => 'Money', 'items' => [['mod' => 'finance', 'children' => [
       $v('Overview', 'view', ''), $v('Revenue', 'view', 'revenue'), $v('Advertising and sponsorship', 'view', 'advertising'), $v('Projects and retainers', 'view', 'projects'),

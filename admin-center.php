@@ -9,6 +9,7 @@ require_once __DIR__ . '/adm_tools_views.php';
 require_once __DIR__ . '/adm_finance_views.php';
 require_once __DIR__ . '/adm_crm.php';
 require_once __DIR__ . '/adm_universe.php';
+require_once __DIR__ . '/adm_editorial.php';
 require_once __DIR__ . '/adm_auth.php';
 require_once __DIR__ . '/adm_account.php';
 $user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
@@ -20,6 +21,11 @@ if ($method === 'POST') {
   if (($_GET['m'] ?? '') === 'crm') {   // U2: CRM actions inside the shell. Permission checked here; role rules, validation, stale-edit checks and audit stay in crm_handle_action()
     if (!adm_can((string)$user['role'], 'crm')) { adm_audit($pdo, $user, 'admin_center_denied', 'crm action'); http_response_code(403); exit('Not allowed.'); }
     header('Location: ' . sec_safe_local_path(admc_post($pdo, $user, $_POST), '/admin-center.php?m=crm'), true, 303); exit;
+  }
+  if (($_GET['m'] ?? '') === 'editorial') {   // U4: tool profile verification; reviewer = signed-in account, role rules and independence in admed_run()
+    if (!adm_can((string)$user['role'], 'universe')) { adm_audit($pdo, $user, 'admin_center_denied', 'editorial action'); http_response_code(403); exit('Not allowed.'); }
+    $r = admed_run($user, 'POST', [], $_POST, null, fn(string $a, string $sum) => adm_audit($pdo, $user, $a, $sum));
+    header('Location: ' . sec_safe_local_path($r['redirect'] ?? admed_url(), '/admin-center.php?m=editorial'), true, 303); exit;
   }
   if (($_GET['m'] ?? '') === 'universe') {   // U3: editorial workflow inside the shell. Maker-checker, independent verification and owner read-only are enforced in admu_run() / uv_handle_post() exactly as on /universe-editor.php
     if (!adm_can((string)$user['role'], 'universe')) { adm_audit($pdo, $user, 'admin_center_denied', 'universe action'); http_response_code(403); exit('Not allowed.'); }
@@ -72,6 +78,7 @@ crm_session_start();
 if (empty($_SESSION['adm_view_at']) || time() - (int)$_SESSION['adm_view_at'] > 1800) { $_SESSION['adm_view_at'] = time(); adm_audit($pdo, $user, 'admin_center_view', 'overview opened'); }   // one audit row per 30 minutes, not per page load
 if ($m === 'dashboard') adm_page($user, 'dashboard', 'Overview', adm_dashboard_body($pdo, $user));
 elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', adma_body($pdo, $_GET));
+elseif ($m === 'editorial') { $r = admed_run($user, 'GET', $_GET, []); adm_page($user, 'editorial', 'Tool profile verification', $r['body'], (int)$r['status']); }
 elseif ($m === 'universe') { $r = admu_run($pdo, $user, 'GET', $_GET, []); adm_page($user, 'universe', 'AI Universe review', admu_compose($r['body']), (int)$r['status']); }
 elseif ($m === 'crm') adm_page($user, 'crm', 'CRM and leads', admc_body($pdo, $user, $_GET));
 elseif ($m === 'account') adm_page($user, 'account', 'Account and password', adm_account_body($user, $_GET));

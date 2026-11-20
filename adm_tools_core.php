@@ -14,7 +14,7 @@ const ADMT_PER_PAGE = 25;
 
 /** Which Control Center permission each action needs. create/edit/unpublish = 'tools' (owner, editor); publish/delete/restore = 'tools_publish' (owner). */
 function admt_action_perm(string $act): ?string {
-  static $ops = ['category_add', 'category_rename', 'category_delete', 'tag_rename', 'bulk_review', 'bulk_apply', 'submission_approve', 'submission_reject', 'submission_needs_info', 'feature_add', 'feature_cancel'];   // M4-M6: owner only
+  static $ops = ['category_add', 'category_rename', 'category_delete', 'tag_rename', 'bulk_review', 'bulk_apply', 'submission_approve', 'submission_reject', 'submission_needs_info', 'submission_record_payment', 'feature_add', 'feature_cancel'];   // M4-M6 and U4: owner only
   if (in_array($act, $ops, true)) return 'tools_publish';
   return ['create' => 'tools', 'edit' => 'tools', 'unpublish' => 'tools', 'publish' => 'tools_publish', 'delete' => 'tools_publish', 'restore' => 'tools_publish'][$act] ?? null;
 }
@@ -27,7 +27,7 @@ function admt_transition(string $act, string $from): ?string {
 function admt_messages(): array {
   return ['created' => 'Tool created as a draft.', 'edited' => 'Changes saved.', 'published' => 'Tool published.', 'unpublished' => 'Tool unpublished.', 'deleted' => 'Tool moved to the trash.', 'restored' => 'Tool restored. It is not published; review it and publish when ready.',
     'category_added' => 'Category added.', 'category_renamed' => 'Category renamed everywhere it is used.', 'category_deleted' => 'Empty category deleted.', 'tag_renamed' => 'Tag renamed on every active tool that used it.', 'bulk' => 'Bulk change applied.',
-    'sub_approved' => 'Submission approved. A DRAFT tool was created from it; the owner publishes it after review.', 'sub_rejected' => 'Submission rejected and the reason saved.', 'sub_info' => 'Marked as needing more information; it stays pending.', 'featured' => 'Featured placement added.', 'unfeatured' => 'Featured placement cancelled.'];
+    'sub_approved' => 'Submission approved. A DRAFT tool was created from it; the owner publishes it after review.', 'sub_rejected' => 'Submission rejected and the reason saved.', 'sub_info' => 'Marked as needing more information; it stays pending.', 'featured' => 'Featured placement added.', 'unfeatured' => 'Featured placement cancelled.', 'sub_paid' => 'Payment recorded as received (entered manually by the owner; not verified against a bank).'];
 }
 
 // ---- text helpers -------------------------------------------------------------------------------------------------------------------
@@ -132,6 +132,8 @@ interface AdmToolStore {
   /** Newest first; each row: id, name, category, website, short_desc, plan, price, currency, status, payment_status, created_at, decision, review_note, reviewed_by, reviewed_at, tool_slug. */
   public function submissions(): array;
   public function submission(int $id): ?array;
+  /** U4: the owner records that payment was RECEIVED (manual confirmation, not bank verification). Only a pending submission with a price and payment_status 'unpaid'. Errors: missing, decided, not_required, already_paid. */
+  public function recordPayment(int $id): array;
   /** decision approved|rejected|needs_info. $tool is the DRAFT to create on approval (null otherwise). Refuses a submission that is no longer pending. */
   public function decideSubmission(int $id, string $decision, ?array $tool, string $actor, string $note): array;
   /** Placement rows, newest first: id, tool_slug, level, starts_on, ends_on, source, status, note, created_by, created_at. */
@@ -186,6 +188,11 @@ final class AdmToolMemoryStore implements AdmToolStore {
   public function deleteCategory(string $name): array { if (!in_array($name, $this->cats, true)) return ['ok' => false, 'error' => 'missing']; if (($this->categoryCounts()[$name] ?? 0) > 0) return ['ok' => false, 'error' => 'in_use']; $this->cats = array_values(array_diff($this->cats, [$name])); return ['ok' => true]; }
   public function submissions(): array { return array_reverse(array_values($this->subs)); }
   public function submission(int $id): ?array { return $this->subs[$id] ?? null; }
+  public function recordPayment(int $id): array {
+    $s = $this->subs[$id] ?? null; if ($s === null) return ['ok' => false, 'error' => 'missing']; if ($s['status'] !== 'pending') return ['ok' => false, 'error' => 'decided'];
+    if ((int)$s['price'] <= 0) return ['ok' => false, 'error' => 'not_required']; if ($s['payment_status'] === 'paid') return ['ok' => false, 'error' => 'already_paid'];
+    $this->subs[$id]['payment_status'] = 'paid'; return ['ok' => true];
+  }
   public function decideSubmission(int $id, string $decision, ?array $tool, string $actor, string $note): array {
     $s = $this->subs[$id] ?? null; if ($s === null) return ['ok' => false, 'error' => 'missing']; if ($s['status'] !== 'pending') return ['ok' => false, 'error' => 'decided'];
     if ($tool !== null) { $r = $this->create($tool, $actor, 'From submission #' . $id); if (!$r['ok']) return $r; $this->subs[$id]['tool_slug'] = $tool['slug']; }
@@ -295,6 +302,15 @@ final class AdmToolPdoStore implements AdmToolStore {
   private const SUBSEL = 'SELECT s.id, s.name, s.category, s.website, s.short_desc, s.plan, s.price, s.currency, s.status, s.payment_status, s.created_at, COALESCE(r.decision, \'\') AS decision, COALESCE(r.note, \'\') AS review_note, COALESCE(r.reviewed_by, \'\') AS reviewed_by, COALESCE(r.reviewed_at, \'\') AS reviewed_at, COALESCE(r.tool_slug, \'\') AS tool_slug FROM submissions s LEFT JOIN adm_submission_review r ON r.submission_id = s.id';
   public function submissions(): array { return $this->pdo->query(self::SUBSEL . ' ORDER BY s.id DESC LIMIT 500')->fetchAll(PDO::FETCH_ASSOC); }
   public function submission(int $id): ?array { $q = $this->pdo->prepare(self::SUBSEL . ' WHERE s.id = ?'); $q->execute([$id]); $r = $q->fetch(PDO::FETCH_ASSOC); return $r ?: null; }
+  public function recordPayment(int $id): array {
+    return $this->tx(function () use ($id) {
+      $q = $this->pdo->prepare('SELECT status, price, payment_status FROM submissions WHERE id = ? FOR UPDATE'); $q->execute([$id]); $r = $q->fetch(PDO::FETCH_ASSOC);
+      if (!$r) return ['ok' => false, 'error' => 'missing']; if ($r['status'] !== 'pending') return ['ok' => false, 'error' => 'decided'];
+      if ((int)$r['price'] <= 0) return ['ok' => false, 'error' => 'not_required']; if ($r['payment_status'] === 'paid') return ['ok' => false, 'error' => 'already_paid'];
+      $this->pdo->prepare("UPDATE submissions SET payment_status = 'paid' WHERE id = ? AND payment_status = 'unpaid'")->execute([$id]);
+      return ['ok' => true];
+    });
+  }
   public function decideSubmission(int $id, string $decision, ?array $tool, string $actor, string $note): array {
     return $this->tx(function () use ($id, $decision, $tool, $actor, $note) {
       $q = $this->pdo->prepare('SELECT status FROM submissions WHERE id = ? FOR UPDATE'); $q->execute([$id]); $st = $q->fetchColumn(); if ($st === false) return ['ok' => false, 'error' => 'missing']; if ($st !== 'pending') return ['ok' => false, 'error' => 'decided'];
