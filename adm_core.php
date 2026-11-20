@@ -6,17 +6,18 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  * the primary reporting currency is EUR (other currencies are never converted or summed with it). Later phases add modules to adm_modules().
  */
 require_once __DIR__ . '/crm_dashboard.php';
+require_once __DIR__ . '/adm_nav.php';
 
 const ADM_REPORT_CURRENCY = 'EUR';
 
 /** Control Center permissions per CRM role. Deliberately separate from crm_roles() (Phase 6/7 tests assert that list). Unknown roles get nothing. */
 function adm_role_perms(): array {
   return [
-    'owner'    => ['center', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'tools_publish', 'finance', 'advertising', 'operations', 'performance'],
-    'sales'    => ['center', 'crm', 'advertising'],
-    'viewer'   => ['center', 'crm'],
-    'editor'   => ['center', 'universe', 'tools'],
-    'verifier' => ['center', 'universe'],
+    'owner'    => ['center', 'account', 'crm', 'universe', 'legacy', 'analytics', 'tools', 'tools_publish', 'finance', 'advertising', 'operations', 'performance'],
+    'sales'    => ['center', 'account', 'crm', 'advertising'],
+    'viewer'   => ['center', 'account', 'crm'],
+    'editor'   => ['center', 'account', 'universe', 'tools'],
+    'verifier' => ['center', 'account', 'universe'],
   ];
 }
 function adm_can(?string $role, string $perm): bool { return $role !== null && in_array($perm, adm_role_perms()[$role] ?? [], true); }
@@ -24,6 +25,7 @@ function adm_can(?string $role, string $perm): bool { return $role !== null && i
 /** Module registry: existing tools are linked, later phases are listed as planned (no data, no fake pages). */
 function adm_modules(): array {
   return [
+    'account'     => ['label' => 'Account and password', 'href' => '/admin-center.php?m=account', 'live' => true, 'internal' => true, 'perm' => 'account', 'group' => 'Account', 'note' => 'Who you are signed in as, your modules, and your password.'],
     'dashboard'   => ['label' => 'Overview', 'href' => '/admin-center.php', 'perm' => 'center', 'live' => true, 'group' => 'Control Center'],
     'crm'         => ['label' => 'CRM and leads', 'href' => '/crm.php', 'perm' => 'crm', 'live' => true, 'group' => 'Business', 'note' => 'Leads, pipeline, proposals, contracts, campaigns, partners.'],
     'universe'    => ['label' => 'AI Universe review', 'href' => '/universe-editor.php', 'perm' => 'universe', 'live' => true, 'group' => 'Business', 'note' => 'Propose, adopt and independently verify AI Universe records.'],
@@ -102,52 +104,55 @@ function adm_css(): string {
   return ':root{--bg:#f4f6fa;--surface:#fff;--ink:#14213d;--muted:#5b6472;--line:#d9dee7;--brand:#0b5fff;--brandInk:#fff;--ok:#0a7a3d;--na:#6b4b00;--navBg:#10203f;--navInk:#e8eefc}'
     . '@media (prefers-color-scheme:dark){:root{--bg:#0c1220;--surface:#151d2e;--ink:#e8eefc;--muted:#a9b4c7;--line:#2a3550;--brand:#5b9bff;--brandInk:#06142e;--ok:#5fd493;--na:#f0c36b;--navBg:#0a1020;--navInk:#e8eefc}}'
     . '*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}'
-    . '.skip{position:absolute;left:-999px;top:0;background:var(--brand);color:var(--brandInk);padding:.6rem 1rem;z-index:10}.skip:focus{left:8px;top:8px}'
-    . 'a{color:var(--brand)}a:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}'
-    . '.admTop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:var(--navBg);color:var(--navInk)}'
-    . '.admBrand{font-weight:700;letter-spacing:.2px}.admWho{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.95rem}.admWho form{margin:0}'
-    . '.admBtn{min-height:44px;min-width:44px;padding:.5rem .9rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}'
-    . '.admLayout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 64px)}'
-    . '.admSide{background:var(--navBg);color:var(--navInk);padding:12px}.admSide h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;margin:14px 8px 4px;opacity:.8}'
-    . '.admSide ul{list-style:none;margin:0;padding:0}.admSide a,.admSide .soon{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:.5rem .75rem;border-radius:8px;color:var(--navInk);text-decoration:none}'
-    . '.admSide a:hover{background:rgba(255,255,255,.1)}.admSide a[aria-current=page]{background:var(--brand);color:var(--brandInk);font-weight:600}.admSide .soon{opacity:.75}'
+    . '.skip{position:absolute;left:-999px;top:0;background:var(--brand);color:var(--brandInk);padding:.6rem 1rem;z-index:60}.skip:focus{left:8px;top:8px}'
+    . 'a{color:var(--brand)}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px}'
+    . '.admEnv{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;justify-content:center;padding:6px 12px;font-size:.88rem;text-align:center}.admEnv strong{letter-spacing:.08em}'
+    . '.admEnv-staging{background:#fde68a;color:#451a03;border-bottom:3px solid #d97706}.admEnv-production{background:#b91c1c;color:#fff;border-bottom:3px solid #7f1d1d}.admEnv-unset,.admEnv-development,.admEnv-local{background:#e5e7eb;color:#1f2937;border-bottom:3px solid #6b7280}'
+    . '.admTop{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;padding:8px 16px;background:var(--navBg);color:var(--navInk)}'
+    . '.admBrandWrap{display:flex;align-items:center;gap:12px}.admBrand{font-weight:700;letter-spacing:.2px}a.admBrand{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:none}.admWho{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.95rem}.admWho form{margin:0}'
+    . '.admId{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 .75rem;border:1px solid rgba(255,255,255,.28);border-radius:999px;color:var(--navInk);text-decoration:none}.admId .role{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border:1px solid currentColor;border-radius:999px;padding:0 .45rem}'
+    . '.admBtn{min-height:44px;min-width:44px;padding:.5rem .9rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}.admMenuBtn{display:none}'
+    . '.admLayout{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:calc(100vh - 64px)}'
+    . '.admSide{background:var(--navBg);color:var(--navInk);padding:12px;overflow:auto}.admSideHead{display:none}.admScrim{display:none}'
+    . '.admGroup{margin:0 0 6px}.admGroup>summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:.35rem .6rem;cursor:pointer;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;opacity:.85;list-style:none;border-radius:8px}.admGroup>summary::-webkit-details-marker{display:none}'
+    . '.admGroup>summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-right:4px;transition:transform .15s}.admGroup[open]>summary::after{transform:rotate(-135deg)}.admGroup>summary:hover{background:rgba(255,255,255,.08)}'
+    . '.admSide ul{list-style:none;margin:0;padding:0}.admSide a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:.5rem .75rem;border-radius:8px;color:var(--navInk);text-decoration:none}.admSide a:hover{background:rgba(255,255,255,.1)}'
+    . '.admItem.is-active>a{background:rgba(91,155,255,.22);font-weight:600}.admSide a[aria-current=page]{background:var(--brand);color:var(--brandInk);font-weight:600}.admSub{margin:2px 0 8px 14px!important;padding-left:10px!important;border-left:2px solid rgba(255,255,255,.2)}.admSub a{min-height:44px;font-size:.93rem}'
     . '.badge{font-size:.72rem;border:1px solid currentColor;border-radius:999px;padding:0 .5rem;white-space:nowrap}'
-    . '.admMain{padding:20px;max-width:1200px;width:100%}.admMain h1{margin:.2rem 0 .3rem;font-size:1.6rem}.lead{color:var(--muted);margin:0 0 1rem}'
+    . '.admCrumbs{margin:0 0 6px}.admCrumbs ol{display:flex;flex-wrap:wrap;gap:2px 0;list-style:none;margin:0;padding:0;font-size:.88rem;color:var(--muted)}.admCrumbs li+li::before{content:"/";margin:0 .5rem;opacity:.6}.admCrumbs a{display:inline-flex;align-items:center;min-height:44px;color:var(--brand)}.admCrumbs [aria-current]{color:var(--ink);font-weight:600}'
+    . '.admMain{padding:20px;max-width:1200px;width:100%;min-width:0}.admMain h1{margin:.2rem 0 .3rem;font-size:1.6rem}.lead{color:var(--muted);margin:0 0 1rem}'
     . '.admGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:8px 0 22px;padding:0;list-style:none}'
     . '.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}.tile h3{margin:0 0 .3rem;font-size:.9rem;color:var(--muted);font-weight:600}'
     . '.tile .val{font-size:1.7rem;font-weight:700;line-height:1.2}.tile .nv{font-size:1.05rem;font-weight:600;color:var(--na)}.tile p{margin:.4rem 0 0;font-size:.85rem;color:var(--muted)}'
     . '.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:18px}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line)}'
     . '.scroll{overflow-x:auto}.sec h2{font-size:1.15rem;margin:1.2rem 0 .2rem}'
-    . 'th a,.admLink{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 .25rem}.admMain{min-width:0}.admMain input[type=date]{max-width:100%}'
-    . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admSide{padding:8px}.admSide ul{display:flex;flex-wrap:wrap;gap:4px}.admSide h2{display:none}.admMain{padding:14px}}'
+    . 'th a,.admLink{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 .25rem}.admMain input[type=date]{max-width:100%}'
+    . '.admAuth{max-width:440px;margin:6vh auto;padding:0 16px}.admAuth .panel{padding:22px}.admAuth h1{margin-top:0}.admAuth label{display:block;font-weight:600;margin:.9rem 0 .25rem}.admAuth input{width:100%;min-height:44px;padding:.5rem .65rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}.admAuth .admBtn{margin-top:1rem;background:var(--brand);color:var(--brandInk);border-color:transparent;font-weight:600;width:100%}.admErr,.admAuth .err{color:#b42318;font-weight:600}.admOk{border-left:6px solid var(--ok)}.panel.admErr{border-left:6px solid #b42318}'
+    . '@media (prefers-color-scheme:dark){.admErr,.admAuth .err{color:#ff8a80}.panel.admErr{border-left-color:#ff8a80}}'
     . (function_exists('admt_css') ? admt_css() : '')
     . (function_exists('admf_css') ? admf_css() : '')
+    . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admMain{padding:14px}.admSide{padding:8px}'
+    . '.js .admMenuBtn{display:inline-flex;align-items:center;gap:6px}.js .admSide{position:fixed;inset:0 auto 0 0;width:min(88vw,320px);z-index:50;transform:translateX(-104%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s;box-shadow:0 0 40px rgba(0,0,0,.5);padding-top:8px}'
+    . '.js .admNavOpen .admSide{transform:none;visibility:visible;transition:transform .2s ease}.js .admSideHead{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 8px;font-weight:700}.js .admScrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:45;opacity:0;pointer-events:none;transition:opacity .2s}.js .admNavOpen .admScrim{opacity:1;pointer-events:auto}.js .admNavOpen{overflow:hidden}}'
     . '@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}';
 }
 
-/** Full page shell: skip link, top bar (user, role, sign-out), sidebar of the modules this role may use, main content. */
+/** Full page shell: environment banner, skip link, top bar (menu, identity, sign-out), grouped collapsible sidebar, breadcrumbs, main content. */
 function adm_page(array $user, string $current, string $title, string $body, int $status = 200): void {
   if (function_exists('sec_send_headers')) sec_send_headers();
   header('Cache-Control: no-store'); header('X-Robots-Tag: noindex, nofollow'); header('Content-Type: text/html; charset=UTF-8');
   http_response_code($status);
-  $role = (string)($user['role'] ?? ''); $groups = [];
-  foreach (adm_modules() as $id => $m) if (adm_can($role, $m['perm'])) $groups[$m['group']][$id] = $m;
-  $nav = '';
-  foreach ($groups as $g => $items) {
-    $nav .= '<h2>' . adm_h($g) . '</h2><ul>';
-    foreach ($items as $id => $m) {
-      if (!empty($m['live'])) $nav .= '<li><a href="' . adm_h($m['href']) . '"' . ($id === $current ? ' aria-current="page"' : '') . '>' . adm_h($m['label']) . '</a></li>';
-      else $nav .= '<li><a href="/admin-center.php?m=' . adm_h($id) . '"' . ($id === $current ? ' aria-current="page"' : '') . '>' . adm_h($m['label']) . ' <span class="badge">Phase ' . adm_h($m['phase']) . '</span></a></li>';
-    }
-    $nav .= '</ul>';
-  }
+  $role = (string)($user['role'] ?? ''); $get = is_array($_GET ?? null) ? $_GET : [];
+  $nav = adm_nav_html(adm_nav_tree($role, $current, $get)); $who = adm_h($user['display_name'] ?? $user['username'] ?? '');
   echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta name="color-scheme" content="light dark">'
-    . '<title>' . adm_h($title) . ' | AIHubpedia Control Center</title><style>' . adm_css() . '</style></head><body>'
-    . '<a class="skip" href="#main">Skip to content</a>'
-    . '<header class="admTop"><span class="admBrand">AIHubpedia Control Center</span><div class="admWho"><span>' . adm_h($user['display_name'] ?? $user['username'] ?? '') . ' (' . adm_h($role) . ')</span>'
+    . '<title>' . adm_h($title) . ' | AIHubpedia Control Center</title><style>' . adm_css() . '</style><script>document.documentElement.classList.add("js")</script><script src="/assets/js/admin-shell.js" defer></script></head><body>'
+    . '<a class="skip" href="#main">Skip to content</a>' . adm_env_html()
+    . '<header class="admTop"><div class="admBrandWrap"><button class="admBtn admMenuBtn" id="admMenuBtn" type="button" aria-controls="admNav" aria-expanded="false">Menu</button><a class="admBrand" href="/admin-center.php">AIHubpedia Control Center</a></div>'
+    . '<div class="admWho"><a class="admId" href="/admin-center.php?m=account" title="Account and password"><span>' . $who . '</span><span class="role">' . adm_h($role) . '</span></a>'
     . '<form method="post" action="/admin-center.php">' . crm_csrf_field() . '<input type="hidden" name="act" value="logout"><button class="admBtn" type="submit">Sign out</button></form></div></header>'
-    . '<div class="admLayout"><nav class="admSide" aria-label="Control Center sections">' . $nav . '</nav>'
-    . '<main id="main" class="admMain" tabindex="-1">' . $body . '</main></div></body></html>';
+    . '<div class="admScrim" id="admScrim" aria-hidden="true"></div>'
+    . '<div class="admLayout"><nav class="admSide" id="admNav" aria-label="Control Center sections"><div class="admSideHead"><span>Menu</span><button class="admBtn" type="button" id="admMenuClose">Close</button></div>' . $nav . '</nav>'
+    . '<main id="main" class="admMain" tabindex="-1">' . adm_crumbs_html(adm_breadcrumbs($current, $get, $role)) . $body . '</main></div></body></html>';
 }
 
 function adm_tiles_html(array $tiles): string {

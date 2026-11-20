@@ -7,12 +7,19 @@ require_once __DIR__ . '/adm_core.php';
 require_once __DIR__ . '/adm_analytics.php';
 require_once __DIR__ . '/adm_tools_views.php';
 require_once __DIR__ . '/adm_finance_views.php';
-$user = crm_gate();                  // renders the sign-in form / disabled notice and exits when there is no signed-in user
+require_once __DIR__ . '/adm_auth.php';
+require_once __DIR__ . '/adm_account.php';
+$user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
 $pdo = crm_pdo();
 $method = (string)($_SERVER['REQUEST_METHOD'] ?? 'GET');
 if ($method === 'POST') {
   if (!crm_csrf_ok()) { sec_log('admin_center_csrf_rejected'); http_response_code(403); exit('Security check failed.'); }
   if (($_POST['act'] ?? '') === 'logout') { adm_audit($pdo, $user, 'admin_center_logout', 'signed out'); crm_logout(); header('Location: /admin-center.php', true, 303); exit; }
+  if (strpos((string)($_POST['act'] ?? ''), 'account_') === 0) {   // the signed-in person's OWN password only: account comes from the session, never from the request
+    $res = adm_account_change_password(new AdmAccountPdoStore($pdo), $user, $_POST, fn(string $a, string $sum) => adm_audit($pdo, $user, $a, $sum), fn(string $b) => sec_rate_limited($b, 5, 900));
+    if ($res['ok']) { crm_session_start(); session_regenerate_id(true); $_SESSION['crm_csrf'] = bin2hex(random_bytes(16)); header('Location: /admin-center.php?m=account&msg=pw_changed', true, 303); exit; }
+    adm_page($user, 'account', 'Account and password', adm_account_body($user, [], $res['errors'], (string)($res['errors']['_'] ?? '')), $res['code']); exit;
+  }
   if (strpos((string)($_POST['act'] ?? ''), 'tool_') === 0) {   // Phase 8C tool management: role check, validation, stale-edit check, revision and audit all happen in admt_apply()
     if (!AdmToolPdoStore::ready($pdo)) { adm_page($user, 'tools', 'AI tool management', admt_not_installed(), 503); exit; }
     $store = new AdmToolPdoStore($pdo);
@@ -52,6 +59,7 @@ crm_session_start();
 if (empty($_SESSION['adm_view_at']) || time() - (int)$_SESSION['adm_view_at'] > 1800) { $_SESSION['adm_view_at'] = time(); adm_audit($pdo, $user, 'admin_center_view', 'overview opened'); }   // one audit row per 30 minutes, not per page load
 if ($m === 'dashboard') adm_page($user, 'dashboard', 'Overview', adm_dashboard_body($pdo, $user));
 elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', adma_body($pdo, $_GET));
+elseif ($m === 'account') adm_page($user, 'account', 'Account and password', adm_account_body($user, $_GET));
 elseif ($m === 'finance') adm_page($user, 'finance', 'Finance', admf_body(new AdmFinancePdoStore($pdo), $user, $_GET));
 elseif ($m === 'tools') adm_page($user, 'tools', 'AI tool management', AdmToolPdoStore::ready($pdo) ? admt_body(new AdmToolPdoStore($pdo), $user, $_GET) : admt_not_installed());
 else adm_page($user, $m, $mod['label'], adm_planned_body($m, $mod));
