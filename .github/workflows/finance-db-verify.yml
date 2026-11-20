@@ -1,0 +1,48 @@
+name: Finance database verification (manual, disposable MySQL)
+
+# NOT part of routine CI. Runs the Phase 8D database and HTTP verification against disposable MySQL service containers (8.0 and 8.4).
+# Triggers: manual dispatch, or a push to the Finance branch that edits this file. It never deploys and touches no real data.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/aihubpedia-finance-phase8d]
+    paths: ['.github/workflows/finance-db-verify.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify (MySQL ${{ matrix.mysql }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ROOT_PASSWORD: root_test_only
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot_test_only"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      AIHUB_DB_HOST: 127.0.0.1
+      P7_USER: root
+      P7_PASS: root_test_only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, dom, curl
+          coverage: none
+      - name: Server version
+        run: mysql -h127.0.0.1 -uroot -proot_test_only -e "SELECT VERSION()"
+      - name: Finance migration, rollback, store, CRM reuse, grants and scale (disposable database)
+        run: php tests/phase8d_finance_db_test.php
+      - name: Finance HTTP checks (owner-only, CSRF, audit, exports) on a disposable database
+        run: php tests/phase8d_finance_http_test.php
