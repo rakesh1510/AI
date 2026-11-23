@@ -93,6 +93,9 @@ function adm_health(PDO $pdo): array {
   $h[] = ['Database', adm_safe(fn() => (bool)$pdo->query('SELECT 1')->fetchColumn(), false) ? 'Reachable' : 'Not reachable', true];
   $h[] = ['CRM schema', function_exists('crm_tables_ready') && adm_safe(fn() => crm_tables_ready(), false) ? 'Installed' : 'Missing', true];
   $h[] = ['AI Universe schema', adm_safe(fn() => $pdo->query('SELECT 1 FROM uni_entity LIMIT 1') !== false, false) ? 'Installed' : 'Not installed', null];
+  $e = function_exists('adm_env') ? adm_env() : null; $h[] = ['Environment label (AIHUB_ENV_LABEL)', $e ? ($e['key'] === 'unset' ? 'NOT SET: banner shows "ENVIRONMENT NOT SET"' : $e['label']) : 'unknown', $e && $e['key'] !== 'unset' ? true : null];
+  $cf = getenv('AIHUB_CONFIG_FILE') ?: __DIR__ . '/config.local.php'; $h[] = ['Private config file (read by this web worker)', is_file($cf) ? (is_readable($cf) ? 'Found and readable' : 'Found but NOT readable by the web server user') : 'Not found', is_file($cf) && is_readable($cf) ? true : false];
+  $h[] = ['Web worker user', function_exists('posix_getpwuid') ? (posix_getpwuid(posix_geteuid())['name'] ?? 'unknown') : 'unknown', null];
   $an = function_exists('analytics_enabled') ? analytics_enabled() : false;
   $h[] = ['Visitor tracking (AIHUB_ANALYTICS)', $an ? 'Enabled on this server' : 'Not enabled on this server', null];
   if ($an) $h[] = ['Visitor hash salt (AIHUB_ANALYTICS_SALT)', function_exists('analytics_salt_ok') && analytics_salt_ok() ? 'Set (strong)' : 'WARNING: missing or shorter than 32 characters - no visitor hashes are recorded', null];
@@ -135,6 +138,7 @@ function adm_css(): string {
     . (function_exists('admf_css') ? admf_css() : '')
     . (function_exists('admc_css') ? admc_css() : '')
     . (function_exists('admu_css') ? admu_css() : '')
+    . (function_exists('anz_css') ? anz_css() : '')
     . '@media (max-width:900px){.admLayout{grid-template-columns:minmax(0,1fr)}.admMain{padding:14px}.admSide{padding:8px}'
     . '.js .admMenuBtn{display:inline-flex;align-items:center;gap:6px}.js .admSide{position:fixed;inset:0 auto 0 0;width:min(88vw,320px);z-index:50;transform:translateX(-104%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s;box-shadow:0 0 40px rgba(0,0,0,.5);padding-top:8px}'
     . '.js .admNavOpen .admSide{transform:none;visibility:visible;transition:transform .2s ease}.js .admSideHead{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 8px;font-weight:700}.js .admScrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:45;opacity:0;pointer-events:none;transition:opacity .2s}.js .admNavOpen .admScrim{opacity:1;pointer-events:auto}.js .admNavOpen{overflow:hidden}}'

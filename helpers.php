@@ -318,6 +318,19 @@ function interaction_tables_exist(){
   } catch(Throwable $e){ return $checked = false; }
 }
 
+/**
+ * True when outbound clicks can be written to `tool_clicks` (database reachable and the table has the visitor_id and ip_hash columns). Independent of tool_votes: counting a click needs nothing from
+ * the voting table, and a missing tool_votes must not silently stop click recording (it did on staging).
+ */
+function tool_clicks_writable(): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try {
+    if (!(db_connection_available() && function_exists('db') && db_table_exists('tool_clicks'))) return $ok = false;
+    $pdo = db(); foreach (['visitor_id', 'ip_hash', 'tool_slug'] as $c) if (!db_column_exists($pdo, 'tool_clicks', $c)) return $ok = false;
+    return $ok = true;
+  } catch (Throwable $e) { return $ok = false; }
+}
+
 /** True when writes to the interaction tables can succeed (database configured, reachable and in the current shape). */
 function interactions_writable(): bool {
   try { return db_connection_available() && function_exists('db') && interaction_tables_exist(); } catch(Throwable $e){ return false; }
@@ -469,22 +482,23 @@ function tool_url($t){
 // ----------------------
 // Click tracking + trending
 // ----------------------
-function record_click(string $toolId): int
+function record_click(string $toolId, ?PDO $pdo = null): int
 {
+    // Analytics privacy (decision D4, option B): an outbound click stores NO visitor identifier and NO IP hash, and sets NO cookie.
+    // visitor_id and ip_hash are written as empty strings only because the current table shape requires the columns to exist.
+    // Abuse prevention does not need them: it uses short-lived rate-limit counters in outbound_click.php (never stored with the click).
     $toolId = trim($toolId);
     if ($toolId === '') {
         return 0;
     }
 
-    $pdo = db();
-    $visitor = get_visitor_id();
-    $ipHash = get_ip_hash();
+    $pdo = $pdo ?? db();
 
     $stmt = $pdo->prepare("
         INSERT INTO tool_clicks (tool_slug, visitor_id, ip_hash, created_at)
-        VALUES (?, ?, ?, NOW())
+        VALUES (?, '', '', CURRENT_TIMESTAMP)
     ");
-    $stmt->execute([$toolId, $visitor, $ipHash]);
+    $stmt->execute([$toolId]);
 
     $count = $pdo->prepare("
         SELECT COUNT(*) FROM tool_clicks WHERE tool_slug = ?
@@ -499,10 +513,29 @@ function record_click(string $toolId): int
  * Click counts for every tool, loaded with ONE grouped query per request.
  * Replaces the per-tool COUNT(*) that caused thousands of queries on listing pages.
  */
+/**
+ * True when click TOTALS can be read from `tool_clicks` (database reachable, table present, tool_slug column present). Deliberately independent of tool_votes and of the identifier columns:
+ * reading a count needs nothing from the voting table. (Staging showed stale counts because all_click_counts() required BOTH tables and silently fell back to the old clicks.json.)
+ */
+function tool_clicks_readable(): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try {
+    if (!(db_connection_available() && function_exists('db') && db_table_exists('tool_clicks'))) return $ok = false;
+    return $ok = db_column_exists(db(), 'tool_clicks', 'tool_slug');
+  } catch (Throwable $e) { return $ok = false; }
+}
+
+/** 'database' when totals come from tool_clicks, 'json' when the old file is used (no usable table). Diagnostics only. */
+function click_counts_source(): string { return tool_clicks_readable() ? 'database' : 'json'; }
+
+/**
+ * Click counts for every tool (the public lifetime totals shown as "clicks" on tool pages and cards), loaded with ONE grouped query per request.
+ * Source: tool_clicks when it is readable; otherwise the legacy clicks.json. Never touches tool_votes.
+ */
 function all_click_counts(): array {
   global $AIHUB_CLICK_COUNTS;
   if(is_array($AIHUB_CLICK_COUNTS)) return $AIHUB_CLICK_COUNTS;
-  if(interaction_tables_exist()){
+  if(tool_clicks_readable()){
     try {
       $map = [];
       foreach(db()->query("SELECT tool_slug, COUNT(*) AS total FROM tool_clicks GROUP BY tool_slug")->fetchAll(PDO::FETCH_ASSOC) as $row){

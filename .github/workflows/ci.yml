@@ -67,6 +67,11 @@ jobs:
           php tests/unified_admin_u4_test.php
           php tests/unified_admin_u5_test.php
           php tests/unified_admin_u6_test.php
+          php tests/analytics_a1_test.php
+          php tests/analytics_a2_a5_test.php
+          php tests/analytics_privacy_test.php
+          php tests/analytics_installer_static_test.php
+          php tests/analytics_config_test.php
 
       - name: Phase 8C screens on synthetic data (axe, overflow, 44px targets; desktop, tablet, mobile, light and dark; no database)
         run: |
@@ -85,6 +90,14 @@ jobs:
         run: |
           php tests/adm_shell_preview.php /tmp/u1_preview
           NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_unified_shell_test.js /tmp/u1_preview
+
+      - name: Analytics dashboard on synthetic data (axe, overflow, 44px targets, light and dark; no database, no tracking)
+        run: |
+          php tests/adm_analytics_preview.php /tmp/an_preview
+          NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_unified_shell_test.js /tmp/an_preview
+
+      - name: Public click counter in the browser (server-confirmed numbers only; no database)
+        run: NODE_PATH=/tmp/pw/node_modules node tests/browser_click_counter_test.js
 
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php

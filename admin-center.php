@@ -12,6 +12,8 @@ require_once __DIR__ . '/adm_universe.php';
 require_once __DIR__ . '/adm_editorial.php';
 require_once __DIR__ . '/adm_access.php';
 require_once __DIR__ . '/adm_advertising.php';
+require_once __DIR__ . '/adm_an2_store.php';
+require_once __DIR__ . '/adm_an2_views.php';
 require_once __DIR__ . '/adm_auth.php';
 require_once __DIR__ . '/adm_account.php';
 $user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
@@ -65,7 +67,9 @@ if (!adm_can((string)$user['role'], $mod['perm'])) {
 }
 if (!empty($mod['live']) && empty($mod['internal']) && $m !== 'dashboard') { header('Location: ' . sec_safe_local_path((string)$mod['href'], '/admin-center.php'), true, 302); exit; }   // existing tools open on their own pages
 if ($m === 'analytics' && isset($_GET['export'])) {   // read-only CSV download: owner only (checked above), every export is audited
-  $which = is_string($_GET['export']) ? $_GET['export'] : ''; $x = in_array($which, ['daily', 'pages', 'referrers', 'countries', 'tools', 'conversions'], true) && adma_storage_ready($pdo) ? adma_export($pdo, $which, adma_range($_GET)) : null;
+  $which = is_string($_GET['export']) ? $_GET['export'] : ''; $x = null;
+  if (isset(anz_export_names()[$which]) && adma_storage_ready($pdo)) { $as = new AdmAnPdoStore($pdo); $ast = $as->status(); $x = anz_export($as, $which, anz_range($_GET, gmdate('Y-m-d'), $ast['first_day'] ?? null), $_GET, anz_catalogue()); }   // A5 exports
+  elseif (in_array($which, ['daily', 'pages', 'referrers', 'countries', 'tools', 'conversions'], true) && adma_storage_ready($pdo)) $x = adma_export($pdo, $which, adma_range($_GET));
   if ($x === null) { adm_page($user, 'analytics', 'Export not available', '<h1>Export not available</h1><p>Unknown export, or the analytics storage is not installed.</p><p><a href="/admin-center.php?m=analytics">Back to Analytics</a></p>', 404); exit; }
   adm_audit($pdo, $user, 'admin_center_export', 'analytics ' . $which . ' ' . $x[0]);
   header('Content-Type: text/csv; charset=UTF-8'); header('Content-Disposition: attachment; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', $x[0]) . '"'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex, nofollow'); echo $x[1]; exit;
@@ -79,7 +83,7 @@ if ($m === 'finance' && isset($_GET['export'])) {   // owner only (checked above
 crm_session_start();
 if (empty($_SESSION['adm_view_at']) || time() - (int)$_SESSION['adm_view_at'] > 1800) { $_SESSION['adm_view_at'] = time(); adm_audit($pdo, $user, 'admin_center_view', 'overview opened'); }   // one audit row per 30 minutes, not per page load
 if ($m === 'dashboard') adm_page($user, 'dashboard', 'Overview', adm_dashboard_body($pdo, $user));
-elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', adma_body($pdo, $_GET));
+elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', anz_body(new AdmAnPdoStore($pdo), $_GET, anz_catalogue(), null, fn() => adma_body($pdo, $_GET)));
 elseif ($m === 'advertising') {   // U6: read-only hub over existing records (CRM campaigns, 8C placements, paid submissions); the tool-management views are owner only
   $camps = (array)adm_safe(fn() => crm_campaigns_list($pdo, '', 200), []); $toolsOk = adm_can((string)$user['role'], 'tools_publish') && AdmToolPdoStore::ready($pdo); $ts = $toolsOk ? new AdmToolPdoStore($pdo) : null;
   adm_page($user, 'advertising', 'Advertising', admv_body($user, $_GET, $camps, $ts ? $ts->placements() : null, $ts ? array_values(array_filter($ts->submissions(), fn($x) => (int)$x['price'] > 0)) : null));
