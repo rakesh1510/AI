@@ -28,6 +28,17 @@ final class AdmAnPdoStore implements AdmAnStore {
       return ['count' => (int)$q->fetchColumn(), 'last_view' => (string)$last];
     } catch (Throwable $e) { return null; }
   }
+  public function lifetimeClicks(): ?array {
+    try { if (!adma_table($this->pdo, 'tool_clicks')) return null; $o = []; foreach ($this->pdo->query('SELECT tool_slug, COUNT(*) AS total FROM tool_clicks GROUP BY tool_slug')->fetchAll(PDO::FETCH_NUM) as [$slug, $n]) $o[(string)$slug] = (int)$n; return $o; } catch (Throwable $e) { return null; }
+  }
+  public function unrolled(?string $sinceUtc): ?array {
+    try {
+      $o = ['page_views' => 0, 'outbound' => 0]; $any = false;
+      if (adma_table($this->pdo, 'page_views')) { $any = true; $q = $this->pdo->prepare("SELECT COUNT(*) FROM page_views WHERE is_bot = 0 AND status < 400" . ($sinceUtc !== null ? ' AND viewed_at > ?' : '')); $q->execute($sinceUtc !== null ? [$sinceUtc] : []); $o['page_views'] = (int)$q->fetchColumn(); }
+      if (adma_table($this->pdo, 'events')) { $any = true; $q = $this->pdo->prepare("SELECT COUNT(*) FROM events WHERE name = 'outbound_click' AND prop2 IN ('sponsored','organic')" . ($sinceUtc !== null ? ' AND occurred_at > ?' : '')); $q->execute($sinceUtc !== null ? [$sinceUtc] : []); $o['outbound'] = (int)$q->fetchColumn(); }
+      return $any ? $o : null;
+    } catch (Throwable $e) { return null; }
+  }
   public function legacyClicks(string $from, string $to): ?array {
     try {
       if (!adma_table($this->pdo, 'tool_clicks')) return null;

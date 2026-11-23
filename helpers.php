@@ -513,10 +513,29 @@ function record_click(string $toolId, ?PDO $pdo = null): int
  * Click counts for every tool, loaded with ONE grouped query per request.
  * Replaces the per-tool COUNT(*) that caused thousands of queries on listing pages.
  */
+/**
+ * True when click TOTALS can be read from `tool_clicks` (database reachable, table present, tool_slug column present). Deliberately independent of tool_votes and of the identifier columns:
+ * reading a count needs nothing from the voting table. (Staging showed stale counts because all_click_counts() required BOTH tables and silently fell back to the old clicks.json.)
+ */
+function tool_clicks_readable(): bool {
+  static $ok = null; if ($ok !== null) return $ok;
+  try {
+    if (!(db_connection_available() && function_exists('db') && db_table_exists('tool_clicks'))) return $ok = false;
+    return $ok = db_column_exists(db(), 'tool_clicks', 'tool_slug');
+  } catch (Throwable $e) { return $ok = false; }
+}
+
+/** 'database' when totals come from tool_clicks, 'json' when the old file is used (no usable table). Diagnostics only. */
+function click_counts_source(): string { return tool_clicks_readable() ? 'database' : 'json'; }
+
+/**
+ * Click counts for every tool (the public lifetime totals shown as "clicks" on tool pages and cards), loaded with ONE grouped query per request.
+ * Source: tool_clicks when it is readable; otherwise the legacy clicks.json. Never touches tool_votes.
+ */
 function all_click_counts(): array {
   global $AIHUB_CLICK_COUNTS;
   if(is_array($AIHUB_CLICK_COUNTS)) return $AIHUB_CLICK_COUNTS;
-  if(interaction_tables_exist()){
+  if(tool_clicks_readable()){
     try {
       $map = [];
       foreach(db()->query("SELECT tool_slug, COUNT(*) AS total FROM tool_clicks GROUP BY tool_slug")->fetchAll(PDO::FETCH_ASSOC) as $row){

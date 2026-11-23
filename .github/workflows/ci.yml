@@ -96,6 +96,9 @@ jobs:
           php tests/adm_analytics_preview.php /tmp/an_preview
           NODE_PATH=/tmp/pw/node_modules AXE_PATH=/tmp/pw/node_modules/axe-core/axe.min.js node tests/browser_unified_shell_test.js /tmp/an_preview
 
+      - name: Public click counter in the browser (server-confirmed numbers only; no database)
+        run: NODE_PATH=/tmp/pw/node_modules node tests/browser_click_counter_test.js
+
       - name: Localisation tests (registry, hreflang, canonical)
         run: php tests/i18n_test.php
 

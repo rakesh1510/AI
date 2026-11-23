@@ -28,6 +28,10 @@ interface AdmAnStore {
   public function placements(): ?array;
   /** Legacy lifetime click records (tool_clicks), per day and tool: day, tool_slug, records, probable_duplicates. null = the table is missing. NOT visitors, NOT page views. */
   public function legacyClicks(string $from, string $to): ?array;
+  /** Public lifetime totals per tool (all dates, every row of tool_clicks): slug => total. This is the number the public site shows next to the eye icon. null = table missing. */
+  public function lifetimeClicks(): ?array;
+  /** Activity recorded AFTER the last rollup finished (not yet in the date-filtered reports): ['page_views' => human views, 'outbound' => outbound click events]. null = raw tables unavailable. */
+  public function unrolled(?string $sinceUtc): ?array;
 }
 
 function anz_days_between(string $from, string $to): int { return (int)((strtotime($to . ' UTC') - strtotime($from . ' UTC')) / 86400) + 1; }
@@ -169,7 +173,7 @@ function anz_device_label(string $k): string { return ['mobile' => 'Mobile', 'ta
 /** In-memory store: the test double and the source for static previews (same semantics as the database store). */
 final class AdmAnMemoryStore implements AdmAnStore {
   /** @param array $traffic day => [views_human, visitors, sessions, views_no_id]; $toolDaily day => slug => [views, outbound, affiliate, sponsored]; $dims dim => day => key => [views, visitor_days] */
-  public function __construct(private array $status = [], private array $traffic = [], private array $toolDaily = [], private array $dims = [], private ?array $active = null, private ?array $placements = null, private ?array $legacy = null) {}
+  public function __construct(private array $status = [], private array $traffic = [], private array $toolDaily = [], private array $dims = [], private ?array $active = null, private ?array $placements = null, private ?array $legacy = null, private ?array $lifetime = null, private ?array $unrolled = null) {}
   public function status(): array { return $this->status + ['storage' => true, 'tracking' => true, 'first_day' => $this->traffic ? min(array_keys($this->traffic)) : null, 'last_day' => $this->traffic ? max(array_keys($this->traffic)) : null, 'last_run' => null, 'raw_rows' => (bool)$this->traffic, 'device_col' => isset($this->dims['device'])]; }
   public function traffic(string $from, string $to): array { $o = []; ksort($this->traffic); foreach ($this->traffic as $d => $r) if ($d >= $from && $d <= $to) $o[] = ['day' => $d, 'views_human' => $r[0], 'visitors' => $r[1], 'sessions' => $r[2], 'views_no_id' => $r[3] ?? 0]; return $o; }
   public function dim(string $dim, string $from, string $to, int $limit): array {
@@ -186,6 +190,8 @@ final class AdmAnMemoryStore implements AdmAnStore {
   }
   public function activeNow(): ?array { return $this->active; }
   public function placements(): ?array { return $this->placements; }
+  public function lifetimeClicks(): ?array { return $this->lifetime; }
+  public function unrolled(?string $sinceUtc): ?array { return $this->unrolled; }
   public function legacyClicks(string $from, string $to): ?array { if ($this->legacy === null) return null; return array_values(array_filter($this->legacy, fn($r) => $r['day'] >= $from && $r['day'] <= $to)); }
 }
 
@@ -205,3 +211,7 @@ function anz_legacy_summary(array $rows): array {
   $o['net'] = $o['records'] - $o['probable_duplicates']; if ($o['days']) { $o['first_day'] = $o['days'][0]['day']; $o['last_day'] = $o['days'][count($o['days']) - 1]['day']; }
   return $o;
 }
+
+/** Freshness of the rollup: minutes since the last successful run (null = never run). 90 minutes is "stale" for an hourly schedule. */
+function anz_rollup_age_minutes(?string $lastRunUtc, ?int $now = null): ?int { if ($lastRunUtc === null || $lastRunUtc === '') return null; $t = strtotime($lastRunUtc . ' UTC'); return $t === false ? null : max(0, (int)floor((($now ?? time()) - $t) / 60)); }
+const ANZ_ROLLUP_STALE_MINUTES = 90;
