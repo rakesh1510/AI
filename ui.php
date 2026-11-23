@@ -27,6 +27,11 @@ function ui_icon_paths(): array {
     'arrow' => '<path d="M5 12h14M12 5l7 7-7 7"/>',
     'external' => '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>',
     'book' => '<path d="M4 19.5A2.5 2.5 0 016.5 17H20V2H6.5A2.5 2.5 0 004 4.5v15zM4 19.5A2.5 2.5 0 006.5 22H20v-5"/>',
+    'plug' => '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 01-12 0V8zM12 17v5"/>',
+    'database' => '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+    'flow' => '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h4a2 2 0 012 2v7M12 3l3 3-3 3"/>',
+    'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    'megaphone' => '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM15 8a5 5 0 010 8M18 5a9 9 0 010 14"/>',
     'sparkle' => '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/>',
   ];
 }
@@ -108,15 +113,16 @@ function render_tool_card(array $t, array $opts = []): string {
   $o .= '<div class="tCard__badges">';
   if (!empty($t['pricing'])) $o .= '<span class="pill' . ($free ? ' pill--free' : '') . '">' . $h($t['pricing']) . '</span>';
   if ($reviewed) $o .= '<span class="pill pill--reviewed" title="Sources, dates and limitations are listed on the profile">' . ui_icon('shield') . ' Reviewed</span>';
+  if ($reviewed && ($prov = ui_provenance($t, true)) !== '') $o .= '<span class="tCard__prov">' . $h($prov) . '</span>';   // provenance only when the profile data supports it
   if ($reviewed && !empty($opts['evidence'])) $o .= '<p class="tCard__evidence">' . render_evidence_badge($t) . '</p>';
   $o .= '</div>';
   if (!empty($opts['why']) && is_array($opts['why'])) $o .= '<p class="tCard__why"><strong>Why this result:</strong> ' . $h(implode(' · ', array_slice($opts['why'], 0, 4))) . '</p>';
   $o .= '<div class="tCard__actions">'
     . '<a class="btn sm" href="' . $h(tool_path($id)) . '">View profile</a>';
   if (tool_url($t) !== '#') {
-    $o .= '<a class="btn sm secondary" target="_blank" rel="' . $h(outbound_rel($t, $sponsored)) . '" href="/redirect.php?id=' . $h(rawurlencode($id)) . '" data-outbound data-affiliate="' . ($aff ? '1' : '0') . '" data-sponsored="' . ($sponsored ? '1' : '0') . '" data-placement="' . $h($placement) . '">Visit site' . ui_icon('external') . '<span class="sr"> (new tab)</span></a>';
+    $o .= '<a class="btn sm secondary tCard__visit" target="_blank" rel="' . $h(outbound_rel($t, $sponsored)) . '" href="/redirect.php?id=' . $h(rawurlencode($id)) . '" data-outbound data-affiliate="' . ($aff ? '1' : '0') . '" data-sponsored="' . ($sponsored ? '1' : '0') . '" data-placement="' . $h($placement) . '">Visit site' . ui_icon('external') . '<span class="sr"> (new tab)</span></a>';
   }
-  $o .= '<button type="button" class="btn sm ghost js-only" data-compare="' . $h($id) . '" data-name="' . $h($t['name']) . '" aria-pressed="false">' . ui_icon('compare') . ' Compare</button>';
+  $o .= '<button type="button" class="btn sm ghost tCard__cmp js-only" data-compare="' . $h($id) . '" data-name="' . $h($t['name']) . '" aria-pressed="false">' . ui_icon('compare') . ' Compare</button>';
   $o .= '</div>';
   if (!empty($opts['votes'])) $o .= render_vote_buttons($id, (string)($opts['votes_context'] ?? 'index.php'));
   if ($aff) $o .= '<p class="tCard__note">Affiliate link: AIHubpedia may earn a commission. <a href="/disclosure.php">Details</a></p>';
@@ -141,4 +147,35 @@ function render_search_box(string $id, array $opts = []): string {
     . '<button class="btn searchBox__btn" type="submit">Search</button>'
     . '<div class="suggest" hidden><ul id="' . $h($id) . '-list" role="listbox" aria-label="Search suggestions"></ul></div>'
     . '<p class="sr" aria-live="polite" data-search-status></p></form>';
+}
+
+
+// ----------------------------------------------------------------------
+// Shared navigation data (header, mobile menu and footer read the same lists)
+// ----------------------------------------------------------------------
+
+/** Main header links. AI Universe is intentionally not listed (hidden from the public navigation; its routes still exist). */
+function site_nav_primary(): array {
+  return [['/categories.php', 'Discover'], ['/compare.php', 'Compare'], ['/guides.php', 'Guides'], ['/business.php', 'For Business'], ['/advertise.php', 'Advertise']];
+}
+/** The call to action next to the primary links: the existing project enquiry form. */
+function site_nav_cta(): array { return ['/services.php#inquiry', 'Discuss Your Project']; }
+/** Secondary navigation, grouped. Every group has at least one link; nothing here points to AI Universe. */
+function site_nav_more(): array {
+  return [
+    'Find tools' => [['/top.php', 'Top tools'], ['/ai-use-case-explorer.php', 'Use cases'], ['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/directory.php', 'All tools (A to Z)'], ['/filters.php', 'Filters']],
+    'Compare and learn' => [['/comparisons.php', 'Popular comparisons'], ['/leaderboard.php', 'Leaderboard'], ['/blog.php', 'Blog'], ['/methodology.php', 'How we review'], ['/about.php', 'About']],
+    'Work with us' => [['/contact.php', 'Contact'], ['/submit.php', 'Submit a tool'], ['/services.php', 'AI development services'], ['/partners.php', 'Partnerships'], ['/disclosure.php', 'Advertising disclosure']],
+  ];
+}
+
+/** True once the newsletter is really sending. Until the site configuration says so (newsletter.launched), pages describe sign-up as launch updates. */
+function newsletter_launched(): bool { $c = site_cfg(); return !empty($c['newsletter']['launched']); }
+
+/** Short, honest provenance line for a card: only what the data supports (reviewed profile and its pricing date). Empty string when nothing is verifiable. */
+function ui_provenance(array $t, bool $short = false): string {
+  $cp = $t['curated'] ?? null; if (empty($cp)) return '';
+  $date = (string)($cp['pricing']['as_of'] ?? '');
+  if ($short) return $date !== '' ? 'Pricing as of ' . $date : '';   // cards already carry the "Reviewed" badge
+  return $date !== '' ? 'Reviewed · pricing as of ' . $date : 'Reviewed profile';
 }

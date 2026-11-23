@@ -6,74 +6,59 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
 <?php $__js_app = @filemtime(__DIR__ . '/assets/js/app.js') ?: '1'; ?>
 <footer class="siteFooter">
   <div class="wrap">
-    <div class="footerTop">
-      <section class="footerNews" aria-labelledby="newsTitle">
-        <h2 id="newsTitle">Get AIHubpedia updates</h2>
-        <p class="small">An email when we publish a new guide or notice a notable price or plan change. Not a fixed schedule. Unsubscribe any time.</p>
-        <form class="newsForm" method="post" action="/subscribe.php">
-          <input type="hidden" name="form_token" value="<?= h(form_token('newsletter')) ?>">
-          <input type="hidden" name="source_page" value="<?= h(rel_url(seo_default_canonical())) ?>">
-          <div class="hp" aria-hidden="true"><label>Leave empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>
-          <label class="sr" for="footerEmail">Email address</label>
-          <div class="newsForm__row">
-            <input class="input" id="footerEmail" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
-            <button class="btn" type="submit">Subscribe</button>
-          </div>
-          <label class="newsForm__consent"><input type="checkbox" name="consent" value="1" required> I agree to receive these emails. <a href="/privacy.php">Privacy policy</a></label>
-        </form>
-      </section>
-      <section class="footerBiz" aria-labelledby="bizTitle">
-        <h2 id="bizTitle">Build something with AI</h2>
-        <p class="small">Need a custom AI agent, software or an AI consultation? Talk to TrustNova Tech. Own an AI tool? See how listings and sponsorships work.</p>
-        <div class="actions"><a class="btn" href="/business.php">Request a consultation</a><a class="btn secondary" href="/advertise.php">Advertise a tool</a></div>
-      </section>
-    </div>
+    <?php if (($footer_newsletter ?? true) !== false): $__nl = newsletter_launched(); ?>
+    <section class="footerNews footerNews--compact" aria-labelledby="newsTitle">
+      <div class="footerNews__text">
+        <h2 id="newsTitle"><?= $__nl ? 'Get AIHubpedia updates' : 'Get launch updates' ?></h2>
+        <p class="small"><?= $__nl ? 'An email when we publish a new guide or notice a notable price or plan change. Free; unsubscribe any time.' : 'The AIHubpedia newsletter has not launched yet. Leave your email to hear when it does. Free; unsubscribe any time.' ?></p>
+      </div>
+      <form class="newsForm" method="post" action="/subscribe.php">
+        <input type="hidden" name="form_token" value="<?= h(form_token('newsletter')) ?>">
+        <input type="hidden" name="source_page" value="<?= h(rel_url(seo_default_canonical())) ?>">
+        <div class="hp" aria-hidden="true"><label>Leave empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>
+        <label class="sr" for="footerEmail">Email address</label>
+        <div class="newsForm__row">
+          <input class="input" id="footerEmail" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+          <button class="btn" type="submit" data-cta="footer_newsletter">Subscribe</button>
+        </div>
+        <label class="newsForm__consent"><input type="checkbox" name="consent" value="1" required> I agree to receive these emails. <a href="/privacy.php">Privacy policy</a></label>
+      </form>
+    </section>
+    <?php endif; ?>
 
     <div class="simpleFooterGrid">
       <div class="footerCol">
         <h3>Discover</h3>
         <a href="/categories.php">All categories</a>
-        <a href="/guides.php">AI tool guides</a>
+        <a href="/directory.php">All tools (A to Z)</a>
         <a href="/top.php">Top AI tools</a>
         <a href="/compare.php">Compare tools</a>
-        <a href="/comparisons.php">Popular comparisons</a>
-        <a href="/leaderboard.php">Leaderboard</a>
+        <a href="/guides.php">Guides</a>
+        <a href="/recommend.php">Recommendation wizard</a>
       </div>
       <div class="footerCol">
-        <h3>AI Universe</h3>
-        <a href="/universe.php">AI Universe overview</a>
-        <a href="/universe-graph.php">Graph</a>
-        <a href="/universe-heatmap.php">Activity heatmap</a>
-        <a href="/universe-lineage.php">Release lineage</a>
-        <a href="/universe-arena.php">Battle Arena</a>
-      </div>
-      <div class="footerCol">
-        <h3>Use cases</h3>
-        <a href="/ai-use-case.php?slug=write-blog-posts">AI tools for Writing &amp; content</a>
-        <a href="/ai-use-case.php?slug=design-graphics">AI tools for Image &amp; design</a>
-        <a href="/ai-use-case.php?slug=automate-work">AI tools for Automation</a>
-        <a href="/ai-use-case.php?slug=build-websites">AI tools for Coding &amp; dev</a>
-      </div>
-      <div class="footerCol">
-        <h3>For businesses</h3>
-        <a href="/business.php">AI consultation &amp; custom agents</a>
+        <h3>For business</h3>
+        <a href="/services.php#inquiry">Discuss your project</a>
         <a href="/services.php">AI development services</a>
-        <a href="/advertise.php">Advertise on AIHubpedia</a>
+        <a href="/advertise.php">Advertise a tool</a>
         <a href="/partners.php">Partnerships</a>
         <a href="/submit.php">Submit your AI tool</a>
-        <a href="/disclosure.php">Advertising &amp; affiliate disclosure</a>
         <a href="/contact.php">Contact</a>
-        <a href="/blog.php">Blog</a>
       </div>
       <div class="footerCol">
         <h3>Company</h3>
         <a href="/about.php">About AIHubpedia</a>
-        <a href="/methodology.php">Methodology</a>
+        <a href="/methodology.php">How we review</a>
+        <a href="/disclosure.php">Advertising &amp; affiliate disclosure</a>
+        <a href="/blog.php">Blog</a>
+        <a href="/sitemap.xml">Sitemap</a>
+      </div>
+      <div class="footerCol">
+        <h3>Legal</h3>
         <a href="/privacy.php">Privacy policy</a>
         <a href="/terms.php">Terms of service</a>
         <a href="/impressum.php">Impressum</a>
         <a href="/disclaimer.php">Disclaimer</a>
-        <a href="/sitemap.xml">Sitemap</a>
       </div>
     </div>
 

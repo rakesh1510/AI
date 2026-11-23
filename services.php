@@ -26,6 +26,6 @@ echo render_breadcrumbs($crumbs);
 <?php endif; ?>
 <section class="panel" style="margin-top:22px" aria-labelledby="honestTitle"><h2 id="honestTitle" style="margin-top:0">What we do and do not claim</h2><ul><?php foreach ($cat['honest_notes'] as $n): ?><li><?= $h($n) ?></li><?php endforeach; ?></ul>
   <p class="small">AIHubpedia’s independent tool reviews are separate from these services: <a href="/disclosure.php">how paid and editorial content are kept apart</a>.</p></section>
-<section class="panel" id="inquiry" style="margin-top:22px" aria-labelledby="inqTitle"><h2 id="inqTitle" style="margin-top:0">Tell us about your project</h2><p class="small">Three short steps. Fields marked optional can be left empty.</p>
+<section class="panel" id="inquiry" style="margin-top:22px" aria-labelledby="inqTitle"><h2 id="inqTitle" style="margin-top:0">Tell us about your project</h2><p class="small">A short form: your goal, your name and email. Everything under “Add details” is optional.</p>
   <?= render_project_form(['service' => $slug]) ?></section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

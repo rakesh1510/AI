@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/crm_intake.php';
 
 $data = load_tools();
 $tools = $data['tools'] ?? [];
@@ -29,10 +30,10 @@ $rest = array_values(array_filter($tools, fn($t) => !in_array($t['id'], $manual_
 $scores = [];
 foreach ($rest as $t) { $scores[$t['id']] = trending_score($t['id']); }
 usort($rest, fn($a, $b) => ($scores[$b['id']] ?? 0) <=> ($scores[$a['id']] ?? 0));
-$popular = array_slice(array_merge($manual, $rest), 0, 8);
+$popular = array_slice(array_merge($manual, $rest), 0, 12);
 
 // Reviewed profiles (evidence-backed) and guides
-$reviewedIds = ['chatgpt', 'claude', 'perplexity', 'notebooklm', 'otter-ai', 'grammarly'];
+$reviewedIds = array_keys(array_filter($byId, fn($t) => !empty($t['curated'])));
 $reviewed = [];
 foreach ($reviewedIds as $id) { if (!empty($byId[$id]['curated'])) $reviewed[] = $byId[$id]; }
 $reviewedCount = count(array_filter($tools, fn($t) => !empty($t['curated'])));
@@ -61,12 +62,21 @@ $jsonld = [[
 ]];
 $hide_header_search = true;
 $main_class = 'fullbleed';
+$footer_newsletter = false;   // the newsletter section below replaces the footer sign-up on this page
+
+// Curated selection: reviewed profiles first, then widely used tools, never more than 12 cards, no duplicates.
+$curated = []; $seen = [];
+foreach (array_merge(array_slice($reviewed, 0, 8), $popular, array_slice($reviewed, 8)) as $t) { if (isset($seen[$t['id']])) continue; $seen[$t['id']] = 1; $curated[] = $t; if (count($curated) >= 12) break; }
+$svcCatalog = trustnova_services_for_home();
+$tiers = pricing_tiers(); $cur = (string)(site_cfg()['currency'] ?? 'USD'); $sym = ['USD' => '$', 'EUR' => '€', 'GBP' => '£'][$cur] ?? '';
+$price = fn(string $k) => isset($tiers[$k]) ? ((int)($tiers[$k]['price'] ?? 0) === 0 ? 'Free' : $sym . number_format((int)$tiers[$k]['price']) . ($sym === '' ? ' ' . $cur : '')) : '';
+$nlLaunched = newsletter_launched();
 require __DIR__ . '/layout_top.php';
 ?>
 
 <section class="homeHero" aria-labelledby="heroTitle">
   <div class="wrap heroGrid">
-    <div>
+    <div class="heroCopy">
       <span class="eyebrow"><?= ui_icon('shield') ?> Independent directory · sources and dates on reviewed tools</span>
       <h1 id="heroTitle">Find the right <span class="gradText">AI tool</span>, with the sources to back it up</h1>
       <p class="heroLead">Search <?= h(number_format(count($tools))) ?> AI tools, compare plans and limits side by side, and read guides built from vendors' own pages. We say where sources disagree and what we have not tested.</p>
@@ -74,11 +84,9 @@ require __DIR__ . '/layout_top.php';
       <div class="heroTry"><span>Popular goals:</span>
         <?php foreach (array_slice($intents, 0, 5) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?>
       </div>
-      <div class="trustStrip" aria-label="What is on AIHubpedia">
-        <span><strong><?= h(number_format(count($tools))) ?></strong>tools listed</span>
-        <span><strong><?= (int)$reviewedCount ?></strong><a href="/methodology.php">reviewed profiles</a> with sources</span>
-        <span><strong><?= count($guides) ?></strong><a href="/guides.php">comparison guides</a></span>
-        <span>Prices carry an “as of” date</span>
+      <div class="heroBiz">
+        <p><strong>Need something built?</strong> TrustNova Tech builds API integrations, workflow automation and custom AI solutions.</p>
+        <a class="btn btn--accent" href="/services.php#inquiry" data-cta="hero_project">Discuss Your Project</a>
       </div>
     </div>
     <?php if ($stack): ?>
@@ -86,121 +94,124 @@ require __DIR__ . '/layout_top.php';
       <?php foreach ($stack as $t): $cp = $t['curated']; ?>
         <div class="floatCard">
           <div class="row"><span class="dot"><?= h(mb_substr($t['name'], 0, 1)) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>
-          <p style="margin-top:10px"><?= h(profile_free_option($cp)) ?> · pricing as of <span class="nw"><?= h($cp['pricing']['as_of']) ?></span></p>
+          <p class="fc__price"><?= h(profile_free_option($cp)) ?></p>
+          <span class="fc__prov"><?= ui_icon('shield') ?> <?= h(ui_provenance($t)) ?></span>
         </div>
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
   </div>
+  <div class="wrap"><div class="trustStrip" aria-label="What is on AIHubpedia">
+    <span><strong><?= h(number_format(count($tools))) ?></strong>tools listed</span>
+    <span><strong><?= (int)$reviewedCount ?></strong><a href="/methodology.php">reviewed profiles</a> with sources</span>
+    <span><strong><?= count($guides) ?></strong><a href="/guides.php">comparison guides</a></span>
+    <span>Prices carry an “as of” date</span>
+  </div></div>
 </section>
 
-<section class="section" aria-labelledby="journeyTitle">
+<section class="section" aria-labelledby="pathsTitle">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="journeyTitle">How do you want to start?</h2><p>Three ways in, depending on where you are in your search.</p></div></div>
-    <div class="journeys">
-      <div class="journey">
+    <div class="sectionHead"><div><h2 id="pathsTitle">What brings you here?</h2><p>Three clear paths. Pick the one that fits.</p></div></div>
+    <div class="paths">
+      <a class="path path--find" href="#discover" data-cta="path_find">
         <span class="bubble"><?= ui_icon('search') ?></span>
-        <h3>Discover</h3>
-        <p>Not sure what exists? Browse by goal or category and see reviewed profiles first.</p>
-        <ul>
-          <li><a href="/categories.php"><?= ui_icon('layers') ?> Browse all categories</a></li>
-          <li><a href="/ai-use-case-explorer.php"><?= ui_icon('sparkle') ?> Explore by use case</a></li>
-          <li><a href="/top.php"><?= ui_icon('chart') ?> See what visitors click most</a></li>
-        </ul>
-        <a class="btn" href="/search.php">Search the directory</a>
-      </div>
-      <div class="journey">
-        <span class="bubble"><?= ui_icon('compare') ?></span>
-        <h3>Compare</h3>
-        <p>Already have two or three in mind? Put plans, limits and best-for notes side by side.</p>
-        <ul>
-          <li><a href="/compare.php"><?= ui_icon('compare') ?> Compare any two tools</a></li>
-          <li><a href="/comparisons.php"><?= ui_icon('book') ?> Popular comparisons</a></li>
-          <li><a href="/alternatives.php?tool=chatgpt"><?= ui_icon('arrow') ?> ChatGPT alternatives</a></li>
-        </ul>
-        <a class="btn secondary" href="/guides.php">Read the guides</a>
-      </div>
-      <div class="journey journey--business">
-        <span class="bubble"><?= ui_icon('briefcase') ?></span>
-        <h3>For business</h3>
-        <p>Choosing tools for a team, want something built, or promoting your own AI product?</p>
-        <ul>
-          <li><a href="/guide.php?slug=best-ai-tools-for-everyday-office-work"><?= ui_icon('book') ?> AI tools for office work</a></li>
-          <li><a href="/business.php"><?= ui_icon('bolt') ?> Custom AI agents &amp; software</a></li>
-          <li><a href="/advertise.php"><?= ui_icon('chart') ?> Advertise your AI tool</a></li>
-        </ul>
-        <a class="btn" href="/business.php">Talk to TrustNova Tech</a>
-      </div>
+        <h3>Find AI Tools</h3>
+        <p>Search by goal, compare plans and limits, and read profiles that show their sources and dates.</p>
+        <span class="path__go">Start with a goal <?= ui_icon('arrow') ?></span>
+      </a>
+      <a class="path path--build" href="/services.php#inquiry" data-cta="path_build">
+        <span class="bubble"><?= ui_icon('code') ?></span>
+        <h3>Build With AI</h3>
+        <p>API integrations, workflow automation, PHP/MySQL development and custom AI solutions from TrustNova Tech.</p>
+        <span class="path__go">Discuss your project <?= ui_icon('arrow') ?></span>
+      </a>
+      <a class="path path--promote" href="/advertise.php" data-cta="path_promote">
+        <span class="bubble"><?= ui_icon('megaphone') ?></span>
+        <h3>Promote Your Tool</h3>
+        <p>Free listings, plus clearly labelled sponsored placements. Paid placement never changes a review.</p>
+        <span class="path__go">See sponsorship options <?= ui_icon('arrow') ?></span>
+      </a>
     </div>
   </div>
 </section>
 
-<section class="section section--tint" aria-labelledby="goalTitle">
+<?php if ($q !== '' || $cat !== ''): ?>
+<section class="section section--tint" aria-labelledby="filterTitle" id="filtered">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="goalTitle">Start from what you want to do</h2><p>Goal-based shortcuts. Counts come from the live catalogue.</p></div></div>
+    <div class="sectionHead"><div><h2 id="filterTitle">Filtered tools</h2><p>Showing <?= number_format(min(24, count($browse))) ?> of <?= number_format(count($browse)) ?> results<?= $q !== '' ? ' for “' . h($q) . '”' : '' ?><?= $cat !== '' ? ' in ' . h($cat) : '' ?>. <a href="/">Clear filters</a></p></div></div>
+    <div class="cardGrid"><?php foreach (array_slice($browse, 0, 24) as $t) echo render_tool_card($t, ['placement' => 'home_filtered']); ?></div>
+    <p class="actions" style="margin-top:18px"><a class="btn secondary" href="/search.php?q=<?= h(rawurlencode($q)) ?>">Open full search</a><a class="btn secondary" href="/directory.php">Browse all tools</a></p>
+  </div>
+</section>
+<?php endif; ?>
+
+<section class="section section--tint" aria-labelledby="discoverTitle" id="discover">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="discoverTitle">Find the right AI tool</h2><p>Start from what you want to do, or browse a category. Counts come from the live catalogue.</p></div><a class="moreLink" href="/categories.php">All categories <?= ui_icon('arrow') ?></a></div>
     <div class="intentGrid">
       <?php foreach ($intents as $i): ?>
         <a class="intent" href="<?= h($i['url']) ?>"><span class="ico"><?= ui_icon($i['icon']) ?></span><span><strong><?= h($i['label']) ?></strong><span class="n"><?= h(seo_plural($i['count'], 'tool')) ?></span></span></a>
       <?php endforeach; ?>
     </div>
-    <div data-recent-list hidden style="margin-top:22px">
-      <h3 style="margin:0 0 10px;font-size:1rem">Continue where you left off</h3>
-      <ul class="linkList" style="margin:0"></ul>
+    <div class="catChips" role="list" aria-label="Browse by category">
+      <?php foreach ($cats as $c): ?><a role="listitem" class="chipLink" href="<?= h(category_path($c)) ?>"><?= h($c) ?> <span class="n"><?= (int)($catCounts[$c] ?? 0) ?></span></a><?php endforeach; ?>
     </div>
+    <div data-recent-list hidden style="margin-top:22px"><h3 style="margin:0 0 10px;font-size:1rem">Continue where you left off</h3><ul class="linkList" style="margin:0"></ul></div>
+    <h3 class="subHead">Reviewed profiles and widely used tools</h3>
+    <p class="small subHeadNote">Tools with a <span class="pill pill--reviewed"><?= ui_icon('shield') ?> Reviewed</span> badge have a profile with vendor sources, a retrieval date and listed limitations (<a href="/methodology.php">how we review</a>). Other tools are listed without that review. Order reflects editor picks and activity on this site, not payment.</p>
+    <div class="cardGrid">
+      <?php foreach ($curated as $t) echo render_tool_card($t, ['placement' => 'home_curated']); ?>
+    </div>
+    <div class="actions actions--center" style="margin-top:24px"><a class="btn" href="/directory.php" data-cta="home_browse_all">Browse All Tools</a><a class="btn secondary" href="/compare.php">Compare tools</a><a class="btn secondary" href="/recommend.php">Get a shortlist</a></div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="catTitle">
+<section class="section" aria-labelledby="svcTitle" id="services">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="catTitle">Browse AI tools by category</h2></div><a class="moreLink" href="/categories.php">All categories <?= ui_icon('arrow') ?></a></div>
-    <div class="catGrid">
-      <?php foreach ($cats as $c): $subs = $subCounts[$c] ?? []; arsort($subs); ?>
-        <a class="catCard reveal" href="<?= h(category_path($c)) ?>">
-          <span class="ico"><?= ui_icon(ui_category_icon($c)) ?></span>
-          <h3><?= h($c) ?> AI tools</h3>
-          <p><?= h(seo_plural((int)($catCounts[$c] ?? 0), 'tool')) ?></p>
-          <?php if ($subs): ?><span class="subs"><?php foreach (array_slice($subs, 0, 3, true) as $sn => $n): ?><span><?= h($sn) ?></span><?php endforeach; ?></span><?php endif; ?>
-        </a>
+    <div class="sectionHead"><div><h2 id="svcTitle">Build with AI</h2><p>AIHubpedia is built and run by TrustNova Tech. These are the projects we take on, and what you receive from each.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
+    <div class="svcGrid">
+      <?php foreach ($svcCatalog as $sv): ?>
+      <article class="svcCard">
+        <span class="bubble"><?= ui_icon($sv['icon']) ?></span>
+        <h3><?= h($sv['title']) ?></h3>
+        <p><?= h($sv['summary']) ?></p>
+        <ul class="ticks"><?php foreach ($sv['deliverables'] as $dv): ?><li><?= h($dv) ?></li><?php endforeach; ?></ul>
+        <a class="svcCard__more" href="/services.php?s=<?= h(rawurlencode($sv['slug'])) ?>">Learn more <?= ui_icon('arrow') ?><span class="sr"> about <?= h($sv['title']) ?></span></a>
+      </article>
       <?php endforeach; ?>
     </div>
-  </div>
-</section>
-
-<?php if ($reviewed): ?>
-<section class="section section--tint" aria-labelledby="revTitle">
-  <div class="wrap">
-    <div class="sectionHead"><div><h2 id="revTitle">Reviewed profiles with sources</h2><p>Each shows its vendor sources, retrieval date, limitations and any conflicts between vendor pages. <a href="/methodology.php">How we review</a>.</p></div><a class="moreLink" href="/guides.php">See comparison guides <?= ui_icon('arrow') ?></a></div>
-    <div class="cardGrid">
-      <?php foreach ($reviewed as $t) echo render_tool_card($t, ['placement' => 'home_reviewed']); ?>
+    <div class="svcCta">
+      <p><strong>Every project starts with a written scope.</strong> We do not promise outcomes in advance; we agree how success will be measured. No client case studies are published here.</p>
+      <a class="btn btn--accent" href="/services.php#inquiry" data-cta="services_project">Discuss Your Project</a>
     </div>
   </div>
 </section>
-<?php endif; ?>
 
-<section class="section" aria-labelledby="guideTitle">
+<section class="section section--tint" aria-labelledby="guideTitle">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="guideTitle">Guides and comparisons</h2><p>Comparison tables are generated from the same reviewed profiles, so the facts match everywhere.</p></div><a class="moreLink" href="/guides.php">All guides <?= ui_icon('arrow') ?></a></div>
-    <div class="cardGrid">
+    <div class="sectionHead"><div><h2 id="guideTitle">Comparisons and guides</h2><p>Comparison tables are generated from the same reviewed profiles, so the facts, sources and pricing dates match everywhere.</p></div><a class="moreLink" href="/guides.php">All guides <?= ui_icon('arrow') ?></a></div>
+    <div class="cardGrid cardGrid--four">
       <?php foreach (array_slice($guides, 0, 4, true) as $slug => $g): ?>
-        <article class="tCard reveal">
+        <article class="tCard tCard--guide reveal">
           <p class="tCard__meta"><?= ui_icon('book') ?> Guide · updated <?= h($g['updated']) ?></p>
-          <h3 style="margin:0;font-size:1.1rem"><a href="<?= h(guide_path($slug)) ?>" style="color:inherit;text-decoration:none"><?= h($g['h1']) ?></a></h3>
+          <h3 class="tCard__guideTitle"><a href="<?= h(guide_path($slug)) ?>"><?= h($g['h1']) ?></a></h3>
           <p class="tCard__desc"><?= h($g['description']) ?></p>
           <div class="tCard__actions"><a class="btn sm" href="<?= h(guide_path($slug)) ?>">Read guide</a></div>
         </article>
       <?php endforeach; ?>
     </div>
     <?php if ($pairs): ?>
-      <h3 style="margin:26px 0 10px;font-size:1rem">Popular head-to-head comparisons</h3>
-      <ul class="linkList"><?php foreach ($pairs as [$pa, $pb]): ?><li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li><?php endforeach; ?></ul>
+      <h3 class="subHead">Popular head-to-head comparisons</h3>
+      <ul class="linkList linkList--chips"><?php foreach ($pairs as [$pa, $pb]): ?><li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li><?php endforeach; ?></ul>
     <?php endif; ?>
+    <p class="actions" style="margin-top:18px"><a class="btn secondary" href="/compare.php" data-cta="home_compare">Compare any two tools</a></p>
   </div>
 </section>
 
 <?php if ($spotlight || $featured): ?>
-<section class="section section--tint" aria-labelledby="sponsoredTitle">
+<section class="section" aria-labelledby="sponsoredTitle">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="sponsoredTitle">Sponsored listings</h2><p>Paid placements, clearly labelled. They do not change a tool's facts or limitations.</p></div><a class="moreLink" href="/advertise.php">Advertise here <?= ui_icon('arrow') ?></a></div>
+    <div class="sectionHead"><div><h2 id="sponsoredTitle">Sponsored listings</h2><p>Paid placements, clearly labelled. They do not change a tool's facts, limitations or ranking.</p></div></div>
     <div class="cardGrid">
       <?php foreach (array_merge($spotlight, $featured) as $t) echo render_tool_card($t, ['sponsored' => true, 'placement' => 'home_sponsored']); ?>
     </div>
@@ -209,50 +220,55 @@ require __DIR__ . '/layout_top.php';
 </section>
 <?php endif; ?>
 
-<section class="section" aria-labelledby="popTitle">
+<section class="section<?= ($spotlight || $featured) ? ' section--tint' : '' ?>" aria-labelledby="sponsorTitle" id="sponsor">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="popTitle">Popular AI tools</h2><p>Editor picks of widely used tools, followed by tools ranked by AIHubpedia clicks, ratings and votes. Rankings reflect activity on this site only.</p></div><a class="moreLink" href="/top.php">Top tools <?= ui_icon('arrow') ?></a></div>
-    <div class="cardGrid">
-      <?php foreach ($popular as $t) echo render_tool_card($t, ['placement' => 'home_popular']); ?>
+    <div class="sectionHead"><div><h2 id="sponsorTitle">Promote your AI tool</h2><p>Reach people who are actively comparing tools. Placements are labelled <span class="adTag">Sponsored</span>, reviewed against our <a href="/methodology.php">methodology</a> first, and kept separate from editorial reviews and rankings.</p></div></div>
+    <div class="sponsorGrid">
+      <div class="sponsorCard">
+        <h3>Listings</h3>
+        <ul class="sponsorList">
+          <li><span>Free listing</span><b><?= h($price('free') ?: 'Free') ?></b><small>Manual review, may take several days</small></li>
+          <li><span>Priority approval</span><b><?= h($price('priority')) ?></b><small>Same listing, reviewed within 24 hours of a complete submission</small></li>
+        </ul>
+        <a class="btn secondary sm" href="/submit.php">Submit a tool</a>
+      </div>
+      <div class="sponsorCard sponsorCard--hl">
+        <h3>Sponsored placements <span class="adTag">Sponsored</span></h3>
+        <ul class="sponsorList">
+          <li><span>Featured listing</span><b><?= h($price('featured')) ?></b><small>7 days in the labelled homepage section</small></li>
+          <li><span>Homepage spotlight</span><b><?= h($price('homepage')) ?></b><small>14 days, top labelled spotlight</small></li>
+        </ul>
+        <a class="btn sm" href="/advertise.php#request" data-cta="sponsor_enquiry">Ask about a placement</a>
+      </div>
+      <div class="sponsorCard">
+        <h3>By enquiry</h3>
+        <ul class="sponsorList">
+          <li><span>Monthly featured placement</span><b>On request</b><small>Packages are still being defined: tell us what you need</small></li>
+          <li><span>Newsletter sponsorship</span><b>Not available yet</b><small>The newsletter has not launched, so there is no audience figure to quote</small></li>
+        </ul>
+        <a class="btn secondary sm" href="/advertise.php?need=newsletter_sponsor#request">Register interest</a>
+      </div>
     </div>
+    <p class="small sponsorNote">List prices come from the site configuration (<?= h($cur) ?>, one-off, excluding taxes). No payment is taken on this website: placements are arranged by enquiry and dates are agreed in writing. We do not publish or promise traffic, click or sales figures. <a href="/disclosure.php">Advertising and affiliate disclosure</a>.</p>
   </div>
 </section>
 
-<section class="section" aria-labelledby="bizTitleBand">
+<section class="section section--tint" aria-labelledby="newsTitle2" id="newsletter">
   <div class="wrap">
-    <div class="ctaBand">
-      <div class="col">
-        <h2 id="bizTitleBand">Have an AI tool to promote?</h2>
-        <p>Featured listings and the homepage spotlight are paid, labelled placements. Free listings are reviewed manually. No traffic or revenue results are promised.</p>
-        <div class="actions"><a class="btn" href="/advertise.php">See advertising options</a><a class="btn secondary" href="/disclosure.php">Read the disclosure</a></div>
+    <div class="newsBand">
+      <div>
+        <h2 id="newsTitle2"><?= $nlLaunched ? 'Get AIHubpedia updates' : 'Get launch updates' ?></h2>
+        <p><?= $nlLaunched ? 'An email when we publish a new guide or notice a notable price or plan change. Not a fixed schedule.' : 'The AIHubpedia newsletter has not launched yet. Leave your email and we will tell you when it does. There is no fixed schedule to promise yet.' ?> Free to read; unsubscribe any time.</p>
       </div>
-      <div class="col">
-        <h2>Need something built with AI?</h2>
-        <p>TrustNova Tech takes on custom AI agent and software projects and AI consultations. Tell us what you want to build.</p>
-        <div class="actions"><a class="btn" href="/business.php">Request a consultation</a></div>
-      </div>
+      <form class="newsForm" method="post" action="/subscribe.php">
+        <input type="hidden" name="form_token" value="<?= h(form_token('newsletter')) ?>">
+        <input type="hidden" name="source_page" value="<?= h(rel_url(seo_default_canonical())) ?>">
+        <div class="hp" aria-hidden="true"><label>Leave empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>
+        <label class="sr" for="homeEmail">Email address</label>
+        <div class="newsForm__row"><input class="input" id="homeEmail" type="email" name="email" placeholder="you@example.com" autocomplete="email" required><button class="btn" type="submit" data-cta="home_newsletter">Subscribe</button></div>
+        <label class="newsForm__consent"><input type="checkbox" name="consent" value="1" required> I agree to receive these emails. <a href="/privacy.php">Privacy policy</a></label>
+      </form>
     </div>
-  </div>
-</section>
-
-<section class="section" aria-labelledby="browseTitle" id="browse">
-  <div class="wrap">
-    <div class="sectionHead"><div><h2 id="browseTitle">Browse tools</h2><p>Showing <?= number_format(count($browse)) ?> results.</p></div></div>
-    <form method="get" action="/" class="filterBar" role="search">
-      <label class="sr" for="browseQ">Filter tools</label>
-      <input class="input" id="browseQ" type="search" name="q" value="<?= h($q) ?>" placeholder="Filter: chat, image, coding, SEO…">
-      <label class="sr" for="browseCat">Category</label>
-      <select id="browseCat" name="cat" style="max-width:220px">
-        <option value="">All categories</option>
-        <?php foreach ($cats as $c): ?><option value="<?= h($c) ?>" <?= $c === $cat ? 'selected' : '' ?>><?= h($c) ?></option><?php endforeach; ?>
-      </select>
-      <button class="btn" type="submit">Apply</button>
-      <a class="btn secondary" href="/">Reset</a>
-    </form>
-    <div class="cardGrid">
-      <?php foreach (array_slice($browse, 0, 24) as $t) echo render_tool_card($t, ['placement' => 'home_browse']); ?>
-    </div>
-    <div class="actions" style="margin-top:22px"><a class="btn secondary" href="/categories.php">Browse all categories</a><a class="btn secondary" href="/top.php">See top tools</a><a class="btn secondary" href="/search.php">Search the directory</a></div>
   </div>
 </section>
 

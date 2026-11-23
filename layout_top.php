@@ -48,12 +48,12 @@ if (($v = getenv('AIHUB_BING_SITE_VERIFICATION')) !== false && $v !== '') $__ver
 
 $__css_ver = @filemtime(__DIR__ . '/assets/css/style.css') ?: '1';
 $__ui_ver = @filemtime(__DIR__ . '/assets/css/ui.css') ?: '1';
+$__pr_ver = @filemtime(__DIR__ . '/assets/css/premium.css') ?: '1';
 $__js_ver = @filemtime(__DIR__ . '/assets/js/interactions.js') ?: '1';
 $__built_css = is_file(__DIR__ . '/assets/css/site.min.css') ? (string)@filemtime(__DIR__ . '/assets/css/site.min.css') : '';   // built by scripts/build_assets.php
 $__hide_header_search = !empty($hide_header_search);
-$__nav = [['/categories.php', 'Categories'], ['/guides.php', 'Guides'], ['/compare.php', 'Compare'], ['/top.php', 'Top Tools'], ['/ai-use-case-explorer.php', 'Use Cases'], ['/universe.php', 'AI Universe']];
-$__navMore = [['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/leaderboard.php', 'Leaderboard'], ['/submit.php', 'Submit a tool'], ['/contact.php', 'Contact'], ['/comparisons.php', 'Comparisons'], ['/filters.php', 'Filters'], ['/community.php', 'Community'], ['/blog.php', 'Blog'], ['/methodology.php', 'Methodology'], ['/about.php', 'About'], ['/disclosure.php', 'Advertising disclosure']];
-$__uniExperiences = [['/universe-graph.php', 'Graph'], ['/universe-heatmap.php', 'Heatmap'], ['/universe-lineage.php', 'Lineage'], ['/universe-arena.php', 'Battle Arena']];
+$__nav = site_nav_primary(); $__navMore = site_nav_more(); [$__ctaHref, $__ctaLabel] = site_nav_cta();
+$__uniExperiences = [['/universe-graph.php', 'Graph'], ['/universe-heatmap.php', 'Heatmap'], ['/universe-lineage.php', 'Lineage'], ['/universe-arena.php', 'Battle Arena']];   // used only for the sub-navigation of the (unlinked) AI Universe pages themselves
 $__curBase = basename($__script);
 $__inUniverse = $__curBase === 'universe.php' || in_array('/' . $__curBase, array_column($__uniExperiences, 0), true);
 $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
@@ -84,6 +84,7 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <?php else: ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= h($__css_ver) ?>">
 <link rel="stylesheet" href="/assets/css/ui.css?v=<?= h($__ui_ver) ?>">
+<link rel="stylesheet" href="/assets/css/premium.css?v=<?= h($__pr_ver) ?>">
 <?php endif; ?>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/favicon-48.png">
@@ -110,32 +111,40 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <body data-page="<?= h(analytics_page_type(seo_current_script())) ?>">
 <?= ui_icon_sprite() ?>
 <a class="skipLink" href="#main">Skip to content</a>
-<header class="siteHeader">
+<header class="siteHeader" data-header>
   <div class="wrap hdr">
     <a class="brand" href="/" aria-label="AIHubpedia home">
       <img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="187" height="44" alt="AIHubpedia" class="brandLogo" fetchpriority="high">
     </a>
 
-    <nav class="primaryNav" id="primaryNav" aria-label="Main navigation">
-      <?php foreach ($__nav as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
-      <div class="moreMenu">
-        <button class="moreMenu__btn" type="button" aria-haspopup="true" aria-expanded="false">More <?= ui_icon('arrow', 'caret') ?></button>
-        <div class="moreMenu__panel">
-          <?php foreach ($__uniExperiences as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>>AI Universe: <?= h($label) ?></a><?php endforeach; ?>
-          <?php foreach ($__navMore as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
-        </div>
-      </div>
+    <nav class="siteNav" id="siteNav" aria-label="Main navigation">
+      <ul class="siteNav__list">
+        <?php foreach ($__nav as [$href, $label]): ?><li><a class="siteNav__link" href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a></li><?php endforeach; ?>
+        <li class="siteMore" data-more>
+          <details class="siteMore__details">
+            <summary class="siteNav__link siteMore__btn" aria-label="More pages">More <?= ui_icon('arrow', 'caret') ?></summary>
+            <div class="siteMore__panel" id="moreMenu">
+              <?php foreach ($__navMore as $__grp => $__links): ?>
+              <div class="siteMore__group"><p class="siteMore__title"><?= h($__grp) ?></p>
+                <?php foreach ($__links as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
+              </div>
+              <?php endforeach; ?>
+            </div>
+          </details>
+        </li>
+      </ul>
+      <a class="btn siteNav__cta" href="<?= h($__ctaHref) ?>" data-cta="header_project"><?= h($__ctaLabel) ?></a>
     </nav>
 
-    <?php if (!$__hide_header_search): ?><div class="hdrSearch"><?= render_search_box('hdrSearch', ['source' => 'header', 'placeholder' => 'Search AI tools']) ?></div><?php endif; ?>
-
     <div class="hdrActions">
+      <?php if (!$__hide_header_search): ?><a class="iconBtn hdrSearchBtn" href="/search.php" data-search-toggle aria-label="Search AI tools" aria-expanded="false" aria-controls="hdrSearchBar"><?= ui_icon('search') ?></a><?php endif; ?>
       <a class="iconBtn favLink js-only" href="/favorites.php" aria-label="Saved tools"><?= ui_icon('heart') ?><span class="favCount" data-fav-count hidden>0</span></a>
       <button class="iconBtn js-only" id="themeToggle" type="button" aria-label="Switch color theme" aria-pressed="false"><?= ui_icon('moon', 'ic-moon') ?><?= ui_icon('sun', 'ic-sun') ?></button>
-      <a class="btn sm hdrCta" href="/business.php">For business</a>
-      <button class="iconBtn navToggle js-only" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu"><?= ui_icon('menu', 'ic-open') ?><?= ui_icon('x', 'ic-close') ?></button>
+      <a class="btn sm hdrCta" href="<?= h($__ctaHref) ?>" data-cta="header_project"><?= h($__ctaLabel) ?></a>
+      <button class="iconBtn navToggle js-only" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="Open menu"><?= ui_icon('menu', 'ic-open') ?><?= ui_icon('x', 'ic-close') ?></button>
     </div>
   </div>
+  <?php if (!$__hide_header_search): ?><div class="hdrSearchBar" id="hdrSearchBar" data-search-bar hidden><div class="wrap"><?= render_search_box('hdrSearch', ['source' => 'header', 'placeholder' => 'Search AI tools, categories and guides']) ?></div></div><?php endif; ?>
 </header>
 <main class="<?= h($main_class ?? 'wrap') ?>" id="main">
 <?php if ($__inUniverse): ?>

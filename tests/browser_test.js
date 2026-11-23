@@ -33,7 +33,7 @@ async function run(profileName, contextOpts) {
   const shot = async (name) => page.screenshot({ path: `${shotDir}/${label}-${P}-${name}.png`, fullPage: false });
   const openNavIfMobile = async () => {
     const toggle = page.locator('.navToggle');
-    if (await toggle.isVisible()) { if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click(); await page.locator('#primaryNav').waitFor({ state: 'visible' }); }
+    if (await toggle.isVisible()) { if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click(); await page.locator('#siteNav').waitFor({ state: 'visible' }); }
   };
 
   // Homepage

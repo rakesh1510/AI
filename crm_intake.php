@@ -8,6 +8,15 @@ require_once __DIR__ . '/crm_dashboard.php';
 
 function trustnova_catalog(): array { return catalog_json('trustnova_services.json', ['services' => [], 'process' => [], 'honest_notes' => []]); }
 function trustnova_services(): array { return trustnova_catalog()['services'] ?? []; }
+/** The four services shown on the homepage, with the visitor-facing names and the real deliverables from the services catalogue (data/trustnova_services.json). */
+function trustnova_services_for_home(): array {
+  $all = trustnova_services(); $out = [];
+  foreach ([['api-integrations', 'API integrations', 'plug'], ['ai-workflow-automation', 'Workflow automation', 'flow'], ['backend-development', 'PHP/MySQL development', 'database'], ['custom-ai-agents', 'Custom AI solutions', 'sparkle']] as [$slug, $title, $icon]) {
+    if (!isset($all[$slug])) continue; $s = $all[$slug];
+    $out[] = ['slug' => $slug, 'title' => $title, 'icon' => $icon, 'summary' => (string)$s['summary'], 'deliverables' => array_slice((array)($s['deliverables'] ?? []), 0, 2)];
+  }
+  return $out;
+}
 function project_contact_prefs(): array { return ['email' => 'Email', 'video_call' => 'Video call', 'phone' => 'Phone call']; }
 
 /** lead type → [CRM kind, subtype] */
@@ -47,11 +56,11 @@ function crm_intake_record(PDO $pdo, array $clean, int $publicLeadId = 0, bool $
 /** Validation for the guided TrustNova project form. @return array{errors:array,clean:array} */
 function project_validate(array $post, ?int $now = null): array {
   $p = ['lead_type' => 'dev_project'] + $post; $v = lead_validate($p, ['dev_project'], $now); $e = $v['errors']; $c = $v['clean'];
-  $svc = (string)($post['service'] ?? ''); if (!isset(trustnova_services()[$svc])) $e['service'] = 'Please choose the kind of project.'; $c['service'] = isset(trustnova_services()[$svc]) ? $svc : '';
+  $svc = (string)($post['service'] ?? ''); if ($svc !== '' && !isset(trustnova_services()[$svc])) $e['service'] = 'Please choose a project type from the list, or leave it empty.'; $c['service'] = isset(trustnova_services()[$svc]) ? $svc : '';   // optional: a short enquiry needs only the goal, a name and an email
   $tech = mb_substr(trim((string)($post['existing_tech'] ?? '')), 0, 600); $c['existing_tech'] = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $tech) ?? '';
   $pref = (string)($post['contact_pref'] ?? 'email'); $c['contact_pref'] = isset(project_contact_prefs()[$pref]) ? $pref : 'email';
-  if (mb_strlen($c['company']) < 2) $e['company'] = 'Please enter your company name.';
-  if (mb_strlen($c['message']) < 40) $e['message'] = 'Please describe the business problem (at least 40 characters) so we can judge whether we can help.';
+  if ($c['company'] !== '' && mb_strlen($c['company']) < 2) $e['company'] = 'Please enter the company name, or leave it empty.';   // optional
+  if (mb_strlen($c['message']) < 20) $e['message'] = 'Please describe what you want to achieve in a sentence or two (at least 20 characters) so we can judge whether we can help.';
   $c['details'] = ['service' => $c['service'], 'existing_technology' => $c['existing_tech'], 'preferred_contact' => $c['contact_pref']];
   $c['message'] = $c['message'] . ($c['existing_tech'] !== '' ? "\n[Existing technology: " . $c['existing_tech'] . ']' : '') . ($c['service'] !== '' ? "\n[Project category: " . (trustnova_services()[$c['service']]['title'] ?? $c['service']) . ']' : '');
   return ['errors' => $e, 'clean' => $c];
@@ -75,23 +84,27 @@ function render_project_form(array $opts = []): string {
   $aria = fn($k) => isset($e[$k]) ? ' aria-invalid="true" aria-describedby="pj-' . $k . '-err"' : '';
   $o = '<form class="leadForm" id="projectForm" method="post" action="/project-inquiry.php" novalidate>';
   if (!empty($e['_token']) || !empty($e['_bot'])) $o .= '<p class="fieldError" role="alert">' . $h($e['_token'] ?? $e['_bot']) . '</p>';
+  if ($e) $o .= '<p class="fieldError" role="alert">Please check the highlighted fields. Nothing was sent yet.</p>';
   $o .= '<input type="hidden" name="form_token" value="' . $h(form_token('lead')) . '"><input type="hidden" name="source_page" value="/services.php"><div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>';
   foreach (['attr_source', 'attr_medium', 'attr_campaign'] as $ak) $o .= '<input type="hidden" name="' . $ak . '" value="' . $h($v[$ak] ?? $att[$ak]) . '">';
-  $opt = '<option value="">Choose a project type</option>'; foreach (trustnova_services() as $slug => $s) $opt .= '<option value="' . $h($slug) . '"' . ($sel === $slug ? ' selected' : '') . '>' . $h($s['title']) . '</option>';
-  $o .= '<fieldset><legend>1. The project</legend>' . crm_form_field('pj-service', 'Project category', '<select id="pj-service" name="service" required' . $aria('service') . '>' . $opt . '</select>', $e['service'] ?? '')
-      . crm_form_field('pj-message', 'The business problem', '<textarea class="input" id="pj-message" name="message" rows="5" required' . $aria('message') . ' aria-describedby="pj-message-hint">' . $h($v['message'] ?? '') . '</textarea>', $e['message'] ?? '', 'What is hard or costly today, and what would a good result look like? Please do not include confidential data or personal data about other people.')
-      . crm_form_field('pj-tech', 'Existing technology <span class="opt">(optional)</span>', '<textarea class="input" id="pj-tech" name="existing_tech" rows="2" maxlength="600">' . $h($v['existing_tech'] ?? '') . '</textarea>', '', 'Systems, languages, cloud or tools involved.') . '</fieldset>';
+  $opt = '<option value="">Not sure yet</option>'; foreach (trustnova_services() as $slug => $s) $opt .= '<option value="' . $h($slug) . '"' . ($sel === $slug ? ' selected' : '') . '>' . $h($s['title']) . '</option>';
   $bo = ''; foreach (lead_budget_options() as $k => $l) $bo .= '<option value="' . $h($k) . '"' . (($v['budget'] ?? '') === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
   $to = ''; foreach (lead_timeline_options() as $k => $l) $to .= '<option value="' . $h($k) . '"' . (($v['timeline'] ?? '') === (string)$k ? ' selected' : '') . '>' . $h($l) . '</option>';
-  $o .= '<fieldset><legend>2. Budget and timing</legend><div class="fieldRow">' . crm_form_field('pj-budget', 'Budget range <span class="opt">(optional)</span>', '<select id="pj-budget" name="budget">' . $bo . '</select>') . crm_form_field('pj-timeline', 'Timeline <span class="opt">(optional)</span>', '<select id="pj-timeline" name="timeline">' . $to . '</select>') . '</div></fieldset>';
   $po = ''; foreach (project_contact_prefs() as $k => $l) $po .= '<option value="' . $h($k) . '"' . (($v['contact_pref'] ?? 'email') === $k ? ' selected' : '') . '>' . $h($l) . '</option>';
-  $o .= '<fieldset><legend>3. About you</legend><div class="fieldRow">' . crm_form_field('pj-name', 'Your name', '<input class="input" id="pj-name" name="name" autocomplete="name" required value="' . $h($v['name'] ?? '') . '"' . $aria('name') . '>', $e['name'] ?? '')
-      . crm_form_field('pj-email', 'Business email', '<input class="input" id="pj-email" name="email" type="email" autocomplete="email" required value="' . $h($v['email'] ?? '') . '"' . $aria('email') . '>', $e['email'] ?? '') . '</div><div class="fieldRow">'
-      . crm_form_field('pj-company', 'Company', '<input class="input" id="pj-company" name="company" autocomplete="organization" required value="' . $h($v['company'] ?? '') . '"' . $aria('company') . '>', $e['company'] ?? '')
+  $o .= crm_form_field('pj-message', 'What do you want to achieve?', '<textarea class="input" id="pj-message" name="message" rows="4" required' . $aria('message') . ' aria-describedby="pj-message-hint">' . $h($v['message'] ?? '') . '</textarea>', $e['message'] ?? '', 'A sentence or two is enough, for example the systems to connect or the process to automate.');
+  $o .= '<div class="fieldRow">' . crm_form_field('pj-name', 'Your name', '<input class="input" id="pj-name" name="name" autocomplete="name" required value="' . $h($v['name'] ?? '') . '"' . $aria('name') . '>', $e['name'] ?? '')
+      . crm_form_field('pj-email', 'Email', '<input class="input" id="pj-email" name="email" type="email" autocomplete="email" required value="' . $h($v['email'] ?? '') . '"' . $aria('email') . '>', $e['email'] ?? '') . '</div>';
+  $openMore = (isset($e['company']) || isset($e['website']) || isset($e['service']) || !empty($v['company']) || !empty($v['budget']) || !empty($v['timeline']) || !empty($v['website']) || !empty($v['existing_tech']) || $sel !== '') ? ' open' : '';
+  $o .= '<details class="more"' . $openMore . '><summary>Add details <span class="opt">(optional)</span></summary>'
+      . '<div class="fieldRow">' . crm_form_field('pj-company', 'Company <span class="opt">(optional)</span>', '<input class="input" id="pj-company" name="company" autocomplete="organization" value="' . $h($v['company'] ?? '') . '"' . $aria('company') . '>', $e['company'] ?? '')
       . crm_form_field('pj-website', 'Website <span class="opt">(optional)</span>', '<input class="input" id="pj-website" name="website" inputmode="url" autocomplete="url" placeholder="https://" value="' . $h($v['website'] ?? '') . '"' . $aria('website') . '>', $e['website'] ?? '') . '</div>'
-      . crm_form_field('pj-pref', 'Preferred way to be contacted', '<select id="pj-pref" name="contact_pref">' . $po . '</select>') . '</fieldset>';
-  $o .= '<div class="field check"><label><input type="checkbox" name="consent" value="1" required' . (!empty($v['consent']) ? ' checked' : '') . $aria('consent') . '> I agree that TrustNova Tech may use these details to reply to my inquiry. <a href="/privacy.php">Privacy policy</a></label>' . (isset($e['consent']) ? '<p class="fieldError" id="pj-consent-err" role="alert">' . $h($e['consent']) . '</p>' : '') . '</div>';
-  return $o . '<button class="btn" type="submit">Send project inquiry</button><p class="small">We reply by email if it looks like a fit. We never add you to a mailing list from this form.</p></form>';
+      . '<div class="fieldRow">' . crm_form_field('pj-service', 'Project type <span class="opt">(optional)</span>', '<select id="pj-service" name="service"' . $aria('service') . '>' . $opt . '</select>', $e['service'] ?? '')
+      . crm_form_field('pj-pref', 'Preferred way to be contacted', '<select id="pj-pref" name="contact_pref">' . $po . '</select>') . '</div>'
+      . '<div class="fieldRow">' . crm_form_field('pj-budget', 'Budget range <span class="opt">(optional)</span>', '<select id="pj-budget" name="budget">' . $bo . '</select>') . crm_form_field('pj-timeline', 'Timeline <span class="opt">(optional)</span>', '<select id="pj-timeline" name="timeline">' . $to . '</select>') . '</div>'
+      . crm_form_field('pj-tech', 'Existing technology <span class="opt">(optional)</span>', '<textarea class="input" id="pj-tech" name="existing_tech" rows="2" maxlength="600">' . $h($v['existing_tech'] ?? '') . '</textarea>', '', 'Systems, languages or services you already use.')
+      . '</details>';
+  $o .= '<div class="field check"><label><input type="checkbox" name="consent" value="1" required' . (!empty($v['consent']) ? ' checked' : '') . $aria('consent') . '> I agree that TrustNova Tech may use these details to reply to my inquiry. <a href="/privacy.php">Privacy policy</a></label>' . (isset($e['consent']) ? '<p class="fieldError" id="pj-consent-err">' . $h($e['consent']) . '</p>' : '') . '</div>';
+  return $o . '<button class="btn btn--accent" type="submit">Send project inquiry</button><p class="small">We read every inquiry and reply by email if it looks like a fit. We do not promise a response time, and we never add you to a mailing list from this form.</p></form>';
 }
 function render_partner_form(array $opts = []): string {
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES); $v = $opts['values'] ?? []; $e = $opts['errors'] ?? []; $att = lead_attribution_from_request($_GET);

@@ -61,27 +61,53 @@
     on(btn, 'click', function () { var t = de.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; apply(t, true); track('theme_toggle', '', { theme: t }); });
   })();
 
-  /* ---------- Navigation drawer + More menu ---------- */
+  /* ---------- Navigation: mobile drawer, More menu (details element), header search bar ---------- */
   (function nav() {
-    var header = $('.siteHeader'), toggle = $('.navToggle'), navEl = $('#primaryNav');
+    var header = $('.siteHeader'), toggle = $('.navToggle'), navEl = $('#siteNav');
+    var more = $('.siteMore__details'), mq = window.matchMedia ? matchMedia('(max-width:1180px)') : null;
+    function setOpen(o) {
+      if (!header || !toggle) return;
+      header.classList.toggle('navOpen', o);
+      toggle.setAttribute('aria-expanded', o ? 'true' : 'false');
+      toggle.setAttribute('aria-label', o ? 'Close menu' : 'Open menu');
+    }
     if (header && toggle && navEl) {
-      function setOpen(o) {
-        header.classList.toggle('navOpen', o);
-        toggle.setAttribute('aria-expanded', o ? 'true' : 'false');
-        toggle.setAttribute('aria-label', o ? 'Close menu' : 'Open menu');
-      }
       on(toggle, 'click', function () { setOpen(!header.classList.contains('navOpen')); });
       on(d, 'keydown', function (e) { if (e.key === 'Escape' && header.classList.contains('navOpen')) { setOpen(false); toggle.focus(); } });
       on(d, 'click', function (e) { if (header.classList.contains('navOpen') && !header.contains(e.target)) setOpen(false); });
       $$('a', navEl).forEach(function (a) { on(a, 'click', function () { setOpen(false); }); });
     }
-    var more = $('.moreMenu__btn');
     if (more) {
-      var wrap = more.parentNode;
-      on(more, 'click', function () { var o = !wrap.classList.contains('open'); wrap.classList.toggle('open', o); more.setAttribute('aria-expanded', o ? 'true' : 'false'); });
-      on(d, 'click', function (e) { if (!wrap.contains(e.target)) { wrap.classList.remove('open'); more.setAttribute('aria-expanded', 'false'); } });
+      var sum = $('summary', more);
+      function closeMore(focus) { if (more.open) { more.open = false; if (focus && sum) sum.focus(); } }
+      on(d, 'keydown', function (e) { if (e.key === 'Escape' && more.open && !(mq && mq.matches)) { closeMore(true); } });
+      on(d, 'click', function (e) { if (more.open && !(mq && mq.matches) && !more.contains(e.target)) closeMore(false); });
+      on(more, 'keydown', function (e) {
+        // Arrow keys move through the links; Home/End jump; Tab leaves normally.
+        if (!more.open || ['ArrowDown', 'ArrowUp', 'Home', 'End'].indexOf(e.key) < 0) return;
+        var links = $$('.siteMore__panel a', more); if (!links.length) return;
+        var i = links.indexOf(d.activeElement); e.preventDefault();
+        var n = e.key === 'Home' ? 0 : e.key === 'End' ? links.length - 1 : (e.key === 'ArrowDown' ? (i + 1) % links.length : (i <= 0 ? links.length - 1 : i - 1));
+        links[n].focus();
+      });
+      on(sum, 'keydown', function (e) { if (e.key === 'ArrowDown') { e.preventDefault(); more.open = true; var f = $('.siteMore__panel a', more); if (f) f.focus(); } });
+      $$('.siteMore__panel a', more).forEach(function (a) { on(a, 'click', function () { if (!(mq && mq.matches)) closeMore(false); }); });
+      // In the mobile drawer every group is shown flat, so the disclosure is kept open there.
+      if (mq && mq.matches) more.open = true;
+      if (mq && mq.addEventListener) mq.addEventListener('change', function () { more.open = !!mq.matches; });
+    }
+    var sBtn = $('[data-search-toggle]'), sBar = $('[data-search-bar]');
+    if (sBtn && sBar) {
+      on(sBtn, 'click', function (e) {
+        e.preventDefault(); var o = sBar.hidden; sBar.hidden = !o; sBtn.setAttribute('aria-expanded', o ? 'true' : 'false');
+        if (o) { var i = $('input[type="search"]', sBar); if (i) i.focus(); }
+      });
+      on(d, 'keydown', function (e) { if (e.key === 'Escape' && !sBar.hidden && sBar.contains(d.activeElement)) { sBar.hidden = true; sBtn.setAttribute('aria-expanded', 'false'); sBtn.focus(); } });
     }
   })();
+
+  /* ---------- Call-to-action clicks (counted as clicks only: not enquiries, not revenue; no personal data) ---------- */
+  on(d, 'click', function (e) { var el = e.target && e.target.closest ? e.target.closest('[data-cta]') : null; if (el) track('cta_click', el.getAttribute('data-cta') || '', {}); });
 
   /* ---------- Search combobox ---------- */
   (function search() {
@@ -305,7 +331,7 @@
       var hero = $('.homeHero'), stack = $('.heroStack');
       if (hero && stack) on(hero, 'pointermove', function (e) { var r = hero.getBoundingClientRect(); stack.style.setProperty('--px', (((e.clientX - r.left) / r.width - .5) * 2).toFixed(3)); stack.style.setProperty('--py', (((e.clientY - r.top) / r.height - .5) * 2).toFixed(3)); });
     }
-    var rv = $$('.reveal');
+    var rv = $$('.reveal'); de.classList.add('reveal-on');   // content is only hidden once this script is running; if anything above throws, everything stays visible
     // Elements already on screen are shown at once. Below-the-fold ones animate in on scroll, and a fallback guarantees that
     // nothing stays hidden for renderers or users that never scroll (content must always be reachable).
     rv.forEach(function (el) { if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('in'); });

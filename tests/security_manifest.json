@@ -148,6 +148,7 @@
   "seo.php": "lib",
   "sitemap.php": "page",
   "click-count.php": "page",
+  "directory.php": "page",
   "sitemap_lib.php": "lib",
   "solutions.php": "page",
   "submit-comment.php": "write",

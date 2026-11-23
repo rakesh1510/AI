@@ -229,12 +229,13 @@ function event_schema(): array {
     'newsletter_signup' => ['source'],               // server-side, after a valid request
     'newsletter_confirmed' => [],
     'lead_submit' => [],                             // ref = lead type (server-side)
+    'cta_click' => [],                               // ref = call-to-action id (header_project, hero_project, sponsor_enquiry ...); a click, never an enquiry or revenue
     'wizard_complete' => ['budget'],                 // server-side; ref = objective key (no personal data)
   ];
 }
 
 /** Client-sendable subset (server-only events cannot be forged from the browser). */
-function event_client_names(): array { return ['search_submit', 'suggest_click', 'outbound_click', 'compare_start', 'compare_open', 'favorite_add', 'filter_use', 'theme_toggle', 'returning_visit']; }
+function event_client_names(): array { return ['search_submit', 'suggest_click', 'outbound_click', 'compare_start', 'compare_open', 'favorite_add', 'filter_use', 'theme_toggle', 'returning_visit', 'cta_click']; }
 
 function event_clean_value($v): string {
   $v = strtolower(trim((string)$v));

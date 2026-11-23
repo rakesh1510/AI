@@ -41,10 +41,10 @@ async function run(P, opts) {
 
   await page.goto(base + '/', { waitUntil: 'load' });
   check(await page.locator('h1').count() === 1, `[${P}] homepage has one h1`);
-  check(await page.locator('.journey').count() === 3, `[${P}] homepage shows Discover, Compare and Business journeys`);
-  check(await page.locator('.journey h3').allInnerTexts().then(t => t.join('|') === 'Discover|Compare|For business'), `[${P}] journey headings are Discover, Compare, For business`);
+  check(await page.locator('.paths .path').count() === 3, `[${P}] homepage shows the three paths (find, build, promote)`);
+  check(await page.locator('.paths .path h3').count() === 3, `[${P}] each path has a heading`);
   check(await page.locator('.intent').count() >= 8, `[${P}] goal-based entry points are shown`);
-  check(await page.locator('.catCard').count() >= 10, `[${P}] category cards are shown`);
+  check(await page.locator('main .tCard').count() >= 6 && await page.locator('main .tCard').count() <= 12 + 4, `[${P}] curated tool cards are shown (no full catalogue)`);
   check(await page.locator('.trustStrip').innerText().then(t => /reviewed profiles/.test(t) && /as of/.test(t)), `[${P}] trust strip states reviewed profiles and dated prices`);
   const bodyText = await page.locator('main').innerText();
   check(!/testimonial|trusted by|as seen on|\d+\s*(million|k)\+?\s*(users|visitors)/i.test(bodyText), `[${P}] no testimonials or invented traffic/customer claims on the homepage`);
@@ -170,21 +170,21 @@ async function run(P, opts) {
   if (isMobile) {
     await page.goto(base + '/', { waitUntil: 'load' });
     const tgl = page.locator('.navToggle');
-    check(await tgl.isVisible() && await page.locator('#primaryNav').isHidden(), `[${P}] menu is collapsed by default on mobile`);
+    check(await tgl.isVisible() && await page.locator('#siteNav').isHidden(), `[${P}] menu is collapsed by default on mobile`);
     await tgl.click();
-    await page.locator('#primaryNav').waitFor({ state: 'visible' });       // the drawer fades in over ~180ms
-    check(await tgl.getAttribute('aria-expanded') === 'true' && await page.locator('#primaryNav').isVisible(), `[${P}] menu button opens the drawer`);
+    await page.locator('#siteNav').waitFor({ state: 'visible' });       // the drawer fades in over ~180ms
+    check(await tgl.getAttribute('aria-expanded') === 'true' && await page.locator('#siteNav').isVisible(), `[${P}] menu button opens the drawer`);
     await page.waitForTimeout(300);
-    check(await page.locator('#primaryNav a:visible').count() >= 9, `[${P}] drawer lists all primary and secondary links`);
+    check(await page.locator('#siteNav a:visible').count() >= 9, `[${P}] drawer lists all primary and secondary links`);
     await shot(page, 'menu-open');
     await page.keyboard.press('Escape');
-    await page.locator('#primaryNav').waitFor({ state: 'hidden' });
-    check(await page.locator('#primaryNav').isHidden() && await tgl.getAttribute('aria-expanded') === 'false', `[${P}] Escape closes the drawer`);
+    await page.locator('#siteNav').waitFor({ state: 'hidden' });
+    check(await page.locator('#siteNav').isHidden() && await tgl.getAttribute('aria-expanded') === 'false', `[${P}] Escape closes the drawer`);
   } else {
     await page.goto(base + '/', { waitUntil: 'load' });
-    check(await page.locator('.navToggle').isHidden() && await page.locator('#primaryNav').isVisible(), `[${P}] desktop shows the full nav and no menu button`);
-    await page.locator('.moreMenu__btn').click();
-    check(await page.locator('.moreMenu__panel a:visible').count() >= 6, `[${P}] More menu opens`);
+    check(await page.locator('.navToggle').isHidden() && await page.locator('#siteNav').isVisible(), `[${P}] desktop shows the full nav and no menu button`);
+    await page.locator('.siteMore__details > summary').click();
+    check(await page.locator('.siteMore__panel a:visible').count() >= 6, `[${P}] More menu opens`);
   }
 
   // Accessibility sanity checks across key pages
@@ -375,8 +375,8 @@ async function run(P, opts) {
   ctx = await newCtx(browser, opts, { javaScriptEnabled: false });
   page = await ctx.newPage();
   await page.goto(base + '/', { waitUntil: 'load' });
-  check(await page.locator('.journey:visible').count() === 3 && await page.locator('.catCard:visible').count() >= 10, `[${P}] no-JS: all homepage sections are visible`);
-  check(await page.locator('#primaryNav a:visible').count() >= 5, `[${P}] no-JS: navigation links are visible`);
+  check(await page.locator('.paths .path:visible').count() === 3 && await page.locator('main .tCard:visible').count() >= 6, `[${P}] no-JS: all homepage sections are visible`);
+  check(await page.locator('#siteNav a:visible').count() >= 5, `[${P}] no-JS: navigation links are visible`);
   check(await page.locator('.navToggle:visible, [data-fav]:visible, #themeToggle:visible').count() === 0, `[${P}] no-JS: JavaScript-only controls are hidden`);
   check(await page.locator('.tCard a[href^="/tool.php"]').count() >= 20, `[${P}] no-JS: tool links are crawlable server-rendered anchors`);
   await page.fill('#heroSearch', 'transcription');
