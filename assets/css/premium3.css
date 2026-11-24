@@ -598,3 +598,4 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 .pgHero[data-tone=emerald] .pgHero__art,.pgHero[data-tone=amber] .pgHero__art{order:-1}
 @media (max-width:900px){.pgHero[data-tone=emerald] .pgHero__art,.pgHero[data-tone=amber] .pgHero__art{order:2}}
 .toolHero{--l1:color-mix(in srgb,var(--c1) 52%,transparent);--l3:color-mix(in srgb,var(--c2) 40%,transparent);--l2:color-mix(in srgb,var(--c2) 28%,transparent)}
+@media (max-width:900px){.pgHero[data-tone=emerald] .wrap,.pgHero[data-tone=amber] .wrap{grid-template-columns:minmax(0,1fr)}}
