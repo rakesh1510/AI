@@ -73,7 +73,7 @@ ok(substr_count($html, '<button') === 2, 'card has exactly the favorite and comp
 
 section('Built assets');
 $build = json_decode((string)@file_get_contents(__DIR__ . '/../assets/build.json'), true)['sources'] ?? [];
-foreach (['assets/css/style.css', 'assets/css/ui.css', 'assets/css/premium.css', 'assets/js/app.js', 'assets/js/interactions.js'] as $src) {
+foreach (['assets/css/style.css', 'assets/css/ui.css', 'assets/css/premium.css', 'assets/css/premium2.css', 'assets/js/app.js', 'assets/js/interactions.js'] as $src) {
   ok(($build[$src] ?? '') === sha1_file(__DIR__ . '/../' . $src), "built assets are current for $src (run: php scripts/build_assets.php)");
 }
 foreach (['assets/css/site.min.css', 'assets/js/app.min.js', 'assets/js/interactions.min.js'] as $out) ok(is_file(__DIR__ . '/../' . $out) && filesize(__DIR__ . '/../' . $out) > 500, "$out exists");

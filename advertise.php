@@ -22,17 +22,64 @@ $faq = [
   ['My tool is not listed yet. What should I do?', 'Submit it on the <a href="/submit.php">submit page</a>. A free listing is reviewed manually; priority approval is a paid option for faster review.'],
   ['What happens to the details I send?', 'We use them to reply to your enquiry. See the <a href="/privacy.php">privacy policy</a> and our <a href="/disclosure.php">advertising disclosure</a>.'],
 ];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<div class="pageHero" style="padding-top:0">
-  <span class="eyebrow"><?= ui_icon('chart') ?> For AI vendors</span>
-  <h1>Advertise your AI tool on AIHubpedia</h1>
-  <p class="lead">Paid placements put your tool in front of people comparing AI tools. Every paid placement is labelled “Sponsored”, and we do not promise traffic, clicks or revenue.</p>
-</div>
+<section class="pgHero stage">
+  <div class="wrap">
+    <div>
+      <div class="pgHero__crumbs" style="padding:0 0 14px"><?= render_breadcrumbs($crumbs) ?></div>
+      <span class="eyebrow"><?= ui_icon('chart') ?> For AI vendors</span>
+      <h1>Advertise your AI tool on <span class="gradText2">AIHubpedia</span></h1>
+      <p class="lead">Paid placements put your tool in front of people comparing AI tools. Every paid placement is labelled “Sponsored”, and we do not promise traffic, clicks or revenue.</p>
+      <div class="heroActions"><a class="btn btn--accent" href="#packages">See packages</a><a class="btn secondary" href="#request" data-cta="adv_hero_enquiry">Send an enquiry</a></div>
+      <ul class="factRow"><li><?= ui_icon('check') ?> Labelled “Sponsored”</li><li><?= ui_icon('check') ?> Never changes reviews or rankings</li><li><?= ui_icon('check') ?> No payment taken on this site</li></ul>
+    </div>
+    <div class="pgHero__art" aria-hidden="true"><?= art_orb() ?></div>
+  </div>
+</section>
 
-<section aria-labelledby="priceTitle">
-  <h2 id="priceTitle">Package comparison</h2>
+<section class="priceStage stage" id="packages" aria-labelledby="pkgTitle">
+  <div class="wrap">
+    <div class="sectionHead"><div><h2 id="pkgTitle">Listing and sponsorship packages</h2><p>Prices are list prices from our configuration (<?= h($cur) ?>, one-off, excluding any taxes). Dates are agreed in writing before payment.</p></div></div>
+    <?php $__pk = sponsorship_packages(); $__slot = ['free' => 'listing', 'priority' => 'listing', 'featured' => 'featured', 'homepage' => 'spotlight']; ?>
+    <ul class="priceGrid">
+    <?php foreach (['free', 'priority', 'featured', 'homepage'] as $key): if (!isset($__pk[$key])) continue; $pk = $__pk[$key]; $tier = $tiers[$key] ?? null; $rec = $key === 'featured';
+      $amount = $tier ? ((int)($tier['price'] ?? 0) === 0 ? 'Free' : $sym . number_format((int)$tier['price']) . ($sym === '' ? ' ' . $cur : '')) : ''; ?>
+      <li><article class="priceCard<?= $rec ? ' priceCard--rec' : '' ?>">
+        <?php if ($rec): ?><span class="priceCard__ribbon">Recommended</span><?php endif; ?>
+        <?php if (!empty($pk['paid']) && in_array($key, ['featured', 'homepage'], true)): ?><span class="priceCard__tag">Sponsored placement</span><?php endif; ?>
+        <h3><?= h($pk['label']) ?></h3>
+        <div class="priceCard__price"><strong><?= h($amount) ?></strong><span><?= h($pk['duration']) ?></span></div>
+        <?= art_placement($__slot[$key]) ?>
+        <ul>
+          <li><?= ui_icon('check') ?><span><?= h($pk['placement']) ?></span></li>
+          <li><?= ui_icon('check') ?><span><?= h($pk['review']) ?></span></li>
+          <?php if (!empty($pk['paid']) && in_array($key, ['featured', 'homepage'], true)): ?><li><?= ui_icon('check') ?><span>Links to your profile and website with <code>rel="sponsored"</code></span></li><?php endif; ?>
+        </ul>
+        <?php if (in_array($key, ['free', 'priority'], true)): ?>
+          <a class="btn secondary" href="/submit.php">Submit a tool</a>
+        <?php else: ?>
+          <a class="btn <?= $rec ? '' : 'secondary' ?>" href="/advertise.php?package=<?= h(rawurlencode($key)) ?>#request" data-cta="adv_pkg_<?= h($key) ?>">Ask about this</a>
+        <?php endif; ?>
+      </article></li>
+    <?php endforeach; ?>
+    </ul>
+    <ul class="enqRow">
+      <?php foreach (['featured_monthly', 'newsletter_sponsor'] as $key): if (!isset($__pk[$key])) continue; $pk = $__pk[$key]; ?>
+      <li class="enqCard">
+        <h3><?= h($pk['label']) ?></h3>
+        <p><?= h($pk['status_text'] ?? '') ?></p>
+        <a class="btn secondary" href="/advertise.php?package=<?= h(rawurlencode($key)) ?>#request"><?= $key === 'newsletter_sponsor' ? 'Register interest' : 'Ask about this' ?></a>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+    <p class="priceNote">AIHubpedia does not publish audience, traffic or conversion figures for placements, because we have not verified any we could stand behind. The previews above are illustrations of where a placement appears, not real results.</p>
+  </div>
+</section>
+
+<section class="cmpBand wrap" aria-labelledby="priceTitle" style="padding-inline:28px">
+  <h2 id="priceTitle">Compare packages in detail</h2>
   <p class="small">Prices are the current list prices from our configuration (<?= h($cur) ?>, one-off, excluding any taxes). Dates are agreed in writing before payment. No payment is taken on this website.</p>
   <div class="matrixWrap" tabindex="0" role="region" aria-label="Package comparison table, scrollable">
     <table class="matrix pkgTable">
@@ -56,7 +103,9 @@ require __DIR__ . '/layout_top.php';
   <p class="small">AIHubpedia does not publish audience, traffic or conversion figures for placements, because we have not verified any we could stand behind. Ask us what can be measured for your placement before you decide.</p>
 </section>
 
-<section class="panel" style="margin-top:28px" aria-labelledby="indepTitle">
+
+<div class="wrap cmpBody">
+<section class="panel" style="margin-top:0" aria-labelledby="indepTitle">
   <h2 id="indepTitle" style="margin-top:0">Editorial and paid are separate</h2>
   <div class="matrixWrap" tabindex="0" role="region" aria-label="Editorial versus paid, scrollable">
   <table class="matrix">
@@ -112,4 +161,5 @@ require __DIR__ . '/layout_top.php';
     <details class="faqItem"><summary><?= h($q) ?></summary><p><?= $a ?></p></details>
   <?php endforeach; ?>
 </section>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

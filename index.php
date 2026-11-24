@@ -74,7 +74,7 @@ $nlLaunched = newsletter_launched();
 require __DIR__ . '/layout_top.php';
 ?>
 
-<section class="homeHero" aria-labelledby="heroTitle">
+<section class="homeHero stage" aria-labelledby="heroTitle">
   <div class="wrap heroGrid">
     <div class="heroCopy">
       <span class="eyebrow"><?= ui_icon('shield') ?> Independent directory · sources and dates on reviewed tools</span>
@@ -91,6 +91,7 @@ require __DIR__ . '/layout_top.php';
     </div>
     <?php if ($stack): ?>
     <div class="heroStack" aria-hidden="true">
+      <?= art_orb() ?>
       <?php foreach ($stack as $t): $cp = $t['curated']; ?>
         <div class="floatCard">
           <div class="row"><span class="dot"><?= h(mb_substr($t['name'], 0, 1)) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>
@@ -153,9 +154,16 @@ require __DIR__ . '/layout_top.php';
         <a class="intent" href="<?= h($i['url']) ?>"><span class="ico"><?= ui_icon($i['icon']) ?></span><span><strong><?= h($i['label']) ?></strong><span class="n"><?= h(seo_plural($i['count'], 'tool')) ?></span></span></a>
       <?php endforeach; ?>
     </div>
-    <div class="catChips" role="list" aria-label="Browse by category">
-      <?php foreach ($cats as $c): ?><a role="listitem" class="chipLink" href="<?= h(category_path($c)) ?>"><?= h($c) ?> <span class="n"><?= (int)($catCounts[$c] ?? 0) ?></span></a><?php endforeach; ?>
-    </div>
+    <?php $__tc = array_filter($cats, fn($c) => $c !== CATALOG_UNCLASSIFIED); usort($__tc, fn($x, $y) => ($catCounts[$y] ?? 0) <=> ($catCounts[$x] ?? 0)); ?>
+    <h3 class="subHead">Browse by category</h3>
+    <ul class="catGrid catGrid--mini" aria-label="Browse by category">
+      <?php foreach (array_slice($__tc, 0, 8) as $c): [$c1, $c2, $ico] = cat_theme((string)$c); ?>
+        <li><a class="catTile catTile--mini" style="--c1:<?= h($c1) ?>;--c2:<?= h($c2) ?>" href="<?= h(category_path($c)) ?>">
+          <span class="catIcon" aria-hidden="true"><?= ui_icon($ico) ?></span>
+          <span class="catTile__txt"><strong><?= h($c) ?></strong><span><?= h(seo_plural((int)($catCounts[$c] ?? 0), 'tool')) ?></span></span>
+        </a></li>
+      <?php endforeach; ?>
+    </ul>
     <div data-recent-list hidden style="margin-top:22px"><h3 style="margin:0 0 10px;font-size:1rem">Continue where you left off</h3><ul class="linkList" style="margin:0"></ul></div>
     <h3 class="subHead">Reviewed profiles and widely used tools</h3>
     <p class="small subHeadNote">Tools with a <span class="pill pill--reviewed"><?= ui_icon('shield') ?> Reviewed</span> badge have a profile with vendor sources, a retrieval date and listed limitations (<a href="/methodology.php">how we review</a>). Other tools are listed without that review. Order reflects editor picks and activity on this site, not payment.</p>
@@ -166,20 +174,20 @@ require __DIR__ . '/layout_top.php';
   </div>
 </section>
 
-<section class="section" aria-labelledby="svcTitle" id="services">
+<section class="bizBand stage" aria-labelledby="svcTitle" id="services">
   <div class="wrap">
     <div class="sectionHead"><div><h2 id="svcTitle">Build with AI</h2><p>AIHubpedia is built and run by TrustNova Tech. These are the projects we take on, and what you receive from each.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
-    <div class="svcGrid">
-      <?php foreach ($svcCatalog as $sv): ?>
-      <article class="svcCard">
-        <span class="bubble"><?= ui_icon($sv['icon']) ?></span>
+    <ul class="svcTiles">
+      <?php foreach ($svcCatalog as $i => $sv): $__t = [['#06b6d4', '#2563eb'], ['#8b5cf6', '#ec4899'], ['#10b981', '#0ea5e9'], ['#f59e0b', '#ef4444']][$i % 4]; ?>
+      <li><article class="svcTile" style="--c1:<?= $__t[0] ?>;--c2:<?= $__t[1] ?>">
+        <span class="catIcon" aria-hidden="true"><?= ui_icon($sv['icon']) ?></span>
         <h3><?= h($sv['title']) ?></h3>
         <p><?= h($sv['summary']) ?></p>
-        <ul class="ticks"><?php foreach ($sv['deliverables'] as $dv): ?><li><?= h($dv) ?></li><?php endforeach; ?></ul>
-        <a class="svcCard__more" href="/services.php?s=<?= h(rawurlencode($sv['slug'])) ?>">Learn more <?= ui_icon('arrow') ?><span class="sr"> about <?= h($sv['title']) ?></span></a>
-      </article>
+        <ul><?php foreach ($sv['deliverables'] as $dv): ?><li><?= ui_icon('check') ?><span><?= h($dv) ?></span></li><?php endforeach; ?></ul>
+        <a class="readGo" href="/services.php?s=<?= h(rawurlencode($sv['slug'])) ?>" style="color:#c4b5fd">Learn more <?= ui_icon('arrow') ?><span class="sr"> about <?= h($sv['title']) ?></span></a>
+      </article></li>
       <?php endforeach; ?>
-    </div>
+    </ul>
     <div class="svcCta">
       <p><strong>Every project starts with a written scope.</strong> We do not promise outcomes in advance; we agree how success will be measured. No client case studies are published here.</p>
       <a class="btn btn--accent" href="/services.php#inquiry" data-cta="services_project">Discuss Your Project</a>
@@ -202,7 +210,16 @@ require __DIR__ . '/layout_top.php';
     </div>
     <?php if ($pairs): ?>
       <h3 class="subHead">Popular head-to-head comparisons</h3>
-      <ul class="linkList linkList--chips"><?php foreach ($pairs as [$pa, $pb]): ?><li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li><?php endforeach; ?></ul>
+      <ul class="vsGrid"><?php foreach (array_slice($pairs, 0, 4) as [$pa, $pb]): ?>
+        <li><a class="vsCard" href="<?= h(compare_path($pa['id'], $pb['id'])) ?>">
+          <span class="vsCard__tools">
+            <span class="vsCard__tool"><?= logo_tile($pa, 'lg') ?><strong><?= h($pa['name']) ?></strong><small><?= h($pa['category']) ?></small></span>
+            <span class="vsBadge" aria-hidden="true">VS</span>
+            <span class="vsCard__tool"><?= logo_tile($pb, 'lg') ?><strong><?= h($pb['name']) ?></strong><small><?= h($pb['category']) ?></small></span>
+          </span>
+          <span class="vsCard__go">Compare <?= h($pa['name']) ?> vs <?= h($pb['name']) ?> <?= ui_icon('arrow') ?></span>
+        </a></li>
+      <?php endforeach; ?></ul>
     <?php endif; ?>
     <p class="actions" style="margin-top:18px"><a class="btn secondary" href="/compare.php" data-cta="home_compare">Compare any two tools</a></p>
   </div>

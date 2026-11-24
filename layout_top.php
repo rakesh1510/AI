@@ -85,6 +85,7 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= h($__css_ver) ?>">
 <link rel="stylesheet" href="/assets/css/ui.css?v=<?= h($__ui_ver) ?>">
 <link rel="stylesheet" href="/assets/css/premium.css?v=<?= h($__pr_ver) ?>">
+<link rel="stylesheet" href="/assets/css/premium2.css?v=<?= h(@filemtime(__DIR__ . "/assets/css/premium2.css") ?: 1) ?>">
 <?php endif; ?>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/favicon-48.png">

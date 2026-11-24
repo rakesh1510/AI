@@ -64,6 +64,18 @@ const pages = ['/', '/categories.php', '/compare.php', '/guides.php', '/business
       await ctx.close();
     }
   }
+  // v2 page structure
+  { const c2 = await browser.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await c2.newPage();
+    const cnt = async (u, sel) => { await pg.goto(base + u, { waitUntil: 'load' }); return pg.locator(sel).count(); };
+    check(await cnt('/categories.php', '.catTile') >= 10, 'categories: colourful category tiles');
+    await pg.fill('[data-cat-filter]', 'writing'); check(await pg.locator('.catTile:visible').count() >= 1 && await pg.locator('.catTile:visible').count() < 5, 'categories: filter narrows the list');
+    check(await cnt('/guides.php', '.magFeature') === 1 && await pg.locator('.gCard').count() >= 2, 'guides: featured article and guide cards');
+    check(await cnt('/compare.php', '.vsCard') >= 4, 'compare: popular comparison cards');
+    check(await cnt('/compare.php?a=chatgpt&b=claude', '.vsHead .lt') === 2 && await pg.locator('h1').count() === 1, 'compare: head-to-head with one h1');
+    check(await cnt('/business.php', '.svcTile') >= 4 && await pg.locator('.timeline li').count() === 4 && await pg.locator('#request form').count() >= 1, 'business: services, timeline and enquiry form');
+    check(await cnt('/advertise.php', '.priceCard') === 4 && await pg.locator('.priceCard--rec').count() === 1 && await pg.locator('table.pkgTable').count() === 1, 'advertise: four price cards, one recommended, comparison table below');
+    check(await pg.locator('.priceCard .artPlace').count() === 4, 'advertise: placement previews');
+    await c2.close(); }
   // search + compare, form validation, reduced motion, no-JS
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();

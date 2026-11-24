@@ -23,6 +23,12 @@ $be = $bad['errors'] ?? $bad;
 ck(isset($be['email']) && isset($be['name']), 'invalid form rejected with field errors: ' . json_encode($be));
 $bot = project_validate(array_merge($ok, ['website_url_confirm' => 'x']), time());
 ck(!empty($bot['errors'] ?? $bot), 'honeypot rejected');
+// v2 illustration helpers: original inline SVG, no external references
+foreach (['art_orb', 'art_agent', 'art_flow'] as $fn) { $svg = $fn(); ck(strpos($svg, '<svg') === 0 && stripos($svg, 'http') === false || strpos($svg, 'xmlns') === false, "$fn is self-contained SVG"); ck(stripos($svg, '<script') === false && stripos($svg, 'href=') === false, "$fn has no scripts or links"); }
+ck(strpos(art_thumb('Chatbots', 2), 'artThumb') !== false && strpos(art_placement('featured'), 'SPONSORED') !== false, 'thumb and placement preview render');
+ck(cat_theme('Audio')[2] === 'mic' && count(cat_theme('Nope')) === 3, 'cat_theme returns a theme for known and unknown categories');
+$lt = logo_tile(['name' => 'Zed <b>', 'category' => 'Coding', 'id' => 'nonexistent-x'], 'md');
+ck(strpos($lt, '<b>Z</b>') !== false && strpos($lt, 'Zed <b>') === false, 'logo_tile escapes and shows a monogram fallback');
 // reveal fallback: hidden state only under reveal-on
 $css = file_get_contents('assets/css/premium.css') . file_get_contents('assets/css/ui.css');
 ck(!preg_match('/html\.js\s+\.reveal\s*\{[^}]*opacity:\s*0/', $css), 'no JS-only hiding without reveal-on');

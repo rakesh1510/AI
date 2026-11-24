@@ -109,6 +109,36 @@
   /* ---------- Call-to-action clicks (counted as clicks only: not enquiries, not revenue; no personal data) ---------- */
   on(d, 'click', function (e) { var el = e.target && e.target.closest ? e.target.closest('[data-cta]') : null; if (el) track('cta_click', el.getAttribute('data-cta') || '', {}); });
 
+  /* ---------- Logo fallback: the monogram under a logo tile shows when the image cannot load ---------- */
+  (function logos() {
+    function mark(i) { var p = i.parentNode; if (p && p.classList) p.classList.add('noimg'); }
+    function ok(i) { var p = i.parentNode; if (p && p.classList) p.classList.add('ld'); }
+    $$('img[data-logo]').forEach(function (i) { if (i.complete) { if (i.naturalWidth === 0) mark(i); else ok(i); } });
+    on(d, 'load', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-logo')) ok(t); }, true);
+    on(d, 'error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-logo')) mark(t); }, true);
+  })();
+
+  /* ---------- Client-side filters (category tiles, guides). Without JS everything stays listed. ---------- */
+  (function filters() {
+    var inp = $('[data-cat-filter]'), tiles = $$('[data-cat-name]'), empty = $('[data-cat-empty]');
+    if (inp && tiles.length) {
+      on(inp, 'input', function () {
+        var q = inp.value.trim().toLowerCase(), n = 0;
+        tiles.forEach(function (t) { var hit = !q || (t.getAttribute('data-cat-name') || '').indexOf(q) > -1; t.hidden = !hit; if (hit) n++; });
+        if (empty) empty.hidden = n > 0;
+      });
+    }
+    var btns = $$('[data-gfilter]'), cards = $$('[data-gcat]');
+    btns.forEach(function (b) {
+      b.hidden = false;
+      on(b, 'click', function () {
+        var v = b.getAttribute('data-gfilter');
+        btns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        cards.forEach(function (c) { c.hidden = !(v === '*' || c.getAttribute('data-gcat') === v); });
+      });
+    });
+  })();
+
   /* ---------- Search combobox ---------- */
   (function search() {
     var forms = $$('[data-search-form]'); if (!forms.length) return;

@@ -1,5 +1,6 @@
 <?php
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+require_once __DIR__ . "/art.php";
 /** UI building blocks shared by the redesigned pages. Pure rendering helpers: no database access. */
 
 /** Icon paths (24x24, stroke-based). One inline sprite per page instead of an icon library. */

@@ -23,7 +23,7 @@ function css_minify(string $css): string {
   return trim($css);
 }
 
-$sources = ['assets/css/style.css', 'assets/css/ui.css', 'assets/css/premium.css', 'assets/js/app.js', 'assets/js/interactions.js'];
+$sources = ['assets/css/style.css', 'assets/css/ui.css', 'assets/css/premium.css', 'assets/css/premium2.css', 'assets/js/app.js', 'assets/js/interactions.js'];
 // graph app: source of truth is the prototype folder, the served copy lives in assets/universe/ (same relative names)
 $uniSrc = ['graph.js', 'graph.css', 'data-source.js', 'layout-worker.js'];
 foreach ((array)glob("$root/prototypes/universe-graph/vendor/d3-*") as $f) $uniSrc[] = 'vendor/' . basename($f);
@@ -47,9 +47,9 @@ if ($check) {
   echo "Built assets are up to date.\n"; exit(0);
 }
 
-$css = css_minify(file_get_contents("$root/assets/css/style.css") . "\n" . file_get_contents("$root/assets/css/ui.css") . "\n" . file_get_contents("$root/assets/css/premium.css"));
+$css = css_minify(file_get_contents("$root/assets/css/style.css") . "\n" . file_get_contents("$root/assets/css/ui.css") . "\n" . file_get_contents("$root/assets/css/premium.css") . "\n" . file_get_contents("$root/assets/css/premium2.css"));
 file_put_contents("$root/assets/css/site.min.css", $css . "\n");
-printf("site.min.css: %d bytes (from %d)\n", strlen($css), filesize("$root/assets/css/style.css") + filesize("$root/assets/css/ui.css") + filesize("$root/assets/css/premium.css"));
+printf("site.min.css: %d bytes (from %d)\n", strlen($css), filesize("$root/assets/css/style.css") + filesize("$root/assets/css/ui.css") + filesize("$root/assets/css/premium.css") + filesize("$root/assets/css/premium2.css"));
 
 $terser = trim((string)shell_exec('command -v terser 2>/dev/null'));
 foreach (['app', 'interactions'] as $js) {

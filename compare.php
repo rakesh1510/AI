@@ -49,42 +49,60 @@ if(($a !== '' && !$ta) || ($b !== '' && !$tb)){
 }
 $__pairs = available_comparison_pairs($tools, 12);
 
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
 
-<?= render_breadcrumbs($crumbs) ?>
-<section class="compare-hero card">
-  <div class="compare-hero__copy">
-    <span class="eyebrow">Side-by-side comparison</span>
-    <h1><?= ($ta && $tb) ? h($ta['name']) . ' vs ' . h($tb['name']) : 'Compare AI tools' ?></h1>
-    <p class="small compare-lead">Pick two AI tools and compare category, listed pricing, features, use cases and platforms side by side. Source-backed data is shown where AIHubpedia has collected it.</p>
+<section class="pgHero vsHero stage pgHero--solo">
+  <div class="wrap">
+    <div class="pgHero__crumbs"><?= render_breadcrumbs($crumbs) ?></div>
+    <?php if($ta && $tb): ?>
+      <div>
+        <span class="eyebrow"><?= ui_icon('compare') ?> Side-by-side comparison</span>
+        <h1 class="sr"><?= h($ta['name']) ?> vs <?= h($tb['name']) ?></h1>
+        <div class="vsHead" role="group" aria-label="<?= h($ta['name']) ?> versus <?= h($tb['name']) ?>">
+          <?php foreach([$ta, $tb] as $k => $vt): ?>
+            <?php if($k === 1): ?><span class="vsMidBig" aria-hidden="true">VS</span><?php endif; ?>
+            <div class="vsSide">
+              <?= logo_tile($vt, 'xl') ?>
+              <p class="vsName"><a href="/tool.php?id=<?= urlencode($vt['id']) ?>"><?= h($vt['name']) ?></a></p>
+              <div class="chips"><span><?= h($vt['category'] ?? 'AI Tool') ?></span><span><?= h(($k === 0 ? $bundleA : $bundleB)['pricing'] ?: ($vt['pricing'] ?? 'Pricing unknown')) ?></span></div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php else: ?>
+      <div>
+        <span class="eyebrow"><?= ui_icon('compare') ?> Compare AI tools</span>
+        <h1>Compare AI tools <span class="gradText2">side by side</span></h1>
+        <p class="lead">Pick two AI tools and compare category, listed pricing, features, use cases and platforms side by side. Source-backed data is shown where AIHubpedia has collected it.</p>
+      </div>
+    <?php endif; ?>
+    <form method="get" action="/compare.php" class="compareForm" data-compare-form>
+      <div class="field">
+        <label for="toolA">Tool A</label>
+        <select id="toolA" name="a">
+          <option value="">Choose first tool</option>
+          <?php foreach($tools as $t): ?><option value="<?= h($t['id']) ?>" <?= ($a===$t['id'])?'selected':'' ?>><?= h($t['name']) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <span class="vsMid" aria-hidden="true">VS</span>
+      <div class="field">
+        <label for="toolB">Tool B</label>
+        <select id="toolB" name="b">
+          <option value="">Choose second tool</option>
+          <?php foreach($tools as $t): ?><option value="<?= h($t['id']) ?>" <?= ($b===$t['id'])?'selected':'' ?>><?= h($t['name']) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="compare-form-actions">
+        <button class="btn btn--accent" type="submit">Compare now</button>
+        <button type="button" class="btn secondary js-only" data-compare-swap>Swap</button>
+        <a class="btn secondary" href="/compare.php">Reset</a>
+      </div>
+    </form>
   </div>
-  <form method="get" action="/compare.php" class="compare-form-grid" data-compare-form>
-    <div class="field">
-      <label for="toolA">Tool A</label>
-      <select id="toolA" name="a">
-        <option value="">Choose first tool</option>
-        <?php foreach($tools as $t): ?>
-          <option value="<?= h($t['id']) ?>" <?= ($a===$t['id'])?'selected':'' ?>><?= h($t['name']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="field">
-      <label for="toolB">Tool B</label>
-      <select id="toolB" name="b">
-        <option value="">Choose second tool</option>
-        <?php foreach($tools as $t): ?>
-          <option value="<?= h($t['id']) ?>" <?= ($b===$t['id'])?'selected':'' ?>><?= h($t['name']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="compare-form-actions">
-      <button class="btn" type="submit">Compare now</button>
-      <button type="button" class="btn secondary js-only" data-compare-swap>Swap</button>
-      <a class="btn secondary" href="/compare.php">Reset</a>
-    </div>
-  </form>
 </section>
+<div class="wrap cmpBody">
 
 <?php if($ta && $tb && $bundleA && $bundleB): ?>
   <div class="compare-sticky-bar card">
@@ -114,7 +132,7 @@ require __DIR__ . '/layout_top.php';
         <?php if($isWinner): ?><div class="compare-card__winner">More complete profile</div><?php endif; ?>
         <div class="compare-card__head">
           <div class="compare-card__brand">
-            <img src="<?= h(tool_logo($tool)) ?>" alt="<?= h($tool['name']) ?> logo" class="tool-logo lg" width="64" height="64" decoding="async">
+            <?= logo_tile($tool, 'lg') ?>
             <div>
               <h2><a href="/tool.php?id=<?= urlencode($tool['id']) ?>"><?= h($tool['name']) ?></a></h2>
               <div class="compare-meta">
@@ -312,14 +330,22 @@ require __DIR__ . '/layout_top.php';
 <?php endif; ?>
 
 <?php if($__pairs): ?>
-<section class="card" style="margin-top:18px">
-  <h2 style="margin-top:0">Popular AI tool comparisons</h2>
-  <ul class="linkList">
+<section style="margin-top:28px" aria-labelledby="popPairs">
+  <div class="sectionHead"><div><h2 id="popPairs">Popular comparisons</h2><p>Start from a pairing other people look at, then change either tool.</p></div></div>
+  <ul class="vsGrid">
     <?php foreach($__pairs as [$pa, $pb]): ?>
-      <li><a href="<?= h(compare_path($pa['id'], $pb['id'])) ?>"><?= h($pa['name']) ?> vs <?= h($pb['name']) ?></a></li>
+    <li><a class="vsCard" href="<?= h(compare_path($pa['id'], $pb['id'])) ?>">
+      <span class="vsCard__tools">
+        <span class="vsCard__tool"><?= logo_tile($pa, 'lg') ?><strong><?= h($pa['name']) ?></strong><small><?= h($pa['category'] ?? '') ?></small></span>
+        <span class="vsBadge" aria-hidden="true">VS</span>
+        <span class="vsCard__tool"><?= logo_tile($pb, 'lg') ?><strong><?= h($pb['name']) ?></strong><small><?= h($pb['category'] ?? '') ?></small></span>
+      </span>
+      <span class="vsCard__go">Compare <?= h($pa['name']) ?> vs <?= h($pb['name']) ?> <?= ui_icon('arrow') ?></span>
+    </a></li>
     <?php endforeach; ?>
   </ul>
 </section>
 <?php endif; ?>
 
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>
