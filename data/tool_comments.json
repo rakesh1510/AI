@@ -100,5 +100,53 @@
         "name": "RL",
         "comment": "rate limit probe 5 6b058cd139a85",
         "created_at": "2026-11-24 13:10:41"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "<script>alert(1)</script>",
+        "comment": "Security test <script>alert(1)</script> 6b059486f3fbf",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 0 6b0594870b5d3",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 1 6b0594870dc5b",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 2 6b05948710e31",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 3 6b059487138c8",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 4 6b0594871628b",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "RL",
+        "comment": "rate limit probe 5 6b05948718cde",
+        "created_at": "2026-11-24 13:43:35"
+    },
+    {
+        "tool_id": "chatgpt",
+        "name": "QA Bot",
+        "comment": "Browser test comment desktop 1795527965292",
+        "created_at": "2026-11-24 13:46:07"
     }
 ]
