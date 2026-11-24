@@ -28,48 +28,8 @@ function logo_tile(array $t, string $size = 'md'): string {
   $c = cat_theme((string)($t['category'] ?? ''));
   $src = function_exists('tool_logo') ? (string)tool_logo($t) : '';
   $mono = htmlspecialchars(mb_strtoupper(mb_substr($name, 0, 1)), ENT_QUOTES);
-  $img = $src !== '' ? '<img src="' . htmlspecialchars($src, ENT_QUOTES) . '" alt="" width="64" height="64" loading="lazy" decoding="async" data-logo>' : '';
+  $img = $src !== '' ? '<img src="' . htmlspecialchars($src, ENT_QUOTES) . '" alt="" width="64" height="64" loading="lazy" decoding="async" fetchpriority="low" data-logo>' : '';
   return '<span class="lt lt--' . $size . '" style="--c1:' . $c[0] . ';--c2:' . $c[1] . '" aria-hidden="true"><b>' . $mono . '</b>' . $img . '</span>';
-}
-
-/** Hero artwork: glossy interlocked rings and a sphere, lit violet/blue. Decorative. */
-function art_orb(): string {
-  return '<svg class="artOrb" viewBox="0 0 520 460" role="img" aria-label="" aria-hidden="true" focusable="false"><defs>'
-    . '<linearGradient id="oA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset=".45" stop-color="#6d5dfc"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>'
-    . '<linearGradient id="oB" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset=".5" stop-color="#6366f1"/><stop offset="1" stop-color="#7e22ce"/></linearGradient>'
-    . '<linearGradient id="oC" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f0abfc"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#312e81"/></linearGradient>'
-    . '<radialGradient id="oS" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#a5b4fc"/><stop offset="1" stop-color="#4338ca"/></radialGradient>'
-    . '<radialGradient id="oG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#7c6cf0" stop-opacity=".55"/><stop offset="1" stop-color="#7c6cf0" stop-opacity="0"/></radialGradient>'
-    . '<filter id="oBl"><feGaussianBlur stdDeviation="6"/></filter></defs>'
-    . '<ellipse cx="260" cy="230" rx="250" ry="215" fill="url(#oG)"/>'
-    . '<g fill="none" stroke-linecap="round">'
-    . '<ellipse cx="260" cy="232" rx="170" ry="78" transform="rotate(-28 260 232)" stroke="url(#oA)" stroke-width="46"/>'
-    . '<ellipse cx="260" cy="232" rx="170" ry="78" transform="rotate(-28 260 232)" stroke="#fff" stroke-opacity=".28" stroke-width="5" stroke-dasharray="120 560" stroke-dashoffset="-20"/>'
-    . '<ellipse cx="260" cy="232" rx="150" ry="70" transform="rotate(34 260 232)" stroke="url(#oB)" stroke-width="40"/>'
-    . '<ellipse cx="260" cy="232" rx="150" ry="70" transform="rotate(34 260 232)" stroke="#fff" stroke-opacity=".3" stroke-width="4" stroke-dasharray="90 600" stroke-dashoffset="-260"/>'
-    . '<ellipse cx="260" cy="232" rx="100" ry="100" stroke="url(#oC)" stroke-width="30" opacity=".92"/>'
-    . '</g>'
-    . '<circle cx="388" cy="96" r="30" fill="url(#oS)"/><circle cx="132" cy="352" r="16" fill="url(#oS)" opacity=".9"/><circle cx="430" cy="330" r="9" fill="#67e8f9" opacity=".85"/>'
-    . '<ellipse cx="260" cy="420" rx="140" ry="16" fill="#000" opacity=".35" filter="url(#oBl)"/></svg>';
-}
-
-/** Business hero artwork: a friendly cube-robot on a lit isometric platform, with glass gate. Decorative. */
-function art_agent(): string {
-  return '<svg class="artAgent" viewBox="0 0 560 480" aria-hidden="true" focusable="false"><defs>'
-    . '<linearGradient id="aP" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b3f8f"/><stop offset="1" stop-color="#171a4d"/></linearGradient>'
-    . '<linearGradient id="aT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ea2ff"/><stop offset="1" stop-color="#4b3df0"/></linearGradient>'
-    . '<linearGradient id="aL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f55d8"/><stop offset="1" stop-color="#2a2a8f"/></linearGradient>'
-    . '<linearGradient id="aR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3ab8"/><stop offset="1" stop-color="#1b1b6a"/></linearGradient>'
-    . '<linearGradient id="aGl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67e8f9" stop-opacity=".75"/><stop offset="1" stop-color="#3b82f6" stop-opacity=".25"/></linearGradient>'
-    . '<radialGradient id="aE" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#ff4fd8"/><stop offset="1" stop-color="#ff4fd8" stop-opacity="0"/></radialGradient></defs>'
-    . '<polygon points="280,170 540,300 280,430 20,300" fill="url(#aP)"/><polygon points="280,170 540,300 280,430 20,300" fill="none" stroke="#6d7bff" stroke-opacity=".45" stroke-width="2"/>'
-    . '<g stroke="#6d7bff" stroke-opacity=".22"><path d="M150 235L410 365M215 202L475 332M345 202L85 332M410 235L150 365"/></g>'
-    . '<polygon points="90,300 150,270 150,215 90,245" fill="url(#aGl)" stroke="#a5f3fc" stroke-opacity=".5"/>'
-    . '<g><polygon points="280,200 350,235 280,270 210,235" fill="url(#aT)"/><polygon points="210,235 280,270 280,350 210,315" fill="url(#aL)"/><polygon points="350,235 280,270 280,350 350,315" fill="url(#aR)"/>'
-    . '<circle cx="253" cy="302" r="22" fill="url(#aE)"/><circle cx="253" cy="302" r="8" fill="#fff"/><circle cx="313" cy="302" r="22" fill="url(#aE)"/><circle cx="313" cy="302" r="8" fill="#fff"/>'
-    . '<rect x="268" y="150" width="8" height="52" rx="4" fill="#9aa8ff"/><circle cx="272" cy="146" r="10" fill="#ff4fd8"/></g>'
-    . '<g fill="#a5b4fc"><circle cx="470" cy="150" r="7" opacity=".8"/><circle cx="90" cy="150" r="5" opacity=".6"/><circle cx="500" cy="230" r="4" opacity=".7"/></g>'
-    . '<rect x="438" y="280" width="26" height="86" rx="8" fill="#c7d2fe"/><rect x="438" y="268" width="26" height="14" rx="7" fill="#e0e7ff"/></svg>';
 }
 
 /** Small workflow illustration: input, three steps, outcome. Decorative. */
@@ -121,40 +81,71 @@ function art_placement(string $slot): string {
 function _a_defs(string $p): string {
   $s = fn($o, $c, $a = 1) => '<stop offset="' . $o . '" stop-color="' . $c . '"' . ($a < 1 ? ' stop-opacity="' . $a . '"' : '') . '/>';
   return '<defs>'
-    . '<linearGradient id="' . $p . 'ch" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#f7f8ff') . $s(.2, '#a8b3e6') . $s(.46, '#eef1ff') . $s(.74, '#6a76bd') . $s(1, '#2a2e6e') . '</linearGradient>'
-    . '<linearGradient id="' . $p . 'gl" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffffff', .42) . $s(.5, '#a5b4fc', .14) . $s(1, '#22d3ee', .10) . '</linearGradient>'
-    . '<radialGradient id="' . $p . 'sp" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#b9c3ff') . $s(.6, '#5a4df0') . $s(1, '#14123f') . '</radialGradient>'
-    . '<radialGradient id="' . $p . 'sc" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#a5f3fc') . $s(.6, '#2a8cf0') . $s(1, '#10205a') . '</radialGradient>'
-    . '<radialGradient id="' . $p . 'sm" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#f5c2ff') . $s(.6, '#a24df0') . $s(1, '#2a1259') . '</radialGradient>'
-    . '<linearGradient id="' . $p . 'vi" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#c4b5fd') . $s(.5, '#6d5dfc') . $s(1, '#1d4ed8') . '</linearGradient>'
-    . '<linearGradient id="' . $p . 'cy" x1="1" y1="0" x2="0" y2="1">' . $s(0, '#67e8f9') . $s(.55, '#3b82f6') . $s(1, '#4c1d95') . '</linearGradient>'
-    . '<radialGradient id="' . $p . 'gw" cx=".5" cy=".5" r=".5">' . $s(0, '#7c6cf0', .5) . $s(1, '#7c6cf0', 0) . '</radialGradient>'
-    . '<filter id="' . $p . 'bl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter></defs>';
+    // brushed chrome: bright specular bands with dark reflections between them
+    . '<linearGradient id="' . $p . 'ch" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffffff') . $s(.14, '#c9d2f5') . $s(.3, '#6c78c4') . $s(.46, '#f1f4ff') . $s(.58, '#8f9bd8') . $s(.8, '#3b4390') . $s(1, '#161a4f') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'gl" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffffff', .5) . $s(.35, '#b7c4ff', .16) . $s(.7, '#7dd3fc', .08) . $s(1, '#a78bfa', .18) . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'ge" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffffff', .95) . $s(.35, '#ffffff', .25) . $s(.65, '#ffffff', .05) . $s(1, '#7dd3fc', .55) . '</linearGradient>'
+    . '<radialGradient id="' . $p . 'sp" cx=".34" cy=".3" r=".82">' . $s(0, '#ffffff') . $s(.18, '#c7d0ff') . $s(.5, '#6d5dfc') . $s(.82, '#26208a') . $s(1, '#0e0c3a') . '</radialGradient>'
+    . '<radialGradient id="' . $p . 'sc" cx=".34" cy=".3" r=".82">' . $s(0, '#ffffff') . $s(.18, '#baf3ff') . $s(.5, '#2f9bf5') . $s(.82, '#13318f') . $s(1, '#081338') . '</radialGradient>'
+    . '<radialGradient id="' . $p . 'sm" cx=".34" cy=".3" r=".82">' . $s(0, '#ffffff') . $s(.18, '#ffd0f7') . $s(.5, '#b04df0') . $s(.82, '#46188f') . $s(1, '#1a0a3c') . '</radialGradient>'
+    . '<radialGradient id="' . $p . 'rm" cx=".72" cy=".78" r=".62">' . $s(0, '#67e8f9', 0) . $s(.72, '#67e8f9', 0) . $s(1, '#67e8f9', .7) . '</radialGradient>'
+    . '<linearGradient id="' . $p . 'vi" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#e0d4ff') . $s(.28, '#8b7bff') . $s(.62, '#4f46e5') . $s(1, '#1d2c9e') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'cy" x1="1" y1="0" x2="0" y2="1">' . $s(0, '#a5f3fc') . $s(.4, '#38bdf8') . $s(.75, '#4f46e5') . $s(1, '#4c1d95') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'mg" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffd6fb') . $s(.4, '#e879f9') . $s(.8, '#7c3aed') . $s(1, '#3b1a8f') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'ao" x1="0" y1="0" x2="0" y2="1">' . $s(0, '#000', 0) . $s(1, '#06061f', .55) . '</linearGradient>'
+    . '<radialGradient id="' . $p . 'gw" cx=".5" cy=".5" r=".5">' . $s(0, '#8b7bff', .55) . $s(.5, '#5b6bff', .16) . $s(1, '#7c6cf0', 0) . '</radialGradient>'
+    . '<filter id="' . $p . 'bl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>'
+    . '<filter id="' . $p . 'sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>'
+    . '<filter id="' . $p . 'ds" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#05052a" flood-opacity=".55"/></filter>'
+    . '</defs>';
 }
 function _a_svg(string $cls, string $vb, string $p, string $inner): string {
   return '<svg class="art ' . $cls . '" viewBox="' . $vb . '" aria-hidden="true" focusable="false">' . _a_defs($p) . $inner . '</svg>';
 }
-/** Lit sphere. $g: sp (violet), sc (cyan), sm (magenta), ch (chrome). */
+/** Lit sphere with rim light, soft specular and a hot spot. $g: sp (violet), sc (cyan), sm (magenta), ch (chrome). */
 function _a_sph(string $p, float $cx, float $cy, float $r, string $g = 'sp'): string {
-  return '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . $g . ')"/><ellipse cx="' . ($cx - $r * .3) . '" cy="' . ($cy - $r * .42) . '" rx="' . ($r * .34) . '" ry="' . ($r * .18) . '" fill="#fff" opacity=".55" transform="rotate(-24 ' . ($cx - $r * .3) . ' ' . ($cy - $r * .42) . ')"/>';
+  $hx = $cx - $r * .32; $hy = $cy - $r * .4;
+  return '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . $g . ')" filter="url(#' . $p . 'ds)"/>'
+    . '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . 'rm)"/>'
+    . '<ellipse cx="' . $hx . '" cy="' . $hy . '" rx="' . ($r * .38) . '" ry="' . ($r * .2) . '" fill="#fff" opacity=".6" transform="rotate(-28 ' . $hx . ' ' . $hy . ')" filter="url(#' . $p . 'sb)"/>'
+    . '<circle cx="' . ($hx - $r * .06) . '" cy="' . ($hy - $r * .02) . '" r="' . max(1.5, $r * .07) . '" fill="#fff"/>';
 }
-/** Frosted glass slab with a bright top edge. */
+/** Frosted glass slab: tint, bevelled edge, diagonal sheen, soft shadow. */
 function _a_slab(string $p, float $x, float $y, float $w, float $h, float $r = 22, string $tr = ''): string {
-  return '<g' . ($tr ? ' transform="' . $tr . '"' : '') . '><rect x="' . $x . '" y="' . $y . '" width="' . $w . '" height="' . $h . '" rx="' . $r . '" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".38"/><path d="M' . ($x + $r) . ' ' . ($y + 1.5) . 'H' . ($x + $w - $r) . '" stroke="#fff" stroke-opacity=".75" stroke-width="2" stroke-linecap="round"/></g>';
+  static $n = 0; $id = $p . 'cl' . (++$n);
+  return '<g' . ($tr ? ' transform="' . $tr . '"' : '') . '>'
+    . '<rect x="' . ($x + 4) . '" y="' . ($y + 14) . '" width="' . ($w - 8) . '" height="' . $h . '" rx="' . $r . '" fill="#05052a" opacity=".38" filter="url(#' . $p . 'bl)"/>'
+    . '<rect x="' . $x . '" y="' . $y . '" width="' . $w . '" height="' . $h . '" rx="' . $r . '" fill="url(#' . $p . 'gl)"/>'
+    . '<clipPath id="' . $id . '"><rect x="' . $x . '" y="' . $y . '" width="' . $w . '" height="' . $h . '" rx="' . $r . '"/></clipPath>'
+    . '<g clip-path="url(#' . $id . ')"><polygon points="' . ($x - 10) . ',' . ($y + $h * .65) . ' ' . ($x + $w * .62) . ',' . ($y - 10) . ' ' . ($x + $w * .86) . ',' . ($y - 10) . ' ' . ($x + 10) . ',' . ($y + $h + 10) . '" fill="#fff" opacity=".1"/></g>'
+    . '<rect x="' . ($x + .75) . '" y="' . ($y + .75) . '" width="' . ($w - 1.5) . '" height="' . ($h - 1.5) . '" rx="' . $r . '" fill="none" stroke="url(#' . $p . 'ge)" stroke-width="1.5"/>'
+    . '</g>';
 }
+/** Glossy tube/ring: dark edge, gradient body, inner sheen and specular arcs. */
 function _a_ring(string $p, float $cx, float $cy, float $rx, float $ry, float $rot, float $w, string $g = 'vi'): string {
-  return '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . $ry . '" transform="rotate(' . $rot . ' ' . $cx . ' ' . $cy . ')" fill="none" stroke="url(#' . $p . $g . ')" stroke-width="' . $w . '"/>'
-    . '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . $ry . '" transform="rotate(' . $rot . ' ' . $cx . ' ' . $cy . ')" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="' . max(2, $w / 9) . '" stroke-dasharray="' . ($rx * .5) . ' ' . ($rx * 4) . '" stroke-dashoffset="-' . ($rx * .25) . '"/>';
+  $t = ' transform="rotate(' . $rot . ' ' . $cx . ' ' . $cy . ')"';
+  $e = '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . $ry . '"' . $t . ' fill="none" ';
+  return $e . 'stroke="#07072e" stroke-opacity=".55" stroke-width="' . ($w + 5) . '" filter="url(#' . $p . 'sb)"/>'
+    . $e . 'stroke="url(#' . $p . $g . ')" stroke-width="' . $w . '"/>'
+    . $e . 'stroke="#fff" stroke-opacity=".22" stroke-width="' . max(2, $w * .34) . '" stroke-dasharray="' . ($rx * 1.5) . ' ' . ($rx * 5) . '" stroke-dashoffset="-' . ($rx * .1) . '" stroke-linecap="round" filter="url(#' . $p . 'sb)"/>'
+    . $e . 'stroke="#fff" stroke-opacity=".85" stroke-width="' . max(1.6, $w / 10) . '" stroke-dasharray="' . ($rx * .34) . ' ' . ($rx * 6) . '" stroke-dashoffset="-' . ($rx * .22) . '" stroke-linecap="round"/>'
+    . $e . 'stroke="#7dd3fc" stroke-opacity=".55" stroke-width="' . max(1.5, $w / 12) . '" stroke-dasharray="' . ($rx * .5) . ' ' . ($rx * 5.5) . '" stroke-dashoffset="-' . ($rx * 3.1) . '" stroke-linecap="round"/>';
 }
 function _a_glow(string $p, float $cx, float $cy, float $r): string { return '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . 'gw)"/>'; }
-function _a_shadow(string $p, float $cx, float $cy, float $rx): string { return '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . ($rx * .1) . '" fill="#000" opacity=".4" filter="url(#' . $p . 'bl)"/>'; }
-/** Isometric cube. $top/$left/$right are gradient ids (without prefix). */
+function _a_shadow(string $p, float $cx, float $cy, float $rx): string { return '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . ($rx * .1) . '" fill="#000" opacity=".45" filter="url(#' . $p . 'bl)"/>'; }
+/** Isometric block with gloss on the top face, ambient occlusion on the sides and bright edges. */
 function _a_cube(string $p, float $cx, float $y, float $s, string $top = 'ch', string $left = 'vi', string $right = 'cy'): string {
-  $h = $s * .5; $d = $s * .58;
-  return '<polygon points="' . $cx . ',' . $y . ' ' . ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . ($cx - $s) . ',' . ($y + $h) . '" fill="url(#' . $p . $top . ')"/>'
-    . '<polygon points="' . ($cx - $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . $cx . ',' . ($y + 2 * $h + $d) . ' ' . ($cx - $s) . ',' . ($y + $h + $d) . '" fill="url(#' . $p . $left . ')"/>'
-    . '<polygon points="' . ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . $cx . ',' . ($y + 2 * $h + $d) . ' ' . ($cx + $s) . ',' . ($y + $h + $d) . '" fill="url(#' . $p . $right . ')"/>'
-    . '<path d="M' . ($cx - $s) . ' ' . ($y + $h) . 'L' . $cx . ' ' . $y . 'L' . ($cx + $s) . ' ' . ($y + $h) . '" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>';
+  $h = $s * .5; $d = $s * .58; $b = $y + 2 * $h;
+  $face = fn($pts, $g) => '<polygon points="' . $pts . '" fill="url(#' . $p . $g . ')"/>';
+  $L = ($cx - $s) . ',' . ($y + $h) . ' ' . $cx . ',' . $b . ' ' . $cx . ',' . ($b + $d) . ' ' . ($cx - $s) . ',' . ($y + $h + $d);
+  $R = ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . $b . ' ' . $cx . ',' . ($b + $d) . ' ' . ($cx + $s) . ',' . ($y + $h + $d);
+  $T = $cx . ',' . $y . ' ' . ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . $b . ' ' . ($cx - $s) . ',' . ($y + $h);
+  return $face($L, $left) . '<polygon points="' . $L . '" fill="url(#' . $p . 'ao)" opacity=".7"/>'
+    . $face($R, $right) . '<polygon points="' . $R . '" fill="url(#' . $p . 'ao)" opacity=".35"/>'
+    . $face($T, $top)
+    . '<polygon points="' . $T . '" fill="url(#' . $p . 'ge)" opacity=".28"/>'
+    . '<path d="M' . ($cx - $s) . ' ' . ($y + $h) . 'L' . $cx . ' ' . $y . 'L' . ($cx + $s) . ' ' . ($y + $h) . '" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.6" stroke-linejoin="round"/>'
+    . '<path d="M' . $cx . ' ' . $b . 'L' . $cx . ' ' . ($b + $d) . '" stroke="#fff" stroke-opacity=".4" stroke-width="1.2"/>';
 }
 
 /** Communication: two glass chat bubbles, a chrome sphere and a ring. */
@@ -233,6 +224,55 @@ function art_doc(): string { $p = 'ad'; return _a_svg('artScene', '0 0 520 400',
   . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(-8 260 200)') . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(6 260 200)')
   . '<g fill="#fff" opacity=".8"><rect x="190" y="130" width="140" height="12" rx="6"/><rect x="190" y="164" width="120" height="12" rx="6" opacity=".6"/><rect x="190" y="198" width="140" height="12" rx="6" opacity=".6"/><rect x="190" y="232" width="90" height="12" rx="6" opacity=".4"/></g>'
   . _a_sph($p, 380, 110, 30, 'sc') . _a_sph($p, 130, 320, 18, 'sm')); }
+
+/** Hero artwork: a woven chrome-and-iridescent ring knot with lit spheres. Decorative. */
+function art_orb(): string {
+  $p = 'ao2';
+  // weave: draw ring A, ring B, then redraw a clipped half of A on top so the rings interlock
+  return _a_svg('artOrb', '0 0 520 460', $p,
+    _a_glow($p, 260, 230, 250) . _a_shadow($p, 260, 428, 150)
+    . _a_ring($p, 260, 232, 176, 82, -28, 48, 'vi')
+    . _a_ring($p, 260, 232, 156, 74, 34, 42, 'cy')
+    . '<clipPath id="' . $p . 'wv"><path clip-rule="evenodd" d="M0 0H260V232H0ZM260 232H520V460H260ZM378 232a118 118 0 1 0 -236 0a118 118 0 1 0 236 0Z"/></clipPath>'
+    . '<g clip-path="url(#' . $p . 'wv)">' . _a_ring($p, 260, 232, 176, 82, -28, 48, 'vi') . '</g>'
+    . _a_ring($p, 260, 232, 104, 104, 0, 30, 'mg')
+    . _a_ring($p, 260, 232, 214, 40, 12, 7, 'ch')
+    . _a_sph($p, 398, 98, 32, 'sc') . _a_sph($p, 128, 354, 18, 'sm') . _a_sph($p, 436, 330, 10, 'sp') . _a_sph($p, 82, 138, 9, 'sc'));
+}
+
+/** Business hero artwork: a glossy cube-robot on a neon-edged platform with a glass gate and floating chips. Decorative. */
+function art_agent(): string {
+  $p = 'aa2';
+  $plat = '280,190 540,318 280,446 20,318';
+  return _a_svg('artAgent', '0 0 560 480', $p,
+    _a_glow($p, 280, 250, 270)
+    // platform: dark glass slab, neon rim, grid
+    . '<polygon points="' . $plat . '" fill="#0c0f3f"/><polygon points="20,318 280,446 280,462 20,334" fill="#070a2e"/><polygon points="540,318 280,446 280,462 540,334" fill="#0a0d38"/>'
+    . '<polygon points="' . $plat . '" fill="url(#' . $p . 'gl)" opacity=".5"/>'
+    . '<g stroke="#6d8bff" stroke-opacity=".28"><path d="M150 254L410 382M215 222L475 350M345 222L85 350M410 254L150 382M280 190V446"/></g>'
+    . '<polygon points="' . $plat . '" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-opacity=".9" filter="url(#' . $p . 'sb)"/><polygon points="' . $plat . '" fill="none" stroke="#a5f3fc" stroke-width="1.2"/>'
+    . '<ellipse cx="280" cy="326" rx="120" ry="40" fill="#22d3ee" opacity=".18" filter="url(#' . $p . 'bl)"/>'
+    // glass gate
+    . '<polygon points="82,306 148,274 148,214 82,246" fill="url(#' . $p . 'gl)" stroke="#a5f3fc" stroke-opacity=".7"/><polygon points="82,306 148,274 148,214 82,246" fill="url(#' . $p . 'ge)" opacity=".18"/>'
+    . '<rect x="76" y="238" width="10" height="72" rx="5" fill="url(#' . $p . 'ch)"/><rect x="144" y="206" width="10" height="72" rx="5" fill="url(#' . $p . 'ch)"/>'
+    // robot: body block
+    . _a_shadow($p, 280, 396, 74)
+    . _a_cube($p, 280, 262, 56, 'ch', 'vi', 'cy')
+    // head: rounded glossy shell with dark visor and glowing eyes
+    . '<g filter="url(#' . $p . 'ds)"><rect x="214" y="150" width="132" height="104" rx="34" fill="url(#' . $p . 'ch)"/></g>'
+    . '<rect x="214" y="150" width="132" height="104" rx="34" fill="url(#' . $p . 'ge)" opacity=".22"/>'
+    . '<rect x="226" y="166" width="108" height="64" rx="26" fill="#0a0b30"/><rect x="226" y="166" width="108" height="64" rx="26" fill="url(#' . $p . 'gl)" opacity=".35"/>'
+    . '<ellipse cx="252" cy="200" rx="15" ry="19" fill="#ff4fd8" opacity=".35" filter="url(#' . $p . 'sb)"/><ellipse cx="308" cy="200" rx="15" ry="19" fill="#ff4fd8" opacity=".35" filter="url(#' . $p . 'sb)"/>'
+    . '<rect x="244" y="186" width="16" height="28" rx="8" fill="#ff7be8"/><rect x="300" y="186" width="16" height="28" rx="8" fill="#ff7be8"/><rect x="249" y="190" width="5" height="9" rx="2.5" fill="#fff"/><rect x="305" y="190" width="5" height="9" rx="2.5" fill="#fff"/>'
+    . '<path d="M240 168Q280 156 322 168" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>'
+    // ears and antenna
+    . '<rect x="204" y="186" width="14" height="36" rx="7" fill="url(#' . $p . 'vi)"/><rect x="342" y="186" width="14" height="36" rx="7" fill="url(#' . $p . 'vi)"/>'
+    . '<rect x="276" y="122" width="8" height="32" rx="4" fill="url(#' . $p . 'ch)"/>' . _a_sph($p, 280, 116, 12, 'sm')
+    // floating chips
+    . _a_slab($p, 410, 150, 64, 64, 18, 'rotate(8 442 182)') . '<path d="M428 172l12 12 20-22" fill="none" stroke="#5eead4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" transform="rotate(8 442 182)"/>'
+    . _a_slab($p, 92, 118, 56, 56, 16, 'rotate(-10 120 146)') . '<path d="M106 132h28M106 146h28M106 160h16" stroke="#c4b5fd" stroke-width="5" stroke-linecap="round" transform="rotate(-10 120 146)"/>'
+    . _a_sph($p, 480, 270, 14, 'sc') . _a_sph($p, 60, 200, 9, 'sm') . _a_sph($p, 498, 96, 8, 'sp'));
+}
 
 /** Generic hero scene chooser used by page_hero(). */
 function art_scene(string $name): string {

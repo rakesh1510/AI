@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/crm_intake.php';
+require_once __DIR__ . '/services_catalog.php';
 
 $data = load_tools();
 $tools = $data['tools'] ?? [];

@@ -163,6 +163,7 @@
   "top.php": "page",
   "track-click.php": "write",
   "art.php": "lib",
+  "services_catalog.php": "lib",
   "ui.php": "lib",
   "unsubscribe.php": "token_write",
   "vote-tool-ajax.php": "write",

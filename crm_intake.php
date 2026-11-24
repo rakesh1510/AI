@@ -5,18 +5,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  * The public inquiry is stored first (leads table, existing notification and reports keep working); the CRM copy is best effort.
  */
 require_once __DIR__ . '/crm_dashboard.php';
+require_once __DIR__ . '/services_catalog.php';   // trustnova_catalog(), trustnova_services(), trustnova_services_for_home()
 
-function trustnova_catalog(): array { return catalog_json('trustnova_services.json', ['services' => [], 'process' => [], 'honest_notes' => []]); }
-function trustnova_services(): array { return trustnova_catalog()['services'] ?? []; }
-/** The four services shown on the homepage, with the visitor-facing names and the real deliverables from the services catalogue (data/trustnova_services.json). */
-function trustnova_services_for_home(): array {
-  $all = trustnova_services(); $out = [];
-  foreach ([['api-integrations', 'API integrations', 'plug'], ['ai-workflow-automation', 'Workflow automation', 'flow'], ['backend-development', 'PHP/MySQL development', 'database'], ['custom-ai-agents', 'Custom AI solutions', 'sparkle']] as [$slug, $title, $icon]) {
-    if (!isset($all[$slug])) continue; $s = $all[$slug];
-    $out[] = ['slug' => $slug, 'title' => $title, 'icon' => $icon, 'summary' => (string)$s['summary'], 'deliverables' => array_slice((array)($s['deliverables'] ?? []), 0, 2)];
-  }
-  return $out;
-}
 function project_contact_prefs(): array { return ['email' => 'Email', 'video_call' => 'Video call', 'phone' => 'Phone call']; }
 
 /** lead type → [CRM kind, subtype] */
