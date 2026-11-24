@@ -5,12 +5,12 @@ set -euo pipefail
 cd "$(dirname "$0")"
 PY=${BPY:-/tmp/bpyenv/bin/python}
 OUT=../assets/art; mkdir -p "$OUT" /tmp/art_png
-SCENES=("$@"); [ ${#SCENES[@]} -eq 0 ] && SCENES=(hero_knot agent podium chat shield network layers lens steps compass mail lost doc)
+SCENES=("$@"); [ ${#SCENES[@]} -eq 0 ] && SCENES=(hero_knot agent podium chat shield network layers lens steps compass mail lost doc ads versus cubes book workflow)
 for sc in "${SCENES[@]}"; do
   case "$sc" in hero_knot|agent) S=1.0; N=128;; *) S=0.8; N=112;; esac
   $PY render.py "$sc" "/tmp/art_png/$sc.png" --samples $N --scale $S 2>&1 | grep -E "Traceback|Error:|rendered" || true
 done
-if [ ${#SCENES[@]} -ge 13 ] || [[ " ${SCENES[*]} " == *" thumbs "* ]]; then
+if [ ${#SCENES[@]} -ge 18 ] || [[ " ${SCENES[*]} " == *" thumbs "* ]]; then
   for t in 0 1 2 3; do THUMB=$t $PY render.py thumbs "/tmp/art_png/thumb$t.png" --samples 96 --scale 0.8 2>&1 | grep -E "Traceback|Error:|rendered" || true; done
 fi
 $PY - <<'PYEOF'

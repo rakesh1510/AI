@@ -89,7 +89,9 @@ function _art_img(string $file, string $class, bool $eager = false): string {
   if (!isset($cache[$path])) { $cache[$path] = is_file($path) ? (@getimagesize($path) ?: null) : null; }
   $sz = $cache[$path]; if (!$sz) return '';
   $v = (string)@filemtime($path);
-  return '<img class="art ' . $class . ' artImg" src="/assets/art/' . $file . '.webp?v=' . $v . '" width="' . (int)$sz[0] . '" height="' . (int)$sz[1] . '" alt="" aria-hidden="true" decoding="async" ' . ($eager ? 'fetchpriority="high"' : 'loading="lazy"') . '>';
+  $small = __DIR__ . '/assets/art/' . $file . '-sm.webp';
+  $srcset = is_file($small) ? ' srcset="/assets/art/' . $file . '-sm.webp?v=' . $v . ' 560w, /assets/art/' . $file . '.webp?v=' . $v . ' ' . (int)$sz[0] . 'w" sizes="(max-width:700px) 80vw, 520px"' : '';
+  return '<img class="art ' . $class . ' artImg" src="/assets/art/' . $file . '.webp?v=' . $v . '"' . $srcset . ' width="' . (int)$sz[0] . '" height="' . (int)$sz[1] . '" alt="" aria-hidden="true" decoding="async" ' . ($eager ? 'fetchpriority="high"' : 'loading="lazy"') . '>';
 }
 
 /* =====================================================================================================
@@ -292,8 +294,15 @@ function art_agent(bool $eager = false): string { if ($i = _art_img('agent', 'ar
     . _a_sph($p, 480, 270, 14, 'sc') . _a_sph($p, 60, 200, 9, 'sm') . _a_sph($p, 498, 96, 8, 'sp'));
 }
 
+/** Render-only scenes (no inline SVG twin): they fall back to the closest SVG scene when the image is missing. */
+function art_ads(bool $eager = false): string { return _art_img('ads', 'artScene', $eager) ?: art_podium(); }
+function art_versus(bool $eager = false): string { return _art_img('versus', 'artScene', $eager) ?: art_podium(); }
+function art_cubes(bool $eager = false): string { return _art_img('cubes', 'artScene', $eager) ?: art_layers(); }
+function art_book(bool $eager = false): string { return _art_img('book', 'artScene', $eager) ?: art_lens(); }
+function art_workflow(bool $eager = false): string { return _art_img('workflow', 'artScene', $eager) ?: art_network(); }
+
 /** Generic hero scene chooser used by page_hero(). */
 function art_scene(string $name, bool $eager = false): string {
-  static $m = ['chat' => 'art_chat', 'podium' => 'art_podium', 'shield' => 'art_shield', 'network' => 'art_network', 'layers' => 'art_layers', 'lens' => 'art_lens', 'steps' => 'art_steps', 'compass' => 'art_compass', 'mail' => 'art_mail', 'lost' => 'art_lost', 'doc' => 'art_doc', 'orb' => 'art_orb', 'agent' => 'art_agent'];
+  static $m = ['chat' => 'art_chat', 'podium' => 'art_podium', 'shield' => 'art_shield', 'network' => 'art_network', 'layers' => 'art_layers', 'lens' => 'art_lens', 'steps' => 'art_steps', 'compass' => 'art_compass', 'mail' => 'art_mail', 'lost' => 'art_lost', 'doc' => 'art_doc', 'orb' => 'art_orb', 'agent' => 'art_agent', 'ads' => 'art_ads', 'versus' => 'art_versus', 'cubes' => 'art_cubes', 'book' => 'art_book', 'workflow' => 'art_workflow'];
   return isset($m[$name]) ? ($m[$name])($eager) : '';
 }

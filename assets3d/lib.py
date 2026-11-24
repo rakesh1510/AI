@@ -66,9 +66,9 @@ def mat_iridescent(name='iri', stops=None, rough=0.14, metallic=0.92, coat=0.6):
     """Angle-dependent violet / blue / cyan / magenta body colour (layer-weight driven colour ramp) over a glossy metallic base."""
     m = bpy.data.materials.new(name); m.use_nodes = True
     nt = m.node_tree; p = nt.nodes['Principled BSDF']
-    lw = nt.nodes.new('ShaderNodeLayerWeight'); lw.inputs['Blend'].default_value = 0.5
+    lw = nt.nodes.new('ShaderNodeLayerWeight'); lw.inputs['Blend'].default_value = 0.3
     ramp = nt.nodes.new('ShaderNodeValToRGB')
-    stops = stops or [(0.0, (0.02, 0.01, 0.22, 1)), (0.25, (0.16, 0.05, 0.75, 1)), (0.5, (0.05, 0.28, 0.95, 1)), (0.75, (0.04, 0.75, 0.95, 1)), (1.0, (0.85, 0.35, 1.0, 1))]
+    stops = stops or [(0.0, (0.03, 0.01, 0.25, 1)), (0.22, (0.28, 0.06, 0.85, 1)), (0.45, (0.06, 0.30, 0.98, 1)), (0.7, (0.03, 0.80, 1.0, 1)), (1.0, (0.95, 0.45, 1.0, 1))]
     el = ramp.color_ramp.elements
     el[0].position = stops[0][0]; el[0].color = stops[0][1]; el[1].position = stops[-1][0]; el[1].color = stops[-1][1]
     for pos, col in stops[1:-1]:
@@ -142,7 +142,7 @@ def studio():
     softbox((0, 7, 8), (10, 3), (math.radians(150), 0, 0), (0.55, 0.5, 1.0), 12)
     softbox((0, -9, -2), (12, 3), (math.radians(-80), 0, 0), (0.25, 0.3, 0.6), 1.2)
 
-def camera(loc, target, lens=70, dof=None, pull=1.15):
+def camera(loc, target, lens=70, dof=None, pull=1.42):
     loc = tuple(Vector(target) + (Vector(loc) - Vector(target)) * pull)
     cam = bpy.data.cameras.new('cam'); cam.lens = lens
     ob = bpy.data.objects.new('cam', cam); bpy.context.collection.objects.link(ob)

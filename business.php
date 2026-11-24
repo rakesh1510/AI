@@ -33,7 +33,7 @@ require __DIR__ . '/layout_top.php';
   </div>
 </section>
 
-<section class="bizBand stage" id="services" aria-labelledby="whatTitle">
+<section class="bizBand stage" data-tone="<?= h(page_tone()) ?>" id="services" aria-labelledby="whatTitle">
  <div class="wrap">
   <div class="sectionHead"><div><h2 id="whatTitle">What you can request</h2><p>Four kinds of project, each with concrete things you receive. Scope and fit are agreed with you before any work starts.</p></div></div>
   <ul class="svcTiles" style="--x:0">

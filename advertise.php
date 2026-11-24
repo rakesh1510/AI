@@ -35,7 +35,7 @@ require __DIR__ . '/layout_top.php';
       <div class="heroActions"><a class="btn btn--accent" href="#packages">See packages</a><a class="btn secondary" href="#request" data-cta="adv_hero_enquiry">Send an enquiry</a></div>
       <ul class="factRow"><li><?= ui_icon('check') ?> Labelled “Sponsored”</li><li><?= ui_icon('check') ?> Never changes reviews or rankings</li><li><?= ui_icon('check') ?> No payment taken on this site</li></ul>
     </div>
-    <div class="pgHero__art" aria-hidden="true"><?= art_orb() ?></div>
+    <div class="pgHero__art" aria-hidden="true"><?= art_ads(true) ?></div>
   </div>
 </section>
 

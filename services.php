@@ -27,7 +27,7 @@ $__spanClass = [0 => 'c', 1 => 'b'];
 </div>
 <?php else: ?>
 <?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI development services', 'icon' => 'code', 'title_html' => 'Custom AI and software, <span class="gradText2">built around your process</span>',
-  'lead' => 'AIHubpedia is built and run by TrustNova Tech. If you need an AI system or custom software built, tell us about the problem. We reply by email if it looks like a fit; there is no obligation.', 'art' => 'agent',
+  'lead' => 'AIHubpedia is built and run by TrustNova Tech. If you need an AI system or custom software built, tell us about the problem. We reply by email if it looks like a fit; there is no obligation.', 'art' => 'workflow',
   'actions' => '<a class="btn btn--accent" href="#inquiry" data-cta="svc_hero_project">Discuss Your Project</a><a class="btn secondary" href="#build">See what we build</a>',
   'facts' => ['Written scope before work starts', 'No outcomes promised in advance', 'No client case studies claimed']]) ?>
 <div class="wrap pgBody" id="build">

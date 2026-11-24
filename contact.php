@@ -21,7 +21,7 @@ $__topics = [
   ['chat', 'Feedback', 'Bug reports and improvements', ['#3b82f6', '#4f46e5']],
 ];
 ?>
-<section class="contactSplit stage">
+<section class="contactSplit stage" data-tone="<?= h(page_tone()) ?>">
   <div class="wrap">
     <div class="contactSplit__copy">
       <div class="pgHero__crumbs" style="padding:0 0 14px"><?= render_breadcrumbs($crumbs) ?></div>

@@ -117,7 +117,7 @@ require __DIR__ . '/layout_top.php';
 $__ct = cat_theme($isUnclassified ? 'Other' : $name);
 ob_start(); ?><?= h(seo_plural((int)$total, 'tool')) ?> listed<?php $rev = count(array_filter($items, fn($t) => !empty($t['curated']))); if ($rev): ?> · <?= (int)$rev ?> with <a href="/methodology.php" style="text-decoration:underline">reviewed profiles</a><?php endif; ?><?php if ($pages > 1): ?> · Page <?= (int)$page ?> of <?= (int)$pages ?><?php endif; ?><?php $__meta = ob_get_clean();
 echo page_hero(['crumbs' => $crumbs, 'eyebrow' => $sub !== '' ? $name . ' · subcategory' : 'Category', 'icon' => $__ct[2], 'title' => $heading,
-  'lead' => h($isUnclassified ? taxonomy_category_description($name) : ($sub !== '' ? 'A focused list of ' . strtolower($sub) . ' tools within ' . strtolower($name) . ' AI tools.' : taxonomy_category_description($name))) . '<span style="display:block;margin-top:12px;font-size:1rem;color:#b5bddf">' . $__meta . '</span>', 'solo' => true, 'size' => 'sm']);
+  'lead' => h($isUnclassified ? taxonomy_category_description($name) : ($sub !== '' ? 'A focused list of ' . strtolower($sub) . ' tools within ' . strtolower($name) . ' AI tools.' : taxonomy_category_description($name))) . '<span style="display:block;margin-top:12px;font-size:1rem;color:#b5bddf">' . $__meta . '</span>', 'solo' => true, 'size' => 'sm', 'accent' => [$__ct[0], $__ct[1]]]);
 ?>
 <div class="wrap pgBody">
 

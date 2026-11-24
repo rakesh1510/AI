@@ -577,3 +577,24 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 .pgHero .artThumbFrame img{max-height:260px;filter:none}
 /* WCAG 2.2 target size: inline category links in ranking cards are at least 28px tall */
 .rankHead .metaRow a,.metaRow a{display:inline-flex;align-items:center;min-height:28px;padding:2px 2px}
+/* hero v4: render-based artwork leads, cards frame it */
+.heroStack img.artOrb{inset:0 -12% auto auto;width:114%;max-width:640px;top:2%}
+.heroStack .floatCard{width:min(210px,46%);padding:12px 14px}
+.heroStack .floatCard:nth-of-type(1){top:-3%;left:-9%}
+.heroStack .floatCard:nth-of-type(3){bottom:-2%;right:-6%}
+@media (max-width:900px){.heroStack img.artOrb{inset:0 6% auto auto;width:88%;top:0}.heroStack .floatCard:nth-of-type(3){width:88%;bottom:-6%;left:6%;right:auto}}
+
+/* ---------- Per-page lighting tones (same system, own mood) ---------- */
+.stage{--l1:rgba(124,92,255,.55);--l2:rgba(34,211,238,.28);--l3:rgba(37,99,235,.38);--l4:rgba(168,85,247,.22)}
+.stage::before{background:radial-gradient(42% 60% at 78% 30%,var(--l1),transparent 70%),radial-gradient(34% 50% at 96% 8%,var(--l2),transparent 70%),radial-gradient(40% 50% at 8% 100%,var(--l3),transparent 70%),radial-gradient(30% 40% at 30% 0%,var(--l4),transparent 70%)}
+.stage[data-tone=cyan]{--l1:rgba(14,165,233,.5);--l2:rgba(45,212,191,.32);--l3:rgba(37,99,235,.36);--l4:rgba(99,102,241,.2)}
+.stage[data-tone=magenta]{--l1:rgba(217,70,239,.45);--l2:rgba(124,92,255,.34);--l3:rgba(99,102,241,.34);--l4:rgba(244,63,94,.2)}
+.stage[data-tone=emerald]{--l1:rgba(16,185,129,.42);--l2:rgba(34,211,238,.3);--l3:rgba(37,99,235,.3);--l4:rgba(132,204,22,.16)}
+.stage[data-tone=amber]{--l1:rgba(245,158,11,.38);--l2:rgba(124,92,255,.34);--l3:rgba(37,99,235,.34);--l4:rgba(244,63,94,.18)}
+.stage[data-tone=blue]{--l1:rgba(59,130,246,.5);--l2:rgba(99,102,241,.34);--l3:rgba(14,165,233,.3);--l4:rgba(124,92,255,.22)}
+.stage[data-tone=slate]{--l1:rgba(100,116,255,.3);--l2:rgba(56,189,248,.18);--l3:rgba(71,85,105,.4);--l4:rgba(99,102,241,.14)}
+/* hero layout variants */
+.pgHero[data-tone=emerald] .wrap,.pgHero[data-tone=amber] .wrap{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+.pgHero[data-tone=emerald] .pgHero__art,.pgHero[data-tone=amber] .pgHero__art{order:-1}
+@media (max-width:900px){.pgHero[data-tone=emerald] .pgHero__art,.pgHero[data-tone=amber] .pgHero__art{order:2}}
+.toolHero{--l1:color-mix(in srgb,var(--c1) 52%,transparent);--l3:color-mix(in srgb,var(--c2) 40%,transparent);--l2:color-mix(in srgb,var(--c2) 28%,transparent)}

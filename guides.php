@@ -23,14 +23,17 @@ $__featTools = [];
 if ($__feat) foreach (array_slice((array)$__feat['tools'], 0, 5) as $tid) { if ($tt = find_tool((string)$tid)) $__featTools[] = $tt; }
 $__allTools = []; foreach ($guides as $g) foreach ((array)$g['tools'] as $tid) { if (!isset($__allTools[$tid]) && ($tt = find_tool((string)$tid))) $__allTools[$tid] = $tt; }
 ?>
-<section class="pgHero stage pgHero--solo">
+<section class="pgHero stage" data-tone="<?= h(page_tone()) ?>">
   <div class="wrap">
+    <div>
     <div class="pgHero__crumbs"><?= render_breadcrumbs($crumbs) ?></div>
     <div>
       <span class="eyebrow"><?= ui_icon('book') ?> The AIHubpedia guides</span>
       <h1>AI tool guides, <span class="gradText2">checked against sources</span></h1>
       <p class="lead">Each guide compares tools using the vendors' own pricing and help pages, shows the date the facts were collected, and links to every source. We say plainly where vendor pages disagree and where we have not tested a claim. <a href="/methodology.php" style="text-decoration:underline">Read our methodology</a>.</p>
     </div>
+    </div>
+    <div class="pgHero__art" aria-hidden="true"><?= art_book(true) ?></div>
   </div>
 </section>
 

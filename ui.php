@@ -193,9 +193,19 @@ function ui_provenance(array $t, bool $short = false): string {
 }
 
 /** Shared premium page hero (dark lit stage). Options: eyebrow, icon, title (plain text) or title_html, lead (html), crumbs, art (scene name), actions (html), facts (list of strings), solo (no art column), size ('sm'). */
+/** Lighting tone per page: the shared design system with its own colour mood on every page. */
+function page_tone(): string {
+  static $m = ['business.php' => 'magenta', 'services.php' => 'cyan', 'partners.php' => 'emerald', 'advertise.php' => 'amber', 'submit.php' => 'violet', 'contact.php' => 'cyan', 'about.php' => 'blue',
+    'methodology.php' => 'emerald', 'disclosure.php' => 'amber', 'privacy.php' => 'slate', 'terms.php' => 'slate', 'impressum.php' => 'slate', 'disclaimer.php' => 'slate', 'leaderboard.php' => 'amber', 'top.php' => 'amber',
+    'solutions.php' => 'emerald', 'recommend.php' => 'violet', 'blog.php' => 'magenta', 'post.php' => 'magenta', 'guides.php' => 'magenta', 'guide.php' => 'magenta', 'search.php' => 'blue', 'comparisons.php' => 'violet',
+    'compare.php' => 'violet', 'categories.php' => 'cyan', 'directory.php' => 'blue', 'favorites.php' => 'magenta', 'filters.php' => 'cyan', 'changelog.php' => 'emerald', 'newsletter-archive.php' => 'cyan',
+    'ai-use-case-explorer.php' => 'emerald', 'ai-use-case.php' => 'emerald', 'alternatives.php' => 'violet', 'pricing-comparison.php' => 'amber', 'index.php' => 'violet'];
+  return $m[basename((string)($_SERVER['SCRIPT_NAME'] ?? ''))] ?? 'violet';
+}
+
 function page_hero(array $o): string {
   $art = (string)($o['art'] ?? ''); $solo = !empty($o['solo']) || $art === '';
-  $h = '<section class="pgHero stage' . ($solo ? ' pgHero--solo' : '') . (($o['size'] ?? '') === 'sm' ? ' pgHero--sm' : '') . '"><div class="wrap"><div>';
+  $h = '<section class="pgHero stage' . ($solo ? ' pgHero--solo' : '') . (($o['size'] ?? '') === 'sm' ? ' pgHero--sm' : '') . '" data-tone="' . page_tone() . '"' . (!empty($o['accent']) ? ' style="--l1:color-mix(in srgb,' . $o['accent'][0] . ' 55%,transparent);--l3:color-mix(in srgb,' . $o['accent'][1] . ' 42%,transparent);--l2:color-mix(in srgb,' . $o['accent'][1] . ' 30%,transparent)"' : '') . '><div class="wrap"><div>';
   if (!empty($o['crumbs'])) $h .= '<div class="pgHero__crumbs" style="padding:0 0 14px">' . render_breadcrumbs($o['crumbs']) . '</div>';
   if (!empty($o['eyebrow'])) $h .= '<span class="eyebrow">' . (!empty($o['icon']) ? ui_icon((string)$o['icon']) . ' ' : '') . htmlspecialchars((string)$o['eyebrow'], ENT_QUOTES) . '</span>';
   $title = isset($o['title_html']) ? (string)$o['title_html'] : htmlspecialchars((string)($o['title'] ?? ''), ENT_QUOTES);

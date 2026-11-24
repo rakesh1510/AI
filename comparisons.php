@@ -27,7 +27,7 @@ $jsonld = [
 $main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Head-to-head', 'icon' => 'compare', 'title_html' => 'AI tool comparisons, <span class="gradText2">side by side</span>',
-  'lead' => 'Popular head-to-head comparisons. You can also <a href="/compare.php" style="text-decoration:underline">compare any two AI tools</a> side by side.', 'art' => 'podium',
+  'lead' => 'Popular head-to-head comparisons. You can also <a href="/compare.php" style="text-decoration:underline">compare any two AI tools</a> side by side.', 'art' => 'versus',
   'actions' => '<a class="btn btn--accent" href="/compare.php">Compare any two tools</a>']);
 ?>
 <div class="wrap pgBody">

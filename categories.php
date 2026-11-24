@@ -25,8 +25,9 @@ $main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 $nCats = count(array_filter($cats, fn($c) => $c !== CATALOG_UNCLASSIFIED));
 ?>
-<section class="pgHero stage pgHero--solo">
+<section class="pgHero stage" data-tone="<?= h(page_tone()) ?>">
   <div class="wrap">
+    <div>
     <div class="pgHero__crumbs"><?= render_breadcrumbs($crumbs) ?></div>
     <div>
       <span class="eyebrow"><?= ui_icon('layers') ?> Browse by category</span>
@@ -34,6 +35,8 @@ $nCats = count(array_filter($cats, fn($c) => $c !== CATALOG_UNCLASSIFIED));
       <p class="lead">Browse <?= h(number_format(count($tools))) ?> AI tools across <?= (int)count($cats) ?> categories. Pick a category, then compare plans, limits and sources side by side.</p>
       <div class="catFilter" role="search"><?= ui_icon('search') ?><label class="sr" for="catFilter">Filter categories</label><input id="catFilter" type="search" placeholder="Filter categories, e.g. “writing”" autocomplete="off" data-cat-filter></div>
     </div>
+    </div>
+    <div class="pgHero__art" aria-hidden="true"><?= art_cubes(true) ?></div>
   </div>
 </section>
 

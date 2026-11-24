@@ -12,7 +12,7 @@ $main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 $__mins = fn(array $p): int => max(1, (int)ceil(str_word_count(strip_tags((string)($p['content'] ?? ''))) / 200));
 $__d = fn(string $d) => ($t = strtotime($d)) ? date('j M Y', $t) : $d;
-echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'The AIHubpedia blog', 'icon' => 'pen', 'title_html' => 'AI tools blog: <span class="gradText2">guides, lists and updates</span>', 'lead' => 'Guides, lists, and updates to help you choose the right AI tools.', 'solo' => true]);
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'The AIHubpedia blog', 'icon' => 'pen', 'title_html' => 'AI tools blog: <span class="gradText2">guides, lists and updates</span>', 'lead' => 'Guides, lists, and updates to help you choose the right AI tools.', 'art' => 'book']);
 ?>
 <div class="wrap pgBody">
 <?php if ($posts): $f = $posts[0]; ?>
