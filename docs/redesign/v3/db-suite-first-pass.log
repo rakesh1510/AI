@@ -1,0 +1,32 @@
+PASS | build isolated test db | 1s | Seeded synthetic clicks/votes for 509 tools
+PASS | php data_quality_test | 0s | PASSED: 281  FAILED: 0
+PASS | php phase4_logic_test | 4s | PASSED: 8683  FAILED: 0
+PASS | php editorial_review_test | 0s | PASSED: 555  FAILED: 0
+PASS | php discovery_quality_test | 1s | PASSED: 98  FAILED: 0
+PASS | php i18n_test | 0s | PASSED: 35  FAILED: 0
+PASS | php content_backlog_test | 0s | PASSED: 27  FAILED: 0
+PASS | php crm_logic_test | 1s | PASSED: 154  FAILED: 0
+PASS | php ux_logic_test | 0s | PASSED: 142  FAILED: 0
+PASS | php security_test | 1s | PASSED: 147  FAILED: 0
+PASS | php secret_init_test | 5s | PASSED: 10  FAILED: 0
+PASS | php security_inventory_test | 0s | PASSED: 546  FAILED: 0
+PASS | php db_compat_test | 46s | PASSED: 252  FAILED: 0
+PASS | php phase6_migration_test | 2s | PASSED: 33  FAILED: 0
+PASS | php premium_ui_test | 0s | premium ui php: 19 passed, 0 failed
+PASS | audit catalogue | 0s |   gptgo-chrome-extension       Chatbots     clicks=24   https://chrome.google.com
+PASS | seo_test full sitemap | 16s | PASSED: 3186  FAILED: 0
+PASS | seed synthetic leads | 0s | Seeded 24 synthetic leads into 'aihub_test'.
+PASS | security_http_test | 3s | PASSED: 76  FAILED: 0
+PASS | security_negative_http_test | 43s | PASSED: 184  FAILED: 0
+PASS | lead_reliability_test | 33s | PASSED: 56  FAILED: 0
+PASS | crm_http_test | 51s | PASSED: 116  FAILED: 0
+PASS | seo_audit | 15s |   thin: 136 words: http://127.0.0.1:8002/category.php?name=Coding&sub=data-sql
+FAIL | browser_test | 39s | }
+FAIL | browser_ux_test | 49s | }
+FAIL | browser_phase4_test | 32s | }
+FAIL | browser_phase6_test | 42s | PASSED: 121  FAILED: 4
+PASS | browser_premium_ui_test | 18s | premium ui: 300 passed, 0 failed
+PASS | axe_audit strict | 123s | axe violations on key rules/impacts: 0 {}
+PASS | qa_public_pages | 205s | public pages QA: 4368 passed, 0 failed (52 pages x 6 widths x 2 themes)
+PASS | axe_public_pages | 117s | axe violations (nodes): 0
+DONE
