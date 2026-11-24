@@ -91,7 +91,7 @@ function _art_img(string $file, string $class, bool $eager = false): string {
   $sz = $cache[$path]; if (!$sz) return '';
   $v = (string)@filemtime($path);
   $small = __DIR__ . '/assets/art/' . $file . '-sm.webp';
-  $srcset = is_file($small) ? ' srcset="/assets/art/' . $file . '-sm.webp?v=' . $v . ' 560w, /assets/art/' . $file . '.webp?v=' . $v . ' ' . (int)$sz[0] . 'w" sizes="(max-width:700px) 80vw, 520px"' : '';
+  $srcset = is_file($small) ? ' srcset="/assets/art/' . $file . '-sm.webp?v=' . $v . ' 560w, /assets/art/' . $file . '.webp?v=' . $v . ' ' . (int)$sz[0] . 'w" sizes="(max-width:900px) 220px, 520px"' : '';
   return '<img class="art ' . $class . ' artImg" src="/assets/art/' . $file . '.webp?v=' . $v . '"' . $srcset . ' width="' . (int)$sz[0] . '" height="' . (int)$sz[1] . '" alt="" aria-hidden="true" decoding="async" ' . ($eager ? 'fetchpriority="high"' : 'loading="lazy"') . '>';
 }
 
