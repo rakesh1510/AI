@@ -140,7 +140,7 @@ def studio():
     softbox((8, -2, 3), (3, 9), (math.radians(80), math.radians(40), math.radians(10)), (0.35, 0.8, 1.0), 40)
     softbox((-8, 4, 2), (3, 8), (math.radians(80), math.radians(-40), math.radians(0)), (0.9, 0.35, 1.0), 34)
     softbox((0, 7, 8), (10, 3), (math.radians(150), 0, 0), (0.55, 0.5, 1.0), 12)
-    softbox((0, -9, -2), (12, 3), (math.radians(-80), 0, 0), (0.25, 0.3, 0.6), 1.2)
+    softbox((0, -8, -3), (12, 2.2), (math.radians(-80), 0, 0), (0.12, 0.08, 0.45), 1.6)   # deep indigo under-light: keeps glass from reflecting a grey band
 
 def camera(loc, target, lens=70, dof=None, pull=1.42):
     loc = tuple(Vector(target) + (Vector(loc) - Vector(target)) * pull)
