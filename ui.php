@@ -105,7 +105,7 @@ function render_tool_card(array $t, array $opts = []): string {
     . (!empty($opts['filter']) ? ' data-search="' . $h(search_normalize($t['name'] . ' ' . ($t['short'] ?? '') . ' ' . ($t['subcategory'] ?? ''))) . '"' : '') . '>';
   if ($sponsored) $o .= '<p class="adLabel"><span class="adTag">Sponsored</span> <a href="/disclosure.php">Why am I seeing this?</a></p>';
   $o .= '<div class="tCard__top">'
-    . '<img class="tCard__logo" src="' . $h(tool_logo($t)) . '" alt="' . $h($t['name']) . ' logo" width="44" height="44" loading="lazy" decoding="async" fetchpriority="low">'
+    . logo_tile($t, 'md')
     . '<div class="tCard__title"><h' . $lvl . '><a href="' . $h(tool_path($id)) . '">' . $h($t['name']) . '</a></h' . $lvl . '>'
     . '<p class="tCard__meta"><a href="' . $h(category_path($cat)) . '">' . $h($cat) . '</a>' . (!empty($t['subcategory']) ? ' · ' . $h($t['subcategory']) : '') . '</p></div>'
     . '<button type="button" class="iconBtn js-only" data-fav="' . $h($id) . '" aria-pressed="false" aria-label="Save ' . $h($t['name']) . ' to favorites">' . ui_icon('heart') . '</button>'
@@ -163,10 +163,21 @@ function site_nav_primary(): array {
 function site_nav_cta(): array { return ['/services.php#inquiry', 'Discuss Your Project']; }
 /** Secondary navigation, grouped. Every group has at least one link; nothing here points to AI Universe. */
 function site_nav_more(): array {
+  $c = ['#3b82f6', '#4f46e5']; $g = ['#10b981', '#0ea5e9']; $v = ['#8b5cf6', '#ec4899']; $o = ['#f59e0b', '#ef4444']; $t = ['#06b6d4', '#2563eb'];
   return [
-    'Find tools' => [['/top.php', 'Top tools'], ['/ai-use-case-explorer.php', 'Use cases'], ['/solutions.php', 'Find by problem'], ['/recommend.php', 'Recommendation wizard'], ['/directory.php', 'All tools (A to Z)'], ['/filters.php', 'Filters']],
-    'Compare and learn' => [['/comparisons.php', 'Popular comparisons'], ['/leaderboard.php', 'Leaderboard'], ['/blog.php', 'Blog'], ['/methodology.php', 'How we review'], ['/about.php', 'About']],
-    'Work with us' => [['/contact.php', 'Contact'], ['/submit.php', 'Submit a tool'], ['/services.php', 'AI development services'], ['/partners.php', 'Partnerships'], ['/disclosure.php', 'Advertising disclosure']],
+    'Find tools' => [
+      ['/top.php', 'Top tools', 'Ranked picks by published rules', 'chart', $o], ['/solutions.php', 'Find by problem', 'Start from what you need to solve', 'search', $t],
+      ['/recommend.php', 'Recommendation wizard', 'Answer a few questions, get a shortlist', 'sparkle', $v], ['/ai-use-case-explorer.php', 'Use cases', 'Browse tools by job to be done', 'layers', $g],
+      ['/directory.php', 'All tools (A to Z)', 'The full catalogue, paginated', 'book', $c], ['/filters.php', 'Filters', 'Narrow by pricing, platform and more', 'flow', $t],
+    ],
+    'Compare and learn' => [
+      ['/comparisons.php', 'Popular comparisons', 'Head-to-head pairings with logos and pricing', 'compare', $v], ['/leaderboard.php', 'Leaderboard', 'Top tools by the published formula', 'chart', $o],
+      ['/blog.php', 'Blog', 'Articles and analysis', 'pen', $c], ['/methodology.php', 'How we review', 'Sources, dates and evidence levels', 'shield', $g], ['/about.php', 'About AIHubpedia', 'Who runs it and why', 'heart', $t],
+    ],
+    'Work with us' => [
+      ['/contact.php', 'Contact', 'Write to us', 'mail', $c], ['/submit.php', 'Submit a tool', 'Free and priority listings', 'plug', $g],
+      ['/services.php', 'AI development services', 'Integrations, automation, custom AI', 'code', $v], ['/partners.php', 'Partnerships', 'Referral and partner enquiries', 'megaphone', $o], ['/disclosure.php', 'Advertising disclosure', 'How paid placements are labelled', 'book', $t],
+    ],
   ];
 }
 
@@ -179,4 +190,52 @@ function ui_provenance(array $t, bool $short = false): string {
   $date = (string)($cp['pricing']['as_of'] ?? '');
   if ($short) return $date !== '' ? 'Pricing as of ' . $date : '';   // cards already carry the "Reviewed" badge
   return $date !== '' ? 'Reviewed · pricing as of ' . $date : 'Reviewed profile';
+}
+
+/** Shared premium page hero (dark lit stage). Options: eyebrow, icon, title (plain text) or title_html, lead (html), crumbs, art (scene name), actions (html), facts (list of strings), solo (no art column), size ('sm'). */
+function page_hero(array $o): string {
+  $art = (string)($o['art'] ?? ''); $solo = !empty($o['solo']) || $art === '';
+  $h = '<section class="pgHero stage' . ($solo ? ' pgHero--solo' : '') . (($o['size'] ?? '') === 'sm' ? ' pgHero--sm' : '') . '"><div class="wrap"><div>';
+  if (!empty($o['crumbs'])) $h .= '<div class="pgHero__crumbs" style="padding:0 0 14px">' . render_breadcrumbs($o['crumbs']) . '</div>';
+  if (!empty($o['eyebrow'])) $h .= '<span class="eyebrow">' . (!empty($o['icon']) ? ui_icon((string)$o['icon']) . ' ' : '') . htmlspecialchars((string)$o['eyebrow'], ENT_QUOTES) . '</span>';
+  $title = isset($o['title_html']) ? (string)$o['title_html'] : htmlspecialchars((string)($o['title'] ?? ''), ENT_QUOTES);
+  $h .= '<h1>' . $title . '</h1>';
+  if (!empty($o['lead'])) $h .= '<p class="lead">' . $o['lead'] . '</p>';
+  if (!empty($o['actions'])) $h .= '<div class="heroActions">' . $o['actions'] . '</div>';
+  if (!empty($o['facts'])) { $h .= '<ul class="factRow">'; foreach ($o['facts'] as $f) $h .= '<li>' . ui_icon('check') . ' ' . htmlspecialchars((string)$f, ENT_QUOTES) . '</li>'; $h .= '</ul>'; }
+  $h .= '</div>';
+  if (!$solo) $h .= '<div class="pgHero__art" aria-hidden="true">' . art_scene($art) . '</div>';
+  return $h . '</div></section>';
+}
+function page_body_open(string $cls = ''): string { return '<div class="wrap pgBody' . ($cls !== '' ? ' ' . htmlspecialchars($cls, ENT_QUOTES) : '') . '">'; }
+function page_body_close(): string { return '</div>'; }
+
+/** Premium empty / error / success panel with a 3D scene. Options: art (scene), eyebrow, title, text (html), actions (html), tone ('ok' for success). */
+function state_box(array $o): string {
+  $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
+  return '<div class="stateBox' . (($o['tone'] ?? '') === 'ok' ? ' stateBox--ok' : '') . '" role="' . (($o['tone'] ?? '') === 'ok' ? 'status' : 'region') . '"><div>'
+    . (!empty($o['eyebrow']) ? '<span class="eyebrow">' . $e($o['eyebrow']) . '</span>' : '')
+    . '<h1>' . $e($o['title'] ?? '') . '</h1>' . (!empty($o['text']) ? '<p>' . $o['text'] . '</p>' : '')
+    . (!empty($o['html']) ? '<div class="stateBox__html">' . $o['html'] . '</div>' : '')
+    . (!empty($o['actions']) ? '<div class="heroActions">' . $o['actions'] . '</div>' : '') . '</div>'
+    . art_scene((string)($o['art'] ?? 'lost')) . '</div>';
+}
+
+/** Long-form reading layout: adds anchors to the top-level section headings (h2, or h3 when there is no h2), builds a table of contents and wraps the text for readability. */
+function doc_page(string $html, string $tocTitle = 'On this page'): string {
+  $lvl = preg_match('/<h2[\s>]/i', $html) ? 'h2' : 'h3'; $toc = []; $used = [];
+  $html = preg_replace_callback('#<' . $lvl . '([^>]*)>(.*?)</' . $lvl . '>#is', function ($m) use (&$toc, &$used, $lvl) {
+    $text = trim(html_entity_decode(strip_tags($m[2]), ENT_QUOTES));
+    if (preg_match('/\sid="([^"]+)"/', $m[1], $im)) { $id = $im[1]; }
+    else { $base = trim((string)preg_replace('/[^a-z0-9]+/', '-', strtolower($text)), '-'); $id = $base !== '' ? $base : 'section'; $n = 2; while (isset($used[$id])) $id = $base . '-' . $n++; $m[1] .= ' id="' . $id . '"'; }
+    $used[$id] = 1; $toc[] = [$id, $text];
+    return '<' . $lvl . $m[1] . '>' . $m[2] . '</' . $lvl . '>';
+  }, $html) ?? $html;
+  $o = '<div class="docLayout' . ($lvl === 'h3' ? ' docLayout--legal' : '') . '">';
+  if (count($toc) >= 3) {
+    $o .= '<nav class="docToc" aria-label="' . htmlspecialchars($tocTitle, ENT_QUOTES) . '"><h2>' . htmlspecialchars($tocTitle, ENT_QUOTES) . '</h2><ol>';
+    foreach ($toc as [$id, $t]) $o .= '<li><a href="#' . htmlspecialchars($id, ENT_QUOTES) . '">' . htmlspecialchars($t, ENT_QUOTES) . '</a></li>';
+    $o .= '</ol></nav>';
+  } else { $o = '<div class="docLayout docLayout--solo">'; }
+  return $o . '<article class="docBody">' . $html . '</article></div>';
 }

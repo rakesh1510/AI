@@ -7,9 +7,9 @@ if(!$p){
   http_response_code(404);
   $title = "Article Not Found";
   $meta_desc = "The article you requested could not be found on AIHubpedia.";
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo "<h1>Post not found</h1><p class='small'>The requested post does not exist.</p>";
-  echo "<div class='actions'><a class='btn' href='/blog.php'>Back to blog</a></div>";
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Article not found', 'title' => 'Post not found', 'text' => 'The requested post does not exist.', 'actions' => '<a class="btn btn--accent" href="/blog.php">Back to blog</a>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -39,25 +39,30 @@ if($date !== '' && strtotime($date)){
   $head_extra = '<meta property="article:published_time" content="' . h($article['datePublished']) . '">';
 }
 $jsonld = [$article, seo_breadcrumb_node($crumbs)];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+$__words = str_word_count(strip_tags((string)($p['content'] ?? ''))); $__mins = max(1, (int)ceil($__words / 200));
+$__dd = ($t = strtotime($date)) ? date('j F Y', $t) : $date;
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article>
-  <h1><?= h($p['title'] ?? '') ?></h1>
-  <?php if($date !== ''): ?><div class="small">Published <time datetime="<?= h($article['datePublished'] ?? $date) ?>"><?= h($date) ?></time> · AIHubpedia</div><?php endif; ?>
-  <div class="card" style="margin-top:14px">
-    <?= $p['content'] ?? '' ?>
+<section class="pgHero stage pgHero--sm">
+  <div class="wrap">
+    <div>
+      <div class="pgHero__crumbs" style="padding:0 0 14px"><?= render_breadcrumbs($crumbs) ?></div>
+      <span class="eyebrow"><?= ui_icon('pen') ?> Article</span>
+      <h1 style="font-size:clamp(2.2rem,1.4rem + 3vw,3.4rem)"><?= h($p['title'] ?? '') ?></h1>
+      <?php if ($date !== ''): ?><p class="lead" style="margin:0">Published <time datetime="<?= h($article['datePublished'] ?? $date) ?>"><?= h($__dd) ?></time> · AIHubpedia · <?= (int)$__mins ?> min read</p><?php endif; ?>
+    </div>
+    <div class="pgHero__art" aria-hidden="true"><?= art_thumb('Chatbots', 0) ?></div>
   </div>
-</article>
-<div class="card" style="margin-top:14px">
-  <h2 style="margin-top:0">Explore AI tools</h2>
-  <ul class="linkList">
-    <li><a href="/categories.php">All AI tool categories</a></li>
-    <li><a href="/top.php">Top AI tools</a></li>
-    <li><a href="/comparisons.php">Popular comparisons</a></li>
+</section>
+<div class="wrap pgBody">
+  <article class="articleBox"><div class="docBody"><?= $p['content'] ?? '' ?></div></article>
+  <div class="sectionHead" style="margin-top:var(--s-5)"><div><h2>Explore AI tools</h2></div></div>
+  <ul class="exploreRow">
+    <li><a class="bento__cell" href="/categories.php"><span class="ico3d" style="--c1:#8b5cf6;--c2:#ec4899"><?= ui_icon('layers') ?></span><h3>All AI tool categories</h3><p>Browse every category with counts.</p></a></li>
+    <li><a class="bento__cell" href="/top.php"><span class="ico3d" style="--c1:#f59e0b;--c2:#ef4444"><?= ui_icon('chart') ?></span><h3>Top AI tools</h3><p>Ranked by the published formula.</p></a></li>
+    <li><a class="bento__cell" href="/comparisons.php"><span class="ico3d" style="--c1:#06b6d4;--c2:#2563eb"><?= ui_icon('compare') ?></span><h3>Popular comparisons</h3><p>Head-to-head pairings.</p></a></li>
   </ul>
-</div>
-<div class="actions" style="margin-top:14px">
-  <a class="btn secondary" href="/blog.php">Back to blog</a>
+  <div class="actions" style="margin-top:var(--s-4)"><a class="btn secondary" href="/blog.php">Back to blog</a></div>
 </div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

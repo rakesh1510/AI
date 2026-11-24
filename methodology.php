@@ -7,12 +7,13 @@ $tools = load_tools()['tools'] ?? [];
 $counts = ['reviewed' => 0, 'standard' => 0, 'basic' => 0];
 foreach ($tools as $t) $counts[tool_quality_tier($t)]++;
 $jsonld = [['@type' => 'AboutPage', '@id' => site_url('/methodology.php#webpage'), 'url' => site_url('/methodology.php'), 'name' => seo_title($title), 'description' => $meta_desc, 'isPartOf' => ['@id' => site_url('/#website')], 'publisher' => ['@id' => site_url('/#organization')]], seo_breadcrumb_node($crumbs)];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Methodology', 'icon' => 'layers', 'title_html' => 'How AIHubpedia <span class="gradText2">reviews AI tools</span>', 'lead' => 'AIHubpedia is an independent directory and comparison site for AI tools. This page explains where our information comes from, how listings are labelled, and what we do not claim.', 'art' => 'layers']);
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article class="prose">
-  <h1>How AIHubpedia reviews AI tools</h1>
-  <p>AIHubpedia is an independent directory and comparison site for AI tools. This page explains where our information comes from, how listings are labelled, and what we do not claim.</p>
+<div class="wrap pgBody">
+<section class="evidenceRow" aria-label="Listing levels"><div class="card"><span class="badge3 badge3--ok"><?= ui_icon('shield') ?> Reviewed</span><strong><?= (int)$counts['reviewed'] ?></strong><p>Facts collected from vendor pages, each source linked with its retrieval date.</p></div><div class="card"><span class="badge3">Standard</span><strong><?= (int)$counts['standard'] ?></strong><p>Tool-specific text that has not been through source collection.</p></div><div class="card"><span class="badge3 badge3--warn">Basic</span><strong><?= (int)$counts['basic'] ?></strong><p>Directory data with generic notes, being replaced by reviewed profiles.</p></div></section>
+<?php ob_start(); ?>
 
   <h2>Three levels of listing</h2>
   <ul>
@@ -55,5 +56,6 @@ require __DIR__ . '/layout_top.php';
 
   <h2>Rankings</h2>
   <p>The <a href="/top.php">Top tools</a> and <a href="/leaderboard.php">Leaderboard</a> pages rank tools by activity on AIHubpedia (clicks, ratings, likes and dislikes). They measure interest on this site, not product quality or market share.</p>
-</article>
+<?php $__doc = ob_get_clean(); echo doc_page($__doc, 'On this page'); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

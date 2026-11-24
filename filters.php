@@ -17,10 +17,12 @@ $filtered = array_values(array_filter($tools, function($t) use ($q,$category,$pr
   }
   return $ok;
 }));
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<section class="hero"><h1>Advanced Filters</h1><p class="small">Filter tools by keyword, category, and price.</p></section>
-<section class="card">
+<?php echo page_hero(['crumbs' => [['Home', site_url('/')], ['Filters', null]], 'eyebrow' => 'Filters', 'icon' => 'flow', 'title_html' => 'Advanced <span class="gradText2">filters</span>', 'lead' => 'Filter tools by keyword, category, and price.', 'solo' => true, 'size' => 'sm']); ?>
+<div class="wrap pgBody">
+<section class="card filtersCard">
 <form method="get" class="grid">
 <div><label>Keyword</label><input class="input" name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"></div>
 <div><label>Category</label><input class="input" name="category" value="<?= htmlspecialchars($_GET['category'] ?? '') ?>"></div>
@@ -36,4 +38,5 @@ require __DIR__ . '/layout_top.php';
   </div>
 <?php endforeach; ?>
 </section>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

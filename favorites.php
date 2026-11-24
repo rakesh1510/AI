@@ -1,13 +1,11 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $crumbs = [['Home', site_url('/')], ['Saved tools', null]];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<div class="pageHero" style="padding-top:0">
-  <h1>Your saved tools</h1>
-  <p class="lead">Tools you save are stored only in this browser, so there is no account and nothing is sent to our servers. Clearing your browser data removes them.</p>
-</div>
+<?php echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Saved in this browser', 'icon' => 'heart', 'title_html' => 'Your saved <span class="gradText2">tools</span>', 'lead' => 'Tools you save are stored only in this browser, so there is no account and nothing is sent to our servers. Clearing your browser data removes them.', 'solo' => true, 'size' => 'sm']); ?>
+<div class="wrap pgBody">
 <noscript><p class="noticeBox">Saving tools needs JavaScript. You can still browse <a href="/categories.php">all categories</a>.</p></noscript>
 <div data-favorites-app>
   <div class="cardGrid" data-favorites-list></div>
@@ -22,4 +20,5 @@ require __DIR__ . '/layout_top.php';
   <p class="small">Shortlists from the <a href="/recommend.php">recommendation wizard</a>, saved in this browser only.</p>
   <ul class="linkList" data-shortlists-list></ul>
 </section>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

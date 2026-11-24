@@ -7,14 +7,13 @@ $affCount = count(array_filter($tools, fn($t) => is_affiliate_link($t)));
 $sponsoredCount = count(featured_tools($tools, 1000)) + count(array_filter($tools, fn($t) => !empty($t['spotlight_until']) && strtotime((string)$t['spotlight_until']) >= strtotime(date('Y-m-d'))));
 $crumbs = [['Home', site_url('/')], ['Advertising disclosure', null]];
 $jsonld = [seo_breadcrumb_node($crumbs)];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Disclosure', 'icon' => 'shield', 'title_html' => 'Advertising and affiliate <span class="gradText2">disclosure</span>', 'lead' => 'AIHubpedia is an independent AI tools directory. We earn money in some ways and not in others, and this page explains which, so you can judge our recommendations.', 'art' => 'shield']);
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article class="prose">
-  <h1>Advertising and affiliate disclosure</h1>
-  <p>AIHubpedia is an independent AI tools directory. We earn money in some ways and not in others, and this page explains which, so you can judge our recommendations.</p>
-
-  <div class="panel" style="margin:18px 0">
+<div class="wrap pgBody">
+<?php ob_start(); ?>
+  <div class="discloseNow">
     <h2 style="margin-top:0">Right now</h2>
     <ul>
       <li><strong><?= (int)$affCount ?></strong> listing<?= $affCount === 1 ? '' : 's' ?> use<?= $affCount === 1 ? 's' : '' ?> an affiliate link.</li>
@@ -41,5 +40,6 @@ require __DIR__ . '/layout_top.php';
 
   <h2>Questions or corrections</h2>
   <p>Email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a>. If a label is missing where one is required, we will fix it.</p>
-</article>
+<?php $__doc = ob_get_clean(); echo doc_page($__doc, 'On this page'); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

@@ -102,6 +102,12 @@
         e.preventDefault(); var o = sBar.hidden; sBar.hidden = !o; sBtn.setAttribute('aria-expanded', o ? 'true' : 'false');
         if (o) { var i = $('input[type="search"]', sBar); if (i) i.focus(); }
       });
+      on(d, 'keydown', function (e) {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+        var a = d.activeElement, tn = a && a.tagName;
+        if (tn === 'INPUT' || tn === 'TEXTAREA' || tn === 'SELECT' || (a && a.isContentEditable)) return;
+        e.preventDefault(); if (sBar.hidden) sBtn.click(); else { var i = $('input[type="search"]', sBar); if (i) i.focus(); }
+      });
       on(d, 'keydown', function (e) { if (e.key === 'Escape' && !sBar.hidden && sBar.contains(d.activeElement)) { sBar.hidden = true; sBtn.setAttribute('aria-expanded', 'false'); sBtn.focus(); } });
     }
   })();
@@ -137,6 +143,46 @@
         cards.forEach(function (c) { c.hidden = !(v === '*' || c.getAttribute('data-gcat') === v); });
       });
     });
+  })();
+
+  /* ---------- Recommendation wizard stepper. Without JavaScript all six questions are shown stacked and the form submits as before. ---------- */
+  (function wizard() {
+    var f = $('[data-wizard]'); if (!f) return;
+    var sets = $$('fieldset', f); if (sets.length < 2) return;
+    var cur = 0, bar = d.createElement('div'), nav = d.createElement('div'), act = $('.wizActions', f);
+    bar.className = 'wizProg';
+    bar.innerHTML = '<div class="wizProg__top"><strong data-wiz-step></strong><span data-wiz-name></span></div><div class="wizProg__track" role="progressbar" aria-label="Wizard progress" aria-valuemin="1" aria-valuemax="' + sets.length + '"><span></span></div>';
+    nav.className = 'wizNav';
+    nav.innerHTML = '<button type="button" class="btn secondary" data-wiz-back>Back</button><button type="button" class="btn" data-wiz-next>Next</button>';
+    f.insertBefore(bar, f.firstChild);
+    if (act) f.insertBefore(nav, act); else f.appendChild(nav);
+    f.classList.add('wiz-on');
+    var back = $('[data-wiz-back]', nav), next = $('[data-wiz-next]', nav), track = $('.wizProg__track', bar), fill = $('span', track);
+    function ok(i) {
+      var r = $$('input[required]', sets[i]); if (!r.length) return true;
+      var g = {}; r.forEach(function (x) { g[x.name] = g[x.name] || x.checked; });
+      return Object.keys(g).every(function (k) { return g[k]; });
+    }
+    function warn(i) {
+      var e = $('.wizErr', sets[i]);
+      if (!e) { e = d.createElement('p'); e.className = 'fieldError wizErr'; e.setAttribute('role', 'alert'); e.textContent = 'Please choose an option to continue.'; sets[i].insertBefore(e, $('legend', sets[i]).nextSibling); }
+      e.hidden = false;
+    }
+    function show(i, focus) {
+      cur = Math.max(0, Math.min(sets.length - 1, i));
+      sets.forEach(function (s, n) { s.hidden = n !== cur; });
+      var lg = $('legend', sets[cur]);
+      $('[data-wiz-step]', bar).textContent = 'Question ' + (cur + 1) + ' of ' + sets.length;
+      $('[data-wiz-name]', bar).textContent = lg ? lg.textContent.replace(/^\d+\.\s*/, '').replace(/\s*\((required|optional)\)\s*$/, '') : '';
+      track.setAttribute('aria-valuenow', cur + 1); fill.style.width = ((cur + 1) / sets.length * 100) + '%';
+      back.disabled = cur === 0; next.hidden = cur === sets.length - 1; if (act) act.hidden = cur !== sets.length - 1;
+      if (focus) { var fi = $('input,select', sets[cur]); if (fi) fi.focus(); }
+    }
+    on(back, 'click', function () { show(cur - 1, true); });
+    on(next, 'click', function () { if (!ok(cur)) { warn(cur); return; } show(cur + 1, true); });
+    on(f, 'change', function () { var er = $('.wizErr', sets[cur]); if (er) er.hidden = true; });
+    on(f, 'submit', function (e) { for (var i = 0; i < sets.length; i++) { if (!ok(i)) { e.preventDefault(); show(i, true); warn(i); return; } } });
+    show(0, false);
   })();
 
   /* ---------- Search combobox ---------- */

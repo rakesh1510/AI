@@ -6,8 +6,9 @@ if (!$g) {
   http_response_code(404);
   $title = 'Guide Not Found';
   $meta_desc = 'The guide you requested could not be found on AIHubpedia.';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Guide not found</h1><div class="actions"><a class="btn" href="/guides.php">Browse all guides</a></div>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Guide not found', 'html' => '<div class="actions"><a class="btn" href="/guides.php">Browse all guides</a></div>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -32,12 +33,13 @@ $head_extra = '<meta property="article:published_time" content="' . h($g['publis
 // Aggregate sources across the profiles used.
 $sources = [];
 foreach ($rows as $t) foreach (($t['curated']['sources'] ?? []) as $s) $sources[$s['url']] = $s + ['tool' => $t['name']];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article class="prose">
-  <h1><?= h($g['h1']) ?></h1>
-  <p class="guideMeta">By <?= h(guide_author()) ?> · Updated <time datetime="<?= h($g['updated']) ?>"><?= h($g['updated']) ?></time> · Facts from vendor pages collected <?= h($rows ? ($rows[0]['curated']['review']['reviewed_on'] ?? $g['updated']) : $g['updated']) ?> · <a href="/methodology.php">Methodology</a></p>
+<?php ob_start(); ?><?= h($g['h1']) ?><?php $__t = ob_get_clean(); ob_start(); ?>By <?= h(guide_author()) ?> · Updated <time datetime="<?= h($g['updated']) ?>"><?= h($g['updated']) ?></time> · Facts from vendor pages collected <?= h($rows ? ($rows[0]['curated']['review']['reviewed_on'] ?? $g['updated']) : $g['updated']) ?> · <a href="/methodology.php">Methodology</a><?php $__l = ob_get_clean();
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Guide', 'icon' => 'book', 'title_html' => $__t, 'lead' => $__l, 'art' => 'lens', 'size' => 'sm']); ?>
+<div class="wrap pgBody">
+<?php ob_start(); ?>
 
   <?php foreach ($g['intro'] as $para): ?><p><?= h($para) ?></p><?php endforeach; ?>
 
@@ -79,5 +81,6 @@ require __DIR__ . '/layout_top.php';
     <?php endforeach; ?>
   </ul>
   <p class="small">Spotted something out of date? Email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a> and we will review it.</p>
-</article>
+<?php $__doc = ob_get_clean(); echo doc_page($__doc); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

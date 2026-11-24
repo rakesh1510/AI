@@ -7,10 +7,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $valid) {
   try { if (db_table_exists('subscribers')) $done = newsletter_unsubscribe(db(), $token) || true; } catch (Throwable $e) { $done = false; }
 }
 $title = 'Unsubscribe';
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
-echo '<div style="max-width:640px">';
-if ($done) echo '<div class="successBox" role="status"><h1 style="margin-top:0">You are unsubscribed</h1><p>You will not receive further emails from AIHubpedia.</p></div>';
-elseif (!$valid) echo '<div class="noticeBox" role="alert"><h1 style="margin-top:0">This unsubscribe link is not valid</h1><p>Email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a> and we will remove you.</p></div>';
-else echo '<h1>Unsubscribe from AIHubpedia emails?</h1><form method="post" action="/unsubscribe.php"><input type="hidden" name="token" value="' . h($token) . '"><button class="btn" type="submit">Yes, unsubscribe me</button> <a class="btn secondary" href="/">Keep me subscribed</a></form>';
+echo '<div class="wrap pgBody">';
+if ($done) echo state_box(['tone' => 'ok', 'art' => 'mail', 'eyebrow' => 'Done', 'title' => 'You are unsubscribed', 'text' => 'You will not receive further emails from AIHubpedia.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
+elseif (!$valid) echo state_box(['art' => 'lost', 'eyebrow' => 'Link not valid', 'title' => 'This unsubscribe link is not valid', 'text' => 'Email <a href="mailto:contact@aihubpedia.com" style="text-decoration:underline">contact@aihubpedia.com</a> and we will remove you.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
+else echo '<div class="glass" style="max-width:640px;padding:32px"><h1>Unsubscribe from AIHubpedia emails?</h1><form method="post" action="/unsubscribe.php"><input type="hidden" name="token" value="' . h($token) . '"><button class="btn" type="submit">Yes, unsubscribe me</button> <a class="btn secondary" href="/">Keep me subscribed</a></form></div>';
 echo '</div>';
 require __DIR__ . '/layout_bottom.php';

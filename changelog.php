@@ -11,13 +11,11 @@ $meta_desc = 'When AIHubpedia last reviewed each tool profile, and the changes e
 $crumbs = [['Home', site_url('/')], ['Recently updated', null]];
 $jsonld = [seo_breadcrumb_node($crumbs)];
 $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<header class="pageHero" style="padding-top:0">
-  <h1>Recently updated tool profiles</h1>
-  <p class="lead">When each profile was last reviewed, and the changes our editors have verified against vendor pages. We list only what we can point to a source for.</p>
-</header>
+<?php echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Changelog', 'icon' => 'check', 'title_html' => 'Recently updated <span class="gradText2">tool profiles</span>', 'lead' => 'When each profile was last reviewed, and the changes our editors have verified against vendor pages. We list only what we can point to a source for.', 'art' => 'layers', 'size' => 'sm']); ?>
+<div class="wrap pgBody">
 
 <section class="panel" aria-labelledby="verTitle">
   <h2 id="verTitle" style="margin-top:0">Verified changes</h2>
@@ -49,4 +47,5 @@ require __DIR__ . '/layout_top.php';
   </table>
   </div>
 </section>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

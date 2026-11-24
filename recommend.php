@@ -22,16 +22,14 @@ $radio = function (string $name, array $options, string $current, bool $required
   }
   return $o;
 };
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Recommendation wizard', 'icon' => 'sparkle', 'title_html' => 'Get an AI tool shortlist <span class="gradText2">in six questions</span>',
+  'lead' => 'No sign-up and no chatbot. Your answers are matched against what our sourced profiles document, and every recommendation explains why. Nothing you choose here is stored on our servers.', 'art' => 'steps',
+  'facts' => ['Six short questions', 'Every match explains why', 'Nothing is stored on our servers']]);
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<header class="pageHero" style="padding-top:0">
-  <span class="eyebrow"><?= ui_icon('sparkle') ?> Recommendation wizard</span>
-  <h1>Get an AI tool shortlist in six questions</h1>
-  <p class="lead">No sign-up and no chatbot. Your answers are matched against what our sourced profiles document, and every recommendation explains why. Nothing you choose here is stored on our servers.</p>
-</header>
-
-<form class="wizard panel" method="get" action="/recommend.php#results" data-wizard>
+<div class="wrap pgBody">
+<form class="wizard panel wizardCard" method="get" action="/recommend.php#results" data-wizard>
   <input type="hidden" name="go" value="1">
   <fieldset>
     <legend>1. What is your role?</legend>
@@ -66,7 +64,7 @@ require __DIR__ . '/layout_top.php';
       <?php endforeach; ?>
     </div>
   </fieldset>
-  <p><button class="btn" type="submit">Show my shortlist</button> <a class="btn secondary" href="/recommend.php">Start over</a></p>
+  <p class="wizActions"><button class="btn btn--accent" type="submit">Show my shortlist</button> <a class="btn secondary" href="/recommend.php">Start over</a></p>
 </form>
 
 <?php if ($submitted): ?>
@@ -89,7 +87,7 @@ require __DIR__ . '/layout_top.php';
           <li class="recItem">
             <article class="panel" aria-labelledby="rec-<?= $h($t['id']) ?>">
               <header class="recHead">
-                <img class="tCard__logo" src="<?= $h(tool_logo($t)) ?>" alt="" width="44" height="44" loading="lazy" decoding="async">
+                <?= logo_tile($t, 'md') ?>
                 <div><h3 id="rec-<?= $h($t['id']) ?>" style="margin:0"><span class="recRank"><?= $i + 1 ?>.</span> <a href="<?= $h(tool_path($t['id'])) ?>"><?= $h($t['name']) ?></a></h3>
                   <p class="small" style="margin:2px 0 0"><?= $h($t['short'] ?? '') ?></p></div>
               </header>
@@ -140,4 +138,5 @@ require __DIR__ . '/layout_top.php';
   <?php endif; ?>
 </section>
 <?php endif; ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

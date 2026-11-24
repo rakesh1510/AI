@@ -24,33 +24,35 @@ $jsonld = [
    'isPartOf' => ['@id' => site_url('/#website')], 'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => count($items), 'itemListElement' => $items]],
   seo_breadcrumb_node($crumbs),
 ];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Head-to-head', 'icon' => 'compare', 'title_html' => 'AI tool comparisons, <span class="gradText2">side by side</span>',
+  'lead' => 'Popular head-to-head comparisons. You can also <a href="/compare.php" style="text-decoration:underline">compare any two AI tools</a> side by side.', 'art' => 'podium',
+  'actions' => '<a class="btn btn--accent" href="/compare.php">Compare any two tools</a>']);
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<h1>AI tool comparisons</h1>
-<p class="small">Popular head-to-head comparisons. You can also <a href="/compare.php">compare any two AI tools</a> side by side.</p>
-
-<div class="grid">
-<?php foreach ($pairs as [$a, $b]): ?>
-  <div class="card">
-    <h2 style="margin:0 0 6px;font-size:1.17em"><a href="<?= h(compare_path($a['id'], $b['id'])) ?>"><?= h($a['name']) ?> vs <?= h($b['name']) ?></a></h2>
-    <p class="small"><?= h($a['category']) ?><?= $a['category'] !== $b['category'] ? ' / ' . h($b['category']) : '' ?> · <?= h($a['pricing'] ?: 'Pricing varies') ?> vs <?= h($b['pricing'] ?: 'Pricing varies') ?></p>
-    <div class="actions">
-      <a class="btn" href="<?= h(compare_path($a['id'], $b['id'])) ?>">Compare</a>
-    </div>
-  </div>
-<?php endforeach; ?>
-</div>
-
-<?php if ($files): ?>
-<section class="card" style="margin-top:22px">
-  <h2 style="margin-top:0">More comparison pages</h2>
-  <ul class="linkList">
-    <?php foreach (array_slice($files, 0, 200) as $f): ?>
-      <li><a href="/compare/<?= h(rawurlencode($f)) ?>"><?= h(ucwords(str_replace(['-vs-', '-', '.php'], [' vs ', ' ', ''], $f))) ?></a></li>
-    <?php endforeach; ?>
+<div class="wrap pgBody">
+  <ul class="vsGrid vsGrid--pricing">
+  <?php foreach ($pairs as $n => [$a, $b]): $cc = cat_theme((string)$a['category']); ?>
+    <li><a class="vsCard" href="<?= h(compare_path($a['id'], $b['id'])) ?>" style="--c1:<?= $cc[0] ?>;--c2:<?= $cc[1] ?>">
+      <span class="vsCard__tools">
+        <span class="vsCard__tool"><?= logo_tile($a, 'lg') ?><strong><?= h($a['name']) ?></strong><small><?= h($a['pricing'] ?: 'Pricing varies') ?></small></span>
+        <span class="vsBadge" aria-hidden="true">VS</span>
+        <span class="vsCard__tool"><?= logo_tile($b, 'lg') ?><strong><?= h($b['name']) ?></strong><small><?= h($b['pricing'] ?: 'Pricing varies') ?></small></span>
+      </span>
+      <span class="vsCard__meta"><?= h($a['category']) ?><?= $a['category'] !== $b['category'] ? ' / ' . h($b['category']) : '' ?></span>
+      <span class="vsCard__go">Compare <?= h($a['name']) ?> vs <?= h($b['name']) ?> <?= ui_icon('arrow') ?></span>
+    </a></li>
+  <?php endforeach; ?>
   </ul>
-</section>
+<?php if ($files): ?>
+  <section class="card" style="margin-top:var(--s-5)">
+    <h2 style="margin-top:0;font-size:1.5rem">More comparison pages</h2>
+    <ul class="linkList">
+      <?php foreach (array_slice($files, 0, 200) as $f): ?>
+        <li><a href="/compare/<?= h(rawurlencode($f)) ?>"><?= h(ucwords(str_replace(['-vs-', '-', '.php'], [' vs ', ' ', ''], $f))) ?></a></li>
+      <?php endforeach; ?>
+    </ul>
+  </section>
 <?php endif; ?>
-
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

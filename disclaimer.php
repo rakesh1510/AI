@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "Disclaimer — AIHubpedia";
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => [['Home', site_url('/')], ['Disclaimer', null]], 'eyebrow' => 'Legal', 'icon' => 'shield', 'title_html' => 'Disclaimer', 'lead' => 'What you can and cannot rely on.', 'art' => 'doc', 'size' => 'sm']);
+ob_start();
 ?>
 
-<h1>Disclaimer</h1>
 
-<div class='card'>
 
 <p>
 AIHubpedia is an independent directory of artificial intelligence tools.
@@ -25,6 +26,5 @@ Please verify details directly on the official website of each tool.
 AIHubpedia is not responsible for third-party services or content.
 </p>
 
-</div>
-
+<?php $__doc = ob_get_clean(); echo '<div class="wrap pgBody">' . doc_page($__doc) . '</div>'; ?>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

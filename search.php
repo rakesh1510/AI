@@ -35,14 +35,13 @@ $url = function (array $over = []) use ($q, $cat, $price) {
   $p = array_filter(array_merge(['q' => $q, 'cat' => $cat, 'price' => $price], $over), fn($v) => $v !== '' && $v !== null && $v !== 1);
   return '/search.php?' . http_build_query($p, '', '&', PHP_QUERY_RFC3986);
 };
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+ob_start(); ?>Ranked from the AIHubpedia database by name, category, tags and description. Tools with reviewed, sourced profiles rank higher, and each result says why it matched. Related words (for example “transcribe” and “transcription”) are labelled. <a href="/methodology.php#search">How ranking works</a>.<?php $__lead = ob_get_clean();
+echo page_hero(['crumbs' => [['Home', site_url('/')], ['Search', null]], 'eyebrow' => 'Search', 'icon' => 'search', 'title_html' => $q !== '' ? 'Results for <span class="gradText2">“' . h($q) . '”</span>' : 'Search <span class="gradText2">AI tools</span>', 'lead' => $__lead, 'art' => 'lens', 'size' => 'sm',
+  'actions' => '<div class="heroSearchWrap">' . render_search_box('pageSearch', ['big' => true, 'source' => 'results', 'value' => $q]) . '</div>']);
 ?>
-<div class="pageHero" style="padding-top:0">
-  <h1><?= $q !== '' ? 'Results for “' . h($q) . '”' : 'Search AI tools' ?></h1>
-  <p class="lead">Ranked from the AIHubpedia database by name, category, tags and description. Tools with reviewed, sourced profiles rank higher, and each result says why it matched. Related words (for example “transcribe” and “transcription”) are labelled. <a href="/methodology.php#search">How ranking works</a>.</p>
-</div>
-<div style="max-width:760px;margin:6px 0 22px"><?= render_search_box('pageSearch', ['big' => true, 'source' => 'results', 'value' => $q]) ?></div>
-
+<div class="wrap pgBody">
 <?php if ($q === ''): ?>
   <section aria-labelledby="startTitle">
     <h2 id="startTitle">Start from a goal</h2>
@@ -97,4 +96,5 @@ require __DIR__ . '/layout_top.php';
     </section>
   <?php endif; ?>
 <?php endif; ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

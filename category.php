@@ -19,9 +19,9 @@ if ($name === '' || !$catTools) {
   http_response_code(404);
   $title = 'AI Tool Category Not Found';
   $meta_desc = 'This AI tool category does not exist on AIHubpedia.';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Category not found</h1><p class="small">' . ($name === '' ? 'No category was specified.' : 'There is no AI tool category called “' . h($name) . '”.') . '</p>';
-  echo '<div class="actions"><a class="btn" href="/categories.php">Browse all categories</a></div>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Category not found', 'text' => ($name === '' ? 'No category was specified.' : 'There is no AI tool category called “' . h($name) . '”.'), 'actions' => '<a class="btn btn--accent" href="/categories.php">Browse all categories</a>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -34,8 +34,9 @@ if ($subParam !== '') {
     http_response_code(404);
     $title = 'AI Tool Subcategory Not Found';
     $meta_desc = 'This AI tool subcategory does not exist on AIHubpedia.';
+    $main_class = 'fullbleed';
     require __DIR__ . '/layout_top.php';
-    echo '<h1>Subcategory not found</h1><div class="actions"><a class="btn" href="' . h(category_path($name)) . '">Back to ' . h($name) . ' AI tools</a></div>';
+    echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Subcategory not found', 'actions' => '<a class="btn btn--accent" href="' . h(category_path($name)) . '">Back to ' . h($name) . ' AI tools</a>']) . '</div>';
     require __DIR__ . '/layout_bottom.php';
     exit;
   }
@@ -65,8 +66,9 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 if ($page > $pages) {
   http_response_code(404);
   $title = 'Page Not Found';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Page not found</h1><div class="actions"><a class="btn" href="' . h(category_path($name, 1, $sub)) . '">Back to ' . h($name) . ' AI tools</a></div>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Page not found', 'actions' => '<a class="btn btn--accent" href="' . h(category_path($name, 1, $sub)) . '">Back to ' . h($name) . ' AI tools</a>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -110,23 +112,21 @@ $jsonld = [
   ],
   seo_breadcrumb_node($crumbs),
 ];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+$__ct = cat_theme($isUnclassified ? 'Other' : $name);
+ob_start(); ?><?= h(seo_plural((int)$total, 'tool')) ?> listed<?php $rev = count(array_filter($items, fn($t) => !empty($t['curated']))); if ($rev): ?> · <?= (int)$rev ?> with <a href="/methodology.php" style="text-decoration:underline">reviewed profiles</a><?php endif; ?><?php if ($pages > 1): ?> · Page <?= (int)$page ?> of <?= (int)$pages ?><?php endif; ?><?php $__meta = ob_get_clean();
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => $sub !== '' ? $name . ' · subcategory' : 'Category', 'icon' => $__ct[2], 'title' => $heading,
+  'lead' => h($isUnclassified ? taxonomy_category_description($name) : ($sub !== '' ? 'A focused list of ' . strtolower($sub) . ' tools within ' . strtolower($name) . ' AI tools.' : taxonomy_category_description($name))) . '<span style="display:block;margin-top:12px;font-size:1rem;color:#b5bddf">' . $__meta . '</span>', 'solo' => true, 'size' => 'sm']);
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<h1><?= h($heading) ?></h1>
-<p><?= h($isUnclassified ? taxonomy_category_description($name) : ($sub !== '' ? 'A focused list of ' . strtolower($sub) . ' tools within ' . strtolower($name) . ' AI tools.' : taxonomy_category_description($name))) ?></p>
-<p class="small">
-  <?= h(seo_plural((int)$total, 'tool')) ?> listed
-  <?php $rev = count(array_filter($items, fn($t) => !empty($t['curated']))); if ($rev): ?> · <?= (int)$rev ?> with <a href="/methodology.php">reviewed profiles</a><?php endif; ?>
-  <?php if ($pages > 1): ?> · Page <?= (int)$page ?> of <?= (int)$pages ?><?php endif; ?>
-</p>
+<div class="wrap pgBody">
 
 <?php if (!$isUnclassified && count($subCounts) > 1): ?>
 <nav aria-label="Subcategories">
-  <ul class="linkList">
-    <li><a href="<?= h(category_path($name)) ?>"<?= $sub === '' ? ' aria-current="page"' : '' ?>>All <?= h($name) ?> (<?= (int)count($catTools) ?>)</a></li>
+  <ul class="catPills subPills">
+    <li><a class="catPill" href="<?= h(category_path($name)) ?>"<?= $sub === '' ? ' aria-current="page"' : '' ?>>All <?= h($name) ?> (<?= (int)count($catTools) ?>)</a></li>
     <?php foreach ($subCounts as $s => $n): ?>
-      <li><a href="<?= h(category_path($name, 1, $s)) ?>"<?= $s === $sub ? ' aria-current="page"' : '' ?>><?= h($s) ?> (<?= (int)$n ?>)</a></li>
+      <li><a class="catPill" href="<?= h(category_path($name, 1, $s)) ?>"<?= $s === $sub ? ' aria-current="page"' : '' ?>><?= h($s) ?> (<?= (int)$n ?>)</a></li>
     <?php endforeach; ?>
   </ul>
 </nav>
@@ -156,13 +156,13 @@ require __DIR__ . '/layout_top.php';
 </nav>
 <?php endif; ?>
 
-<section class="card" style="margin-top:22px">
-  <h2 style="margin-top:0">Other AI tool categories</h2>
-  <ul class="linkList">
-    <?php foreach ($cats as $c): if ($c === $name || $c === CATALOG_UNCLASSIFIED) continue; ?>
-      <li><a href="<?= h(category_path($c)) ?>"><?= h($c) ?> AI tools</a></li>
+<section style="margin-top:var(--s-5)" aria-labelledby="otherCats">
+  <h2 id="otherCats" style="margin-top:0">Other AI tool categories</h2>
+  <ul class="catPills">
+    <?php foreach ($cats as $c): if ($c === $name || $c === CATALOG_UNCLASSIFIED) continue; $__oc = cat_theme((string)$c); ?>
+      <li><a class="catPill" style="--c1:<?= $__oc[0] ?>;--c2:<?= $__oc[1] ?>" href="<?= h(category_path($c)) ?>"><i></i><?= h($c) ?> AI tools</a></li>
     <?php endforeach; ?>
   </ul>
 </section>
-
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

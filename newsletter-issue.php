@@ -8,8 +8,9 @@ $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
 if (!$i) {
   http_response_code(404);
   $title = 'Issue Not Found'; $meta_desc = 'This newsletter issue is not available.';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Issue not found</h1><p><a class="btn" href="/newsletter-archive.php">Newsletter archive</a></p>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Issue not found', 'html' => '<p><a class="btn" href="/newsletter-archive.php">Newsletter archive</a></p>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -18,12 +19,13 @@ $meta_desc = $i['summary'] ?: 'AIHubpedia newsletter issue published ' . $i['pub
 $canonical = newsletter_issue_url($slug);
 $crumbs = [['Home', site_url('/')], ['Newsletter archive', site_url('/newsletter-archive.php')], [$i['title'], null]];
 $jsonld = [seo_breadcrumb_node($crumbs)];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article class="prose">
-  <h1><?= $h($i['title']) ?></h1>
-  <p class="guideMeta">Published <?= $h($i['published_on']) ?> · Edited by <?= $h($i['editor']) ?></p>
+<?php ob_start(); ?><?= $h($i['title']) ?><?php $__t = ob_get_clean(); ob_start(); ?>Published <?= $h($i['published_on']) ?> · Edited by <?= $h($i['editor']) ?><?php $__l = ob_get_clean();
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Newsletter issue', 'icon' => 'mail', 'title_html' => $__t, 'lead' => $__l, 'art' => 'mail', 'size' => 'sm']); ?>
+<div class="wrap pgBody">
+<?php ob_start(); ?>
   <?php if (!empty($i['summary'])): ?><p><?= $h($i['summary']) ?></p><?php endif; ?>
   <ul>
     <?php foreach ($i['items'] as $it): ?>
@@ -31,5 +33,6 @@ require __DIR__ . '/layout_top.php';
     <?php endforeach; ?>
   </ul>
   <?php if (!empty($i['sponsor'])): ?><aside class="panel"><p class="adLabel"><span class="adTag">Sponsored</span> <a href="/disclosure.php">Why am I seeing this?</a></p><p><strong><?= $h($i['sponsor']['label']) ?></strong> <?= $h($i['sponsor']['text'] ?? '') ?></p></aside><?php endif; ?>
-</article>
+<?php $__doc = ob_get_clean(); echo doc_page($__doc); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

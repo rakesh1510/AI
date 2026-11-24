@@ -25,14 +25,15 @@ else {
 }
 http_response_code($code);
 $title = 'Subscribe to AIHubpedia Updates';
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
-echo '<div style="max-width:640px">';
+echo '<div class="wrap pgBody">';
 if ($status === 'ok') {
-  echo '<div class="successBox" role="status"><h1 style="margin-top:0">Check your inbox</h1><p>If this address can be subscribed, we have sent a confirmation link. You will not receive updates until you confirm.</p></div>';
+  echo state_box(['tone' => 'ok', 'art' => 'mail', 'eyebrow' => 'Almost done', 'title' => 'Check your inbox', 'text' => 'If this address can be subscribed, we have sent a confirmation link. You will not receive updates until you confirm.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
 } elseif ($status === 'unsent') {
-  echo '<div class="noticeBox" role="alert"><h1 style="margin-top:0">We saved your request, but the email did not send</h1><p>The confirmation email could not be sent right now. Please try again later or email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a>.</p></div>';
+  echo state_box(['art' => 'lost', 'eyebrow' => 'Not sent', 'title' => 'We saved your request, but the email did not send', 'text' => 'The confirmation email could not be sent right now. Please try again later or email <a href="mailto:contact@aihubpedia.com" style="text-decoration:underline">contact@aihubpedia.com</a>.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
 } else {
-  echo '<div class="noticeBox" role="alert"><h1 style="margin-top:0">We could not subscribe you</h1><p>' . h($message) . '</p></div>';
+  echo state_box(['art' => 'lost', 'eyebrow' => 'Could not subscribe', 'title' => 'We could not subscribe you', 'text' => h($message), 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
 }
-echo '<p style="margin-top:18px"><a class="btn secondary" href="/">Back to AIHubpedia</a></p></div>';
+echo '</div>';
 require __DIR__ . '/layout_bottom.php';

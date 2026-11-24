@@ -80,12 +80,15 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <?= $__verify ?><meta name="application-name" content="AIHubpedia">
 <meta name="theme-color" content="#4f46e5">
 <?php if ($__built_css): ?>
+<link rel="preload" href="/assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.min.css?v=<?= h($__built_css) ?>">
 <?php else: ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= h($__css_ver) ?>">
 <link rel="stylesheet" href="/assets/css/ui.css?v=<?= h($__ui_ver) ?>">
 <link rel="stylesheet" href="/assets/css/premium.css?v=<?= h($__pr_ver) ?>">
 <link rel="stylesheet" href="/assets/css/premium2.css?v=<?= h(@filemtime(__DIR__ . "/assets/css/premium2.css") ?: 1) ?>">
+<link rel="stylesheet" href="/assets/css/premium3.css?v=<?= h(@filemtime(__DIR__ . "/assets/css/premium3.css") ?: 1) ?>">
 <?php endif; ?>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/favicon-48.png">
@@ -127,9 +130,10 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
             <div class="siteMore__panel" id="moreMenu">
               <?php foreach ($__navMore as $__grp => $__links): ?>
               <div class="siteMore__group"><p class="siteMore__title"><?= h($__grp) ?></p>
-                <?php foreach ($__links as [$href, $label]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><?= h($label) ?></a><?php endforeach; ?>
+                <?php foreach ($__links as [$href, $label, $__d, $__ic, $__cc]): ?><a href="<?= h($href) ?>"<?= $__cur($href) ?>><span class="mm__ico" style="--c1:<?= h($__cc[0]) ?>;--c2:<?= h($__cc[1]) ?>" aria-hidden="true"><?= ui_icon($__ic) ?></span><span><strong><?= h($label) ?></strong><small><?= h($__d) ?></small></span></a><?php endforeach; ?>
               </div>
               <?php endforeach; ?>
+              <div class="siteMore__foot"><p><strong>Need something built?</strong> API integrations, workflow automation and custom AI.</p><a class="btn" href="<?= h($__ctaHref) ?>" data-cta="mega_project"><?= h($__ctaLabel) ?></a></div>
             </div>
           </details>
         </li>
@@ -138,7 +142,7 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
     </nav>
 
     <div class="hdrActions">
-      <?php if (!$__hide_header_search): ?><a class="iconBtn hdrSearchBtn" href="/search.php" data-search-toggle aria-label="Search AI tools" aria-expanded="false" aria-controls="hdrSearchBar"><?= ui_icon('search') ?></a><?php endif; ?>
+      <?php if (!$__hide_header_search): ?><a class="iconBtn hdrSearchBtn" href="/search.php" data-search-toggle aria-label="Search AI tools" aria-expanded="false" aria-controls="hdrSearchBar" title="Search (press /)"><?= ui_icon('search') ?><kbd aria-hidden="true">/</kbd></a><?php endif; ?>
       <a class="iconBtn favLink js-only" href="/favorites.php" aria-label="Saved tools"><?= ui_icon('heart') ?><span class="favCount" data-fav-count hidden>0</span></a>
       <button class="iconBtn js-only" id="themeToggle" type="button" aria-label="Switch color theme" aria-pressed="false"><?= ui_icon('moon', 'ic-moon') ?><?= ui_icon('sun', 'ic-sun') ?></button>
       <a class="btn sm hdrCta" href="<?= h($__ctaHref) ?>" data-cta="header_project"><?= h($__ctaLabel) ?></a>

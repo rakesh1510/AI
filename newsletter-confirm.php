@@ -13,10 +13,11 @@ if ($posted && $valid) {
 }
 $title = 'Confirm Subscription';
 http_response_code(($posted && !$ok) || !$valid ? 400 : 200);
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
-echo '<div style="max-width:640px">';
-if ($ok) echo '<div class="successBox" role="status"><h1 style="margin-top:0">You are subscribed</h1><p>Thanks for confirming. Every email includes an unsubscribe link.</p></div>';
-elseif (!$valid || $posted) echo '<div class="noticeBox" role="alert"><h1 style="margin-top:0">This confirmation link is not valid</h1><p>It may be incomplete or already used. You can subscribe again from the footer of any page.</p></div>';
-else echo '<h1>Confirm your subscription</h1><p>Press the button to confirm that you want to receive AIHubpedia emails.</p><form method="post" action="/newsletter-confirm.php"><input type="hidden" name="token" value="' . h($token) . '"><button class="btn" type="submit">Yes, confirm my subscription</button></form>';
-echo '<p style="margin-top:18px"><a class="btn secondary" href="/">Back to AIHubpedia</a></p></div>';
+echo '<div class="wrap pgBody">';
+if ($ok) echo state_box(['tone' => 'ok', 'art' => 'mail', 'eyebrow' => 'Confirmed', 'title' => 'You are subscribed', 'text' => 'Thanks for confirming. Every email includes an unsubscribe link.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
+elseif (!$valid || $posted) echo state_box(['art' => 'lost', 'eyebrow' => 'Link not valid', 'title' => 'This confirmation link is not valid', 'text' => 'It may be incomplete or already used. You can subscribe again from the footer of any page.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a>']);
+else echo '<div class="glass" style="max-width:640px;padding:32px"><h1>Confirm your subscription</h1><p>Press the button to confirm that you want to receive AIHubpedia emails.</p><form method="post" action="/newsletter-confirm.php"><input type="hidden" name="token" value="' . h($token) . '"><button class="btn" type="submit">Yes, confirm my subscription</button></form></div>';
+echo '</div>';
 require __DIR__ . '/layout_bottom.php';

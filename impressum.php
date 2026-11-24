@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "Impressum — AIHubpedia";
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => [['Home', site_url('/')], ['Impressum', null]], 'eyebrow' => 'Legal', 'icon' => 'briefcase', 'title_html' => 'Impressum', 'lead' => 'Legal information about the operator of this website.', 'art' => 'doc', 'size' => 'sm']);
+ob_start();
 ?>
 
-<h1>Impressum</h1>
 
-<div class="card">
 
 <h3>Information according to §5 TMG</h3>
 
@@ -56,6 +57,5 @@ Reproduction, editing, distribution or any kind of use outside the limits of cop
 require the written consent of the respective author or creator.
 </p>
 
-</div>
-
+<?php $__doc = ob_get_clean(); echo '<div class="wrap pgBody">' . doc_page($__doc) . '</div>'; ?>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

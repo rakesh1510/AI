@@ -4,30 +4,44 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
 </main>
 
 <?php $__js_app = @filemtime(__DIR__ . '/assets/js/app.js') ?: '1'; ?>
-<footer class="siteFooter">
+<footer class="siteFooter stage-footer">
   <div class="wrap">
-    <?php if (($footer_newsletter ?? true) !== false): $__nl = newsletter_launched(); ?>
-    <section class="footerNews footerNews--compact" aria-labelledby="newsTitle">
-      <div class="footerNews__text">
-        <h2 id="newsTitle"><?= $__nl ? 'Get AIHubpedia updates' : 'Get launch updates' ?></h2>
-        <p class="small"><?= $__nl ? 'An email when we publish a new guide or notice a notable price or plan change. Free; unsubscribe any time.' : 'The AIHubpedia newsletter has not launched yet. Leave your email to hear when it does. Free; unsubscribe any time.' ?></p>
+    <?php $__nl = newsletter_launched(); ?>
+    <section class="fHero" aria-labelledby="<?= ($footer_newsletter ?? true) !== false ? 'newsTitle' : 'ftCta' ?>">
+      <div>
+        <?php if (($footer_newsletter ?? true) !== false): ?>
+          <span class="eyebrow"><?= ui_icon('mail') ?> Newsletter</span>
+          <h2 id="newsTitle"><?= $__nl ? 'Get AIHubpedia updates' : 'Get launch updates' ?></h2>
+          <p><?= $__nl ? 'An email when we publish a new guide or notice a notable price or plan change. Free; unsubscribe any time.' : 'The AIHubpedia newsletter has not launched yet. Leave your email to hear when it does. Free; unsubscribe any time.' ?></p>
+          <form class="newsForm" method="post" action="/subscribe.php">
+            <input type="hidden" name="form_token" value="<?= h(form_token('newsletter')) ?>">
+            <input type="hidden" name="source_page" value="<?= h(rel_url(seo_default_canonical())) ?>">
+            <div class="hp" aria-hidden="true"><label>Leave empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>
+            <label class="sr" for="footerEmail">Email address</label>
+            <div class="newsForm__row">
+              <input class="input" id="footerEmail" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+              <button class="btn" type="submit" data-cta="footer_newsletter">Subscribe</button>
+            </div>
+            <label class="newsForm__consent"><input type="checkbox" name="consent" value="1" required><span>I agree to receive these emails. <a href="/privacy.php">Privacy policy</a></span></label>
+          </form>
+        <?php else: ?>
+          <span class="eyebrow"><?= ui_icon('briefcase') ?> For business</span>
+          <h2 id="ftCta">Have a project in mind?</h2>
+          <p>TrustNova Tech builds API integrations, workflow automation and custom AI solutions. Tell us your goal and we will reply by email if it is a fit.</p>
+          <div class="fHero__cta"><a class="btn btn--accent" href="/services.php#inquiry" data-cta="footer_project">Discuss Your Project</a><a class="btn secondary" href="/advertise.php">Advertise a tool</a></div>
+        <?php endif; ?>
       </div>
-      <form class="newsForm" method="post" action="/subscribe.php">
-        <input type="hidden" name="form_token" value="<?= h(form_token('newsletter')) ?>">
-        <input type="hidden" name="source_page" value="<?= h(rel_url(seo_default_canonical())) ?>">
-        <div class="hp" aria-hidden="true"><label>Leave empty<input type="text" name="website_url_confirm" tabindex="-1" autocomplete="off"></label></div>
-        <label class="sr" for="footerEmail">Email address</label>
-        <div class="newsForm__row">
-          <input class="input" id="footerEmail" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
-          <button class="btn" type="submit" data-cta="footer_newsletter">Subscribe</button>
-        </div>
-        <label class="newsForm__consent"><input type="checkbox" name="consent" value="1" required> I agree to receive these emails. <a href="/privacy.php">Privacy policy</a></label>
-      </form>
+      <div class="fHero__art" aria-hidden="true"><?= ($footer_newsletter ?? true) !== false ? art_mail() : art_orb() ?></div>
     </section>
-    <?php endif; ?>
 
-    <div class="simpleFooterGrid">
-      <div class="footerCol">
+    <div class="fCols">
+      <div class="fBrand">
+        <a class="fLogo" href="/" aria-label="AIHubpedia home"><img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="119" height="28" alt="AIHubpedia" loading="lazy"></a>
+        <p>Discover, compare and choose AI tools, with sources and dates. An independent directory run by TrustNova Tech.</p>
+        <a class="fMail" href="mailto:contact@aihubpedia.com"><?= ui_icon('mail') ?> contact@aihubpedia.com</a>
+        <?php if (($footer_newsletter ?? true) !== false): ?><div style="margin-top:8px"><a class="btn sm secondary" href="/services.php#inquiry" data-cta="footer_project">Discuss Your Project</a></div><?php endif; ?>
+      </div>
+      <nav class="footerCol" aria-label="Discover">
         <h3>Discover</h3>
         <a href="/categories.php">All categories</a>
         <a href="/directory.php">All tools (A to Z)</a>
@@ -35,8 +49,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <a href="/compare.php">Compare tools</a>
         <a href="/guides.php">Guides</a>
         <a href="/recommend.php">Recommendation wizard</a>
-      </div>
-      <div class="footerCol">
+      </nav>
+      <nav class="footerCol" aria-label="For business">
         <h3>For business</h3>
         <a href="/services.php#inquiry">Discuss your project</a>
         <a href="/services.php">AI development services</a>
@@ -44,33 +58,27 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <a href="/partners.php">Partnerships</a>
         <a href="/submit.php">Submit your AI tool</a>
         <a href="/contact.php">Contact</a>
-      </div>
-      <div class="footerCol">
+      </nav>
+      <nav class="footerCol" aria-label="Company">
         <h3>Company</h3>
         <a href="/about.php">About AIHubpedia</a>
         <a href="/methodology.php">How we review</a>
         <a href="/disclosure.php">Advertising &amp; affiliate disclosure</a>
         <a href="/blog.php">Blog</a>
         <a href="/sitemap.xml">Sitemap</a>
-      </div>
-      <div class="footerCol">
+      </nav>
+      <nav class="footerCol" aria-label="Legal">
         <h3>Legal</h3>
         <a href="/privacy.php">Privacy policy</a>
         <a href="/terms.php">Terms of service</a>
         <a href="/impressum.php">Impressum</a>
         <a href="/disclaimer.php">Disclaimer</a>
-      </div>
+      </nav>
     </div>
 
-    <div class="footerBrandRow">
-      <a href="/" aria-label="AIHubpedia Home"><img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="119" height="28" alt="AIHubpedia logo" class="footerBrandLogo" loading="lazy"></a>
-      <p class="small">Discover, compare and choose AI tools, with sources and dates.</p>
-      <p class="footerContact"><a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a></p>
-    </div>
-
-    <div class="simpleFooterBottom">
+    <div class="fBottom">
       <div>© <?= date('Y') ?> AIHubpedia · <button type="button" class="linkBtn js-only" data-privacy-open>Privacy choices</button></div>
-      <div class="small footerLegalNote">All trademarks, logos and product names are the property of their respective owners. AIHubpedia is an independent AI tools directory and is not affiliated with the listed companies.</div>
+      <div class="footerLegalNote">All trademarks, logos and product names are the property of their respective owners. AIHubpedia is an independent AI tools directory and is not affiliated with the listed companies.</div>
     </div>
   </div>
 </footer>

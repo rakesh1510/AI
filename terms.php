@@ -2,12 +2,13 @@
 require_once __DIR__ . '/helpers.php';
 $title = "Terms of Service — AIHubpedia";
 $meta_desc = "Terms of Service for AIHubpedia";
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => [['Home', site_url('/')], ['Terms of service', null]], 'eyebrow' => 'Legal', 'icon' => 'book', 'title_html' => 'Terms of Service', 'lead' => 'The rules for using AIHubpedia.', 'art' => 'doc', 'size' => 'sm']);
+ob_start();
 ?>
 
-<h1>Terms of Service</h1>
 
-<div class="card">
 
 <h3>1. Acceptance of Terms</h3>
 <p>
@@ -78,6 +79,5 @@ If you have questions about these Terms of Service, please contact:
 <strong>Email:</strong> contact@aihubpedia.com
 </p>
 
-</div>
-
+<?php $__doc = ob_get_clean(); echo '<div class="wrap pgBody">' . doc_page($__doc) . '</div>'; ?>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

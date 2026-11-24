@@ -14,8 +14,9 @@ if ($slug !== '') {
     http_response_code(404);
     $title = 'Problem Not Found';
     $meta_desc = 'This task or problem is not listed on AIHubpedia.';
+    $main_class = 'fullbleed';
     require __DIR__ . '/layout_top.php';
-    echo '<h1>Problem not found</h1><p class="small">Pick a task from the list of problems AIHubpedia can help you shortlist tools for.</p><p><a class="btn" href="/solutions.php">Find tools by problem</a></p>';
+    echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Problem not found', 'title' => 'Problem not found', 'text' => 'Pick a task from the list of problems AIHubpedia can help you shortlist tools for.', 'actions' => '<a class="btn btn--accent" href="/solutions.php">Find tools by problem</a>']) . '</div>';
     require __DIR__ . '/layout_bottom.php';
     exit;
   }
@@ -37,29 +38,23 @@ if ($slug !== '') {
   foreach (guides_all() as $gs => $g) {
     foreach ($results as $r) { if (in_array($r['tool']['id'], $g['tools'] ?? [], true)) { $guides[$gs] = $g; break; } }
   }
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
+  $__pc = cat_theme('Research');
+  echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Find tools by problem', 'icon' => $problem['icon'] ?? 'search', 'title' => $problem['title'], 'lead' => h($problem['problem']) . '<br><span class="small" style="color:#b5bddf;display:block;margin-top:12px;font-size:1rem">Shortlist ranked live from the AIHubpedia catalogue. This is a starting list, not a test of output quality. <a href="/methodology.php#search" style="text-decoration:underline">How results are ranked</a>.</span>', 'art' => 'compass']);
   ?>
-  <?= render_breadcrumbs($crumbs) ?>
-  <article>
-    <header class="pageHero" style="padding-top:0">
-      <span class="eyebrow">Find tools by problem</span>
-      <h1><?= h($problem['title']) ?></h1>
-      <p class="lead"><?= h($problem['problem']) ?></p>
-      <p class="small">Shortlist ranked live from the AIHubpedia catalogue. This is a starting list, not a test of output quality. <a href="/methodology.php#search">How results are ranked</a>.</p>
-    </header>
-
-    <div class="grid2" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
-      <section class="panel" aria-labelledby="lookFor">
-        <h2 id="lookFor" style="margin-top:0">What to look for</h2>
-        <ul><?php foreach ($problem['look_for'] as $x): ?><li><?= h($x) ?></li><?php endforeach; ?></ul>
+  <article class="wrap pgBody">
+    <div class="bento" style="margin-bottom:var(--s-5)">
+      <section class="bento__cell bento__cell--a" aria-labelledby="lookFor"><span class="ico3d" style="--c1:#10b981;--c2:#0ea5e9"><?= ui_icon('check') ?></span>
+        <h2 id="lookFor" style="margin:0;font-size:1.5rem">What to look for</h2>
+        <ul class="tickList"><?php foreach ($problem['look_for'] as $x): ?><li><?= h($x) ?></li><?php endforeach; ?></ul>
       </section>
-      <section class="panel" aria-labelledby="askVendors">
-        <h2 id="askVendors" style="margin-top:0">Questions to ask a vendor</h2>
-        <ul><?php foreach ($problem['ask_vendors'] as $x): ?><li><?= h($x) ?></li><?php endforeach; ?></ul>
+      <section class="bento__cell bento__cell--a" aria-labelledby="askVendors"><span class="ico3d" style="--c1:#8b5cf6;--c2:#ec4899"><?= ui_icon('chat') ?></span>
+        <h2 id="askVendors" style="margin:0;font-size:1.5rem">Questions to ask a vendor</h2>
+        <ul class="tickList"><?php foreach ($problem['ask_vendors'] as $x): ?><li><?= h($x) ?></li><?php endforeach; ?></ul>
       </section>
     </div>
-
-    <h2 style="margin-top:28px">Tools to consider (<?= count($results) ?>)</h2>
+    <h2 style="margin-top:0">Tools to consider (<?= count($results) ?>)</h2>
     <?php if (!$results): ?>
       <p class="noticeBox">No tools in the catalogue match this problem yet. Try <a href="/search.php?q=<?= h(rawurlencode($problem['query'])) ?>">searching</a> or <a href="/submit.php">submit a tool</a>.</p>
     <?php else: ?>
@@ -69,7 +64,7 @@ if ($slug !== '') {
       </div>
     <?php endif; ?>
 
-    <section class="panel" style="margin-top:24px" aria-labelledby="nextSteps">
+    <section class="glass" style="margin-top:var(--s-5);padding:clamp(22px,3vw,34px)" aria-labelledby="nextSteps">
       <h2 id="nextSteps" style="margin-top:0">Next steps</h2>
       <ul class="linkList">
         <li><a href="/recommend.php">Answer six questions for a personalised shortlist</a> (no sign-up)</li>
@@ -89,21 +84,23 @@ $title = 'Find AI Tools by Problem or Task';
 $meta_desc = 'Start from the problem you need to solve, such as transcribing meetings or answering customer questions, and get a transparent, ranked shortlist of AI tools with the reasons for each match.';
 $canonical = site_url('/solutions.php');
 $jsonld = [seo_breadcrumb_node($crumbs)];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Find tools by problem', 'icon' => 'search', 'title_html' => 'Find AI tools <span class="gradText2">by problem</span>',
+  'lead' => 'Start from the job you need done. Each page explains what to look for, which questions to ask vendors, and shows a ranked shortlist with the reason every tool matched. No AI chatbot is involved: the ranking rules are published in our <a href="/methodology.php#search" style="text-decoration:underline">methodology</a>.', 'art' => 'compass',
+  'actions' => '<a class="btn btn--accent" href="/recommend.php">Get a personalised shortlist</a><a class="btn secondary" href="/search.php">Search all tools</a>']);
+$__ac = [['#06b6d4', '#2563eb'], ['#8b5cf6', '#ec4899'], ['#10b981', '#0ea5e9'], ['#f59e0b', '#ef4444'], ['#3b82f6', '#4f46e5'], ['#d946ef', '#6366f1']];
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<header class="pageHero" style="padding-top:0">
-  <h1>Find AI tools by problem</h1>
-  <p class="lead">Start from the job you need done. Each page explains what to look for, which questions to ask vendors, and shows a ranked shortlist with the reason every tool matched. No AI chatbot is involved: the ranking rules are published in our <a href="/methodology.php#search">methodology</a>.</p>
-</header>
-<div class="cardGrid">
-  <?php foreach ($problems as $s => $p): $res = solution_results_cached($s, SOLUTION_CACHE_ROWS); if (!$res) continue; ?>
-    <article class="tCard">
-      <div class="tCard__top"><span class="ico" aria-hidden="true"><?= ui_icon($p['icon'] ?? 'search') ?></span><div class="tCard__title"><h2><a href="<?= h(solution_path($s)) ?>"><?= h($p['title']) ?></a></h2></div></div>
-      <p class="tCard__desc"><?= h($p['problem']) ?></p>
-      <p class="small"><?= (int)count($res) ?> matching tools · <?= (int)solution_reviewed_count($res) ?> reviewed</p>
-    </article>
+<div class="wrap pgBody">
+  <ul class="catGrid">
+  <?php $n = 0; foreach ($problems as $s => $p): $res = solution_results_cached($s, SOLUTION_CACHE_ROWS); if (!$res) continue; $ac = $__ac[$n++ % 6]; ?>
+    <li><article class="catTile" style="--c1:<?= $ac[0] ?>;--c2:<?= $ac[1] ?>">
+      <span class="catIcon" aria-hidden="true"><?= ui_icon($p['icon'] ?? 'search') ?></span>
+      <h2><a href="<?= h(solution_path($s)) ?>"><?= h($p['title']) ?></a></h2>
+      <p><?= h($p['problem']) ?></p>
+      <div class="catFoot"><span class="catCount"><?= (int)count($res) ?> matching tools · <?= (int)solution_reviewed_count($res) ?> reviewed</span><span class="catGo">Open <?= ui_icon('arrow') ?></span></div>
+    </article></li>
   <?php endforeach; ?>
+  </ul>
 </div>
-<p style="margin-top:24px"><a class="btn" href="/recommend.php">Get a personalised shortlist</a> <a class="btn secondary" href="/search.php">Search all tools</a></p>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

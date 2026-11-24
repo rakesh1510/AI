@@ -11,94 +11,52 @@ if (empty($_SESSION['csrf'])) {
 $sent = isset($_GET['sent']) && $_GET['sent'] === '1';
 $err  = trim($_GET['err'] ?? '');
 
+$main_class = 'fullbleed';
+$crumbs = [['Home', site_url('/')], ['Contact', null]];
 require __DIR__ . '/layout_top.php';
+$__topics = [
+  ['megaphone', 'Partnership', 'Affiliates, sponsorships and promotions', ['#f59e0b', '#ef4444']],
+  ['pen', 'Tool update', 'Fix a link, pricing or feature detail', ['#10b981', '#0ea5e9']],
+  ['chart', 'Paid listing', 'Featured placement requests (tool name and plan)', ['#8b5cf6', '#ec4899']],
+  ['chat', 'Feedback', 'Bug reports and improvements', ['#3b82f6', '#4f46e5']],
+];
 ?>
-
-<style>
-.contactWrap{max-width:1100px;margin:0 auto}
-.contactGrid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start}
-@media (max-width: 980px){.contactGrid{grid-template-columns:1fr}}
-.infoCard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}
-.formCard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}
-.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 12px;margin-top:12px}
-.kv div{font-size:13px;color:#9ca3af}
-.kv b{color:#e5e7eb}
-.alertOk{background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.25);border-radius:16px;padding:14px;margin-bottom:14px}
-.alertErr{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.25);border-radius:16px;padding:14px;margin-bottom:14px}
-.help{font-size:12px;color:#9ca3af;margin-top:6px}
-.fieldRow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width: 720px){.fieldRow{grid-template-columns:1fr}}
-textarea.input{min-height:140px;resize:vertical}
-</style>
-
-<div class="contactWrap">
-  <section class="hero" style="padding-bottom:10px">
-    <h1>Contact</h1>
-    <p>For partnerships, tool updates, paid listings, or feedback — send us a message. We usually reply within 1–2 business days.</p>
-  </section>
-
-  <?php if($sent): ?>
-    <div class="alertOk">✅ Message sent! Thanks — we’ll get back to you soon.</div>
-  <?php elseif($err): ?>
-    <div class="alertErr">❌ <?= h($err) ?></div>
-  <?php endif; ?>
-
-  <div class="contactGrid">
-
-    <!-- Left: info -->
-    <div class="infoCard">
-      <h2 style="margin-top:0">Quick info</h2>
-      <p class="small">Use the form to reach us. For paid listings, include your tool name + plan.</p>
-
-      <div class="kv">
-        <div><b>Topic</b></div><div><b>Best for</b></div>
-        <div>Partnership</div><div>Affiliates, sponsorships, promos</div>
-        <div>Tool update</div><div>Fix links, update pricing/features</div>
-        <div>Paid listing</div><div>Featured placement requests</div>
-        <div>Feedback</div><div>Bug reports and improvements</div>
-      </div>
-
-      <div style="margin-top:14px" class="small">
-        <b>Tip:</b> If you’re submitting a tool, use the <a href="submit.php">Submit page</a>.
-      </div>
+<section class="contactSplit stage">
+  <div class="wrap">
+    <div class="contactSplit__copy">
+      <div class="pgHero__crumbs" style="padding:0 0 14px"><?= render_breadcrumbs($crumbs) ?></div>
+      <span class="eyebrow"><?= ui_icon('mail') ?> Contact</span>
+      <h1>Let’s talk about <span class="gradText2">your tool or project</span></h1>
+      <p class="lead">For partnerships, tool updates, paid listings or feedback, send us a message. We read every message and reply by email where a reply is needed.</p>
+      <ul class="topicList">
+        <?php foreach ($__topics as [$ic, $t, $d, $cc]): ?>
+          <li><span class="ico3d" style="--c1:<?= $cc[0] ?>;--c2:<?= $cc[1] ?>" aria-hidden="true"><?= ui_icon($ic) ?></span><div><strong><?= h($t) ?></strong><span><?= h($d) ?></span></div></li>
+        <?php endforeach; ?>
+      </ul>
+      <p class="small" style="color:#b5bddf">Submitting a tool? Use the <a href="/submit.php" style="text-decoration:underline">Submit page</a>. Prefer email? <a href="mailto:contact@aihubpedia.com" style="text-decoration:underline">contact@aihubpedia.com</a>.</p>
+      <div class="contactSplit__art" aria-hidden="true"><?= art_chat() ?></div>
     </div>
 
-    <!-- Right: form -->
-    <div class="formCard">
+    <div class="consult__form contactForm" id="message">
       <h2 style="margin-top:0">Send a message</h2>
-
+      <?php if ($sent): ?>
+        <div class="alertOk" role="status"><?= ui_icon('check') ?> <span><strong>Message sent.</strong> Thanks. We will get back to you if a reply is needed.</span></div>
+      <?php elseif ($err): ?>
+        <div class="alertErr" role="alert"><?= ui_icon('x') ?> <span><?= h($err) ?></span></div>
+      <?php endif; ?>
       <form method="post" action="contact_send.php">
         <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']) ?>"/>
-
         <div class="fieldRow">
-          <div>
-            <label class="small">Your name</label>
-            <input class="input" name="name" placeholder="Your name" required>
-          </div>
-          <div>
-            <label class="small">Your email</label>
-            <input class="input" name="email" type="email" placeholder="you@example.com" required>
-          </div>
+          <div class="field"><label for="cName">Your name</label><input class="input" id="cName" name="name" placeholder="Your name" autocomplete="name" required></div>
+          <div class="field"><label for="cEmail">Your email</label><input class="input" id="cEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" required></div>
         </div>
-
-        <label class="small" style="margin-top:10px">Subject</label>
-        <input class="input" name="subject" placeholder="Partnership / Tool update / Feedback" required>
-
-        <label class="small" style="margin-top:10px">Message</label>
-        <textarea class="input" name="message" placeholder="Write your message..." required></textarea>
-        <div class="help">Please include tool URL if you’re requesting a listing/update.</div>
-
+        <div class="field"><label for="cSubject">Subject</label><input class="input" id="cSubject" name="subject" placeholder="Partnership / Tool update / Feedback" required></div>
+        <div class="field"><label for="cMsg">Message</label><textarea class="input" id="cMsg" name="message" placeholder="Write your message..." required></textarea><p class="help">Please include the tool URL if you are requesting a listing or update.</p></div>
         <!-- Honeypot (anti-spam) -->
         <input type="text" name="company" value="" style="display:none" tabindex="-1" autocomplete="off">
-
-        <div class="actions" style="margin-top:12px">
-          <button class="btn" type="submit">Send message</button>
-          <a class="btn secondary" href="index.php">Back</a>
-        </div>
+        <div class="actions"><button class="btn btn--accent" type="submit">Send message</button><a class="btn secondary" href="/">Back to home</a></div>
       </form>
     </div>
-
   </div>
-</div>
-
+</section>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

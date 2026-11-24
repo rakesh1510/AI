@@ -113,3 +113,129 @@ function art_placement(string $slot): string {
   if ($slot === 'listing') $o = str_replace('<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/>', '<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/><rect x="20" y="32" width="60" height="30" rx="6" fill="url(#pv)"/>', $o);
   return $o . '</svg>';
 }
+
+/* =====================================================================================================
+   V3 artwork kit: chrome, glass and lit-sphere primitives composed into scenes. Original, inline, no network.
+   Every scene takes no arguments, is aria-hidden and uses its own gradient id prefix so several can share a page.
+   ===================================================================================================== */
+function _a_defs(string $p): string {
+  $s = fn($o, $c, $a = 1) => '<stop offset="' . $o . '" stop-color="' . $c . '"' . ($a < 1 ? ' stop-opacity="' . $a . '"' : '') . '/>';
+  return '<defs>'
+    . '<linearGradient id="' . $p . 'ch" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#f7f8ff') . $s(.2, '#a8b3e6') . $s(.46, '#eef1ff') . $s(.74, '#6a76bd') . $s(1, '#2a2e6e') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'gl" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#ffffff', .42) . $s(.5, '#a5b4fc', .14) . $s(1, '#22d3ee', .10) . '</linearGradient>'
+    . '<radialGradient id="' . $p . 'sp" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#b9c3ff') . $s(.6, '#5a4df0') . $s(1, '#14123f') . '</radialGradient>'
+    . '<radialGradient id="' . $p . 'sc" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#a5f3fc') . $s(.6, '#2a8cf0') . $s(1, '#10205a') . '</radialGradient>'
+    . '<radialGradient id="' . $p . 'sm" cx=".32" cy=".28" r=".85">' . $s(0, '#ffffff') . $s(.22, '#f5c2ff') . $s(.6, '#a24df0') . $s(1, '#2a1259') . '</radialGradient>'
+    . '<linearGradient id="' . $p . 'vi" x1="0" y1="0" x2="1" y2="1">' . $s(0, '#c4b5fd') . $s(.5, '#6d5dfc') . $s(1, '#1d4ed8') . '</linearGradient>'
+    . '<linearGradient id="' . $p . 'cy" x1="1" y1="0" x2="0" y2="1">' . $s(0, '#67e8f9') . $s(.55, '#3b82f6') . $s(1, '#4c1d95') . '</linearGradient>'
+    . '<radialGradient id="' . $p . 'gw" cx=".5" cy=".5" r=".5">' . $s(0, '#7c6cf0', .5) . $s(1, '#7c6cf0', 0) . '</radialGradient>'
+    . '<filter id="' . $p . 'bl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter></defs>';
+}
+function _a_svg(string $cls, string $vb, string $p, string $inner): string {
+  return '<svg class="art ' . $cls . '" viewBox="' . $vb . '" aria-hidden="true" focusable="false">' . _a_defs($p) . $inner . '</svg>';
+}
+/** Lit sphere. $g: sp (violet), sc (cyan), sm (magenta), ch (chrome). */
+function _a_sph(string $p, float $cx, float $cy, float $r, string $g = 'sp'): string {
+  return '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . $g . ')"/><ellipse cx="' . ($cx - $r * .3) . '" cy="' . ($cy - $r * .42) . '" rx="' . ($r * .34) . '" ry="' . ($r * .18) . '" fill="#fff" opacity=".55" transform="rotate(-24 ' . ($cx - $r * .3) . ' ' . ($cy - $r * .42) . ')"/>';
+}
+/** Frosted glass slab with a bright top edge. */
+function _a_slab(string $p, float $x, float $y, float $w, float $h, float $r = 22, string $tr = ''): string {
+  return '<g' . ($tr ? ' transform="' . $tr . '"' : '') . '><rect x="' . $x . '" y="' . $y . '" width="' . $w . '" height="' . $h . '" rx="' . $r . '" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".38"/><path d="M' . ($x + $r) . ' ' . ($y + 1.5) . 'H' . ($x + $w - $r) . '" stroke="#fff" stroke-opacity=".75" stroke-width="2" stroke-linecap="round"/></g>';
+}
+function _a_ring(string $p, float $cx, float $cy, float $rx, float $ry, float $rot, float $w, string $g = 'vi'): string {
+  return '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . $ry . '" transform="rotate(' . $rot . ' ' . $cx . ' ' . $cy . ')" fill="none" stroke="url(#' . $p . $g . ')" stroke-width="' . $w . '"/>'
+    . '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . $ry . '" transform="rotate(' . $rot . ' ' . $cx . ' ' . $cy . ')" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="' . max(2, $w / 9) . '" stroke-dasharray="' . ($rx * .5) . ' ' . ($rx * 4) . '" stroke-dashoffset="-' . ($rx * .25) . '"/>';
+}
+function _a_glow(string $p, float $cx, float $cy, float $r): string { return '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="url(#' . $p . 'gw)"/>'; }
+function _a_shadow(string $p, float $cx, float $cy, float $rx): string { return '<ellipse cx="' . $cx . '" cy="' . $cy . '" rx="' . $rx . '" ry="' . ($rx * .1) . '" fill="#000" opacity=".4" filter="url(#' . $p . 'bl)"/>'; }
+/** Isometric cube. $top/$left/$right are gradient ids (without prefix). */
+function _a_cube(string $p, float $cx, float $y, float $s, string $top = 'ch', string $left = 'vi', string $right = 'cy'): string {
+  $h = $s * .5; $d = $s * .58;
+  return '<polygon points="' . $cx . ',' . $y . ' ' . ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . ($cx - $s) . ',' . ($y + $h) . '" fill="url(#' . $p . $top . ')"/>'
+    . '<polygon points="' . ($cx - $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . $cx . ',' . ($y + 2 * $h + $d) . ' ' . ($cx - $s) . ',' . ($y + $h + $d) . '" fill="url(#' . $p . $left . ')"/>'
+    . '<polygon points="' . ($cx + $s) . ',' . ($y + $h) . ' ' . $cx . ',' . ($y + 2 * $h) . ' ' . $cx . ',' . ($y + 2 * $h + $d) . ' ' . ($cx + $s) . ',' . ($y + $h + $d) . '" fill="url(#' . $p . $right . ')"/>'
+    . '<path d="M' . ($cx - $s) . ' ' . ($y + $h) . 'L' . $cx . ' ' . $y . 'L' . ($cx + $s) . ' ' . ($y + $h) . '" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>';
+}
+
+/** Communication: two glass chat bubbles, a chrome sphere and a ring. */
+function art_chat(): string { $p = 'ac'; return _a_svg('artScene', '0 0 520 440', $p,
+  _a_glow($p, 260, 220, 230) . _a_ring($p, 262, 232, 190, 66, -24, 30) . _a_shadow($p, 260, 410, 150)
+  . _a_slab($p, 70, 90, 250, 130, 34) . '<path d="M110 220l-6 46 52-36z" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".38"/>'
+  . '<g fill="#fff" opacity=".85"><rect x="104" y="128" width="150" height="12" rx="6"/><rect x="104" y="156" width="190" height="12" rx="6" opacity=".6"/><rect x="104" y="184" width="110" height="12" rx="6" opacity=".4"/></g>'
+  . _a_slab($p, 230, 230, 230, 120, 34) . '<path d="M420 350l8 42-48-30z" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".38"/>'
+  . '<circle cx="290" cy="290" r="10" fill="#a5f3fc"/><circle cx="326" cy="290" r="10" fill="#c4b5fd"/><circle cx="362" cy="290" r="10" fill="#f5c2ff"/>'
+  . _a_sph($p, 410, 120, 46, 'ch') . _a_sph($p, 90, 330, 22, 'sc') . _a_sph($p, 470, 260, 12, 'sm')); }
+
+/** Podium: metallic 2-1-3 blocks with lit spheres. */
+function art_podium(): string { $p = 'ap'; return _a_svg('artScene', '0 0 560 430', $p,
+  _a_glow($p, 280, 200, 250) . _a_shadow($p, 280, 398, 220)
+  . _a_cube($p, 150, 232, 92, 'ch', 'vi', 'cy') . _a_cube($p, 280, 170, 92, 'ch', 'vi', 'cy') . _a_cube($p, 410, 262, 92, 'ch', 'vi', 'cy')
+  . '<g font-family="Space Grotesk,Inter,sans-serif" font-weight="800" font-size="40" fill="#fff" opacity=".92" text-anchor="middle"><text x="150" y="346" transform="skewY(0)">2</text><text x="280" y="284">1</text><text x="410" y="376">3</text></g>'
+  . _a_sph($p, 280, 118, 40, 'sm') . _a_sph($p, 150, 178, 28, 'sc') . _a_sph($p, 410, 208, 24, 'sp')
+  . _a_ring($p, 280, 120, 74, 18, -14, 9, 'cy')); }
+
+/** Trust: a glass shield with a check, orbited by a ring and spheres. */
+function art_shield(): string { $p = 'as'; return _a_svg('artScene', '0 0 520 440', $p,
+  _a_glow($p, 260, 215, 220) . _a_shadow($p, 260, 408, 130) . _a_ring($p, 260, 230, 200, 60, 22, 24, 'cy')
+  . '<path d="M260 50l124 44v104c0 86-52 140-124 172-72-32-124-86-124-172V94z" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>'
+  . '<path d="M260 82l94 34v86c0 66-38 108-94 134-56-26-94-68-94-134v-86z" fill="url(#' . $p . 'vi)" opacity=".92"/>'
+  . '<path d="M212 214l34 34 66-72" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>'
+  . _a_sph($p, 410, 90, 30, 'sc') . _a_sph($p, 100, 320, 20, 'sm') . _a_sph($p, 440, 330, 12, 'sp')); }
+
+/** Ecosystem: a chrome hub connected to orbiting nodes. */
+function art_network(): string { $p = 'an'; $pts = [[90, 130], [430, 110], [70, 300], [450, 300], [260, 60], [260, 390]];
+  $lines = ''; $nodes = ''; $gs = ['sp', 'sc', 'sm', 'sp', 'sc', 'sm'];
+  foreach ($pts as $i => [$x, $y]) { $lines .= '<path d="M260 225L' . $x . ' ' . $y . '" stroke="url(#' . $p . 'cy)" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round" opacity=".8"/>'; $nodes .= _a_slab($p, $x - 34, $y - 34, 68, 68, 22) . _a_sph($p, $x, $y, 17, $gs[$i]); }
+  return _a_svg('artScene', '0 0 520 450', $p, _a_glow($p, 260, 225, 240) . _a_ring($p, 260, 225, 200, 80, -20, 4, 'vi') . $lines . _a_shadow($p, 260, 428, 120) . $nodes . _a_sph($p, 260, 225, 64, 'ch') . '<circle cx="260" cy="225" r="30" fill="url(#' . $p . 'vi)"/>'); }
+
+/** Method: stacked glass layers (evidence levels). */
+function art_layers(): string { $p = 'al'; $o = _a_glow($p, 260, 210, 230) . _a_shadow($p, 260, 400, 160);
+  foreach ([[300, 'cy'], [236, 'vi'], [172, 'ch']] as [$y, $g]) { $o .= '<g><polygon points="260,' . $y . ' 430,' . ($y + 62) . ' 260,' . ($y + 124) . ' 90,' . ($y + 62) . '" fill="url(#' . $p . $g . ')" opacity=".9"/><polygon points="260,' . $y . ' 430,' . ($y + 62) . ' 260,' . ($y + 124) . ' 90,' . ($y + 62) . '" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".5"/></g>'; }
+  $o .= '<polygon points="260,108 430,170 260,232 90,170" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>' . _a_sph($p, 260, 150, 30, 'sc') . _a_sph($p, 410, 90, 16, 'sm');
+  return _a_svg('artScene', '0 0 520 430', $p, $o); }
+
+/** Discovery: a glass lens with a sphere inside. */
+function art_lens(): string { $p = 'ae'; return _a_svg('artScene', '0 0 520 440', $p,
+  _a_glow($p, 240, 210, 230) . _a_shadow($p, 260, 410, 140)
+  . '<circle cx="230" cy="200" r="130" fill="url(#' . $p . 'gl)" stroke="url(#' . $p . 'ch)" stroke-width="26"/>'
+  . '<path d="M330 300l92 96" stroke="url(#' . $p . 'ch)" stroke-width="40" stroke-linecap="round"/><path d="M330 300l92 96" stroke="#fff" stroke-opacity=".35" stroke-width="6" stroke-linecap="round"/>'
+  . _a_sph($p, 215, 190, 52, 'sp') . _a_sph($p, 290, 130, 18, 'sc') . _a_sph($p, 160, 255, 14, 'sm')
+  . _a_ring($p, 230, 200, 170, 44, 18, 6, 'cy')); }
+
+/** Guided steps: ascending glass blocks with a sphere on the top step. */
+function art_steps(): string { $p = 'at'; return _a_svg('artScene', '0 0 520 420', $p,
+  _a_glow($p, 270, 200, 230) . _a_shadow($p, 270, 392, 200)
+  . _a_cube($p, 110, 250, 72, 'ch', 'cy', 'vi') . _a_cube($p, 220, 200, 72, 'ch', 'cy', 'vi') . _a_cube($p, 330, 150, 72, 'ch', 'cy', 'vi') . _a_cube($p, 440, 100, 72, 'ch', 'cy', 'vi')
+  . _a_sph($p, 440, 62, 30, 'sm') . '<path d="M110 232L220 182L330 132L440 82" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-dasharray="4 10" fill="none" stroke-linecap="round"/>'); }
+
+/** Compass for problem-based discovery. */
+function art_compass(): string { $p = 'ak'; return _a_svg('artScene', '0 0 520 440', $p,
+  _a_glow($p, 260, 215, 220) . _a_shadow($p, 260, 410, 130)
+  . '<circle cx="260" cy="215" r="150" fill="url(#' . $p . 'gl)" stroke="url(#' . $p . 'ch)" stroke-width="22"/><circle cx="260" cy="215" r="112" fill="none" stroke="#fff" stroke-opacity=".3" stroke-dasharray="2 10" stroke-width="4"/>'
+  . '<polygon points="260,100 292,215 260,330 228,215" fill="url(#' . $p . 'vi)" transform="rotate(38 260 215)"/><polygon points="260,100 292,215 228,215" fill="#fff" opacity=".55" transform="rotate(38 260 215)"/>'
+  . _a_sph($p, 260, 215, 20, 'ch') . _a_sph($p, 420, 100, 22, 'sc') . _a_sph($p, 100, 330, 16, 'sm')); }
+
+/** Mail / confirmation: envelope slab with a check sphere. */
+function art_mail(): string { $p = 'am'; return _a_svg('artScene', '0 0 520 400', $p,
+  _a_glow($p, 260, 200, 220) . _a_shadow($p, 260, 372, 150) . _a_ring($p, 260, 200, 200, 60, -18, 18, 'cy')
+  . _a_slab($p, 90, 110, 340, 220, 30) . '<path d="M100 132l160 110 160-110" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linejoin="round"/>'
+  . _a_sph($p, 410, 120, 48, 'sc') . '<path d="M388 120l16 16 30-34" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' . _a_sph($p, 90, 340, 16, 'sm')); }
+
+/** Page not found: a lit orb with a broken ring. */
+function art_lost(): string { $p = 'ao'; return _a_svg('artScene', '0 0 520 400', $p,
+  _a_glow($p, 260, 190, 220) . _a_shadow($p, 260, 372, 120)
+  . '<path d="M110 200a150 60 0 0 1 130-58" fill="none" stroke="url(#' . $p . 'vi)" stroke-width="26" stroke-linecap="round"/><path d="M300 140a150 60 0 0 1 112 62" fill="none" stroke="url(#' . $p . 'cy)" stroke-width="26" stroke-linecap="round"/><path d="M130 240a150 60 0 0 0 270 6" fill="none" stroke="url(#' . $p . 'vi)" stroke-width="26" stroke-linecap="round" opacity=".7"/>'
+  . _a_sph($p, 260, 190, 70, 'sp') . _a_sph($p, 410, 90, 20, 'sc') . _a_sph($p, 100, 300, 14, 'sm') . '<text x="260" y="206" text-anchor="middle" font-family="Space Grotesk,Inter,sans-serif" font-weight="800" font-size="46" fill="#fff" opacity=".9">?</text>'); }
+
+/** Calm document stack for legal and policy pages. */
+function art_doc(): string { $p = 'ad'; return _a_svg('artScene', '0 0 520 400', $p,
+  _a_glow($p, 260, 200, 210) . _a_shadow($p, 260, 372, 130)
+  . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(-8 260 200)') . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(6 260 200)')
+  . '<g fill="#fff" opacity=".8"><rect x="190" y="130" width="140" height="12" rx="6"/><rect x="190" y="164" width="120" height="12" rx="6" opacity=".6"/><rect x="190" y="198" width="140" height="12" rx="6" opacity=".6"/><rect x="190" y="232" width="90" height="12" rx="6" opacity=".4"/></g>'
+  . _a_sph($p, 380, 110, 30, 'sc') . _a_sph($p, 130, 320, 18, 'sm')); }
+
+/** Generic hero scene chooser used by page_hero(). */
+function art_scene(string $name): string {
+  static $m = ['chat' => 'art_chat', 'podium' => 'art_podium', 'shield' => 'art_shield', 'network' => 'art_network', 'layers' => 'art_layers', 'lens' => 'art_lens', 'steps' => 'art_steps', 'compass' => 'art_compass', 'mail' => 'art_mail', 'lost' => 'art_lost', 'doc' => 'art_doc', 'orb' => 'art_orb', 'agent' => 'art_agent'];
+  return isset($m[$name]) ? ($m[$name])() : '';
+}

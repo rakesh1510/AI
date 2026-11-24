@@ -9,8 +9,9 @@ $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
 if ($slug !== '' && !isset($groups[$slug])) {
   http_response_code(404);
   $title = 'Comparison Not Found'; $meta_desc = 'No pricing comparison is available for this group.';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Comparison not found</h1><p class="small">Pricing comparisons exist only for groups with at least three reviewed, sourced profiles.</p><p><a class="btn" href="/pricing-comparison.php">All pricing comparisons</a></p>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Comparison not found', 'html' => '<p class="small">Pricing comparisons exist only for groups with at least three reviewed, sourced profiles.</p><p><a class="btn" href="/pricing-comparison.php">All pricing comparisons</a></p>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -21,15 +22,17 @@ if ($slug === '') {
   if (!$groups) $robots = 'noindex';
   $canonical = site_url('/pricing-comparison.php');
   $jsonld = [seo_breadcrumb_node($crumbs)];
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo render_breadcrumbs($crumbs);
+  echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Pricing comparisons', 'icon' => 'chart', 'title_html' => 'AI tool pricing <span class="gradText2">comparisons</span>', 'lead' => 'Prices exactly as vendors state them, with the date we retrieved them and how confident we are.', 'art' => 'layers', 'size' => 'sm']);
+  echo '<div class="wrap pgBody">';
   ?>
-  <header class="pageHero" style="padding-top:0"><h1>AI tool pricing comparisons</h1><p class="lead">Prices exactly as vendors state them, with the date we retrieved them and how confident we are. We never calculate or estimate prices. Prices change often: always confirm on the vendor's page.</p></header>
   <?php if (!$groups): ?><p class="noticeBox">No group has enough reviewed profiles yet.</p><?php else: ?>
     <p>A group is listed only when at least three of its tools have reviewed profiles with at least two vendor sources each. Every comparison shows the price as the vendor states it, the date we retrieved it, a confidence note, the free option, the main limitation and which capabilities our sources document. It does not rank tools or say which is best: use the <a href="/recommend.php">recommendation wizard</a> for a shortlist that fits your situation.</p>
     <ul class="linkList"><?php foreach ($groups as $s => $g): ?><li><a href="/pricing-comparison.php?group=<?= $h(rawurlencode($s)) ?>"><?= $h($g['label']) ?>: pricing and capabilities (<?= count($g['tools']) ?> reviewed tools: <?= $h(implode(', ', array_map(fn($t) => $t['name'], $g['tools']))) ?>)</a></li><?php endforeach; ?></ul>
     <p class="small">Why some tools are missing: tools without a reviewed profile are not compared here because we would have nothing sourced to show. See <a href="/methodology.php#evidence">how evidence levels work</a>.</p>
   <?php endif;
+  echo '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -39,12 +42,11 @@ $meta_desc = 'Pricing as stated by vendors, free options, limitations and docume
 $canonical = site_url('/pricing-comparison.php?group=' . rawurlencode($slug));
 $crumbs[1][1] = site_url('/pricing-comparison.php'); $crumbs[] = [$g['label'], null];
 $jsonld = [seo_breadcrumb_node($crumbs), ['@type' => 'CollectionPage', '@id' => $canonical . '#webpage', 'url' => $canonical, 'name' => seo_title($title), 'description' => seo_description($meta_desc), 'isPartOf' => ['@id' => site_url('/#website')], 'mainEntity' => seo_tool_itemlist_node($g['tools'], $g['label'])]];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
-echo render_breadcrumbs($crumbs);
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Pricing comparison', 'icon' => 'chart', 'title' => $g['label'] . ': pricing and capabilities', 'lead' => 'Only tools with reviewed, sourced profiles are listed. Pricing is shown as the vendor states it. “Unknown” means our sources do not say, not that the tool lacks the feature. <a href="/methodology.php#evidence" style="text-decoration:underline">How to read the evidence levels</a>.', 'art' => 'layers', 'size' => 'sm']);
 ?>
-<article>
-<header class="pageHero" style="padding-top:0"><h1><?= $h($g['label']) ?>: pricing and capabilities</h1>
-  <p class="lead">Only tools with reviewed, sourced profiles are listed. Pricing is shown as the vendor states it. "Unknown" means our sources do not say, not that the tool lacks the feature. <a href="/methodology.php#evidence">How to read the evidence levels</a>.</p></header>
+<article class="wrap pgBody">
 <div class="matrixWrap" tabindex="0" role="region" aria-label="Pricing comparison, scrollable">
 <table class="matrix pkgTable">
   <caption class="sr">Pricing as stated in vendor sources for <?= $h($g['label']) ?> tools</caption>

@@ -8,13 +8,11 @@ if (!$issues) $robots = 'noindex';       // an empty archive is a thin page
 $crumbs = [['Home', site_url('/')], ['Newsletter archive', null]];
 $jsonld = [seo_breadcrumb_node($crumbs)];
 $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<header class="pageHero" style="padding-top:0">
-  <h1>Newsletter archive</h1>
-  <p class="lead">Every issue we send is kept here, with the source for each item. Subscribing is optional and double opt-in; you can unsubscribe at any time.</p>
-</header>
+<?php echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Newsletter', 'icon' => 'mail', 'title_html' => 'Newsletter <span class="gradText2">archive</span>', 'lead' => 'Every issue we send is kept here, with the source for each item. Subscribing is optional and double opt-in; you can unsubscribe at any time.', 'art' => 'mail', 'size' => 'sm']); ?>
+<div class="wrap pgBody">
 <?php if (!$issues): ?>
   <div class="panel"><h2 style="margin-top:0">No issues published yet</h2>
     <p>The AIHubpedia newsletter has not launched, so there is nothing to show. If you subscribe in the footer, you will get a confirmation email first, and nothing is sent until an issue has been reviewed by an editor.</p>
@@ -26,4 +24,5 @@ require __DIR__ . '/layout_top.php';
     <?php endforeach; ?>
   </ul>
 <?php endif; ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

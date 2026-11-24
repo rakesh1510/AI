@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 $title = "Privacy Policy — AIHubpedia";
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+echo page_hero(['crumbs' => [['Home', site_url('/')], ['Privacy policy', null]], 'eyebrow' => 'Legal', 'icon' => 'shield', 'title_html' => 'Privacy Policy', 'lead' => 'How AIHubpedia handles your data.', 'art' => 'shield', 'size' => 'sm']);
+ob_start();
 ?>
 
-<h1>Privacy Policy</h1>
 
-<div class="card">
 
 <h3>1. Data protection at a glance</h3>
 
@@ -159,6 +160,5 @@ you can contact us at:
 <strong>Email:</strong> contact@aihubpedia.com
 </p>
 
-</div>
-
+<?php $__doc = ob_get_clean(); echo '<div class="wrap pgBody">' . doc_page($__doc) . '</div>'; ?>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

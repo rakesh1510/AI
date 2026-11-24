@@ -7,9 +7,9 @@ if(!$t){
   http_response_code(404);
   $title = "AI Tool Not Found";
   $meta_desc = "The AI tool you requested is not listed on AIHubpedia.";
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo "<h1>Tool not found</h1><p class='small'>The requested tool does not exist or is no longer listed.</p>";
-  echo "<div class='actions'><a class='btn' href='/'>Browse all AI tools</a><a class='btn secondary' href='/categories.php'>Browse categories</a></div>";
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Tool not found', 'text' => 'The requested tool does not exist or is no longer listed.', 'actions' => '<a class="btn btn--accent" href="/directory.php">Browse all tools</a>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -48,30 +48,33 @@ $jsonld = [
   seo_tool_node($t, $canonical, [$avg, $cnt]),
   seo_breadcrumb_node($crumbs),
 ];
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
 <div hidden data-tool-view data-id="<?= h($t['id']) ?>" data-name="<?= h($t['name']) ?>" data-category="<?= h($t['category']) ?>"></div>
-
-<div class="card">
-  <div style="display:flex;gap:12px;align-items:flex-start">
-    <img class="logo" style="width:64px;height:64px" src="<?= h(tool_logo($t)) ?>" alt="<?= h($t['name']) ?> logo" width="64" height="64" decoding="async" />
-    <div style="flex:1">
-      <h1 style="margin:0 0 6px"><?= h($t['name']) ?></h1>
-      <div class="small">
-        Category: <a href="<?= h(rel_url($catUrl)) ?>"><b><?= h($t['category']) ?></b></a> • Pricing: <b><?= h($t['pricing'] ?? 'Varies') ?></b> • Rating: <?= $cnt?number_format($avg,1):'—' ?> (<?= (int)$cnt ?>) • Clicks: <?= (int)$clicks ?>
-      </div>
-      <p style="margin-top:12px"><?= h(($t['description'] ?? '') !== '' ? $t['description'] : ($t['short'] ?? '')) ?></p>
-      <?php if(tool_domain($t['website'] ?? '') !== ''): ?>
-        <p class="small">Official website: <?= h(tool_domain($t['website'])) ?></p>
-      <?php endif; ?>
-      <div class="actions">
+<?php $__tc = cat_theme((string)$t['category']); ?>
+<section class="pgHero stage toolHero" style="--c1:<?= $__tc[0] ?>;--c2:<?= $__tc[1] ?>">
+  <div class="wrap">
+    <div class="pgHero__crumbs" style="padding:0 0 18px"><?= render_breadcrumbs($crumbs) ?></div>
+    <div class="toolHero__grid">
+      <?= logo_tile($t, 'xl') ?>
+      <div class="toolHero__main">
+        <h1><?= h($t['name']) ?></h1>
+        <ul class="factRow toolHero__meta">
+          <li><a href="<?= h(rel_url($catUrl)) ?>"><?= h($t['category']) ?></a></li>
+          <li>Pricing: <strong><?= h($t['pricing'] ?? 'Varies') ?></strong></li>
+          <li>Rating: <?= $cnt ? number_format($avg, 1) : '—' ?> (<?= (int)$cnt ?>)</li>
+          <li>Clicks: <?= (int)$clicks ?></li>
+        </ul>
+        <p class="lead"><?= h(($t['description'] ?? '') !== '' ? $t['description'] : ($t['short'] ?? '')) ?></p>
+        <?php if(tool_domain($t['website'] ?? '') !== ''): ?><p class="small" style="color:#b5bddf;margin:0 0 14px">Official website: <?= h(tool_domain($t['website'])) ?></p><?php endif; ?>
+        <div class="heroActions">
         <a class="btn" target="_blank" rel="<?= h(outbound_rel($t, is_featured_tool($t))) ?>" href="/redirect.php?id=<?= urlencode($t['id']) ?>" data-outbound data-affiliate="<?= is_affiliate_link($t) ? '1' : '0' ?>" data-sponsored="<?= is_featured_tool($t) ? '1' : '0' ?>" data-placement="profile">Open official website<?= ui_icon('external') ?></a>
         <button type="button" class="btn secondary js-only" data-fav="<?= h($t['id']) ?>" aria-pressed="false" aria-label="Save <?= h($t['name']) ?> to favorites"><?= ui_icon('heart') ?> Save</button>
         <button type="button" class="btn secondary js-only" data-compare="<?= h($t['id']) ?>" data-name="<?= h($t['name']) ?>" aria-pressed="false"><?= ui_icon('compare') ?> Add to compare</button>
         <a class="btn secondary" href="/compare.php?a=<?= urlencode($t['id']) ?>" rel="nofollow">Compare</a>
-      </div>
-      <?php if(is_affiliate_link($t)): ?><p class="small">Affiliate link: AIHubpedia may earn a commission if you sign up. <a href="/disclosure.php">Details</a></p><?php endif; ?>
+        </div>
+      <?php if(is_affiliate_link($t)): ?><p class="small" style="color:#b5bddf">Affiliate link: AIHubpedia may earn a commission if you sign up. <a href="/disclosure.php">Details</a></p><?php endif; ?>
       <?php if(is_featured_tool($t)): ?><p class="adLabel"><span class="adTag">Sponsored</span> This listing is a paid placement. <a href="/disclosure.php">Why am I seeing this?</a></p><?php endif; ?>
       <?php $voteBreakdown = tool_vote_breakdown($t['id']); ?>
       <div class="voteSummary">
@@ -80,10 +83,12 @@ require __DIR__ . '/layout_top.php';
         <span class="votePill">Score: <?= (int)tool_vote_total($t['id']) ?></span>
       </div>
       <?= render_vote_buttons($t['id'], 'tool.php?id=' . urlencode($t['id']) . '#community') ?>
+      </div>
     </div>
   </div>
-
-  <hr>
+</section>
+<div class="wrap pgBody">
+<div class="card toolBody">
 
   <?php if($cp): ?>
   <section class="profileBox" aria-labelledby="glance">
@@ -300,4 +305,5 @@ require __DIR__ . '/layout_top.php';
   <h2 id="bizHelp" style="margin-top:0">Own this tool, or need something custom?</h2>
   <p class="small">If you are the vendor, you can <a href="/advertise.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>#request">ask about labelled placements</a> or send a correction through <a href="/contact.php">contact</a>. If no existing tool fits your workflow, <a href="/business.php?ref=tool-page&tool=<?= h(rawurlencode((string)$t['id'])) ?>">request a consultation</a> about a custom AI agent.</p>
 </section>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

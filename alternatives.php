@@ -8,8 +8,9 @@ if (!$t || empty($t['curated']) || count($alts) < 3) {
   http_response_code(404);
   $title = 'Alternatives Not Found';
   $meta_desc = 'No alternatives comparison is available for this tool on AIHubpedia.';
+  $main_class = 'fullbleed';
   require __DIR__ . '/layout_top.php';
-  echo '<h1>Alternatives not found</h1><p class="small">Alternatives pages exist only for tools with reviewed profiles and at least three reviewed alternatives.</p><div class="actions"><a class="btn" href="/guides.php">Browse guides</a><a class="btn secondary" href="/categories.php">Browse categories</a></div>';
+  echo '<div class="wrap pgBody">' . state_box(['art' => 'lost', 'eyebrow' => 'Not found', 'title' => 'Alternatives not found', 'html' => '<p class="small">Alternatives pages exist only for tools with reviewed profiles and at least three reviewed alternatives.</p><div class="actions"><a class="btn" href="/guides.php">Browse guides</a><a class="btn secondary" href="/categories.php">Browse categories</a></div>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -28,12 +29,13 @@ $jsonld = [
 $related = guides_for_tool($id);
 $why = [];
 foreach (tool_alternatives_ranked($t, $byId, 12) as $r) $why[$r['tool']['id']] = $r;
+$main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
 ?>
-<?= render_breadcrumbs($crumbs) ?>
-<article class="prose">
-  <h1><?= h($t['name']) ?> alternatives</h1>
-  <p class="guideMeta"><?= render_evidence_badge($t) ?> · Facts from vendor pages collected <?= h($cp['review']['reviewed_on'] ?? '') ?> · <a href="/methodology.php">Methodology</a></p>
+<?php ob_start(); ?><?= h($t['name']) ?> alternatives<?php $__t = ob_get_clean(); ob_start(); ?><?= render_evidence_badge($t) ?> · Facts from vendor pages collected <?= h($cp['review']['reviewed_on'] ?? '') ?> · <a href="/methodology.php">Methodology</a><?php $__l = ob_get_clean();
+echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Alternatives', 'icon' => 'compare', 'title_html' => $__t, 'lead' => $__l, 'art' => 'network', 'size' => 'sm']); ?>
+<div class="wrap pgBody">
+<?php ob_start(); ?>
   <p>People look for <?= h($t['name']) ?> alternatives for practical reasons. From its vendor pages, the main limits to be aware of are:</p>
   <ul><?php foreach (array_slice($cp['limitations'] ?? [], 0, 3) as $l): ?><li><?= h($l) ?></li><?php endforeach; ?></ul>
   <p>The tools below are other options in the “<?= h($t['subcategory'] ?: $t['category']) ?>” group that have reviewed profiles on AIHubpedia. We have not benchmarked output quality, so use the comparison to shortlist and then test. “Why it is listed” shows the documented reasons; a capability we have no sourced statement about is treated as unknown, not as missing.</p>
@@ -62,5 +64,6 @@ require __DIR__ . '/layout_top.php';
     <h2>Related guides</h2>
     <ul class="linkList"><?php foreach ($related as $slug => $g): ?><li><a href="<?= h(guide_path($slug)) ?>"><?= h($g['h1']) ?></a></li><?php endforeach; ?></ul>
   <?php endif; ?>
-</article>
+<?php $__doc = ob_get_clean(); echo doc_page($__doc); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>
