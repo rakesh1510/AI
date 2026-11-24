@@ -250,7 +250,7 @@ async function run(P, opts) {
   page = await ctx.newPage();
   const advEmail = `adv+${uniq()}@example.test`;
   await page.goto(base + '/advertise.php', { waitUntil: 'load' });
-  check(await page.locator('table.pkgTable tbody tr').count() >= 4 && /do not promise traffic/.test(await page.locator('.pageHero').innerText()), `[${P}] advertise page lists options and makes no traffic promise`);
+  check(await page.locator('table.pkgTable tbody tr').count() >= 4 && /do not promise traffic/.test(await page.locator('.pgHero, .pageHero').first().innerText()), `[${P}] advertise page lists options and makes no traffic promise`);
   await shot(page, 'advertise');
   await page.waitForTimeout(2300);
   await page.fill('#adv-name', 'Ada Advertiser');

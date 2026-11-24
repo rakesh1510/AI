@@ -67,9 +67,10 @@ function art_thumb(string $cat, int $variant = 0): string {
 
 /** Ad-placement preview: a miniature homepage with the sponsored slot highlighted. $slot: featured | spotlight | listing. */
 function art_placement(string $slot): string {
-  $hl = 'fill="url(#pv)" stroke="#fff" stroke-opacity=".6"';
+  static $n = 0; $pv = 'pv' . (++$n);   // unique gradient id per instance: several previews share one page
+  $hl = 'fill="url(#' . $pv . ')" stroke="#fff" stroke-opacity=".6"';
   $row = '<rect x="14" y="%d" width="%d" height="%d" rx="6" fill="#fff" opacity=".12"/>';
-  $o = '<svg class="artPlace" viewBox="0 0 240 150" aria-hidden="true" focusable="false"><defs><linearGradient id="pv" x1="0" x2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>'
+  $o = '<svg class="artPlace" viewBox="0 0 240 150" aria-hidden="true" focusable="false"><defs><linearGradient id="' . $pv . '" x1="0" x2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>'
     . '<rect x="1" y="1" width="238" height="148" rx="12" fill="#0f1236" stroke="#fff" stroke-opacity=".18"/><rect x="1" y="1" width="238" height="16" rx="12" fill="#fff" opacity=".1"/><circle cx="12" cy="9" r="2.5" fill="#fff" opacity=".5"/><circle cx="21" cy="9" r="2.5" fill="#fff" opacity=".5"/>';
   if ($slot === 'spotlight') $o .= '<rect x="14" y="26" width="212" height="42" rx="8" ' . $hl . '/><text x="22" y="52" font-size="10" font-weight="700" fill="#fff" font-family="sans-serif">SPONSORED · Spotlight</text>';
   else $o .= '<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/>';
@@ -78,7 +79,7 @@ function art_placement(string $slot): string {
     $o .= ($slot === 'featured' && $i === 1) ? '<rect x="' . $x . '" y="80" width="68" height="56" rx="8" ' . $hl . '/><text x="' . ($x + 6) . '" y="112" font-size="8" font-weight="700" fill="#fff" font-family="sans-serif">SPONSORED</text>'
       : '<rect x="' . $x . '" y="80" width="68" height="56" rx="8" fill="#fff" opacity=".1"/>';
   }
-  if ($slot === 'listing') $o = str_replace('<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/>', '<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/><rect x="20" y="32" width="60" height="30" rx="6" fill="url(#pv)"/>', $o);
+  if ($slot === 'listing') $o = str_replace('<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/>', '<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/><rect x="20" y="32" width="60" height="30" rx="6" fill="url(#' . $pv . ')"/>', $o);
   return $o . '</svg>';
 }
 

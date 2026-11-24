@@ -119,12 +119,11 @@ async function run(profileName, contextOpts) {
   await page.waitForLoadState('load');
   check(await page.locator(`text=${commentText}`).count() === 1, `[${P}] comment posted and displayed`);
 
-  // Outbound "Open tool" link → click tracking + redirect.php (third-party destination blocked)
-  const [trackResp] = await Promise.all([
-    page.waitForResponse(r => r.url().includes('track-click.php')),
-    page.locator('a[href*="redirect.php?id=chatgpt"]').first().click(),
-  ]);
-  check(trackResp.status() === 200, `[${P}] click tracking endpoint OK`);
+  // Outbound "Open tool" link -> /redirect.php is the single server-side click recorder (the browser no longer posts to track-click.php); the third-party destination is blocked in this test.
+  const redirectSeen = ctx.waitForEvent('response', { predicate: r => r.url().includes('/redirect.php?id=chatgpt'), timeout: 15000 });
+  await page.locator('a[href*="redirect.php?id=chatgpt"]').first().click();
+  const trackResp = await redirectSeen;
+  check([200, 301, 302, 303, 307].includes(trackResp.status()), `[${P}] outbound link goes through the /redirect.php click recorder (HTTP ${trackResp.status()})`);
   await page.waitForTimeout(300);
   for (const p of ctx.pages()) if (p !== page) await p.close();
 
@@ -147,9 +146,9 @@ async function run(profileName, contextOpts) {
   await openNavIfMobile();
   await guidesNav.scrollIntoViewIfNeeded();
   await Promise.all([page.waitForURL(/guides\.php/), guidesNav.click()]);
-  check(await page.locator('.grid .card').count() >= 4, `[${P}] guides hub lists at least 4 guides`);
+  check(await page.locator('.gGrid .gCard').count() >= 4, `[${P}] guides hub lists at least 4 guides`);
   await noHorizontalScroll('guides hub');
-  await Promise.all([page.waitForURL(/guide\.php\?slug=/), page.locator('.grid .card h2 a').first().click()]);
+  await Promise.all([page.waitForURL(/guide\.php\?slug=/), page.locator('.gGrid .gCard h3 a').first().click()]);
   check(await page.locator('h1').count() === 1, `[${P}] guide has one h1`);
   check(await page.locator('table.compareTable tbody tr').count() >= 3, `[${P}] guide comparison table has rows`);
   check(await page.locator('.noticeBox:has-text("not benchmarked")').count() === 1, `[${P}] guide discloses that quality is not benchmarked`);
@@ -196,7 +195,7 @@ async function run(profileName, contextOpts) {
 
   // Comparisons hub links
   await page.goto(base + '/comparisons.php', { waitUntil: 'load' });
-  check(await page.locator('.grid .card').count() >= 6, `[${P}] comparisons hub lists matchups`);
+  check(await page.locator('.vsGrid .vsCard').count() >= 6, `[${P}] comparisons hub lists matchups`);
 
   // Leaderboard / top
   for (const path of ['/top.php', '/leaderboard.php', '/blog.php', '/post.php?slug=best-ai-tools-2026', '/ai-use-case-explorer.php', '/ai-use-case.php?slug=write-blog-posts']) {

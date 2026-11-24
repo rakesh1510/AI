@@ -63,7 +63,7 @@ require __DIR__ . '/layout_top.php';
 </section>
 
 <section class="bizBand wrap" aria-labelledby="useTitle" style="padding-top:0;padding-inline:28px">
-  <div class="sectionHead"><div><h2 id="useTitle">Examples of what we can build</h2><p>Illustrative project types, not client case studies. Tell us your own use case in the form below.</p></div></div>
+  <div class="sectionHead"><div><h2 id="useTitle">Examples of what we can build</h2><p>Illustrative project types, not past client work. Tell us your own use case in the form below.</p></div></div>
   <ul class="useGrid">
     <?php foreach ([
       ['chat', 'Support triage', 'Route and draft replies to incoming messages, with a person approving anything sent.', 0],

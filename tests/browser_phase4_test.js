@@ -76,8 +76,8 @@ async function run(P, opts) {
 
   // ---------- Problem pages ----------
   r = await page.goto(base + '/solutions.php', { waitUntil: 'load' });
-  check(r.status() === 200 && await page.locator('.tCard').count() >= 6, `[${P}] problem hub lists problems`);
-  await page.locator('.tCard h2 a').first().click();
+  check(r.status() === 200 && await page.locator('.catGrid .catTile').count() >= 6, `[${P}] problem hub lists problems`);
+  await page.locator('.catTile h2 a').first().click();
   await page.waitForLoadState('load');
   check(await page.locator('h1').count() === 1 && await page.locator('#lookFor').count() === 1 && await page.locator('.tCard__why').count() >= 1, `[${P}] problem page shows criteria and "why this result" for each tool`);
   check(await page.locator('.tCard__why').first().innerText().then(t => /Why this result:/.test(t) && t.length > 30), `[${P}] relevance explanations have content`);
