@@ -18,7 +18,7 @@ echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'About AIHubpedia', 'icon' => 
 </div>
 
 <section class="bizBand stage" aria-labelledby="whyT">
-  <div class="wrap pgHero" style="padding:0"><div class="wrap" style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(20px,4vw,56px);align-items:center;padding:0">
+  <div class="wrap splitRow"><div class="splitRow__grid">
     <div>
       <span class="eyebrow"><?= ui_icon('compare') ?> Why we exist</span>
       <h2 id="whyT" style="margin:14px 0">Why AIHubpedia Exists</h2>

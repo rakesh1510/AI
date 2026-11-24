@@ -76,6 +76,36 @@ const pages = ['/', '/categories.php', '/compare.php', '/guides.php', '/business
     check(await cnt('/advertise.php', '.priceCard') === 4 && await pg.locator('.priceCard--rec').count() === 1 && await pg.locator('table.pkgTable').count() === 1, 'advertise: four price cards, one recommended, comparison table below');
     check(await pg.locator('.priceCard .artPlace').count() === 4, 'advertise: placement previews');
     await c2.close(); }
+  // V3 design system: typography, footer, mega menu, wizard stepper, new page structures
+  { const c3 = await browser.newContext({ viewport: { width: 1440, height: 900 } }); const pg = await c3.newPage();
+    await pg.goto(base + '/', { waitUntil: 'load' }); await pg.waitForTimeout(500);
+    const ty = await pg.evaluate(() => ({ h1: getComputedStyle(document.querySelector('h1')).fontFamily, h1px: parseFloat(getComputedStyle(document.querySelector('h1')).fontSize), body: getComputedStyle(document.body).fontFamily, bodypx: parseFloat(getComputedStyle(document.body).fontSize), sg: [...document.fonts].some(f => f.family.includes('Space Grotesk') && f.status === 'loaded'), inter: [...document.fonts].some(f => f.family.includes('Inter') && f.status === 'loaded') }));
+    check(/Space Grotesk/.test(ty.h1) && /Inter/.test(ty.body), 'v3: headings use Space Grotesk and body uses Inter');
+    check(ty.sg && ty.inter, 'v3: both local fonts load');
+    check(ty.h1px >= 60 && ty.h1px <= 80 && ty.bodypx >= 16, `v3: hero ${ty.h1px}px and body ${ty.bodypx}px within the type scale`);
+    check(await pg.locator('.siteFooter .fHero').count() === 1 && await pg.locator('.siteFooter .footerCol').count() === 4 && await pg.locator('.siteFooter .fBrand').count() === 1, 'v3: premium footer structure (hero, brand, four link groups)');
+    check(await pg.locator('.siteFooter a[href*="universe"]').count() === 0, 'v3: no AI Universe link in the footer');
+    await pg.locator('.siteMore__details > summary').click();
+    check(await pg.locator('.siteMore__panel .mm__ico').count() >= 15 && await pg.locator('.siteMore__foot a').count() === 1, 'v3: mega menu has icons for every link and a project CTA');
+    await pg.keyboard.press('Escape');
+    await pg.goto(base + '/recommend.php', { waitUntil: 'load' });
+    check(await pg.locator('.wizProg').count() === 1 && await pg.locator('fieldset:not([hidden])').count() === 1, 'v3: wizard shows one question at a time with a progress indicator');
+    await pg.click('[data-wiz-next]'); await pg.click('[data-wiz-next]');
+    check(await pg.locator('.wizErr:visible').count() === 1, 'v3: wizard blocks a required question left blank');
+    await pg.locator('fieldset:not([hidden]) .choice').first().click(); await pg.click('[data-wiz-next]'); await pg.locator('fieldset:not([hidden]) .choice').first().click();
+    check(await pg.locator('[data-wiz-name]').innerText().then(t => t.length > 3), 'v3: wizard advances through the questions');
+    const njs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } }); const np = await njs.newPage();
+    await np.goto(base + '/recommend.php', { waitUntil: 'load' });
+    check(await np.locator('fieldset:visible').count() === 6 && await np.locator('button[type=submit]:visible').count() >= 1, 'v3: without JavaScript all six questions are visible and the form submits');
+    await pg.goto(base + '/submit.php', { waitUntil: 'load' });
+    check(await pg.locator('.planCard').count() === 4 && await pg.locator('input[name=plan]:checked').count() === 1, 'v3: submit page has four selectable plan cards, one preselected');
+    await pg.goto(base + '/leaderboard.php', { waitUntil: 'load' });
+    check(await pg.locator('.podiumCard').count() === 3, 'v3: leaderboard podium shows three tools');
+    await pg.goto(base + '/privacy.php', { waitUntil: 'load' });
+    check(await pg.locator('.docToc a').count() >= 5, 'v3: legal pages have a table of contents');
+    await pg.goto(base + '/404.php', { waitUntil: 'load' });
+    check(await pg.locator('.stateBox').count() === 1, 'v3: 404 uses the shared state panel');
+    await c3.close(); await njs.close(); }
   // search + compare, form validation, reduced motion, no-JS
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();

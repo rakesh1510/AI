@@ -24,19 +24,15 @@ require __DIR__ . '/layout_top.php';
 <div class="wrap pgBody">
 <section class="card filtersCard">
 <form method="get" class="grid">
-<div><label>Keyword</label><input class="input" name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"></div>
-<div><label>Category</label><input class="input" name="category" value="<?= htmlspecialchars($_GET['category'] ?? '') ?>"></div>
-<div><label>Price</label><select class="input" name="price"><option value="">Any</option><option value="free">Free</option><option value="paid">Paid</option><option value="freemium">Freemium</option></select></div>
+<div><label for="fKw">Keyword</label><input class="input" id="fKw" name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"></div>
+<div><label for="fCat">Category</label><input class="input" id="fCat" name="category" value="<?= htmlspecialchars($_GET['category'] ?? '') ?>"></div>
+<div><label for="fPrice">Price</label><select class="input" id="fPrice" name="price"><option value="">Any</option><option value="free">Free</option><option value="paid">Paid</option><option value="freemium">Freemium</option></select></div>
 <div style="align-self:end"><button class="btn">Filter</button></div>
 </form>
 </section>
-<section class="grid">
-<?php foreach($filtered as $t): ?>
-  <div class="card">
-    <h3><a href="tool.php?id=<?= urlencode($t['id']) ?>"><?= htmlspecialchars($t['name']) ?></a></h3>
-    <p><?= htmlspecialchars($t['short'] ?? '') ?></p>
-  </div>
-<?php endforeach; ?>
+<section class="cardGrid" aria-label="Filtered tools" style="margin-top:var(--s-4)">
+<?php foreach (array_slice($filtered, 0, 48) as $t) echo render_tool_card($t, ['placement' => 'filters', 'heading' => 3]); ?>
 </section>
+<?php if (!$filtered): ?><div class="emptyMini" style="margin-top:var(--s-4)">No tools match these filters. Try fewer words or clear the category.</div><?php endif; ?>
 </div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>
