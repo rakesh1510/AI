@@ -23,11 +23,11 @@ async function axe(page) { await page.addStyleTag({ content: '*,*::before,*::aft
     const ctx = await browser.newContext(opts); await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort()); const page = await ctx.newPage(); const P = `[${prof}]`;
     // ---- services
     await page.goto(base + '/services.php', { waitUntil: 'load' });
-    check(await page.locator('h1').first().innerText().then(t => /AI development services/i.test(t)), `${P} services page heading`);
-    check(await page.locator('.cardGrid .card').count() === 10, `${P} ten services are listed`);
+    check(await page.locator('h1').first().innerText().then(t => /Custom AI and software/i.test(t)), `${P} services page heading`);
+    check(await page.locator('.bento a.bento__cell').count() === 10, `${P} ten services are listed`);
     check(!(await page.content()).match(/testimonial|trusted by|clients include/i), `${P} no client or testimonial claims`);
     check(await noHScroll(page), `${P} services page has no horizontal scrolling`);
-    await page.locator('.cardGrid .card').first().click(); await page.waitForLoadState('load'); check(/services\.php\?s=custom-ai-agents/.test(page.url()) && await page.locator('#projectForm').count() === 1, `${P} a service page opens with the guided form preselected`);
+    await page.locator('.bento a.bento__cell').first().click(); await page.waitForLoadState('load'); check(/services\.php\?s=custom-ai-agents/.test(page.url()) && await page.locator('#projectForm').count() === 1, `${P} a service page opens with the guided form preselected`);
     check(await page.locator('#pj-service').inputValue() === 'custom-ai-agents', `${P} the service is preselected in the form`);
     check(await page.locator('link[rel=canonical]').getAttribute('href').then(h => /services\.php\?s=custom-ai-agents$/.test(h)), `${P} the service page has a self-canonical URL`);
     check(await page.locator('#projectForm label').count() >= 9 && await page.locator('#projectForm [required]').count() >= 6, `${P} every project form field has a label and required fields are marked`);

@@ -44,9 +44,12 @@ ok((int)$pdo->query("SELECT COUNT(*) FROM crm_contacts WHERE consent_status = 'i
 $r2 = submit('/project-inquiry.php', ['name' => 'Pat P.'] + $proj, '/services.php'); $dup = $pdo->query('SELECT duplicate_of FROM crm_leads ORDER BY id DESC LIMIT 1')->fetchColumn();
 ok($r2['code'] === 303 && $dup !== null && $count('crm_contacts') === 1 && $count('crm_companies') === 1, 'a second inquiry from the same email is flagged as a possible duplicate without creating a second contact or company');
 $pdo->exec('DELETE FROM leads');   // the public form allows 5 inquiries per network per hour; reset between sections of this test
-$bad = ['no service' => ['service' => ''], 'unknown service' => ['service' => 'world-domination'], 'short problem' => ['message' => 'too short'], 'no company' => ['company' => ''], 'bad email' => ['email' => 'nope'], 'no consent' => ['consent' => ''], 'bad website' => ['website' => 'javascript:alert(1)']];
+$bad = ['unknown service' => ['service' => 'world-domination'], 'short problem' => ['message' => 'too short'], 'bad email' => ['email' => 'nope'], 'no consent' => ['consent' => ''], 'bad website' => ['website' => 'javascript:alert(1)']];
 $n = $count('crm_leads'); foreach ($bad as $label => $o) { $r = submit('/project-inquiry.php', $o + $proj, '/services.php'); ok($r['code'] === 422 && stripos($r['body'], 'fieldError') !== false, "project validation: $label refused (HTTP {$r['code']})"); }
 ok($count('crm_leads') === $n, 'refused project inquiries store nothing');
+// The enquiry form is deliberately short: service and company are optional, the goal (20+ characters), name, email and consent are required.
+$r = submit('/project-inquiry.php', ['service' => '', 'company' => '', 'email' => 'optional.fields@example.com'] + $proj, '/services.php');
+ok($r['code'] === 303, 'a short enquiry without service or company is accepted (HTTP ' . $r['code'] . ')'); $n = $count('crm_leads');
 $pdo->exec('DELETE FROM leads'); $hp = http('GET', "$base/services.php")['body']; $tk = token($hp); sleep(2); $r = http('POST', "$base/project-inquiry.php", $proj + ['form_token' => $tk, 'website_url_confirm' => 'http://spam.example'], $own); ok($r['code'] === 422 && $count('crm_leads') === $n, 'the honeypot rejects bots');
 $fresh = token(http('GET', "$base/services.php")['body']); $r = http('POST', "$base/project-inquiry.php", $proj + ['form_token' => $fresh], $own); ok($r['code'] === 422 && $count('crm_leads') === $n, "a form submitted instantly (time trap) is refused (HTTP {$r['code']})");
 $r = http('POST', "$base/project-inquiry.php", $proj + ['form_token' => 'forged'], $own); ok($r['code'] === 422 && $count('crm_leads') === $n, "a forged token is refused (HTTP {$r['code']}, leads {$count('crm_leads')} vs $n)");

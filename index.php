@@ -91,7 +91,7 @@ require __DIR__ . '/layout_top.php';
     </div>
     <?php if ($stack): ?>
     <div class="heroStack" aria-hidden="true">
-      <?= art_orb() ?>
+      <?= art_orb(true) ?>
       <?php foreach ($stack as $t): $cp = $t['curated']; ?>
         <div class="floatCard">
           <div class="row"><span class="dot"><?= h(mb_substr($t['name'], 0, 1)) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>

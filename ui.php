@@ -204,7 +204,7 @@ function page_hero(array $o): string {
   if (!empty($o['actions'])) $h .= '<div class="heroActions">' . $o['actions'] . '</div>';
   if (!empty($o['facts'])) { $h .= '<ul class="factRow">'; foreach ($o['facts'] as $f) $h .= '<li>' . ui_icon('check') . ' ' . htmlspecialchars((string)$f, ENT_QUOTES) . '</li>'; $h .= '</ul>'; }
   $h .= '</div>';
-  if (!$solo) $h .= '<div class="pgHero__art" aria-hidden="true">' . art_scene($art) . '</div>';
+  if (!$solo) $h .= '<div class="pgHero__art" aria-hidden="true">' . art_scene($art, true) . '</div>';
   return $h . '</div></section>';
 }
 function page_body_open(string $cls = ''): string { return '<div class="wrap pgBody' . ($cls !== '' ? ' ' . htmlspecialchars($cls, ENT_QUOTES) : '') . '">'; }

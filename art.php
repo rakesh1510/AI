@@ -43,6 +43,14 @@ function art_flow(): string {
 
 /** Abstract 3D-ish thumbnail for editorial cards, tinted by the category theme. $variant (0-3) changes the composition. */
 function art_thumb(string $cat, int $variant = 0): string {
+  // Studio-render cover when available: one of four compositions, tinted per category with a hue rotation (cheap, GPU-side).
+  $f = 'thumb' . ($variant % 4); $path = __DIR__ . '/assets/art/' . $f . '.webp';
+  if (is_file($path) && ($sz = @getimagesize($path))) {
+    $hex = ltrim(cat_theme($cat)[0], '#'); $r = hexdec(substr($hex, 0, 2)) / 255; $g = hexdec(substr($hex, 2, 2)) / 255; $b = hexdec(substr($hex, 4, 2)) / 255;
+    $mx = max($r, $g, $b); $mn = min($r, $g, $b); $d = $mx - $mn; $h = $d == 0 ? 0 : ($mx == $r ? fmod(($g - $b) / $d, 6) : ($mx == $g ? ($b - $r) / $d + 2 : ($r - $g) / $d + 4)); $h = fmod($h * 60 + 360, 360);
+    $rot = (int)round($h - 262);
+    return '<span class="artThumbFrame"><img class="artThumb artImg" src="/assets/art/' . $f . '.webp?v=' . @filemtime($path) . '" width="' . (int)$sz[0] . '" height="' . (int)$sz[1] . '" alt="" aria-hidden="true" loading="lazy" decoding="async" style="filter:hue-rotate(' . $rot . 'deg)"></span>';
+  }
   [$a, $b] = cat_theme($cat); $id = 't' . substr(md5($cat . $variant), 0, 6);
   $shapes = [
     '<circle cx="200" cy="110" r="64" fill="url(#' . $id . 's)"/><rect x="60" y="70" width="110" height="110" rx="26" transform="rotate(-14 115 125)" fill="url(#' . $id . 'g)" opacity=".92"/><circle cx="270" cy="60" r="16" fill="#fff" opacity=".7"/>',
@@ -72,6 +80,16 @@ function art_placement(string $slot): string {
   }
   if ($slot === 'listing') $o = str_replace('<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/>', '<rect x="14" y="26" width="212" height="42" rx="8" fill="#fff" opacity=".1"/><rect x="20" y="32" width="60" height="30" rx="6" fill="url(#pv)"/>', $o);
   return $o . '</svg>';
+}
+
+/** Studio-render image for a scene (Blender/Cycles stills in assets/art/*.webp, see assets3d/). Returns '' when the file is missing so the inline SVG artwork is used as a fallback. */
+function _art_img(string $file, string $class, bool $eager = false): string {
+  static $cache = [];
+  $path = __DIR__ . '/assets/art/' . $file . '.webp';
+  if (!isset($cache[$path])) { $cache[$path] = is_file($path) ? (@getimagesize($path) ?: null) : null; }
+  $sz = $cache[$path]; if (!$sz) return '';
+  $v = (string)@filemtime($path);
+  return '<img class="art ' . $class . ' artImg" src="/assets/art/' . $file . '.webp?v=' . $v . '" width="' . (int)$sz[0] . '" height="' . (int)$sz[1] . '" alt="" aria-hidden="true" decoding="async" ' . ($eager ? 'fetchpriority="high"' : 'loading="lazy"') . '>';
 }
 
 /* =====================================================================================================
@@ -149,7 +167,7 @@ function _a_cube(string $p, float $cx, float $y, float $s, string $top = 'ch', s
 }
 
 /** Communication: two glass chat bubbles, a chrome sphere and a ring. */
-function art_chat(): string { $p = 'ac'; return _a_svg('artScene', '0 0 520 440', $p,
+function art_chat(bool $eager = false): string { if ($i = _art_img('chat', 'artScene', $eager)) return $i; $p = 'ac'; return _a_svg('artScene', '0 0 520 440', $p,
   _a_glow($p, 260, 220, 230) . _a_ring($p, 262, 232, 190, 66, -24, 30) . _a_shadow($p, 260, 410, 150)
   . _a_slab($p, 70, 90, 250, 130, 34) . '<path d="M110 220l-6 46 52-36z" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".38"/>'
   . '<g fill="#fff" opacity=".85"><rect x="104" y="128" width="150" height="12" rx="6"/><rect x="104" y="156" width="190" height="12" rx="6" opacity=".6"/><rect x="104" y="184" width="110" height="12" rx="6" opacity=".4"/></g>'
@@ -158,7 +176,7 @@ function art_chat(): string { $p = 'ac'; return _a_svg('artScene', '0 0 520 440'
   . _a_sph($p, 410, 120, 46, 'ch') . _a_sph($p, 90, 330, 22, 'sc') . _a_sph($p, 470, 260, 12, 'sm')); }
 
 /** Podium: metallic 2-1-3 blocks with lit spheres. */
-function art_podium(): string { $p = 'ap'; return _a_svg('artScene', '0 0 560 430', $p,
+function art_podium(bool $eager = false): string { if ($i = _art_img('podium', 'artScene', $eager)) return $i; $p = 'ap'; return _a_svg('artScene', '0 0 560 430', $p,
   _a_glow($p, 280, 200, 250) . _a_shadow($p, 280, 398, 220)
   . _a_cube($p, 150, 232, 92, 'ch', 'vi', 'cy') . _a_cube($p, 280, 170, 92, 'ch', 'vi', 'cy') . _a_cube($p, 410, 262, 92, 'ch', 'vi', 'cy')
   . '<g font-family="Space Grotesk,Inter,sans-serif" font-weight="800" font-size="40" fill="#fff" opacity=".92" text-anchor="middle"><text x="150" y="346" transform="skewY(0)">2</text><text x="280" y="284">1</text><text x="410" y="376">3</text></g>'
@@ -166,7 +184,7 @@ function art_podium(): string { $p = 'ap'; return _a_svg('artScene', '0 0 560 43
   . _a_ring($p, 280, 120, 74, 18, -14, 9, 'cy')); }
 
 /** Trust: a glass shield with a check, orbited by a ring and spheres. */
-function art_shield(): string { $p = 'as'; return _a_svg('artScene', '0 0 520 440', $p,
+function art_shield(bool $eager = false): string { if ($i = _art_img('shield', 'artScene', $eager)) return $i; $p = 'as'; return _a_svg('artScene', '0 0 520 440', $p,
   _a_glow($p, 260, 215, 220) . _a_shadow($p, 260, 408, 130) . _a_ring($p, 260, 230, 200, 60, 22, 24, 'cy')
   . '<path d="M260 50l124 44v104c0 86-52 140-124 172-72-32-124-86-124-172V94z" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>'
   . '<path d="M260 82l94 34v86c0 66-38 108-94 134-56-26-94-68-94-134v-86z" fill="url(#' . $p . 'vi)" opacity=".92"/>'
@@ -174,19 +192,19 @@ function art_shield(): string { $p = 'as'; return _a_svg('artScene', '0 0 520 44
   . _a_sph($p, 410, 90, 30, 'sc') . _a_sph($p, 100, 320, 20, 'sm') . _a_sph($p, 440, 330, 12, 'sp')); }
 
 /** Ecosystem: a chrome hub connected to orbiting nodes. */
-function art_network(): string { $p = 'an'; $pts = [[90, 130], [430, 110], [70, 300], [450, 300], [260, 60], [260, 390]];
+function art_network(bool $eager = false): string { if ($i = _art_img('network', 'artScene', $eager)) return $i; $p = 'an'; $pts = [[90, 130], [430, 110], [70, 300], [450, 300], [260, 60], [260, 390]];
   $lines = ''; $nodes = ''; $gs = ['sp', 'sc', 'sm', 'sp', 'sc', 'sm'];
   foreach ($pts as $i => [$x, $y]) { $lines .= '<path d="M260 225L' . $x . ' ' . $y . '" stroke="url(#' . $p . 'cy)" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round" opacity=".8"/>'; $nodes .= _a_slab($p, $x - 34, $y - 34, 68, 68, 22) . _a_sph($p, $x, $y, 17, $gs[$i]); }
   return _a_svg('artScene', '0 0 520 450', $p, _a_glow($p, 260, 225, 240) . _a_ring($p, 260, 225, 200, 80, -20, 4, 'vi') . $lines . _a_shadow($p, 260, 428, 120) . $nodes . _a_sph($p, 260, 225, 64, 'ch') . '<circle cx="260" cy="225" r="30" fill="url(#' . $p . 'vi)"/>'); }
 
 /** Method: stacked glass layers (evidence levels). */
-function art_layers(): string { $p = 'al'; $o = _a_glow($p, 260, 210, 230) . _a_shadow($p, 260, 400, 160);
+function art_layers(bool $eager = false): string { if ($i = _art_img('layers', 'artScene', $eager)) return $i; $p = 'al'; $o = _a_glow($p, 260, 210, 230) . _a_shadow($p, 260, 400, 160);
   foreach ([[300, 'cy'], [236, 'vi'], [172, 'ch']] as [$y, $g]) { $o .= '<g><polygon points="260,' . $y . ' 430,' . ($y + 62) . ' 260,' . ($y + 124) . ' 90,' . ($y + 62) . '" fill="url(#' . $p . $g . ')" opacity=".9"/><polygon points="260,' . $y . ' 430,' . ($y + 62) . ' 260,' . ($y + 124) . ' 90,' . ($y + 62) . '" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".5"/></g>'; }
   $o .= '<polygon points="260,108 430,170 260,232 90,170" fill="url(#' . $p . 'gl)" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>' . _a_sph($p, 260, 150, 30, 'sc') . _a_sph($p, 410, 90, 16, 'sm');
   return _a_svg('artScene', '0 0 520 430', $p, $o); }
 
 /** Discovery: a glass lens with a sphere inside. */
-function art_lens(): string { $p = 'ae'; return _a_svg('artScene', '0 0 520 440', $p,
+function art_lens(bool $eager = false): string { if ($i = _art_img('lens', 'artScene', $eager)) return $i; $p = 'ae'; return _a_svg('artScene', '0 0 520 440', $p,
   _a_glow($p, 240, 210, 230) . _a_shadow($p, 260, 410, 140)
   . '<circle cx="230" cy="200" r="130" fill="url(#' . $p . 'gl)" stroke="url(#' . $p . 'ch)" stroke-width="26"/>'
   . '<path d="M330 300l92 96" stroke="url(#' . $p . 'ch)" stroke-width="40" stroke-linecap="round"/><path d="M330 300l92 96" stroke="#fff" stroke-opacity=".35" stroke-width="6" stroke-linecap="round"/>'
@@ -194,39 +212,39 @@ function art_lens(): string { $p = 'ae'; return _a_svg('artScene', '0 0 520 440'
   . _a_ring($p, 230, 200, 170, 44, 18, 6, 'cy')); }
 
 /** Guided steps: ascending glass blocks with a sphere on the top step. */
-function art_steps(): string { $p = 'at'; return _a_svg('artScene', '0 0 520 420', $p,
+function art_steps(bool $eager = false): string { if ($i = _art_img('steps', 'artScene', $eager)) return $i; $p = 'at'; return _a_svg('artScene', '0 0 520 420', $p,
   _a_glow($p, 270, 200, 230) . _a_shadow($p, 270, 392, 200)
   . _a_cube($p, 110, 250, 72, 'ch', 'cy', 'vi') . _a_cube($p, 220, 200, 72, 'ch', 'cy', 'vi') . _a_cube($p, 330, 150, 72, 'ch', 'cy', 'vi') . _a_cube($p, 440, 100, 72, 'ch', 'cy', 'vi')
   . _a_sph($p, 440, 62, 30, 'sm') . '<path d="M110 232L220 182L330 132L440 82" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-dasharray="4 10" fill="none" stroke-linecap="round"/>'); }
 
 /** Compass for problem-based discovery. */
-function art_compass(): string { $p = 'ak'; return _a_svg('artScene', '0 0 520 440', $p,
+function art_compass(bool $eager = false): string { if ($i = _art_img('compass', 'artScene', $eager)) return $i; $p = 'ak'; return _a_svg('artScene', '0 0 520 440', $p,
   _a_glow($p, 260, 215, 220) . _a_shadow($p, 260, 410, 130)
   . '<circle cx="260" cy="215" r="150" fill="url(#' . $p . 'gl)" stroke="url(#' . $p . 'ch)" stroke-width="22"/><circle cx="260" cy="215" r="112" fill="none" stroke="#fff" stroke-opacity=".3" stroke-dasharray="2 10" stroke-width="4"/>'
   . '<polygon points="260,100 292,215 260,330 228,215" fill="url(#' . $p . 'vi)" transform="rotate(38 260 215)"/><polygon points="260,100 292,215 228,215" fill="#fff" opacity=".55" transform="rotate(38 260 215)"/>'
   . _a_sph($p, 260, 215, 20, 'ch') . _a_sph($p, 420, 100, 22, 'sc') . _a_sph($p, 100, 330, 16, 'sm')); }
 
 /** Mail / confirmation: envelope slab with a check sphere. */
-function art_mail(): string { $p = 'am'; return _a_svg('artScene', '0 0 520 400', $p,
+function art_mail(bool $eager = false): string { if ($i = _art_img('mail', 'artScene', $eager)) return $i; $p = 'am'; return _a_svg('artScene', '0 0 520 400', $p,
   _a_glow($p, 260, 200, 220) . _a_shadow($p, 260, 372, 150) . _a_ring($p, 260, 200, 200, 60, -18, 18, 'cy')
   . _a_slab($p, 90, 110, 340, 220, 30) . '<path d="M100 132l160 110 160-110" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linejoin="round"/>'
   . _a_sph($p, 410, 120, 48, 'sc') . '<path d="M388 120l16 16 30-34" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' . _a_sph($p, 90, 340, 16, 'sm')); }
 
 /** Page not found: a lit orb with a broken ring. */
-function art_lost(): string { $p = 'ao'; return _a_svg('artScene', '0 0 520 400', $p,
+function art_lost(bool $eager = false): string { if ($i = _art_img('lost', 'artScene', $eager)) return $i; $p = 'ao'; return _a_svg('artScene', '0 0 520 400', $p,
   _a_glow($p, 260, 190, 220) . _a_shadow($p, 260, 372, 120)
   . '<path d="M110 200a150 60 0 0 1 130-58" fill="none" stroke="url(#' . $p . 'vi)" stroke-width="26" stroke-linecap="round"/><path d="M300 140a150 60 0 0 1 112 62" fill="none" stroke="url(#' . $p . 'cy)" stroke-width="26" stroke-linecap="round"/><path d="M130 240a150 60 0 0 0 270 6" fill="none" stroke="url(#' . $p . 'vi)" stroke-width="26" stroke-linecap="round" opacity=".7"/>'
   . _a_sph($p, 260, 190, 70, 'sp') . _a_sph($p, 410, 90, 20, 'sc') . _a_sph($p, 100, 300, 14, 'sm') . '<text x="260" y="206" text-anchor="middle" font-family="Space Grotesk,Inter,sans-serif" font-weight="800" font-size="46" fill="#fff" opacity=".9">?</text>'); }
 
 /** Calm document stack for legal and policy pages. */
-function art_doc(): string { $p = 'ad'; return _a_svg('artScene', '0 0 520 400', $p,
+function art_doc(bool $eager = false): string { if ($i = _art_img('doc', 'artScene', $eager)) return $i; $p = 'ad'; return _a_svg('artScene', '0 0 520 400', $p,
   _a_glow($p, 260, 200, 210) . _a_shadow($p, 260, 372, 130)
   . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(-8 260 200)') . _a_slab($p, 150, 70, 220, 270, 26, 'rotate(6 260 200)')
   . '<g fill="#fff" opacity=".8"><rect x="190" y="130" width="140" height="12" rx="6"/><rect x="190" y="164" width="120" height="12" rx="6" opacity=".6"/><rect x="190" y="198" width="140" height="12" rx="6" opacity=".6"/><rect x="190" y="232" width="90" height="12" rx="6" opacity=".4"/></g>'
   . _a_sph($p, 380, 110, 30, 'sc') . _a_sph($p, 130, 320, 18, 'sm')); }
 
 /** Hero artwork: a woven chrome-and-iridescent ring knot with lit spheres. Decorative. */
-function art_orb(): string {
+function art_orb(bool $eager = false): string { if ($i = _art_img('hero_knot', 'artOrb', $eager)) return $i;
   $p = 'ao2';
   // weave: draw ring A, ring B, then redraw a clipped half of A on top so the rings interlock
   return _a_svg('artOrb', '0 0 520 460', $p,
@@ -241,7 +259,7 @@ function art_orb(): string {
 }
 
 /** Business hero artwork: a glossy cube-robot on a neon-edged platform with a glass gate and floating chips. Decorative. */
-function art_agent(): string {
+function art_agent(bool $eager = false): string { if ($i = _art_img('agent', 'artAgent', $eager)) return $i;
   $p = 'aa2';
   $plat = '280,190 540,318 280,446 20,318';
   return _a_svg('artAgent', '0 0 560 480', $p,
@@ -275,7 +293,7 @@ function art_agent(): string {
 }
 
 /** Generic hero scene chooser used by page_hero(). */
-function art_scene(string $name): string {
+function art_scene(string $name, bool $eager = false): string {
   static $m = ['chat' => 'art_chat', 'podium' => 'art_podium', 'shield' => 'art_shield', 'network' => 'art_network', 'layers' => 'art_layers', 'lens' => 'art_lens', 'steps' => 'art_steps', 'compass' => 'art_compass', 'mail' => 'art_mail', 'lost' => 'art_lost', 'doc' => 'art_doc', 'orb' => 'art_orb', 'agent' => 'art_agent'];
-  return isset($m[$name]) ? ($m[$name])() : '';
+  return isset($m[$name]) ? ($m[$name])($eager) : '';
 }

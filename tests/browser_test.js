@@ -76,13 +76,11 @@ async function run(profileName, contextOpts) {
   check(await page.locator('meta[name=robots][content*="noindex"]').count() === 1, `[${P}] search results are noindex`);
   // Legacy homepage filter (?q= / ?cat=) still works for old links
   await page.goto(base + '/?q=chat', { waitUntil: 'load' });
-  const resultsText = await page.locator('#browseTitle + p').innerText();
-  check(/Showing \d+ results/.test(resultsText) && !/Showing 0 results/.test(resultsText), `[${P}] legacy homepage filter returns results (${resultsText})`);
+  const resultsText = await page.locator('#filterTitle + p').innerText();
+  check(/Showing \d+ of \d+ results/.test(resultsText) && !/Showing 0 of/.test(resultsText), `[${P}] legacy homepage filter returns results (${resultsText})`);
   check(await page.locator('meta[name=robots][content*="noindex"]').count() === 1, `[${P}] legacy homepage filter is noindex`);
-  await page.goto(base + '/', { waitUntil: 'load' });
-  await page.selectOption('#browseCat', 'Coding');
-  await Promise.all([page.waitForURL(/cat=Coding/), page.locator('#browse form button[type=submit]').click()]);
-  const cardCats = await page.locator('#browse .tCard__meta a').allInnerTexts();
+  await page.goto(base + '/?cat=Coding', { waitUntil: 'load' });   // the category tiles link to category pages; the legacy ?cat= parameter still filters the homepage
+  const cardCats = await page.locator('#filtered .tCard__meta a').allInnerTexts();
   check(cardCats.length > 0 && cardCats.every(b => b === 'Coding'), `[${P}] category filter returns only Coding (${cardCats.length})`);
 
   // Tool page: ChatGPT, vote via AJAX

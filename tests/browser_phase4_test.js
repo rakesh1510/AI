@@ -33,17 +33,24 @@ async function run(P, opts) {
   check(await page.locator('fieldset').count() === 6 && await page.locator('fieldset legend').count() === 6, `[${P}] six questions, each in a fieldset with a legend`);
   check(await page.locator('meta[name=robots]').getAttribute('content').then(c => /index/.test(c) && !/noindex/.test(c)), `[${P}] the empty wizard is indexable`);
   check(await noHScroll(page), `[${P}] wizard form has no horizontal scrolling`);
-  // Submitting without required answers: native validation blocks, so the page stays
-  await page.locator('form[data-wizard] button[type=submit]').click();
-  check(page.url().indexOf('go=1') === -1, `[${P}] required questions block an empty submit`);
+  // The wizard shows one question at a time (stepper). Required questions block "Next"; the form still submits as a plain GET.
+  const nextBtn = page.locator('[data-wiz-next]');
+  await nextBtn.click();                                   // role (optional) -> objective
+  await nextBtn.click();                                   // objective is required
+  check(await page.locator('.wizErr:visible').count() === 1 && page.url().indexOf('go=1') === -1, `[${P}] required questions block an empty step`);
   // Keyboard: radios reachable and selectable with the keyboard
   await page.locator('#objective-meetings').focus();
   await page.keyboard.press('Space');
   check(await page.locator('#objective-meetings').isChecked(), `[${P}] a goal can be chosen with the keyboard`);
+  await nextBtn.click();                                   // -> budget
   await page.locator('label[for=budget-free_only]').click();
+  await nextBtn.click();                                   // -> experience
+  await nextBtn.click();                                   // -> team
   await page.locator('label[for=team-small]').click();
+  await nextBtn.click();                                   // -> integrations
   await page.locator('label[for=int-zoom]').click();
-  await page.selectOption('#role', 'manager');
+  await page.locator('fieldset', { has: page.locator('#role') }).evaluate(() => {});   // role select stays in the DOM
+  await page.selectOption('#role', 'manager', { force: true });
   await shot(page, 'wizard-form');
   await Promise.all([page.waitForURL(/recommend\.php\?.*go=1/), page.locator('form[data-wizard] button[type=submit]').click()]);
   await page.locator('#results').waitFor({ state: 'visible' });

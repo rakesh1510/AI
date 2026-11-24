@@ -132,7 +132,7 @@ ok(strpos($cat, 'javascript:alert(1)') === false, 'nothing was injected into the
 
 section('Submit form protection');
 $s = http('GET', "$base/submit.php");
-$stok = field_token($s['body'], '<form method="post">');
+$stok = field_token($s['body'], '<form method="post" class="submitForm">');
 $r = http('POST', "$base/submit.php", ['name' => 'T', 'category' => 'Writing', 'website' => 'javascript:alert(1)', 'short' => 'x', 'plan' => 'free'], $own);
 ok($r['code'] === 200 && stripos($r['body'], 'expired') !== false, 'submission without token is refused');
 $r = http('POST', "$base/submit.php", ['name' => 'T', 'category' => 'Writing', 'website' => 'javascript:alert(1)', 'short' => 'x', 'plan' => 'free', '_csrf' => $stok], $own);

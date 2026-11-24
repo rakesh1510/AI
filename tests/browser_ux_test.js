@@ -44,7 +44,7 @@ async function run(P, opts) {
   check(await page.locator('.paths .path').count() === 3, `[${P}] homepage shows the three paths (find, build, promote)`);
   check(await page.locator('.paths .path h3').count() === 3, `[${P}] each path has a heading`);
   check(await page.locator('.intent').count() >= 8, `[${P}] goal-based entry points are shown`);
-  check(await page.locator('main .tCard').count() >= 6 && await page.locator('main .tCard').count() <= 12 + 4, `[${P}] curated tool cards are shown (no full catalogue)`);
+  check(await page.locator('#discover .tCard').count() >= 6 && await page.locator('#discover .tCard').count() <= 12, `[${P}] curated tool cards are shown (no full catalogue)`);
   check(await page.locator('.trustStrip').innerText().then(t => /reviewed profiles/.test(t) && /as of/.test(t)), `[${P}] trust strip states reviewed profiles and dated prices`);
   const bodyText = await page.locator('main').innerText();
   check(!/testimonial|trusted by|as seen on|\d+\s*(million|k)\+?\s*(users|visitors)/i.test(bodyText), `[${P}] no testimonials or invented traffic/customer claims on the homepage`);
@@ -113,7 +113,7 @@ async function run(P, opts) {
 
   // Favorites
   await page.goto(base + '/', { waitUntil: 'load' });
-  const favBtn = page.locator('#revTitle').locator('xpath=ancestor::section').locator('[data-fav]').first();
+  const favBtn = page.locator('#discover [data-fav]').first();
   await favBtn.scrollIntoViewIfNeeded();
   await favBtn.click();
   check(await favBtn.getAttribute('aria-pressed') === 'true', `[${P}] favorite button toggles on`);
@@ -307,7 +307,7 @@ async function run(P, opts) {
   check(await page.evaluate(() => document.documentElement.getAttribute('data-events')) === '1', `[${P}] server advertises that event collection is available`);
   const countEv = (name) => parseInt(sql(`SELECT COUNT(*) FROM events WHERE name='${name}' AND day=CURDATE()`), 10);
   const favBefore = countEv('favorite_add');
-  const fav2 = page.locator('#revTitle').locator('xpath=ancestor::section').locator('[data-fav]').first();
+  const fav2 = page.locator('#discover [data-fav]').first();
   await fav2.scrollIntoViewIfNeeded(); await fav2.click(); await page.waitForTimeout(400);
   check(evReq.length === 0 && countEv('favorite_add') === favBefore, `[${P}] no events are sent or stored without opt-in`);
   check(await page.evaluate(() => document.cookie) === '', `[${P}] the site sets no cookies for visitors`);
