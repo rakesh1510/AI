@@ -143,6 +143,11 @@ Total `assets/art` 2.0 MB for 44 files (22 full + 22 phone variants), hero image
 | 51 | newsletter-confirm-invalid | `/newsletter-confirm.php?token=invalid` | invalid-link state |
 | 52 | unsubscribe-invalid | `/unsubscribe.php?token=invalid` | invalid-link state |
 
+## Pre-staging changes (final)
+- AI Universe hidden from the public site: no sitemap entries (even with verified data) unless `AIHUB_UNIVERSE_PUBLIC=1` / `site.json universe.public`; its pages send `noindex, nofollow`; `robots.txt` keeps the API, editor and parameter spaces blocked and deliberately does **not** disallow the pages (a crawler must be able to fetch a page to obey its `noindex`). Code, routes, data and admin tools are unchanged. New `tests/universe_hidden_test.php` (27 checks); the Phase 7 page/graph tests run the public mode so the evidence gates stay covered (324 and 206 passed).
+- Removed test pollution (`data/ratings.json`, `data/tool_comments.json`) that browser tests had committed; the release now changes no `data/` file, no `.htaccess`, no SQL.
+- Staging Basic auth and noindex are server-level (not in the repository) and are unchanged by this release; `DEPLOY_STAGING.md` records and re-checks them.
+
 ## Remaining limitations
 - Artwork realism is below your references (see assessment). Procedural renders, not artist-modelled.
 - Staging live behaviour, real mail delivery, CDN/compression and real logo loading are unverified (staging is auth-blocked; sandbox has no internet, so logos show monograms locally).

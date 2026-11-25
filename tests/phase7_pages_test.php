@@ -50,7 +50,7 @@ function freePort(int $from, int $to): int { for ($p = $from; $p <= $to; $p++) {
 function startServer(string $root, string $db, string $dbHost, string $dbUser, string $dbPass, array $extra = []): string {
   global $servers, $tmp; $port = freePort(8270, 8290);
   $dir = sys_get_temp_dir() . '/p7pg_' . getmypid() . '_' . $port; @mkdir($dir, 0700); $tmp[] = $dir;
-  $env = array_merge(getenv(), ['AIHUB_DB_HOST' => $dbHost, 'AIHUB_DB_NAME' => $db, 'AIHUB_DB_USER' => $dbUser, 'AIHUB_DB_PASS' => $dbPass, 'AIHUB_RATE_DIR' => $dir, 'AIHUB_SECURITY_LOG' => "$dir/sec.log", 'AIHUB_FORM_SECRET' => 'p7pg-secret-not-for-production', 'AIHUB_UNIVERSE_PAGE_RATE_LIMIT' => '10000'], $extra);
+  $env = array_merge(getenv(), ['AIHUB_DB_HOST' => $dbHost, 'AIHUB_DB_NAME' => $db, 'AIHUB_DB_USER' => $dbUser, 'AIHUB_DB_PASS' => $dbPass, 'AIHUB_RATE_DIR' => $dir, 'AIHUB_SECURITY_LOG' => "$dir/sec.log", 'AIHUB_FORM_SECRET' => 'p7pg-secret-not-for-production', 'AIHUB_UNIVERSE_PAGE_RATE_LIMIT' => '10000', 'AIHUB_UNIVERSE_PUBLIC' => '1'], $extra);   // public mode: the evidence gates are what these tests cover; hidden default: universe_hidden_test.php
   $servers[] = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-d', 'log_errors=1', '-d', "error_log=$dir/php.log", '-d', 'error_reporting=32767', '-d', 'output_buffering=0', '-S', "127.0.0.1:$port", '-t', $root, "$root/tests/router.php"], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $root, $env);
   for ($i = 0; $i < 60; $i++) { $c = @fsockopen('127.0.0.1', $port); if ($c) { fclose($c); break; } usleep(100000); }
   return "http://127.0.0.1:$port";
@@ -241,7 +241,7 @@ ok($r['code'] === 200 && indexable($m) && $m['h1'] === 1 && $m['canonical'] === 
 foreach (['/universe-graph.php', '/universe-heatmap.php', '/universe-lineage.php', '/universe-arena.php'] as $u) ok(strpos($r['body'], 'href="' . $u . '"') !== false, "hub links to $u");
 ok(preg_match('/\d+ verified entit/', $txt) === 1 && preg_match('/\d+ verified events?/', $txt) === 1 && preg_match('/\d+ verified releases?/', $txt) === 1, 'hub shows verified counts taken from the ledger');
 ok(strpos($txt, 'leak') === false && stripos($txt, 'proposed') === false, 'hub shows no unverified text');
-ok(substr_count($r['body'], 'aria-current="page"') >= 1 && strpos($r['body'], 'class="primaryNav"') !== false && strpos($r['body'], 'href="/universe.php" aria-current="page"') !== false, 'hub marks itself as the current page in the navigation');
+ok(strpos($r['body'], 'class="uniSubnav"') !== false && strpos($r['body'], 'href="/universe.php" aria-current="page"') !== false, 'hub keeps its own sub-navigation and marks itself as the current page there (the feature is hidden from the public navigation)');
 $r2 = http($A, 'GET', '/universe-heatmap.php');
 ok(strpos($r2['body'], 'class="uniSubnav"') !== false && strpos($r2['body'], 'href="/universe-heatmap.php" aria-current="page"') !== false && strpos($r2['body'], 'href="/universe.php" aria-current="true"') !== false, 'an experience page marks itself and its section in the navigation');
 ok(strpos($sm, '<loc>https://aihubpedia.com/universe.php</loc>') !== false, 'sitemap lists the hub when verified data exists');

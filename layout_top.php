@@ -28,6 +28,7 @@ $canonical = preg_replace('#^https?://(www\.)?(aihubpedia\.com|187\.77\.184\.173
 // Robots: error responses, registry noindex pages and parameterised (search/filter) URLs are not indexed.
 $__status = http_response_code();
 $robots = $robots ?? ($__page['robots'] ?? 'index');
+if (strpos(seo_current_script(), 'universe') === 0 && !(function_exists('universe_public') && universe_public())) $robots = 'noindex, nofollow';   // hidden feature: reachable by URL, never indexed
 // A page may set a stricter full robots string (private pages use 'noindex, nofollow'); that must survive error statuses and be sent as the header too.
 $__strict_robots = is_string($robots) && strpos($robots, 'nofollow') !== false;
 if (((is_int($__status) && $__status >= 400) || seo_has_noncanonical_params()) && !$__strict_robots) $robots = 'noindex';

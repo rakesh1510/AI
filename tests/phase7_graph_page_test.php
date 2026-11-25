@@ -66,7 +66,7 @@ function freePort(int $from, int $to): int {
 }
 function startServer(string $root, int $port, array $env) {
   global $servers;
-  $proc = proc_open(['php', '-S', "127.0.0.1:$port", '-t', $root, $root . '/tests/router.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $root, $env + getenv());
+  $proc = proc_open(['php', '-S', "127.0.0.1:$port", '-t', $root, $root . '/tests/router.php'], [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $root, $env + ['AIHUB_UNIVERSE_PUBLIC' => '1'] + getenv());   // these tests exercise the evidence gates of the public mode; the hidden default is covered by universe_hidden_test.php
   $servers[] = $proc;
   for ($i = 0; $i < 60; $i++) { usleep(100000); $c = @fsockopen('127.0.0.1', $port, $en, $es, 0.2); if ($c) { fclose($c); return $proc; } }
   throw new RuntimeException("server did not start on $port");

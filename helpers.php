@@ -1190,3 +1190,12 @@ function compare_pick_winner_from_bundles(array $bundleA, array $bundleB){
   if($sa === $sb) return null;
   return $sa > $sb ? 'a' : 'b';
 }
+
+/**
+ * AI Universe is hidden from the public site: no navigation, no sitemap entries, noindex. The routes, code, data and admin tools still work (they are reachable by URL).
+ * Public listing is an explicit, reversible switch: set AIHUB_UNIVERSE_PUBLIC=1 in the environment, or "universe": {"public": true} in data/site.json.
+ */
+function universe_public(): bool {
+  if (getenv('AIHUB_UNIVERSE_PUBLIC') === '1') return true;
+  try { $c = function_exists('site_cfg') ? site_cfg() : []; return !empty($c['universe']['public']); } catch (Throwable $e) { return false; }
+}

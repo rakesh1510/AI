@@ -34,9 +34,11 @@ Disallow: /inquiry.php
 Disallow: /event.php
 Disallow: /suggest.php
 Disallow: /universe-api.php
+Disallow: /universe-editor.php
 Disallow: /universe-heatmap.php?*
 Disallow: /universe-arena.php?a=
 Disallow: /universe-arena.php?b=
+# The AI Universe pages themselves are deliberately NOT disallowed: they send noindex, nofollow while the feature is hidden, and a crawler can only obey that if it may fetch the page.
 Disallow: /search.php
 Disallow: /favorites.php
 Disallow: /contact_send.php
