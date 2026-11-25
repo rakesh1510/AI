@@ -36,7 +36,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
 
     <div class="fCols">
       <div class="fBrand">
-        <a class="fLogo" href="/" aria-label="AIHubpedia home"><img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="119" height="28" alt="AIHubpedia" loading="lazy"></a>
+        <a class="fLogo brand" href="/" aria-label="AIHubpedia home"><img class="brandMark" src="/assets/images/logo-mark-44.webp" srcset="/assets/images/logo-mark-44.webp 1x, /assets/images/logo-mark-88.webp 2x" width="34" height="34" alt="" loading="lazy"><span class="brandWord" aria-hidden="true">Hubpedia</span></a>
         <p>Discover, compare and choose AI tools, with sources and dates. An independent directory run by TrustNova Tech.</p>
         <a class="fMail" href="mailto:contact@aihubpedia.com"><?= ui_icon('mail') ?> contact@aihubpedia.com</a>
         <?php if (($footer_newsletter ?? true) !== false): ?><div style="margin-top:8px"><a class="btn sm secondary" href="/services.php#inquiry" data-cta="footer_project">Discuss Your Project</a></div><?php endif; ?>

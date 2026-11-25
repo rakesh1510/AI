@@ -119,7 +119,8 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <header class="siteHeader" data-header>
   <div class="wrap hdr">
     <a class="brand" href="/" aria-label="AIHubpedia home">
-      <img src="/assets/images/logo-44.webp" srcset="/assets/images/logo-44.webp 1x, /assets/images/logo-88.webp 2x" width="187" height="44" alt="AIHubpedia" class="brandLogo" fetchpriority="high">
+      <img class="brandMark" src="/assets/images/logo-mark-44.webp" srcset="/assets/images/logo-mark-44.webp 1x, /assets/images/logo-mark-88.webp 2x" width="40" height="40" alt="" fetchpriority="high">
+      <span class="brandWord" aria-hidden="true">Hubpedia</span>
     </a>
 
     <nav class="siteNav" id="siteNav" aria-label="Main navigation">

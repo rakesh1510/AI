@@ -77,6 +77,13 @@
       on(d, 'click', function (e) { if (header.classList.contains('navOpen') && !header.contains(e.target)) setOpen(false); });
       $$('a', navEl).forEach(function (a) { on(a, 'click', function () { setOpen(false); }); });
     }
+    /* header glass state: transparent over the hero at the top, frosted once the page scrolls (one passive listener, rAF-throttled) */
+    if (header) {
+      var ticking = false;
+      var sync = function () { ticking = false; header.classList.toggle('isScrolled', (window.pageYOffset || 0) > 12); };
+      on(window, 'scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(sync); } }, { passive: true });
+      sync();
+    }
     if (more) {
       var sum = $('summary', more);
       function closeMore(focus) { if (more.open) { more.open = false; if (focus && sum) sum.focus(); } }

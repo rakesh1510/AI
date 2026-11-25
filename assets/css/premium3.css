@@ -599,3 +599,119 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 @media (max-width:900px){.pgHero[data-tone=emerald] .pgHero__art,.pgHero[data-tone=amber] .pgHero__art{order:2}}
 .toolHero{--l1:color-mix(in srgb,var(--c1) 52%,transparent);--l3:color-mix(in srgb,var(--c2) 40%,transparent);--l2:color-mix(in srgb,var(--c2) 28%,transparent)}
 @media (max-width:900px){.pgHero[data-tone=emerald] .wrap,.pgHero[data-tone=amber] .wrap{grid-template-columns:minmax(0,1fr)}}
+
+/* =====================================================================================================================================================
+   V3.1 final refinements (refines V3; nothing is rebuilt): glass header, brand, hero hierarchy, goals, search, floating cards, 3D depth, light motion.
+   ===================================================================================================================================================== */
+:root{--hdr-h:76px;--ease-out:cubic-bezier(.16,1,.3,1)}
+@media (max-width:560px){:root{--hdr-h:68px}}
+
+/* --- Glass header that follows the active theme ------------------------------------------------------------------------------------------------ */
+.siteHeader{background:color-mix(in srgb,var(--bg) 56%,transparent);-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border-bottom:1px solid color-mix(in srgb,var(--text) 9%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 14px 40px -22px rgba(15,18,60,.35);transition:background-color .3s var(--ease),border-color .3s var(--ease),box-shadow .3s var(--ease)}
+:root[data-theme="dark"] .siteHeader{background:color-mix(in srgb,#0a0d24 58%,transparent);border-bottom-color:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 16px 44px -20px rgba(0,0,0,.7)}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .siteHeader{background:color-mix(in srgb,#0a0d24 58%,transparent);border-bottom-color:rgba(255,255,255,.09)}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.siteHeader{background:var(--bg)}}
+/* pages that open with a dark hero: the header floats over it as transparent glass, then turns frosted when the page scrolls */
+@supports selector(:has(*)){
+  body:has(main>.stage:first-child) .siteHeader{margin-bottom:calc(-1 * var(--hdr-h))}
+  main>.stage:first-child{padding-top:calc(var(--hdr-h) + clamp(22px,3.6vw,52px))}
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen){background:linear-gradient(180deg,rgba(6,8,26,.62),rgba(6,8,26,.16));border-bottom-color:rgba(255,255,255,.10);box-shadow:none}
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) :is(.siteNav__list>li>.siteNav__link,.siteMore__details>summary,.iconBtn,.brandWord){color:#eef0ff}
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) :is(.siteNav__list>li>.siteNav__link,.siteMore__details>summary):hover{background:rgba(255,255,255,.10);color:#fff}
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .iconBtn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)}
+}
+.siteHeader.isScrolled{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 18px 44px -20px rgba(15,18,60,.42)}
+.siteHeader.navOpen{background:var(--bg)}
+.hdr{min-height:var(--hdr-h)}
+
+/* --- Brand: transparent AI tile + live wordmark (no white plate, follows the theme) --------------------------------------------------------------- */
+.brand{display:inline-flex!important;align-items:center;gap:10px;padding:2px 4px!important;margin-left:-4px;background:none!important;border:0!important;box-shadow:none!important;border-radius:12px!important}
+.brandMark{display:block;width:38px;height:38px;border-radius:11px;box-shadow:0 8px 18px -6px rgba(37,99,235,.65),inset 0 0 0 1px rgba(255,255,255,.2);transition:transform .45s var(--ease-out),box-shadow .45s var(--ease-out)}
+.brand:hover .brandMark{transform:rotate(-5deg) scale(1.06);box-shadow:0 12px 24px -6px rgba(37,99,235,.75),inset 0 0 0 1px rgba(255,255,255,.25)}
+.brandWord{font-family:var(--font-head);font-weight:700;font-size:1.55rem;line-height:1;letter-spacing:-.035em;color:var(--text)}
+.brand:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+@media (max-width:560px){.brandMark{width:34px;height:34px;border-radius:10px}.brandWord{font-size:1.35rem}}
+
+/* --- Hero hierarchy -------------------------------------------------------------------------------------------------------------------------------- */
+.homeHero .heroCopy{max-width:690px}
+.homeHero .eyebrow{padding:7px 14px;font-size:.75rem;letter-spacing:.09em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.17);color:#dcd8ff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.homeHero h1{font-size:clamp(2rem,.9rem + 4.2vw,4.1rem);line-height:1.04;letter-spacing:-.036em;font-weight:700;text-wrap:balance;margin:16px 0 20px;max-width:16em;text-shadow:0 2px 30px rgba(10,8,60,.45)}
+.homeHero .gradText{background:linear-gradient(100deg,#c9bcff 0%,#8fd8ff 55%,#aef5ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.homeHero .heroLead{max-width:56ch;margin:0 0 28px;font-size:clamp(1.02rem,.95rem + .35vw,1.2rem);line-height:1.62;color:#d3d9f6}
+
+/* --- Search: high-contrast field, clear focus ------------------------------------------------------------------------------------------------------ */
+.homeHero .searchBox{background:#fff;border:1px solid rgba(255,255,255,.75);box-shadow:0 22px 60px -22px rgba(124,92,255,.75),0 8px 24px rgba(4,4,40,.35)}
+.homeHero .searchBox__input{color:#0f1330}
+.homeHero .searchBox__input::placeholder{color:#5a6180;opacity:1}
+.homeHero .searchBox__icon{color:#5a6180}
+.homeHero .searchBox:focus-within{border-color:#7c5cff;box-shadow:0 0 0 4px rgba(124,92,255,.38),0 22px 60px -22px rgba(124,92,255,.8)}
+.homeHero .searchBox__btn{background:linear-gradient(135deg,#6d4dff,#3b82f6);color:#fff;box-shadow:0 8px 20px -8px rgba(79,70,229,.9)}
+.homeHero .searchBox__btn:hover{filter:brightness(1.08)}
+
+/* --- Popular goals: one aligned grid of equal buttons ---------------------------------------------------------------------------------------------- */
+.homeHero .heroTry{display:block;margin-top:20px;max-width:660px}
+.heroTry__label{margin:0 0 10px;font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#aab3d8}
+.heroGoals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.heroGoals .chipLink{justify-content:center;text-align:center;min-height:44px;padding:9px 12px;font-size:.875rem;line-height:1.25;color:#e8ebff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.heroGoals .chipLink:hover{background:rgba(255,255,255,.13);border-color:rgba(167,155,255,.8);color:#fff;transform:translateY(-2px)}
+@media (max-width:560px){.heroGoals{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+
+/* --- Business prompt: quiet, not a second hero button --------------------------------------------------------------------------------------------- */
+.homeHero .heroBiz{background:none;border:0;border-top:1px solid rgba(255,255,255,.13);border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:18px 0 0;margin-top:28px;max-width:660px}
+.homeHero .heroBiz p{font-size:.9375rem;color:#bcc4e6}
+.homeHero .heroBiz .btn{flex:0 0 auto}
+.homeHero .trustStrip{margin-top:34px}
+
+/* --- 3D art: depth, rim light, contact shadow and reflection around the existing render ----------------------------------------------------------- */
+.heroStack::before{content:"";position:absolute;z-index:-1;inset:6% -8% 4% 6%;background:radial-gradient(46% 46% at 58% 46%,rgba(139,115,255,.42),transparent 70%),radial-gradient(30% 34% at 78% 24%,rgba(56,189,248,.26),transparent 72%);filter:blur(10px);pointer-events:none}
+.heroStack::after{content:"";position:absolute;z-index:0;left:18%;right:4%;bottom:-3%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(3,4,30,.7),transparent);filter:blur(8px);pointer-events:none}
+.heroStack img.artOrb{-webkit-box-reflect:below -2% linear-gradient(transparent 72%,rgba(255,255,255,.10));filter:drop-shadow(0 34px 46px rgba(8,6,70,.65)) drop-shadow(0 0 28px rgba(124,92,255,.28)) saturate(1.06) contrast(1.03)}
+
+/* --- Floating tool cards: glass, brand tile or logo, single-line provenance ---------------------------------------------------------------------- */
+.heroStack .floatCard{width:min(262px,58%);padding:14px 16px;border-radius:20px;background:linear-gradient(155deg,rgba(255,255,255,.17),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);box-shadow:0 30px 60px -22px rgba(4,4,40,.7),inset 0 1px 0 rgba(255,255,255,.34),inset 0 -1px 0 rgba(255,255,255,.05)}
+.heroStack .floatCard .row{align-items:center;gap:12px}
+.heroStack .floatCard h3{font-size:1.0625rem;letter-spacing:-.01em;color:#fff;margin:0}
+.heroStack .floatCard .row p{margin:2px 0 0;font-size:.8125rem;color:#c3cae8}
+.heroStack .floatCard .dot{width:44px;height:44px;border-radius:13px;flex:0 0 auto;background:linear-gradient(145deg,color-mix(in srgb,var(--tile,#4f46e5) 88%,#fff),var(--tile,#4f46e5));font-size:1.15rem;font-weight:700;color:#fff;box-shadow:0 8px 18px -6px color-mix(in srgb,var(--tile,#4f46e5) 80%,#000),inset 0 1px 0 rgba(255,255,255,.35)}
+.heroStack .floatCard .dot--logo{background:#fff;padding:6px}
+.heroStack .floatCard .dot--logo img{width:100%;height:100%;object-fit:contain;display:block}
+.heroStack .fc__price{margin:12px 0 0!important;color:#eef0ff!important;font-weight:600}
+.heroStack .fc__prov{white-space:nowrap;font-size:.75rem;padding:4px 10px;background:rgba(154,230,247,.12);color:#a8ecfb}
+
+/* --- Subtle, lightweight motion (transform/opacity only; off for reduced-motion) ----------------------------------------------------------------- */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes v31Rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes v31Bob{0%,100%{translate:0 0}50%{translate:0 -7px}}
+  @keyframes v31Sheen{0%{transform:translateX(-120%)}60%,100%{transform:translateX(220%)}}
+  .homeHero .eyebrow,.homeHero .heroLead,.homeHero .searchBox,.homeHero .heroTry,.homeHero .heroBiz,.homeHero .trustStrip{animation:v31Rise .7s var(--ease-out) both}
+  .homeHero .heroLead{animation-delay:.08s}.homeHero .searchBox{animation-delay:.16s}.homeHero .heroTry{animation-delay:.24s}.homeHero .heroBiz{animation-delay:.32s}.homeHero .trustStrip{animation-delay:.4s}
+  .heroStack .floatCard:nth-of-type(1){animation:v31Bob 7s ease-in-out infinite}
+  .heroStack .floatCard:nth-of-type(3){animation:v31Bob 8.5s ease-in-out -2.5s infinite}
+  .homeHero .searchBox__btn{position:relative;overflow:hidden}
+  .homeHero .searchBox__btn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.32) 50%,transparent 70%);transform:translateX(-120%);animation:v31Sheen 5.5s ease-in-out 1.6s infinite;pointer-events:none}
+}
+@media (prefers-reduced-motion:reduce){.homeHero .searchBox__btn::after{display:none}}
+@media (max-width:900px){.heroStack .floatCard{width:min(262px,86%)}.heroStack img.artOrb{-webkit-box-reflect:unset}}
+
+.heroStack .floatCard:nth-of-type(1){top:-2%;left:-13%}
+.heroStack .floatCard:nth-of-type(3){bottom:0;right:-6%}
+@media (max-width:900px){.heroStack .floatCard:nth-of-type(3){right:auto;left:6%;bottom:-4%}}
+.homeHero .eyebrow{display:inline-flex;align-items:center;gap:8px}
+@media (max-width:560px){.eyebrow__more{display:none}.homeHero .eyebrow{font-size:.6875rem}}
+
+/* header: clean frosted glass once scrolled (no grey mud over mixed content); glass search button over dark heroes */
+.siteHeader.isScrolled{background:color-mix(in srgb,var(--bg) 91%,transparent);border-bottom-color:color-mix(in srgb,var(--text) 10%,transparent)}
+:root[data-theme="dark"] .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent)}}
+@supports selector(:has(*)){
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .hdrSearchBtn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#e6e9ff}
+  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .hdrSearchBtn kbd{border-color:rgba(255,255,255,.28);color:#cfd5f5}
+}
+.hdrSearchBtn{background:color-mix(in srgb,var(--surface) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* the suggestions dropdown must stay above the later (animated) hero blocks */
+.homeHero .searchBox{position:relative;z-index:30}
+.homeHero .heroTry,.homeHero .heroBiz,.homeHero .trustStrip{position:relative;z-index:1}
+/* footer brand matches the header */
+.fBrand .fLogo{background:none;padding:2px 4px;border-radius:12px}
+.fBrand .fLogo .brandMark{width:34px;height:34px;border-radius:10px}
+.fBrand .fLogo .brandWord{font-size:1.35rem;color:#fff}

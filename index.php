@@ -53,6 +53,8 @@ $spotlight = array_slice($spotlight, 0, 1);
 
 // Hero stack: three real reviewed tools (no invented ratings or counts)
 $stackIds = ['chatgpt', 'claude', 'otter-ai'];
+// Recognisable logo only from a locally cached file (assets/logos/<id>.png|webp, created by scripts/cache_logos.php): no third-party request for decorative cards.
+$localLogo = function (array $t): string { $id = preg_replace('/[^a-z0-9._-]/i', '', (string)($t['id'] ?? '')); foreach (['webp', 'png'] as $e) { if ($id !== '' && is_file(__DIR__ . '/assets/logos/' . $id . '.' . $e)) return '/assets/logos/' . $id . '.' . $e; } return ''; };
 $stack = [];
 foreach ($stackIds as $id) { if (!empty($byId[$id]['curated'])) $stack[] = $byId[$id]; }
 
@@ -77,26 +79,27 @@ require __DIR__ . '/layout_top.php';
 <section class="homeHero stage" aria-labelledby="heroTitle">
   <div class="wrap heroGrid">
     <div class="heroCopy">
-      <span class="eyebrow"><?= ui_icon('shield') ?> Independent directory · sources and dates on reviewed tools</span>
+      <span class="eyebrow"><?= ui_icon('shield') ?><span>Independent directory<span class="eyebrow__more"> · every review is sourced and dated</span></span></span>
       <h1 id="heroTitle">Find the right <span class="gradText">AI tool</span>, with the sources to back it up</h1>
       <p class="heroLead">Search <?= h(number_format(count($tools))) ?> AI tools, compare plans and limits side by side, and read guides built from vendors' own pages. We say where sources disagree and what we have not tested.</p>
-      <?= render_search_box('heroSearch', ['big' => true, 'source' => 'hero', 'placeholder' => 'Try “transcribe meetings”, “ChatGPT” or “resume”']) ?>
-      <div class="heroTry"><span>Popular goals:</span>
-        <?php foreach (array_slice($intents, 0, 5) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?>
+      <?= render_search_box('heroSearch', ['big' => true, 'source' => 'hero', 'placeholder' => 'Try “transcribe meetings”']) ?>
+      <div class="heroTry"><p class="heroTry__label" id="goalsLabel">Popular goals</p>
+        <div class="heroGoals" role="group" aria-labelledby="goalsLabel"><?php foreach (array_slice($intents, 0, 6) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?></div>
       </div>
       <div class="heroBiz">
         <p><strong>Need something built?</strong> TrustNova Tech builds API integrations, workflow automation and custom AI solutions.</p>
-        <a class="btn btn--accent" href="/services.php#inquiry" data-cta="hero_project">Discuss Your Project</a>
+        <a class="btn secondary sm" href="/services.php#inquiry" data-cta="hero_project">Discuss Your Project</a>
       </div>
     </div>
     <?php if ($stack): ?>
     <div class="heroStack" aria-hidden="true">
       <?= art_orb(true) ?>
       <?php foreach ($stack as $t): $cp = $t['curated']; ?>
+        <?php $__lg = $localLogo($t); $__tile = ['chatgpt' => '#10a37f', 'claude' => '#d97757', 'otter-ai' => '#2563eb'][$t['id']] ?? 'hsl(' . (crc32((string)$t['id']) % 360) . ' 62% 46%)'; ?>
         <div class="floatCard">
-          <div class="row"><span class="dot"><?= h(mb_substr($t['name'], 0, 1)) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>
+          <div class="row"><span class="dot<?= $__lg !== '' ? ' dot--logo' : '' ?>" style="--tile:<?= h($__tile) ?>"><?= $__lg !== '' ? '<img src="' . h($__lg) . '" alt="" width="32" height="32" decoding="async">' : h(mb_strtoupper(mb_substr($t['name'], 0, 1))) ?></span><div><h3><?= h($t['name']) ?></h3><p><?= h($t['category']) ?> · <?= h($t['subcategory']) ?></p></div></div>
           <p class="fc__price"><?= h(profile_free_option($cp)) ?></p>
-          <span class="fc__prov"><?= ui_icon('shield') ?> <?= h(ui_provenance($t)) ?></span>
+          <span class="fc__prov"><?= ui_icon('shield') ?> <?= h(str_replace('pricing as of', 'as of', ui_provenance($t))) ?></span>
         </div>
       <?php endforeach; ?>
     </div>
