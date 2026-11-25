@@ -119,7 +119,7 @@ function render_partner_form(array $opts = []): string {
  * Order: the public `leads` table when it exists (existing notification tracking, reports and rate limit), then the CRM mirror. If the `leads` table
  * does not exist (the live "aihub" schema lacks the Phase 3/4 tables) but the CRM tables do, the inquiry is stored in the CRM only, so no inquiry is
  * lost; the per-network limit then uses the file-based limiter. If neither exists the form reports "temporarily unavailable".
- * @return array{status:string,lead_id:int,crm:string} status: ok | rate_limited | unavailable
+ * @return array{status:string,lead_id:int,crm:string,ref?:string} status: ok | rate_limited | unavailable; ref is the enquiry reference shown to the sender
  */
 function crm_public_submit(array $clean, string $logCtx): array {
   try {
@@ -127,13 +127,20 @@ function crm_public_submit(array $clean, string $logCtx): array {
     if (!$haveLeads && !$haveCrm) return ['status' => 'unavailable', 'lead_id' => 0, 'crm' => 'none'];
     $pdo = db(); $ipHash = conversion_ip_hash();
     if ($haveLeads ? lead_rate_limited($pdo, 'leads', $ipHash, 5) : sec_rate_limited('public_inquiry', 5, 3600)) return ['status' => 'rate_limited', 'lead_id' => 0, 'crm' => 'none'];
+    if ($haveLeads && ($dup = lead_recent_duplicate($pdo, $clean)) > 0) {   // double click / refresh: acknowledge, do not store or email twice
+      sec_log('lead_duplicate_ignored', ['lead' => $dup]);
+      return ['status' => 'ok', 'lead_id' => $dup, 'crm' => 'duplicate', 'ref' => enquiry_reference('L', $dup), 'duplicate' => true];
+    }
     $leadId = $haveLeads ? lead_store($pdo, $clean, $ipHash) : 0; $crmLead = 0; $crmState = $haveCrm ? 'failed' : 'not_installed';
     if ($haveCrm) { try { [$ok, $id] = crm_intake_record($pdo, $clean, $leadId); if ($ok) { $crmState = 'stored'; $crmLead = (int)$id; } } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':crm'); } }
-    $sent = false; try { $sent = lead_notify_owner($clean); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, $logCtx . ':notify'); }
-    if ($haveLeads) { try { lead_record_notification($pdo, $leadId, $sent, mail_last_error()); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-record'); } }
-    elseif (!$sent && $crmLead) { try { crm_activity_add($pdo, null, 'lead', $crmLead, 'system', 'The owner e-mail notification failed (' . mail_last_error() . '). Check this lead in the CRM.'); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-note'); } }
-    if (!$sent) sec_log('lead_notification_failed', ['lead' => $leadId ?: $crmLead, 'reason' => mail_last_error()]);
+    $ref = enquiry_reference('L', $leadId ?: $crmLead);
+    $sent = false; try { $sent = lead_notify_owner($clean, $ref, $leadId); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, $logCtx . ':notify'); }
+    $mailErr = mail_last_error();
+    if ($haveLeads) { try { lead_record_notification($pdo, $leadId, $sent, $mailErr); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-record'); } }
+    elseif (!$sent && $crmLead) { try { crm_activity_add($pdo, null, 'lead', $crmLead, 'system', 'The owner e-mail notification failed (' . $mailErr . ') and is queued for retry. Reference ' . $ref . '. Check this lead in the CRM.'); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':notify-note'); } }
+    if (!$sent) sec_log('lead_notification_failed', ['lead' => $leadId ?: $crmLead, 'ref' => $ref, 'reason' => $mailErr]);
+    try { lead_notify_customer($clean, $ref); } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':customer-confirm'); }
     event_record_server('lead_submit', (string)($clean['lead_type'] ?? ''));
-    return ['status' => 'ok', 'lead_id' => $leadId, 'crm' => $crmState];
+    return ['status' => 'ok', 'lead_id' => $leadId, 'crm' => $crmState, 'ref' => $ref, 'owner_notified' => $sent];
   } catch (Throwable $e) { sec_log_exception($e, $logCtx . ':submit'); return ['status' => 'unavailable', 'lead_id' => 0, 'crm' => 'none']; }
 }

@@ -8,7 +8,7 @@ if ($ok) {
   $res = crm_public_submit($clean, 'partner');
   if ($res['status'] === 'rate_limited') { http_response_code(429); $errors['_bot'] = 'Too many requests from your network. Please try again later or email contact@aihubpedia.com.'; $ok = false; }
   elseif ($res['status'] === 'unavailable') { $unavailable = true; $ok = false; http_response_code(503); }
-  else { header('Location: /inquiry.php?sent=partnership_application', true, 303); exit; }
+  else { header('Location: /inquiry.php?sent=partnership_application' . (!empty($res['ref']) ? '&ref=' . rawurlencode($res['ref']) : ''), true, 303); exit; }
 }
 if (!$ok && !$unavailable && $errors && http_response_code() === 200) http_response_code(422);
 $title = 'Check Your Partnership Application'; $main_class = 'fullbleed';

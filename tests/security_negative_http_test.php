@@ -28,7 +28,7 @@ function http(string $method, string $url, $body = null, array $headers = [], ?s
   $head = substr($r, 0, $hs);
   return ['code' => $code, 'head' => $head, 'body' => substr($r, $hs), 'loc' => preg_match('/^Location:\s*(.+)$/mi', $head, $m) ? trim($m[1]) : ''];
 }
-function clear_rate(): void { global $rateDir; foreach (glob($rateDir . '/*') ?: [] as $f) @unlink($f); }
+function clear_rate(): void { global $rateDir; $d = realpath((string)$rateDir); if ($d === false || $d === '/' || strlen($d) < 6 || !is_dir($d)) return; foreach (glob($d . '/*') ?: [] as $f) { if (is_file($f)) @unlink($f); } }
 function snapshot(): array {
   global $pdo, $root; $s = [];
   foreach (['leads', 'subscribers', 'tool_votes', 'tool_clicks', 'contact_messages', 'submissions', 'lead_status_history', 'ratings', 'crm_companies', 'crm_contacts', 'crm_leads', 'crm_opportunities', 'crm_proposals', 'crm_contracts', 'crm_campaigns', 'crm_partners', 'crm_prospects', 'crm_outreach_drafts', 'crm_tasks', 'crm_activities', 'crm_audit_log', 'crm_users'] as $t) { try { $s["db:$t"] = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn(); } catch (Throwable $e) { /* table may not exist */ } }

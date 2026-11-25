@@ -12,6 +12,7 @@ require_once $root . '/helpers.php';
 if (stripos((string)sec_setting('AIHUB_DB_NAME', 'db.name'), 'test') === false) { fwrite(STDERR, "Refusing: database name must contain 'test'\n"); exit(2); }
 db_connection_available(); $pdo = db();
 $smtpLog = getenv('AIHUB_SMTP_LOG') ?: '/tmp/smtp_sink.log'; $rateDir = getenv('AIHUB_RATE_DIR') ?: ''; $adminPw = getenv('AIHUB_TEST_ADMIN_PW') ?: 'ci-admin-test-pw';
+if ($rateDir === '' || realpath($rateDir) === false) { fwrite(STDERR, "Refusing: set AIHUB_RATE_DIR to an existing scratch directory (and start the test server with the same value)\n"); exit(2); }
 $pass = 0; $fail = 0;
 function ok(bool $c, string $m): void { global $pass, $fail; if ($c) $pass++; else { $fail++; echo "  FAIL: $m\n"; } }
 function section(string $t): void { echo "== $t\n"; }
@@ -22,7 +23,8 @@ function http(string $m, string $u, $body = null, array $h = [], ?string $jar = 
   $r = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $hs = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE); curl_close($ch);
   return ['code' => $code, 'head' => substr($r, 0, $hs), 'body' => substr($r, $hs), 'loc' => preg_match('/^Location:\s*(.+)$/mi', substr($r, 0, $hs), $mm) ? trim($mm[1]) : ''];
 }
-function clear_rate(): void { global $rateDir; foreach (glob($rateDir . '/*') ?: [] as $f) @unlink($f); }
+/** Deletes only the files inside the dedicated, non-root rate-limit directory. An empty/unsafe path is a no-op (an unset AIHUB_RATE_DIR once turned this into glob('/*') and removed system links). */
+function clear_rate(): void { global $rateDir; $d = realpath((string)$rateDir); if ($d === false || $d === '/' || strlen($d) < 6 || !is_dir($d)) return; foreach (glob($d . '/*') ?: [] as $f) { if (is_file($f)) @unlink($f); } }
 function token(string $html, string $n = 'form_token'): string { return preg_match('/name="' . preg_quote($n, '/') . '" value="([^"]+)"/', $html, $m) ? html_entity_decode($m[1]) : ''; }
 $host = parse_url($base, PHP_URL_HOST) . ':' . parse_url($base, PHP_URL_PORT); $own = ['Origin: http://' . $host];
 function lead(string $b, array $over = [], string $path = '/business.php', ?string $h = null): array {

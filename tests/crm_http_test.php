@@ -19,7 +19,7 @@ function http(string $m, string $u, $body = null, array $h = [], ?string $jar = 
   $r = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $hs = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE); curl_close($ch);
   return ['code' => $code, 'head' => substr($r, 0, $hs), 'body' => substr($r, $hs), 'loc' => preg_match('/^Location:\s*(.+)$/mi', substr($r, 0, $hs), $mm) ? trim($mm[1]) : ''];
 }
-function clear_rate(): void { global $rateDir; foreach (glob($rateDir . '/*') ?: [] as $f) @unlink($f); }
+function clear_rate(): void { global $rateDir; $d = realpath((string)$rateDir); if ($d === false || $d === '/' || strlen($d) < 6 || !is_dir($d)) return; foreach (glob($d . '/*') ?: [] as $f) { if (is_file($f)) @unlink($f); } }
 function token(string $html, string $n = 'form_token'): string { return preg_match('/name="' . preg_quote($n, '/') . '" value="([^"]+)"/', $html, $m) ? html_entity_decode($m[1]) : ''; }
 $host = parse_url($base, PHP_URL_HOST) . ':' . parse_url($base, PHP_URL_PORT); $own = ['Origin: http://' . $host]; $foreign = ['Origin: http://evil.example'];
 foreach (['crm_audit_log', 'crm_outreach_drafts', 'crm_prospects', 'crm_partners', 'crm_campaigns', 'crm_revenue_entries', 'crm_contracts', 'crm_proposal_items', 'crm_proposal_versions', 'crm_proposals', 'crm_tasks', 'crm_activities', 'crm_stage_history', 'crm_opportunities', 'crm_leads', 'crm_contacts', 'crm_companies', 'crm_users'] as $t) $pdo->exec("DELETE FROM $t");
@@ -41,7 +41,8 @@ ok($L && $L['kind'] === 'development' && $L['subtype'] === 'project' && $L['stat
 ok($L['public_lead_id'] !== null && (int)$pdo->query('SELECT COUNT(*) FROM leads WHERE lead_type = \'dev_project\'')->fetchColumn() === 1, 'the public lead row also exists, so existing reports and notifications keep working');
 $ty = http('GET', $base . $r['loc']); ok($ty['code'] === 200 && stripos($ty['body'], 'received') !== false && strpos($ty['body'], 'pat@projectco.example') === false, 'the thank-you page does not echo personal data');
 ok((int)$pdo->query("SELECT COUNT(*) FROM crm_contacts WHERE consent_status = 'inbound_inquiry'")->fetchColumn() === 1, 'an inquiry is stored as inbound-inquiry, not marketing consent');
-$r2 = submit('/project-inquiry.php', ['name' => 'Pat P.'] + $proj, '/services.php'); $dup = $pdo->query('SELECT duplicate_of FROM crm_leads ORDER BY id DESC LIMIT 1')->fetchColumn();
+// A different message from the same person: an identical one within 15 minutes is a double submit and is suppressed (see forms_email_e2e_test).
+$r2 = submit('/project-inquiry.php', ['name' => 'Pat P.', 'message' => 'A second, different question: can the same corpus also feed an evaluation dashboard for the support team?'] + $proj, '/services.php'); $dup = $pdo->query('SELECT duplicate_of FROM crm_leads ORDER BY id DESC LIMIT 1')->fetchColumn();
 ok($r2['code'] === 303 && $dup !== null && $count('crm_contacts') === 1 && $count('crm_companies') === 1, 'a second inquiry from the same email is flagged as a possible duplicate without creating a second contact or company');
 $pdo->exec('DELETE FROM leads');   // the public form allows 5 inquiries per network per hour; reset between sections of this test
 $bad = ['unknown service' => ['service' => 'world-domination'], 'short problem' => ['message' => 'too short'], 'bad email' => ['email' => 'nope'], 'no consent' => ['consent' => ''], 'bad website' => ['website' => 'javascript:alert(1)']];

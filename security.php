@@ -25,6 +25,17 @@ function sec_local_config(): array {
     $v = (static function ($f) { return include $f; })($file);
     if (is_array($v)) $cfg = $v;
   }
+  // Optional private mail settings kept OUTSIDE the web root and outside Git (default /etc/aihubpedia/mail.php, or AIHUB_MAIL_CONFIG_FILE).
+  // The file returns ['mail' => [...]] (or the mail array itself). Its values win over the mail block of config.local.php; the rest of config.local.php is untouched.
+  $mailFile = getenv('AIHUB_MAIL_CONFIG_FILE') ?: '/etc/aihubpedia/mail.php';
+  if (is_string($mailFile) && $mailFile !== '' && @is_file($mailFile) && @is_readable($mailFile)) {
+    $mv = (static function ($f) { return include $f; })($mailFile);
+    if (is_array($mv)) {
+      $mm = (isset($mv['mail']) && is_array($mv['mail'])) ? $mv['mail'] : $mv;
+      $base = (isset($cfg['mail']) && is_array($cfg['mail'])) ? $cfg['mail'] : [];
+      $cfg['mail'] = array_merge($base, $mm);
+    }
+  }
   return $cfg;
 }
 

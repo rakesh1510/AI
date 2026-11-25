@@ -10,8 +10,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
   $group = lead_types()[$sent]['group'];
   $main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
+  $ref = (string)($_GET['ref'] ?? ''); $ref = enquiry_reference_valid($ref) ? $ref : '';
   $back = ['advertise' => '/advertise.php', 'project' => '/services.php', 'partner' => '/partners.php'][$group] ?? '/business.php';
-  echo '<div class="wrap pgBody">' . state_box(['tone' => 'ok', 'art' => 'mail', 'eyebrow' => 'Request received', 'title' => 'Thank you, your request was received', 'text' => 'We read every request and will reply by email if it is a fit. We do not promise a response time.', 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a><a class="btn secondary" href="' . h($back) . '">Back to the form page</a>']) . '</div>';
+  echo '<div class="wrap pgBody">' . state_box(['tone' => 'ok', 'art' => 'mail', 'eyebrow' => 'Request received', 'title' => 'Thank you, your request was received', 'text' => 'We read every request and will reply by email if it is a fit. We do not promise a response time.' . ($ref !== '' ? ' Your reference is <strong>' . h($ref) . '</strong>: please quote it if you write to us again.' : ''), 'actions' => '<a class="btn btn--accent" href="/">Back to AIHubpedia</a><a class="btn secondary" href="' . h($back) . '">Back to the form page</a>']) . '</div>';
   require __DIR__ . '/layout_bottom.php';
   exit;
 }
@@ -30,7 +31,7 @@ if ($ok) {
   $res = crm_public_submit($clean, 'inquiry');
   if ($res['status'] === 'rate_limited') { http_response_code(429); $errors['_bot'] = 'Too many requests from your network. Please try again later or email contact@aihubpedia.com.'; $ok = false; }
   elseif ($res['status'] === 'unavailable') { $unavailable = true; $ok = false; http_response_code(503); }
-  else { header('Location: /inquiry.php?sent=' . rawurlencode($clean['lead_type']), true, 303); exit; }
+  else { header('Location: /inquiry.php?sent=' . rawurlencode($clean['lead_type']) . (!empty($res['ref']) ? '&ref=' . rawurlencode($res['ref']) : ''), true, 303); exit; }
 }
 if (!$ok && !$unavailable && $errors) http_response_code(isset($errors['_bot']) && http_response_code() === 429 ? 429 : 422);
 $title = 'Check Your Request';

@@ -48,7 +48,7 @@ function lead_retry_notification(PDO $pdo, int $id): string {
   $row = lead_get($pdo, $id);
   if (!$row) return 'not_found';
   $c = array_intersect_key($row, array_flip(['lead_type', 'name', 'email', 'company', 'website', 'budget', 'timeline', 'message', 'source_page', 'package_interest', 'campaign_goal', 'attr_source', 'attr_medium', 'attr_campaign', 'ref_tool']));
-  $sent = false; try { $sent = lead_notify_owner($c); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, 'lead_retry'); }
+  $sent = false; try { $sent = lead_notify_owner($c, enquiry_reference('L', $id), $id, false); } catch (Throwable $e) { mail_last_error('smtp_other'); sec_log_exception($e, 'lead_retry'); }
   lead_record_notification($pdo, $id, $sent, mail_last_error());
   return $sent ? 'sent' : 'failed';
 }

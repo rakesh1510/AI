@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/conversion.php';
 $title = "Submit a tool — AIHubpedia";
 
 $tiers = pricing_tiers();
@@ -36,7 +37,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
     require_once __DIR__ . '/db.php';
 try {
-$stmt = db()->prepare("
+$pdo = db(); $subRef = ''; $dupId = 0;
+$d = $pdo->prepare('SELECT id FROM submissions WHERE name = ? AND website = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) ORDER BY id DESC LIMIT 1');
+$d->execute([$name, $safeSite]); $dupId = (int)$d->fetchColumn();
+if ($dupId > 0) { $subRef = enquiry_reference('S', $dupId); sec_log('submission_duplicate_ignored', ['id' => $dupId]); }   // double click / refresh: acknowledge once
+else {
+$stmt = $pdo->prepare("
 INSERT INTO submissions
 (name, category, website, short_desc, plan, price, currency, status, payment_status)
 VALUES
@@ -53,6 +59,17 @@ $stmt->execute([
   ':currency' => (site_cfg()['currency'] ?? 'USD'),
   ':payment_status' => ($price > 0 ? 'unpaid' : 'not_required')
 ]);
+$subRef = enquiry_reference('S', (int)$pdo->lastInsertId());
+// Owner notification (the form collects no email address, so there is nobody to confirm to). A failed send is spooled and retried; the submission itself is already stored.
+try {
+  $h = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES); $to = site_owner_email();
+  $body = '<h2>New tool submission</h2><p><b>Reference:</b> ' . $h($subRef) . '</p><p><b>Name:</b> ' . $h($name) . '</p><p><b>Category:</b> ' . $h($category) . '</p><p><b>Website:</b> ' . $h($safeSite) . '</p><p><b>Plan:</b> ' . $h($tier['label'] ?? $plan) . ' (' . (int)$price . ')</p><p><b>Description:</b><br>' . nl2br($h($short)) . '</p><p>Review it in the admin area; it is pending review.</p>';
+  $text = "New tool submission\nReference: $subRef\nName: $name\nCategory: $category\nWebsite: $safeSite\nPlan: " . ($tier['label'] ?? $plan) . " ($price)\n\n$short\n";
+  $sentSub = $to !== '' ? send_mail_reliable($to, '[AIHubpedia submission] ' . preg_replace('/[\r\n]+/', ' ', $name) . ' (' . $subRef . ')', $body, $text, '', [], ['kind' => 'submission', 'ref' => $subRef]) : false;
+  if ($to === '') mail_spool_add('', '[AIHubpedia submission] ' . $name . ' (' . $subRef . ')', $body, $text, '', [], ['kind' => 'submission', 'ref' => $subRef], 'not_configured');
+  if (!$sentSub) sec_log('submission_notification_failed', ['ref' => $subRef, 'reason' => mail_last_error()]);
+} catch (Throwable $e) { sec_log_exception($e, 'submit.php:notify'); }
+}
     $ok = true;
     $selected = $plan;
     } catch(Throwable $e){ sec_log_exception($e, 'submit.php'); $err = "Sorry, your submission could not be saved. Please try again later."; }
@@ -81,7 +98,7 @@ echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Submit an AI tool', 'icon' =>
 <div class="wrap pgBody">
   <?php if ($ok): ?>
     <div class="stateBox stateBox--ok" role="status" style="margin-bottom:28px">
-      <div><span class="eyebrow"><?= ui_icon('check') ?> Submitted</span><h2>Thanks. Your tool is now pending review.</h2>
+      <div><span class="eyebrow"><?= ui_icon('check') ?> Submitted</span><h2>Thanks. Your tool is now pending review.</h2><?php if (!empty($subRef)): ?><p>Reference: <strong><?= h($subRef) ?></strong>. Keep it if you need to ask about this submission.</p><?php endif; ?>
         <p>We review every submission before publishing. <?php if ($selectedPrice > 0): ?>Your selected plan needs payment before it is approved: see the next step below.<?php else: ?>Free listings are reviewed in order, so this can take several days.<?php endif; ?></p></div>
       <?= art_mail() ?>
     </div>

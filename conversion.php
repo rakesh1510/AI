@@ -142,12 +142,39 @@ function lead_record_notification(PDO $pdo, int $id, bool $sent, string $code): 
       ->execute([$sent ? 'sent' : 'failed', $sent ? '' : substr($code, 0, 24), $id]);
 }
 
-function lead_notify_owner(array $c): bool {
+/**
+ * Enquiry reference shown to the sender and quoted in every email: AHP-<kind>-<6-digit record id>-<check letter>.
+ * Derived from the stored record's id (L lead/CRM, C contact message, S tool submission), so it is unique, needs no schema change and cannot be guessed to read anything:
+ * the reference only identifies a record to the owner; it grants no access.
+ */
+function enquiry_reference(string $kind, int $id): string {
+  $kind = strtoupper(substr($kind, 0, 1)); if ($id < 1 || !in_array($kind, ['L', 'C', 'S'], true)) return '';
+  return sprintf('AHP-%s-%06d-%s', $kind, $id, chr(65 + (($id * 7 + ord($kind)) % 26)));
+}
+function enquiry_reference_valid(string $ref): bool {
+  if (!preg_match('/^AHP-([LCS])-(\d{6,9})-([A-Z])$/', $ref, $m)) return false;
+  return enquiry_reference($m[1], (int)$m[2]) === $ref;
+}
+
+/** Same sender, same type, same message within the last 15 minutes = a double click or a refresh, not a new enquiry. @return int existing lead id, 0 when none. */
+function lead_recent_duplicate(PDO $pdo, array $clean): int {
+  try {
+    $s = $pdo->prepare('SELECT id FROM leads WHERE email = ? AND lead_type = ? AND message LIKE ? AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) ORDER BY id DESC LIMIT 1');
+    $s->execute([$clean['email'], $clean['lead_type'], mb_substr((string)$clean['message'], 0, 200) . '%']);
+    return (int)$s->fetchColumn();
+  } catch (Throwable $e) { return 0; }
+}
+
+/**
+ * Owner notification. On failure the message is spooled for retry (unless $spool is false, used by the retry paths themselves) and false is returned so the lead is
+ * marked "failed" until the retry succeeds.
+ */
+function lead_notify_owner(array $c, string $ref = '', int $leadId = 0, bool $spool = true): bool {
   $to = site_owner_email();
   if ($to === '') { mail_last_error('not_configured'); return false; }
   $label = lead_types()[$c['lead_type']]['label'] ?? $c['lead_type'];
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
-  $rows = ['Type' => $label, 'Name' => $c['name'], 'Email' => $c['email'], 'Company' => $c['company'], 'Website' => $c['website'], 'Budget' => $c['budget'], 'Timeline' => $c['timeline'], 'Page' => $c['source_page'],
+  $rows = ['Reference' => $ref, 'Type' => $label, 'Name' => $c['name'], 'Email' => $c['email'], 'Company' => $c['company'], 'Website' => $c['website'], 'Budget' => $c['budget'], 'Timeline' => $c['timeline'], 'Page' => $c['source_page'],
     'Package interest' => lead_package_options()[$c['package_interest'] ?? ''] ?? '', 'Goal' => lead_goal_options()[$c['campaign_goal'] ?? ''] ?? '',
     'Attribution' => trim(($c['attr_source'] ?? '') . ' ' . ($c['attr_medium'] ?? '') . ' ' . ($c['attr_campaign'] ?? '') . ' ' . (!empty($c['ref_tool']) ? 'tool:' . $c['ref_tool'] : ''))];
   $body = '<h2>New AIHubpedia lead</h2>';
@@ -156,7 +183,23 @@ function lead_notify_owner(array $c): bool {
   $text = "New AIHubpedia lead\n";
   foreach ($rows as $k => $v) if ($v !== '') $text .= preg_replace('/[\r\n]+/', ' ', "$k: $v") . "\n";
   $text .= "\nMessage:\n" . $c['message'] . "\n";
-  return send_mail($to, '[AIHubpedia lead] ' . $label . ' — ' . preg_replace('/[\r\n]+/', ' ', (string)$c['name']), $body, $text, $c['email']);
+  $subject = '[AIHubpedia lead] ' . $label . ' — ' . preg_replace('/[\r\n]+/', ' ', (string)$c['name']) . ($ref !== '' ? ' (' . $ref . ')' : '');
+  if (!$spool) return send_mail($to, $subject, $body, $text, $c['email']);
+  return send_mail_reliable($to, $subject, $body, $text, $c['email'], [], ['kind' => 'owner', 'lead_id' => $leadId, 'ref' => $ref]);
+}
+
+/**
+ * Acknowledgement to the person who wrote in: confirms receipt and quotes the reference. It promises no response time and contains no marketing.
+ * A failure here never affects the enquiry (it is retried from the spool).
+ */
+function lead_notify_customer(array $c, string $ref): bool {
+  if (!mail_customer_confirmation_enabled() || !filter_var($c['email'] ?? '', FILTER_VALIDATE_EMAIL)) return false;
+  $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
+  $label = (string)($c['label'] ?? (lead_types()[$c['lead_type'] ?? '']['label'] ?? 'your request'));
+  $body = '<p>Hello ' . $h($c['name']) . ',</p><p>We received your request (' . $h($label) . '). Your reference is <b>' . $h($ref) . '</b>. Please quote it if you write to us again.</p>'
+    . '<p>A person reads every request and replies by email if it is a fit. We do not promise a response time.</p><p>You did not sign up for anything: this is a one-time confirmation of the message you sent through the AIHubpedia website. If it was not you, you can ignore this email.</p>';
+  $text = "Hello {$c['name']},\n\nWe received your request ($label). Your reference is $ref. Please quote it if you write to us again.\n\nA person reads every request and replies by email if it is a fit. We do not promise a response time.\n\nThis is a one-time confirmation of the message you sent through the AIHubpedia website. If it was not you, you can ignore this email.\n";
+  return send_mail_reliable((string)$c['email'], 'We received your request (' . $ref . ')', $body, $text, site_owner_email(), [], ['kind' => 'customer', 'ref' => $ref]);
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +237,7 @@ function newsletter_subscribe(PDO $pdo, string $email, string $source, string $i
 function newsletter_send_confirmation(string $email, string $token): bool {
   $url = site_url('/newsletter-confirm.php?token=' . $token);
   $html = '<p>Please confirm your subscription to AIHubpedia emails.</p><p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">Confirm my subscription</a></p><p>If you did not request this, ignore this email and you will not be subscribed.</p>';
-  return send_mail($email, 'Confirm your AIHubpedia subscription', $html, "Confirm your subscription: $url\n\nIf you did not request this, ignore this email.");
+  return send_mail_reliable($email, 'Confirm your AIHubpedia subscription', $html, "Confirm your subscription: $url\n\nIf you did not request this, ignore this email.", '', [], ['kind' => 'newsletter']);
 }
 
 function newsletter_confirm(PDO $pdo, string $token): bool {

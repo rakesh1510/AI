@@ -91,7 +91,7 @@ function site_cfg(){
 function site_cfg_harden(array $cfg): array {
   unset($cfg['admin_pass']);
   $m = (isset($cfg['mail']) && is_array($cfg['mail'])) ? $cfg['mail'] : [];
-  foreach (['smtp_host' => 'AIHUB_SMTP_HOST', 'smtp_port' => 'AIHUB_SMTP_PORT', 'smtp_secure' => 'AIHUB_SMTP_SECURE', 'smtp_user' => 'AIHUB_SMTP_USER', 'smtp_pass' => 'AIHUB_SMTP_PASS', 'from_email' => 'AIHUB_MAIL_FROM', 'to_email' => 'AIHUB_MAIL_TO'] as $k => $env) {
+  foreach (['smtp_host' => 'AIHUB_SMTP_HOST', 'smtp_port' => 'AIHUB_SMTP_PORT', 'smtp_secure' => 'AIHUB_SMTP_SECURE', 'smtp_user' => 'AIHUB_SMTP_USER', 'smtp_pass' => 'AIHUB_SMTP_PASS', 'from_email' => 'AIHUB_MAIL_FROM', 'from_name' => 'AIHUB_MAIL_FROM_NAME', 'to_email' => 'AIHUB_MAIL_TO'] as $k => $env) {
     $v = sec_setting($env, 'mail.' . $k);
     if ($v !== '') $m[$k] = $k === 'smtp_port' ? (int)$v : $v;
   }

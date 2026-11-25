@@ -9,6 +9,7 @@ if (empty($_SESSION['csrf'])) {
 }
 
 $sent = isset($_GET['sent']) && $_GET['sent'] === '1';
+$ref = (string)($_GET['ref'] ?? ''); if (!enquiry_reference_valid($ref)) $ref = '';
 $err  = trim($_GET['err'] ?? '');
 
 $main_class = 'fullbleed';
@@ -40,7 +41,7 @@ $__topics = [
     <div class="consult__form contactForm" id="message">
       <h2 style="margin-top:0">Send a message</h2>
       <?php if ($sent): ?>
-        <div class="alertOk" role="status"><?= ui_icon('check') ?> <span><strong>Message sent.</strong> Thanks. We will get back to you if a reply is needed.</span></div>
+        <div class="alertOk" role="status"><?= ui_icon('check') ?> <span><strong>Message received.</strong> Thanks. We will get back to you if a reply is needed.<?php if ($ref !== ''): ?> Your reference is <strong><?= h($ref) ?></strong>.<?php endif; ?></span></div>
       <?php elseif ($err): ?>
         <div class="alertErr" role="alert"><?= ui_icon('x') ?> <span><?= h($err) ?></span></div>
       <?php endif; ?>

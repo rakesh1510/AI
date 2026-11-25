@@ -46,92 +46,59 @@ if(strlen($message) < 10){
 
 /* --------------------------------
    SAVE MESSAGE INTO MYSQL
+   The message is stored first. A mail problem never turns a stored message into an error for the sender (they would resubmit and we would get
+   duplicates); instead the notification is retried from the mail spool and the failure is logged. If the table is missing, the message is
+   kept in the private spool so it is never lost.
 -------------------------------- */
-
+require_once __DIR__ . '/conversion.php';
+$id = 0; $stored = false; $dupId = 0;
 try {
-$stmt = db()->prepare("
+  $pdo = db();
+  $d = $pdo->prepare('SELECT id FROM contact_messages WHERE email = ? AND subject = ? AND message = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) ORDER BY id DESC LIMIT 1');
+  $d->execute([$email, $subject, $message]); $dupId = (int)$d->fetchColumn();
+  if ($dupId === 0) {
+    $stmt = $pdo->prepare("
 INSERT INTO contact_messages
 (name,email,subject,message,ip_address,user_agent)
 VALUES
 (:name,:email,:subject,:message,:ip,:ua)
 ");
+    $stmt->execute([
+      ':name' => $name,
+      ':email' => $email,
+      ':subject' => $subject,
+      ':message' => $message,
+      ':ip' => sec_ip_hash('contact'),   // salted hash only: no raw IP address or user agent is stored
+      ':ua' => ''
+    ]);
+    $id = (int)$pdo->lastInsertId(); $stored = $id > 0;
+  }
+} catch(Throwable $e){ sec_log_exception($e, 'contact_send.php:save'); }
 
-$stmt->execute([
-  ':name' => $name,
-  ':email' => $email,
-  ':subject' => $subject,
-  ':message' => $message,
-  ':ip' => sec_ip_hash('contact'),   // salted hash only: no raw IP address or user agent is stored
-  ':ua' => ''
-]);
-} catch(Throwable $e){ sec_log_exception($e, 'contact_send.php:save'); fail("Sorry, your message could not be saved. Please try again later."); }
-
-/* --------------------------------
-   EMAIL SEND (PHPMailer)
--------------------------------- */
-
-$cfg = site_cfg();
-$mailCfg = $cfg['mail'] ?? [];
-
-$toEmail   = $mailCfg['to_email'] ?? '';
-$fromEmail = $mailCfg['from_email'] ?? '';
-$fromName  = $mailCfg['from_name'] ?? 'AIHubpedia';
-
-$smtpHost   = $mailCfg['smtp_host'] ?? '';
-$smtpPort   = (int)($mailCfg['smtp_port'] ?? 587);
-$smtpSecure = $mailCfg['smtp_secure'] ?? 'tls';
-$smtpUser   = $mailCfg['smtp_user'] ?? '';
-$smtpPass   = $mailCfg['smtp_pass'] ?? '';
-
-if($toEmail==='' || $smtpUser==='' || $smtpPass===''){
-  fail("Mail configuration missing.");
+if ($dupId > 0) {   // double click or refresh: acknowledge without storing or emailing again
+  sec_log('contact_duplicate_ignored', ['id' => $dupId]);
+  header('Location: contact.php?sent=1&ref=' . rawurlencode(enquiry_reference('C', $dupId))); exit;
 }
 
-/* PHPMailer */
-require_once __DIR__ . '/vendor/autoload.php';
+$ref = $stored ? enquiry_reference('C', $id) : '';
+$toEmail = site_owner_email();
+$subj = '[AIHubpedia Contact] ' . $subject . ($ref !== '' ? ' (' . $ref . ')' : '');
+$body = '<h2>New Contact Message</h2>' . ($ref !== '' ? '<p><b>Reference:</b> ' . h($ref) . '</p>' : '')
+  . '<p><b>Name:</b> ' . h($name) . '</p><p><b>Email:</b> ' . h($email) . '</p><p><b>Subject:</b> ' . h($subject) . '</p><p><b>Message:</b><br>' . nl2br(h($message)) . '</p>'
+  . ($stored ? '' : '<p><b>Note:</b> this message could not be saved to the database; this email and the mail spool are the only copies.</p>');
+$alt = ($ref !== '' ? "Reference: $ref\n" : '') . "Name: $name\nEmail: $email\nSubject: $subject\n\n$message";
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-try {
-
-  $mail = new PHPMailer(true);
-
-  $mail->isSMTP();
-  $mail->Host = $smtpHost;
-  $mail->SMTPAuth = true;
-  $mail->Username = $smtpUser;
-  $mail->Password = $smtpPass;
-  $mail->SMTPSecure = $smtpSecure;
-  $mail->Port = $smtpPort;
-
-  $mail->setFrom($fromEmail, $fromName);
-  $mail->addAddress($toEmail);
-  $mail->addReplyTo($email, $name);
-
-  $mail->isHTML(true);
-  $mail->Subject = "[AIHubpedia Contact] ".$subject;
-
-  $safeMsg = nl2br(h($message));
-
-  $mail->Body = "
-  <h2>New Contact Message</h2>
-  <p><b>Name:</b> ".h($name)."</p>
-  <p><b>Email:</b> ".h($email)."</p>
-  <p><b>Subject:</b> ".h($subject)."</p>
-  <p><b>Message:</b><br>{$safeMsg}</p>
-  ";
-
-  $mail->AltBody =
-  "Name: $name\nEmail: $email\nSubject: $subject\n\n$message";
-
-  $mail->send();
-
-} catch (Exception $e) {
-  sec_log_exception($e, 'contact_send.php');
-  fail("Your message was saved, but the notification email could not be sent.");
+$notified = false;
+try { $notified = $toEmail !== '' ? send_mail_reliable($toEmail, $subj, $body, $alt, $email, [], ['kind' => 'contact', 'ref' => $ref]) : false; } catch (Throwable $e) { sec_log_exception($e, 'contact_send.php:notify'); }
+if ($toEmail === '') { mail_last_error('not_configured'); mail_spool_add('', $subj, $body, $alt, $email, [], ['kind' => 'contact', 'ref' => $ref], 'not_configured'); }
+if (!$notified) sec_log('contact_notification_failed', ['ref' => $ref, 'stored' => $stored ? 1 : 0, 'reason' => mail_last_error()]);
+if (!$stored && !$notified) {
+  // Nothing could be stored AND nothing could be emailed: only the spool copy exists (if even that failed, tell the sender honestly).
+  if (mail_spool_counts()['pending'] === 0) fail('Sorry, your message could not be saved. Please email contact@aihubpedia.com instead.');
+}
+if ($stored) {   // acknowledgement to the sender (retried from the spool if it fails; never an error for the sender)
+  try { lead_notify_customer(['name' => $name, 'email' => $email, 'label' => 'contact message'], $ref); } catch (Throwable $e) { sec_log_exception($e, 'contact_send.php:customer'); }
 }
 
 /* SUCCESS */
-header("Location: contact.php?sent=1");
-exit;
+header('Location: contact.php?sent=1' . ($ref !== '' ? '&ref=' . rawurlencode($ref) : ''));
