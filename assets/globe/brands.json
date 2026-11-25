@@ -1,0 +1,74 @@
+{
+ "chatgpt": {
+  "hex": "10a37f",
+  "svg": "/assets/globe/logos/openai.svg"
+ },
+ "claude": {
+  "hex": "d97757",
+  "svg": "/assets/globe/logos/claude-color.svg"
+ },
+ "codegeex": {
+  "hex": "3b82f6",
+  "svg": "/assets/globe/logos/codegeex-color.svg"
+ },
+ "copilot": {
+  "hex": "6a5cff",
+  "svg": "/assets/globe/logos/copilot-color.svg"
+ },
+ "deepl-translator": {
+  "hex": "1f6fd0",
+  "svg": "/assets/globe/logos/deepl-color.svg"
+ },
+ "deepnote": {
+  "hex": "3793ef",
+  "svg": "/assets/globe/logos/deepnote.svg"
+ },
+ "deepseek": {
+  "hex": "4d6bfe",
+  "svg": "/assets/globe/logos/deepseek-color.svg"
+ },
+ "gemini": {
+  "hex": "3186ff",
+  "svg": "/assets/globe/logos/gemini-color.svg"
+ },
+ "google-cloud-vision-ai": {
+  "hex": "4285f4",
+  "svg": "/assets/globe/logos/googlecloud-color.svg"
+ },
+ "grammarly": {
+  "hex": "027e6f",
+  "svg": "/assets/globe/logos/grammarly.svg"
+ },
+ "ifttt": {
+  "hex": "5b6bff",
+  "svg": "/assets/globe/logos/ifttt.svg"
+ },
+ "microsoft-bing": {
+  "hex": "0b8bd6",
+  "svg": "/assets/globe/logos/bing-color.svg"
+ },
+ "monica": {
+  "hex": "6d5cff",
+  "svg": "/assets/globe/logos/monica-color.svg"
+ },
+ "notebooklm": {
+  "hex": "5b6bff",
+  "svg": "/assets/globe/logos/notebooklm.svg"
+ },
+ "perplexity": {
+  "hex": "22b8cd",
+  "svg": "/assets/globe/logos/perplexity-color.svg"
+ },
+ "tensorflow": {
+  "hex": "ff6f00",
+  "svg": "/assets/globe/logos/tensorflow.svg"
+ },
+ "together-ai": {
+  "hex": "0f6fff",
+  "svg": "/assets/globe/logos/together-color.svg"
+ },
+ "zoom-ai-companion": {
+  "hex": "0b5cff",
+  "svg": "/assets/globe/logos/zoom.svg"
+ }
+}

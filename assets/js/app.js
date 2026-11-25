@@ -61,6 +61,21 @@
     on(btn, 'click', function () { var t = de.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; apply(t, true); track('theme_toggle', '', { theme: t }); });
   })();
 
+  /* ---------- Homepage "Global AI Ecosystem" globe: loaded lazily, only where it is welcome. Otherwise the static poster simply stays. ---------- */
+  (function globe() {
+    var box = $('[data-globe]'); if (!box || !window.matchMedia) return;
+    var conn = navigator.connection || {};
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData || /(^|-)2g$/.test(conn.effectiveType || '')) return;
+    var started = false;
+    function load() { if (started) return; started = true; var s = document.createElement('script'); s.src = box.getAttribute('data-src') || '/assets/globe/globe.min.js'; s.async = true; document.head.appendChild(s); }
+    function arm() {
+      if (!('IntersectionObserver' in window)) { load(); return; }
+      new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); load(); } }, { rootMargin: '300px' }).observe(box);
+    }
+    function idle() { setTimeout(function () { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 1500 }); else arm(); }, 2500); }   // 2.5 s after load, when the browser is idle (the identical poster is shown meanwhile)
+    if (document.readyState === 'complete') idle(); else on(window, 'load', idle);
+  })();
+
   /* ---------- Navigation: mobile drawer, More menu (details element), header search bar ---------- */
   (function nav() {
     var header = $('.siteHeader'), toggle = $('.navToggle'), navEl = $('#siteNav');

@@ -1,0 +1,6 @@
+{
+  "name": "aihubpedia-globe-build",
+  "private": true,
+  "description": "Build-only dependencies for assets/globe/globe.min.js (not needed to run the site)",
+  "devDependencies": { "esbuild": "0.25.0", "three": "0.170.0" }
+}
