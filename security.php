@@ -336,7 +336,7 @@ function sec_send_headers(): void {
   header('X-Content-Type-Options: nosniff');
   header('X-Frame-Options: SAMEORIGIN');
   header('Referrer-Policy: strict-origin-when-cross-origin');
-  header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), interest-cohort=()');
+  header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
 }
 
 /** The legacy demo login/bookmarks feature exists only for local demos: it is off unless AIHUB_DEMO_LOGIN=1. */

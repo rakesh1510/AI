@@ -724,8 +724,8 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 .heroGlobe::before{inset:2% -4% 6% -4%;background:radial-gradient(44% 44% at 50% 48%,rgba(110,120,255,.34),transparent 72%),radial-gradient(28% 30% at 70% 26%,rgba(56,189,248,.18),transparent 74%)}
 .globeBox{position:relative;width:100%;aspect-ratio:1100/1000}
 .globePoster,.globeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.globePoster{object-fit:contain;transition:opacity 1s .25s}
-.globeCanvas{opacity:0;transition:opacity 1s;outline:none;-webkit-tap-highlight-color:transparent}
+.globePoster{object-fit:contain;transition:opacity .5s}
+.globeCanvas{opacity:0;transition:opacity .5s;outline:none;-webkit-tap-highlight-color:transparent}
 .globeBox.is-live .globeCanvas{opacity:1}
 .globeBox.is-live .globePoster{opacity:0}
 .globeBox.is-live .globeCanvas{cursor:grab}
@@ -747,10 +747,8 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 @media (prefers-reduced-motion:reduce){.globePoster,.globeCanvas{transition:none}}
 .homeHero{overflow-x:clip}
 @media (min-width:901px){.heroGlobe{width:122%;max-width:none;margin-left:-16%;margin-right:-6%}}
-.globeCanvas{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
-.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
+.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
 .globeBox{aspect-ratio:1200/1000}
 @media (max-width:900px){.globeBox{aspect-ratio:1/1.02}}
-.globeCanvas{-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);-webkit-mask-composite:source-in,source-in;mask-composite:intersect,intersect}
-.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%)}
+.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);-webkit-mask-composite:source-in,source-in;mask-composite:intersect,intersect}
 .heroGlobe::before{opacity:.7}

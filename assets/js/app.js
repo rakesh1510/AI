@@ -72,7 +72,7 @@
       if (!('IntersectionObserver' in window)) { load(); return; }
       new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); load(); } }, { rootMargin: '300px' }).observe(box);
     }
-    function idle() { setTimeout(function () { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 1500 }); else arm(); }, 2500); }   // 2.5 s after load, when the browser is idle (the identical poster is shown meanwhile)
+    function idle() { setTimeout(function () { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 1500 }); else arm(); }, 1200); }   // 1.2 s after load, when the browser is idle (the identical V4 poster is shown meanwhile)
     if (document.readyState === 'complete') idle(); else on(window, 'load', idle);
   })();
 
