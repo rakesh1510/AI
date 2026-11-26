@@ -751,5 +751,6 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 .globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
 .globeBox{aspect-ratio:1200/1000}
 @media (max-width:900px){.globeBox{aspect-ratio:1/1.02}}
-.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%)}
+.globeCanvas{-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);-webkit-mask-composite:source-in,source-in;mask-composite:intersect,intersect}
+.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%)}
 .heroGlobe::before{opacity:.7}
