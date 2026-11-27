@@ -747,8 +747,7 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 @media (prefers-reduced-motion:reduce){.globePoster,.globeCanvas{transition:none}}
 .homeHero{overflow-x:clip}
 @media (min-width:901px){.heroGlobe{width:122%;max-width:none;margin-left:-16%;margin-right:-6%}}
-.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
+.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 71% 71% at 50% 50%,#000 90%,transparent 100%);mask-image:radial-gradient(ellipse 71% 71% at 50% 50%,#000 90%,transparent 100%)}   /* transparent canvas + alpha poster: the artwork blends into the page; this only feathers the extreme corners (all content lies well inside) */
 .globeBox{aspect-ratio:1200/1000}
 @media (max-width:900px){.globeBox{aspect-ratio:1/1.02}}
-.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);-webkit-mask-composite:source-in,source-in;mask-composite:intersect,intersect}
 .heroGlobe::before{opacity:.7}

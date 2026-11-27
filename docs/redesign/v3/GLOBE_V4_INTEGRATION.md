@@ -27,3 +27,8 @@ The static poster is now a render of the V4 scene at t=0 (`assets/globe/globe-po
 Start-up cost: the loader starts the bundle right after load; `home.src.js` now warms up in steps (async shader compile, per-texture upload, one off-screen frame) before the first visible frame, and the canvas only fades in after that frame is drawn.
 Regenerate a poster after any visual change: serve the site, open a temporary page that loads `globe.v4.min.js?freeze&globeforce` in a box of 553x461 (wide) or 400x408 (small) CSS px at deviceScaleFactor 1.5, wait for `data-ready`, call `snapshotFrames(1)` and screenshot the box.
 The `interest-cohort` token was removed from the Permissions-Policy header in `security.php` (Chrome no longer recognises it).
+
+## Transparent canvas, real start-up fix (staging feedback round 2)
+- **Start-up root cause (measured with performance marks):** the IntersectionObserver started the render loop while the warm-up was still awaiting, so the first rAF frame compiled every shader and uploaded every texture synchronously (the ~1.5 s frame) and the canvas only became visible after it. `go()` now waits for `warmed`; the first visible frame is cheap (14 ms after warm-up in the probe run).
+- **Dark rectangle root cause:** the canvas and the poster were opaque (#02040c) on a gradient hero. The renderer now uses `alpha: true`, no scene background, and a last shader pass sets coverage = max(scene alpha, brightest channel) after tone-mapping, which over black equals the previous opaque render. The posters are WebP with alpha, rendered from the same bundle on a transparent page (`omitBackground`). The CSS mask only feathers the extreme corners.
+- Poster size is kept small (71 KB / 40 KB) because the poster is the LCP element.

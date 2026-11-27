@@ -103,16 +103,18 @@ function edgeTexture(S) { const c = document.createElement('canvas'); c.width = 
 
 export async function init(box, data, opts = {}) {
   const canvas = box.querySelector('canvas'), base = box.dataset.base, mobile = box.clientWidth < 600, freeze = typeof opts.freezeAt === 'number';
-  const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: 'high-performance' }); // Software rasterisers (SwiftShader/llvmpipe: no GPU) cannot run this scene smoothly; the static poster is kept instead. ?globeforce overrides, for testing.
+  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' }); // Software rasterisers (SwiftShader/llvmpipe: no GPU) cannot run this scene smoothly; the static poster is kept instead. ?globeforce overrides, for testing.
   try { const gl = renderer.getContext(), ex = gl.getExtension('WEBGL_debug_renderer_info'), rn = ex ? String(gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)) : ''; if (/swiftshader|llvmpipe|softpipe|software/i.test(rn) && !/[?&]globeforce/.test(location.search)) { renderer.dispose(); throw new Error('software-gl'); } } catch (e) { if (e && e.message === 'software-gl') throw e; }
-  renderer.setClearColor(0x02040c, 1); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
-  const scene = new Scene(), camera = new PerspectiveCamera(30, 1, .1, 60), rig = new Group(), world = new Group(), orbit = new Group(); scene.add(rig); rig.add(world, orbit); scene.background = new Color(0x02040c);
+  renderer.setClearColor(0x000000, 0); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
+  const scene = new Scene(), camera = new PerspectiveCamera(30, 1, .1, 60), rig = new Group(), world = new Group(), orbit = new Group(); scene.add(rig); rig.add(world, orbit); scene.background = null;
   const rt = new WebGLRenderTarget(2, 2, { type: HalfFloatType, samples: 0 }), composer = new EffectComposer(renderer, rt), bloomComposer = new EffectComposer(renderer, new WebGLRenderTarget(2, 2, { type: HalfFloatType })), bloom = new UnrealBloomPass(new Vector2(256, 256), mobile ? .32 : .42, .18, .18), bloomSwap = [], bloomHide = [];
   bloomComposer.renderToScreen = false;
   world.rotation.z = -.2; world.rotation.y = -Math.PI / 2 - 18 * Math.PI / 180; rig.rotation.x = .34;
   bloomComposer.addPass(new RenderPass(scene, camera)); bloomComposer.addPass(bloom);
-  const mix = new ShaderPass({ uniforms: { tDiffuse: { value: null }, bloomTexture: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform sampler2D bloomTexture;varying vec2 vUv;void main(){gl_FragColor=vec4(texture2D(tDiffuse,vUv).rgb+texture2D(bloomTexture,vUv).rgb,1.);}' }, 'tDiffuse');
+  const mix = new ShaderPass({ uniforms: { tDiffuse: { value: null }, bloomTexture: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform sampler2D bloomTexture;varying vec2 vUv;void main(){vec4 b=texture2D(tDiffuse,vUv);vec3 g=texture2D(bloomTexture,vUv).rgb;gl_FragColor=vec4(b.rgb+g,max(b.a,max(g.r,max(g.g,g.b))));}' }, 'tDiffuse');
   composer.addPass(new RenderPass(scene, camera)); composer.addPass(mix); composer.addPass(new OutputPass());
+  // Last step, after tone-mapping/sRGB: coverage = max(scene alpha, brightest channel). Over black this equals the opaque render exactly; over the page gradient the dark space is transparent (no box) and glows are not over-brightened.
+  composer.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);gl_FragColor=vec4(c.rgb,max(c.a,max(c.r,max(c.g,c.b))));}' }));
   const SUN = new Vector3(.74, .52, -.22).normalize();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const ambient = new AmbientLight(0xb5caff, 1.1); scene.add(ambient);
@@ -226,8 +228,8 @@ export async function init(box, data, opts = {}) {
   canvas.addEventListener('pointerleave',()=>{hover=null;panel.hidden=true;mx=0;my=0;});
   box.snapshotFrames = (n) => { simT = 0; for (let i = 0; i < n; i++) tick(i * .03); };
   if (freeze) { tick(opts.freezeAt); box.dataset.ready = '1'; return; }
-  let vis = true, live = false; const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; liveAt = performance.now(); box.classList.add('is-live'); } requestAnimationFrame(loop); };
-  const go = () => { if (running || !vis || document.hidden) return; running = true; last = 0; requestAnimationFrame(loop); }, halt = () => { running = false; };
+  let vis = true, live = false, warmed = false; const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; liveAt = performance.now(); box.classList.add('is-live'); } requestAnimationFrame(loop); };
+  const go = () => { if (running || !vis || !warmed || document.hidden) return; running = true; last = 0; requestAnimationFrame(loop); }, halt = () => { running = false; };
   new IntersectionObserver((en) => { vis = en[0].isIntersecting; vis ? go() : halt(); }, { threshold: .05 }).observe(box); document.addEventListener('visibilitychange', () => { (!document.hidden && vis) ? go() : halt(); });
   // Warm-up in small steps so no single frame has to compile every shader and upload every texture (that was one ~1.5 s frame).
   // The first live frame is the same state as the static poster (t=0), and the canvas only fades in after it has been drawn.
@@ -235,6 +237,6 @@ export async function init(box, data, opts = {}) {
   try { await renderer.compileAsync(scene, camera); } catch (e) {}
   for (const t of [day, night, water, clouds].concat(slots.map((s) => s.tex))) { try { renderer.initTexture(t); } catch (e) {} await idle(); }
   await nextFrame(); tick(0);
-  box.dataset.ready = '1'; go();
+  box.dataset.ready = '1'; warmed = true; go();
 }
 (async () => { const box = document.querySelector('[data-globe]'); if (!box) return; const data = JSON.parse(document.getElementById('globeData').textContent); await new Promise((r) => (document.fonts ? document.fonts.ready.then(r) : r())); if (box.dataset.ready) return; try { await init(box, data, new URLSearchParams(location.search).has('freeze') ? { freezeAt: 0 } : {}); } catch (e) { /* no WebGL / textures: the static poster stays */ } })();
