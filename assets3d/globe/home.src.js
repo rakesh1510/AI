@@ -102,7 +102,7 @@ function paintTile(tex, t, img, idx) {
 function edgeTexture(S) { const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), { w, x0, y0, r } = GEO(S); x.fillStyle = 'rgb(20,30,66)'; rr(x, x0, y0, w, w, r); x.fill(); const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.premultiplyAlpha = true; return t; }
 
 export async function init(box, data, opts = {}) {
-  const canvas = box.querySelector('canvas'), base = box.dataset.base, mobile = box.clientWidth < 600, freeze = typeof opts.freezeAt === 'number';
+  const canvas = box.querySelector('canvas'), base = box.dataset.base, mobile = box.clientWidth < 700 /* the hero box is 330-650 px wide at every breakpoint: always the same quality tier as the posters */, freeze = typeof opts.freezeAt === 'number';
   // ---- marks: always on (a few dozen performance.mark calls, negligible) so normal browsing can be read from the console:
   //      performance.getEntriesByType('mark').filter(m => m.name.startsWith('globe:'))   or   window.__globeReport()
   //      ?globeperf    prints the report 3 s after the globe appears (no extra work, no GPU synchronisation)

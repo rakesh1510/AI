@@ -115,7 +115,7 @@ require __DIR__ . '/layout_top.php';
     </div>
     <div class="heroStack heroGlobe" role="group" aria-label="Global AI ecosystem: an illustration of AI tools from the directory orbiting the Earth">
       <div class="globeBox" data-globe data-base="/assets/globe/" data-src="<?= h('/assets/globe/globe.v4.min.js?v=' . substr((string)@md5_file(__DIR__ . '/assets/globe/globe.v4.min.js'), 0, 8)) ?>">
-        <picture><source media="(max-width:900px)" srcset="/assets/globe/globe-poster-v4-m.webp"><img class="globePoster" src="/assets/globe/globe-poster-v4.webp" width="830" height="692" alt="" fetchpriority="high" decoding="async"></picture>
+        <picture><source media="(max-width:600px)" srcset="/assets/globe/globe-poster-v4-m.webp"><source media="(max-width:900px)" srcset="/assets/globe/globe-poster-v4-t.webp"><img class="globePoster" src="/assets/globe/globe-poster-v4.webp" width="921" height="767" alt="" fetchpriority="high" decoding="async"></picture>
         <canvas class="globeCanvas" aria-hidden="true"></canvas>
         <div class="globeTip" hidden aria-hidden="true"><strong data-n></strong><span data-c></span><span data-p></span><em data-a hidden>Sponsored placement · paid, never changes a tool's facts</em></div>
       </div>
