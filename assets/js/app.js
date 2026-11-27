@@ -67,14 +67,18 @@
     var conn = navigator.connection || {};
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData || /(^|-)2g$/.test(conn.effectiveType || '')) return;
     var started = false;
-    function load() { if (started) return; started = true; var base = box.getAttribute('data-base') || '/assets/globe/'; ['v4/day4k.webp', 'v4/night4k.webp', 'v4/clouds4k.webp', 'earth-water.webp'].forEach(function (f) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.crossOrigin = 'anonymous'; l.href = base + f; document.head.appendChild(l); });   /* textures download in parallel with the script */
+    function load() { if (started) return; started = true; var base = box.getAttribute('data-base') || '/assets/globe/'; ['v4/day4k.webp', 'v4/night4k.webp', 'v4/clouds4k.webp', 'earth-water.webp'].forEach(function (f) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.setAttribute('fetchpriority', 'low'); l.href = base + f; document.head.appendChild(l); });   /* textures download in parallel with the script */
       var s = document.createElement('script'); s.src = box.getAttribute('data-src') || '/assets/globe/globe.min.js'; s.async = true; document.head.appendChild(s); }
     function arm() {
       if (!('IntersectionObserver' in window)) { load(); return; }
       new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); load(); } }, { rootMargin: '300px' }).observe(box);
     }
-    function idle() { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 400 }); else setTimeout(arm, 0); }   // right after load, when the browser is idle (the identical V4 poster is shown meanwhile)
-    if (document.readyState === 'complete') idle(); else on(window, 'load', idle);
+    function idle() { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 400 }); else setTimeout(arm, 0); }   // as soon as the DOM is ready and the browser is idle (the identical V4 poster is shown meanwhile)
+    // Start as soon as the browser has painted its first largest-contentful element (text or poster): the globe never competes with what the visitor is
+    // waiting for, and it never waits for unrelated resources (cards, favicons: window load). 1.5 s safety net for browsers that report no LCP.
+    var armed = false; function begin() { if (armed) return; armed = true; idle(); }
+    try { new PerformanceObserver(function (l, o) { o.disconnect(); begin(); }).observe({ type: 'largest-contentful-paint', buffered: true }); } catch (e) { begin(); }
+    setTimeout(begin, 1500);
   })();
 
   /* ---------- Navigation: mobile drawer, More menu (details element), header search bar ---------- */

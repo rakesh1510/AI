@@ -4,7 +4,7 @@
  * Tiles: smoked dark glass, official marks (sharp, 512 px) + names. Orbits: thin blue/cyan/violet paths. No floor, halo or nebula.
  */
 import {
-  Shape, ExtrudeGeometry, MeshPhysicalMaterial, AmbientLight, DirectionalLight, WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, SphereGeometry, PlaneGeometry, TorusGeometry, ShaderMaterial, TextureLoader, SRGBColorSpace, NoColorSpace, AdditiveBlending, CustomBlending, OneFactor, BackSide, Vector3, Quaternion, Euler,
+  Shape, ExtrudeGeometry, MeshPhysicalMaterial, AmbientLight, DirectionalLight, WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, SphereGeometry, PlaneGeometry, TorusGeometry, ShaderMaterial, Texture, ColorManagement, SRGBTransfer, NoToneMapping, SRGBColorSpace, NoColorSpace, AdditiveBlending, CustomBlending, OneFactor, BackSide, Vector3, Quaternion, Euler,
   CanvasTexture, Sprite, SpriteMaterial, BufferGeometry, Float32BufferAttribute, Line, LineBasicMaterial, Points, PointsMaterial, MathUtils, LinearFilter, LinearMipmapLinearFilter, DynamicDrawUsage, RepeatWrapping, WebGLRenderTarget, HalfFloatType, Vector2, Color
 } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -105,16 +105,38 @@ export async function init(box, data, opts = {}) {
   const canvas = box.querySelector('canvas'), base = box.dataset.base, mobile = box.clientWidth < 600, freeze = typeof opts.freezeAt === 'number';
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' }); // Software rasterisers (SwiftShader/llvmpipe: no GPU) cannot run this scene smoothly; the static poster is kept instead. ?globeforce overrides, for testing.
   try { const gl = renderer.getContext(), ex = gl.getExtension('WEBGL_debug_renderer_info'), rn = ex ? String(gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)) : ''; if (/swiftshader|llvmpipe|softpipe|software/i.test(rn) && !/[?&]globeforce/.test(location.search)) { renderer.dispose(); throw new Error('software-gl'); } } catch (e) { if (e && e.message === 'software-gl') throw e; }
-  renderer.setClearColor(0x000000, 0); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
+  renderer.setClearColor(0x000000, 0);
+  // ---- diagnostics: opt-in with ?globeperf (nothing is logged otherwise) -------------------------------------------------------------
+  const PERF = /[?&]globeperf/.test(location.search), PM = { init_start: performance.now() }, pm = (k) => { PM[k] = performance.now(); if (PERF) performance.mark('globe:' + k); };
+  pm('renderer_ready');
+  const raf = () => new Promise((r) => requestAnimationFrame(() => r()));
+  // ---- textures: fetch + off-thread decode start NOW and overlap with the scene build and the shader compile -----------------------
+  const mkTex = (srgb) => { const t = new Texture(); if (srgb) t.colorSpace = SRGBColorSpace; t.anisotropy = 8; t.wrapS = RepeatWrapping; return t; };
+  const day = mkTex(true), night = mkTex(), water = mkTex(), clouds = mkTex(), TST = {};
+  const loadTex = async (key, file, t) => {
+    const s = TST[key] = { t0: performance.now() };
+    try {
+      const r = await fetch(base + file); if (!r.ok) throw new Error('HTTP ' + r.status);
+      const b = await r.blob(); s.t1 = performance.now();
+      t.image = await createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); t.flipY = false; s.t2 = performance.now(); s.path = 'ImageBitmap';
+      t.onUpdate = () => { t.onUpdate = null; try { t.image.close(); } catch (e) {} };   // the GPU has its copy: free the 33 MB CPU bitmap
+    } catch (e) {   // browsers without createImageBitmap options: <img> + decode(), still off the main thread
+      const im = new Image(); im.crossOrigin = 'anonymous'; await new Promise((res, rej) => { im.onload = res; im.onerror = rej; im.src = base + file; });
+      s.t1 = performance.now(); try { await im.decode(); } catch (e2) {} t.image = im; t.flipY = true; s.t2 = performance.now(); s.path = 'img.decode';
+    }
+    t.needsUpdate = true; return t;
+  };
+  const pDay = loadTex('day', 'v4/day4k.webp', day), pNight = loadTex('night', 'v4/night4k.webp', night), pClouds = loadTex('clouds', 'v4/clouds4k.webp', clouds), pWater = loadTex('water', 'earth-water.webp', water);
+  const texP = Promise.all([pDay, pNight, pClouds, pWater]).then(() => pm('textures_ready')); texP.catch(() => {}); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
   const scene = new Scene(), camera = new PerspectiveCamera(30, 1, .1, 60), rig = new Group(), world = new Group(), orbit = new Group(); scene.add(rig); rig.add(world, orbit); scene.background = null;
-  const rt = new WebGLRenderTarget(2, 2, { type: HalfFloatType, samples: 0 }), composer = new EffectComposer(renderer, rt), bloomComposer = new EffectComposer(renderer, new WebGLRenderTarget(2, 2, { type: HalfFloatType })), bloom = new UnrealBloomPass(new Vector2(256, 256), mobile ? .32 : .42, .18, .18), bloomSwap = [], bloomHide = [];
+  pm('post_start'); const rt = new WebGLRenderTarget(2, 2, { type: HalfFloatType, samples: 0 }), composer = new EffectComposer(renderer, rt), bloomComposer = new EffectComposer(renderer, new WebGLRenderTarget(2, 2, { type: HalfFloatType })), bloom = new UnrealBloomPass(new Vector2(256, 256), mobile ? .32 : .42, .18, .18), bloomSwap = [], bloomHide = [];
   bloomComposer.renderToScreen = false;
   world.rotation.z = -.2; world.rotation.y = -Math.PI / 2 - 18 * Math.PI / 180; rig.rotation.x = .34;
   bloomComposer.addPass(new RenderPass(scene, camera)); bloomComposer.addPass(bloom);
   const mix = new ShaderPass({ uniforms: { tDiffuse: { value: null }, bloomTexture: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;uniform sampler2D bloomTexture;varying vec2 vUv;void main(){vec4 b=texture2D(tDiffuse,vUv);vec3 g=texture2D(bloomTexture,vUv).rgb;gl_FragColor=vec4(b.rgb+g,max(b.a,max(g.r,max(g.g,g.b))));}' }, 'tDiffuse');
-  composer.addPass(new RenderPass(scene, camera)); composer.addPass(mix); composer.addPass(new OutputPass());
+  composer.addPass(new RenderPass(scene, camera)); composer.addPass(mix); const outputPass = new OutputPass(); composer.addPass(outputPass);
   // Last step, after tone-mapping/sRGB: coverage = max(scene alpha, brightest channel). Over black this equals the opaque render exactly; over the page gradient the dark space is transparent (no box) and glows are not over-brightened.
-  composer.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);gl_FragColor=vec4(c.rgb,max(c.a,max(c.r,max(c.g,c.b))));}' }));
+  const finalPass = new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);gl_FragColor=vec4(c.rgb,max(c.a,max(c.r,max(c.g,c.b))));}' }); composer.addPass(finalPass); pm('post_end');
   const SUN = new Vector3(.74, .52, -.22).normalize();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const ambient = new AmbientLight(0xb5caff, 1.1); scene.add(ambient);
@@ -125,9 +147,6 @@ export async function init(box, data, opts = {}) {
   const sg = new BufferGeometry(); sg.setAttribute('position', new Float32BufferAttribute(sp, 3)); scene.add(new Points(sg, new PointsMaterial({ map: glowTexture(200, 215, 255), size: .07, transparent: true, opacity: .85, depthWrite: false, blending: AdditiveBlending, premultipliedAlpha: true, color: 0xcfdcff })));
   bloomHide.push(scene.children[scene.children.length - 1]);
   // Earth
-  const loader = new TextureLoader(), ready = []; const tex = (f, srgb, aniso) => new Promise((res) => { const t = loader.load(base + f, () => res(t), undefined, () => res(null)); if (srgb) t.colorSpace = SRGBColorSpace; t.anisotropy = aniso || 8; t.wrapS = RepeatWrapping; ready.push(t); });
-  const [day, night, water, clouds] = await Promise.all([tex('v4/day4k.webp', true), tex('v4/night4k.webp'), tex('earth-water.webp'), tex('v4/clouds4k.webp')]);
-  if (![day, night, water, clouds].every(Boolean)) { renderer.dispose(); throw new Error('Globe texture load failed'); }
   world.add(new Mesh(new SphereGeometry(1, mobile ? 96 : 160, mobile ? 72 : 120), new ShaderMaterial({ vertexShader: EARTH_V, fragmentShader: EARTH_F, uniforms: { dayMap: { value: day }, nightMap: { value: night }, waterMap: { value: water }, cloudMap: { value: clouds }, L: { value: SUN } } })));
   const earthMesh = world.children[0];
   const cloudMesh = new Mesh(new SphereGeometry(1.010, mobile ? 72 : 128, mobile ? 54 : 96), new ShaderMaterial({ vertexShader: EARTH_V, fragmentShader: CLOUD_F, transparent: true, depthWrite: false, uniforms: { cloudMap: { value: clouds }, L: { value: SUN } } })); world.add(cloudMesh);
@@ -174,9 +193,11 @@ export async function init(box, data, opts = {}) {
   const assign = (s, t) => { s.tool = t; paintTile(s.tex, t, null, s.idx); if (t.svg) loadImg(t.svg).then((im) => { if (s.tool === t && im) paintTile(s.tex, t, im, s.idx); }); };
   slots.forEach((s) => assign(s, withLogo[firstFill] ? withLogo[firstFill++] : nextPool()));
   // frame
-  let liveAt = 0, W = 1, H = 1, last = 0, simT = 0, mx = 0, my = 0, tx = 0, ty = 0, hover = null, running = false;
+  let warmed = false, liveAt = 0, W = 1, H = 1, last = 0, simT = 0, mx = 0, my = 0, tx = 0, ty = 0, hover = null, running = false;
   const pos = new Vector3(), pos2 = new Vector3(), proj2 = new Vector3(), proj = new Vector3(), qP = new Quaternion(), qT = new Quaternion(), eul = new Euler(), arcP = new Vector3();
-  const resize = () => { const r = box.getBoundingClientRect(); W = Math.max(1, r.width | 0); H = Math.max(1, r.height | 0); renderer.setSize(W, H, false); composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(W, H); bloomComposer.setPixelRatio(renderer.getPixelRatio() * .5); bloomComposer.setSize(W, H); camera.aspect = W / H; camera.updateProjectionMatrix(); const t = Math.tan(camera.fov * Math.PI / 360); camera.position.z = Math.max((mobile ? 2.12 : 2.48) / (t * camera.aspect), (mobile ? 1.85 : 1.70) / t); };
+  let rW = 0, rH = 0, rD = 0; const resize = () => { const r = box.getBoundingClientRect(), w = Math.max(1, r.width | 0), h = Math.max(1, r.height | 0), d = renderer.getPixelRatio(); if (w === rW && h === rH && d === rD) return; rW = w; rH = h; rD = d; W = w; H = h; renderer.setSize(W, H, false); composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(W, H); bloomComposer.setPixelRatio(renderer.getPixelRatio() * .5); bloomComposer.setSize(W, H); camera.aspect = W / H; camera.updateProjectionMatrix(); const t = Math.tan(camera.fov * Math.PI / 360); camera.position.z = Math.max((mobile ? 2.12 : 2.48) / (t * camera.aspect), (mobile ? 1.85 : 1.70) / t); };
+  let gq = null;   // GPU timer queries (only with ?globeperf and only where the browser exposes EXT_disjoint_timer_query_webgl2)
+  if (PERF) { const gl = renderer.getContext(), ex = gl.getExtension && gl.getExtension('EXT_disjoint_timer_query_webgl2'); if (ex) { const pend = [], out = []; gq = { out, cur: null, begin() { if (out.length + pend.length > 300) return; this.cur = gl.createQuery(); gl.beginQuery(ex.TIME_ELAPSED_EXT, this.cur); }, end() { if (this.cur) { gl.endQuery(ex.TIME_ELAPSED_EXT); pend.push(this.cur); this.cur = null; } }, poll() { while (pend.length && gl.getQueryParameter(pend[0], gl.QUERY_RESULT_AVAILABLE)) { const q = pend.shift(); if (!gl.getParameter(ex.GPU_DISJOINT_EXT)) out.push(gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6); gl.deleteQuery(q); } } }; } }
   const tick = (t) => {
     const ramp = liveAt ? Math.min(1, (performance.now() - liveAt) / 700) : 0, dt = (freeze || reduced.matches || hover) ? 0 : Math.max(0, Math.min(.05, t - last)) * ramp * ramp * (3 - 2 * ramp);   /* motion eases in from the poster's frame instead of waiting */ last = t; simT = freeze ? opts.freezeAt : simT + dt;
     if (!freeze && !reduced.matches) { world.rotation.y += dt * .075; cloudMesh.rotation.y += dt * .004; orbit.rotation.y += dt * .015; }
@@ -210,11 +231,11 @@ export async function init(box, data, opts = {}) {
     });
     const pp = pGeo.attributes.position.array; pulses.forEach((p, i) => { if (!freeze) { p.t += dt * p.v; if (p.t > 1) { p.t -= 1; p.arc = (p.arc + 5) % arcs.length; } } const pts = arcs[p.arc], f = p.t * (pts.length - 1), a = Math.floor(f), b = Math.min(pts.length - 1, a + 1); arcP.copy(pts[a]).lerp(pts[b], f - a); pp[i * 3] = arcP.x; pp[i * 3 + 1] = arcP.y; pp[i * 3 + 2] = arcP.z; }); pGeo.attributes.position.needsUpdate = true;
     const bg = scene.background; scene.background = new Color(0x000000); bloomSwap.forEach((e) => { e[0].material = e[2]; }); bloomHide.forEach((o) => { o.visible = false; });
-    bloomComposer.render();
+    if (gq) gq.begin(); bloomComposer.render();
     bloomSwap.forEach((e) => { e[0].material = e[1]; }); bloomHide.forEach((o) => { o.visible = true; }); scene.background = bg;
-    mix.uniforms.bloomTexture.value = bloom.renderTargetsHorizontal[0].texture; composer.render();
+    mix.uniforms.bloomTexture.value = bloom.renderTargetsHorizontal[0].texture; composer.render(); if (gq) gq.end();
   };
-  resize(); new ResizeObserver(() => { resize(); if (!running) tick(last); }).observe(box);
+  resize(); pm('scene_built'); new ResizeObserver(() => { resize(); if (warmed && !running) tick(last); }).observe(box);   // observers never render before start-up is finished
   let down = null, dragged = false;
   canvas.style.touchAction = 'pan-y';
   const panel = document.createElement('div'); panel.style.cssText='position:absolute;z-index:3;pointer-events:none;max-width:230px;padding:10px 12px;border:1px solid #64748b;border-radius:12px;background:#101827;color:#fff;font:13px system-ui;box-shadow:0 8px 24px #0008;'; panel.hidden=true; box.append(panel);
@@ -227,16 +248,70 @@ export async function init(box, data, opts = {}) {
   canvas.addEventListener('pointerup',e=>{ if(down && !dragged && !freeze){const s=hit(e); if(s?.tool?.url){const url=new URL(s.tool.url,location.origin); if(url.origin===location.origin && url.pathname==='/tool.php') location.assign(url.href);}} down=null; });
   canvas.addEventListener('pointerleave',()=>{hover=null;panel.hidden=true;mx=0;my=0;});
   box.snapshotFrames = (n) => { simT = 0; for (let i = 0; i < n; i++) tick(i * .03); };
-  if (freeze) { tick(opts.freezeAt); box.dataset.ready = '1'; return; }
-  let vis = true, live = false, warmed = false; const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; liveAt = performance.now(); box.classList.add('is-live'); } requestAnimationFrame(loop); };
+  if (freeze) { await texP; tick(opts.freezeAt); box.dataset.ready = '1'; return; }
+  let vis = true, live = false, rot0 = 0;
+  const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; liveAt = performance.now(); rot0 = world.rotation.y; pm('first_live_frame'); box.classList.add('is-live'); } if (PERF) perfFrame(ms); requestAnimationFrame(loop); };
   const go = () => { if (running || !vis || !warmed || document.hidden) return; running = true; last = 0; requestAnimationFrame(loop); }, halt = () => { running = false; };
   new IntersectionObserver((en) => { vis = en[0].isIntersecting; vis ? go() : halt(); }, { threshold: .05 }).observe(box); document.addEventListener('visibilitychange', () => { (!document.hidden && vis) ? go() : halt(); });
-  // Warm-up in small steps so no single frame has to compile every shader and upload every texture (that was one ~1.5 s frame).
-  // The first live frame is the same state as the static poster (t=0), and the canvas only fades in after it has been drawn.
-  const idle = () => new Promise((r) => setTimeout(r, 0)), nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
-  try { await renderer.compileAsync(scene, camera); } catch (e) {}
-  for (const t of [day, night, water, clouds].concat(slots.map((s) => s.tex))) { try { renderer.initTexture(t); } catch (e) {} await idle(); }
-  await nextFrame(); tick(0);
-  box.dataset.ready = '1'; warmed = true; go();
+
+  // ---- start-up: everything that can overlap does; nothing renders before it is ready --------------------------------------------------
+  // 1. ONE batch of shader programs: the scene, the bloom swap materials, the bloom/composite/output passes (render-target context) and the final
+  //    pass (screen context). Where KHR_parallel_shader_compile exists the driver links them concurrently; otherwise three.js falls back to the
+  //    ordinary synchronous path by itself.
+  const TG = {};
+  const compileAll = async () => {
+    const a0 = performance.now(), gl = renderer.getContext(); PM.parallel = !!(gl.getExtension && gl.getExtension('KHR_parallel_shader_compile'));
+    const quad = new BufferGeometry(); quad.setAttribute('position', new Float32BufferAttribute([-1, 3, 0, -1, -1, 0, 3, -1, 0], 3)); quad.setAttribute('uv', new Float32BufferAttribute([0, 2, 0, 0, 2, 0], 2));
+    const holder = (geo, mats) => { const sc = new Scene(); mats.forEach((m) => sc.add(new Mesh(geo, m))); return sc; };
+    // OutputPass builds its defines lazily on its first render; set the same ones now so that first render does not compile it a second time.
+    try { if ('_outputColorSpace' in outputPass && renderer.toneMapping === NoToneMapping) { outputPass._outputColorSpace = renderer.outputColorSpace; outputPass._toneMapping = renderer.toneMapping; outputPass.material.defines = ColorManagement.getTransfer(renderer.outputColorSpace) === SRGBTransfer ? { SRGB_TRANSFER: '' } : {}; outputPass.material.needsUpdate = true; } } catch (e) {}
+    const swap = new Scene(); swap.add(new AmbientLight(), new DirectionalLight(), new DirectionalLight());   // same light counts as the real scene: they are part of the program key
+    bloomSwap.forEach((e) => swap.add(new Mesh(e[0].geometry, e[2])));
+    const post = holder(quad, [mix.material, outputPass.material, bloom.materialHighPassFilter].concat(bloom.separableBlurMaterials, [bloom.compositeMaterial, bloom.blendMaterial])), fin = holder(quad, [finalPass.material]);
+    const prev = renderer.getRenderTarget(), run = (name, sc, target) => { renderer.setRenderTarget(target); return renderer.compileAsync(sc, camera).then(() => { TG[name] = performance.now() - a0; }); };
+    let ps; try { ps = [run('scene', scene, composer.renderTarget1), run('bloom_swap', swap, composer.renderTarget1), run('post', post, composer.renderTarget1), run('final', fin, null)]; } finally { renderer.setRenderTarget(prev); }
+    pm('compile_submitted'); await Promise.all(ps); PM.programs_compiled = renderer.info.programs.length; pm('compile_done');
+  };
+  // 2. Texture uploads: one per frame, in the order the textures arrive, while the compile above runs in the driver.
+  const UP = [];
+  const uploadAll = async () => {
+    const up = (name, t) => { const a = performance.now(); try { renderer.initTexture(t); if (PERF) renderer.getContext().finish(); } catch (e) {} UP.push([name, performance.now() - a]); };
+    try { await pDay; await raf(); up('day 4096x2048', day); await pNight; await raf(); up('night 4096x2048', night); await pClouds; await raf(); up('clouds 4096x2048', clouds); await pWater; await raf(); up('water 1024x512', water); } catch (e) { throw new Error('Globe texture load failed'); }
+    await raf(); slots.forEach((s) => up('tile 512x512', s.tex)); pm('uploads_done');
+  };
+  const perfFrame = (ms) => { if (PM.prevMs) (PM.ft = PM.ft || []).push(ms - PM.prevMs); PM.prevMs = ms; if (!PM.first_anim && Math.abs(world.rotation.y - rot0) > .006) pm('first_anim'); if (gq) gq.poll(); if (!PM.reported && performance.now() - PM.first_live_frame > 3000) { PM.reported = true; report(); } };
+  let posterT = null, LT = [];
+  if (PERF) { try { new PerformanceObserver((l) => { for (const e of l.getEntries()) if (e.element && e.element.classList && e.element.classList.contains('globePoster')) posterT = e.startTime; }).observe({ type: 'largest-contentful-paint', buffered: true }); } catch (e) {} try { new PerformanceObserver((l) => { LT = LT.concat(l.getEntries().map((e) => [e.startTime, e.duration])); }).observe({ type: 'longtask', buffered: true }); } catch (e) {} }
+  const report = () => {
+    const CPU = 'measured: CPU / main thread', NET = 'measured: network', WALL = 'measured: wall-clock (includes GPU/driver work, not separable)', GPUm = 'measured: GPU timer query', DISP = 'measured: real frame cadence', EST = 'ESTIMATE', R = [], r1 = (v) => Math.round(v * 10) / 10, add = (m, v, k) => R.push({ metric: m, ms: v == null ? 'n/a' : r1(v), kind: k });
+    const sres = performance.getEntriesByType('resource').find((e) => /globe\.v4\.min\.js/.test(e.name)), tt = (k) => TST[k];
+    if (posterT == null) { const fcp = performance.getEntriesByName('first-contentful-paint')[0]; posterT = fcp ? fcp.startTime : null; add('navigation -> poster painted (FCP fallback: the poster was not the LCP element)', posterT, 'measured: browser paint timing'); } else add('navigation -> poster painted', posterT, 'measured: browser paint timing');
+    if (sres) { add('bundle: request -> response end (download)', sres.responseEnd - sres.startTime, NET); add('bundle: response end -> init() start (parse + evaluate)', PM.init_start - sres.responseEnd, CPU); }
+    add('init: renderer + software-GL guard', PM.renderer_ready - PM.init_start, CPU + ' (context creation)');
+    add('init: post-processing objects built (composers, bloom, passes)', PM.post_end - PM.post_start, CPU);
+    add('init: scene + geometry + tiles built', PM.scene_built - PM.post_end, CPU);
+    for (const k of Object.keys(TST)) { const x = TST[k]; add('texture ' + k + ': fetch', x.t1 - x.t0, NET); add('texture ' + k + ': decode (' + x.path + ')', x.t2 - x.t1, WALL.replace('includes GPU/driver work, not separable', 'decode runs off the main thread')); }
+    add('textures: all ready (from init start)', PM.textures_ready - PM.init_start, NET + ' + decode');
+    add('shader compile (' + (PM.parallel ? 'KHR_parallel_shader_compile: parallel' : 'no parallel-compile extension: synchronous fallback') + '): scene group', TG.scene, WALL);
+    add('shader compile: bloom swap group', TG.bloom_swap, WALL); add('shader compile: post-processing group', TG.post, WALL); add('shader compile: final pass', TG.final, WALL);
+    add('shader compile: whole batch (submit -> all programs ready)', PM.compile_done - PM.compile_submitted, WALL);
+    add('programs compiled / extra programs created by first real frame', PM.programs_compiled, 'count (extra = ' + ((PM.programs_after_warm || 0) - (PM.programs_compiled || 0)) + ', must be 0)');
+    UP.forEach(([n, v]) => add('texture upload ' + n + ' (initTexture + gl.finish)', v, WALL));
+    add('texture uploads: all done', PM.uploads_done - PM.init_start, WALL);
+    add('warm frame (first draw, invisible)', PM.warm_frame - PM.compile_done, CPU + ' + GPU submit');
+    add('first visible live frame (navigation time)', PM.first_live_frame, 'measured: wall-clock');
+    add('first visible animation (Earth turned >= ~1 px)', PM.first_anim, 'measured: wall-clock');
+    if (posterT != null && PM.first_anim) add('TOTAL poster -> animation', PM.first_anim - posterT, 'measured: wall-clock  (target <= 1000)');
+    add('init start -> first visible animation', PM.first_anim - PM.init_start, 'measured: wall-clock');
+    const lt = LT.filter((x) => x[0] >= PM.init_start - 50); add('long tasks since init start: count / total / max', null, CPU + ': ' + lt.length + ' / ' + r1(lt.reduce((a, x) => a + x[1], 0)) + ' ms / ' + r1(Math.max(0, ...lt.map((x) => x[1]))) + ' ms');
+    const ft = (PM.ft || []).slice(1).sort((a, b) => a - b); if (ft.length) { add('frame interval: average (' + r1(1000 / (ft.reduce((a, x) => a + x, 0) / ft.length)) + ' fps)', ft.reduce((a, x) => a + x, 0) / ft.length, DISP); add('frame interval: 95th percentile', ft[Math.floor(ft.length * .95)], DISP); add('frame interval: worst', ft[ft.length - 1], DISP); }
+    if (gq && gq.out.length) add('GPU time per frame: average of ' + gq.out.length + ' frames', gq.out.reduce((a, x) => a + x, 0) / gq.out.length, GPUm); else add('GPU time per frame', null, 'not measurable here: EXT_disjoint_timer_query_webgl2 is not exposed by this browser/GPU');
+    add('start-up work that happens inside the GPU/driver (compile + upload wall-clock)', (PM.compile_done - PM.compile_submitted) + UP.reduce((a, x) => a + x[1], 0), EST + ': upper bound; compile and upload overlap');
+    PM.rows = R; window.__globePerf = { rows: R, marks: PM, textures: TST, uploads: UP, compileGroups: TG, longTasks: lt };
+    console.groupCollapsed('[globeperf] AIHubpedia globe start-up (CPU rows are exact; GPU rows only where a GPU timer exists)'); console.table(R); console.groupEnd();
+  };
+  try { await Promise.all([compileAll().catch(() => {}), uploadAll()]); } catch (e) { renderer.dispose(); throw e; }
+  await raf(); tick(0); PM.programs_after_warm = renderer.info.programs.length; pm('warm_frame');   // first draw into the still-invisible canvas: geometry buffers; nothing left to compile
+  box.dataset.ready = '1'; warmed = true; pm('ready'); go();
 }
 (async () => { const box = document.querySelector('[data-globe]'); if (!box) return; const data = JSON.parse(document.getElementById('globeData').textContent); await new Promise((r) => (document.fonts ? document.fonts.ready.then(r) : r())); if (box.dataset.ready) return; try { await init(box, data, new URLSearchParams(location.search).has('freeze') ? { freezeAt: 0 } : {}); } catch (e) { /* no WebGL / textures: the static poster stays */ } })();
