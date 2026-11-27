@@ -66,18 +66,48 @@
     var box = $('[data-globe]'); if (!box || !window.matchMedia) return;
     var conn = navigator.connection || {};
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData || /(^|-)2g$/.test(conn.effectiveType || '')) return;
-    var started = false;
-    function load() { if (started) return; started = true; var base = box.getAttribute('data-base') || '/assets/globe/'; ['v4/day4k.webp', 'v4/night4k.webp', 'v4/clouds4k.webp', 'earth-water.webp'].forEach(function (f) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.setAttribute('fetchpriority', 'low'); l.href = base + f; document.head.appendChild(l); });   /* textures download in parallel with the script */
-      var s = document.createElement('script'); s.src = box.getAttribute('data-src') || '/assets/globe/globe.min.js'; s.async = true; document.head.appendChild(s); }
+    var P = function (n) { try { performance.mark('globe:' + n); } catch (e) {} };
+    var started = false, base = box.getAttribute('data-base') || '/assets/globe/';
+    // Hand-over to the globe bundle (it reads window.__globeStart): the decoded texture bitmaps and long-task entries. (An early WebGL context created
+    // here was measured to add ~250 ms of main-thread time on software renderers and to cost Lighthouse mobile ~6 points: it is created in init().)
+    var G = window.__globeStart = { jobs: {}, stat: {}, lt: [] };
+    try { new PerformanceObserver(function (l) { l.getEntries().forEach(function (e) { G.lt.push([e.startTime, e.duration]); }); }).observe({ type: 'longtask', buffered: true }); } catch (e) {}
+    G.release = function () {   // bitmaps nobody consumed (no WebGL, software rendering, script failure) are freed at once
+      Object.keys(G.jobs).forEach(function (k) { G.jobs[k].then(function (b) { if (b && b.close) b.close(); }, function () {}); }); G.jobs = {};
+    };
+    function job(key, f) {   // fetch + off-thread decode, started in parallel with the bundle download; pixel data identical to a normal <img> upload
+      var s = G.stat[key] = { t0: performance.now() };
+      var p = G.jobs[key] = fetch(base + f).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }).then(function (b) {
+        s.t1 = performance.now(); return createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+      }).then(function (bm) { s.t2 = performance.now(); s.path = 'ImageBitmap (loader)'; return bm; });
+      p.catch(function () {});
+    }
+    function load() {
+      if (started) return; started = true; P('loader_start');
+      if (window.fetch && window.createImageBitmap) { job('day', 'v4/day4k.webp'); job('night', 'v4/night4k.webp'); job('clouds', 'v4/clouds4k.webp'); job('water', 'earth-water.webp'); }
+      var s = document.createElement('script'); s.src = box.getAttribute('data-src') || '/assets/globe/globe.min.js'; s.async = true; s.onerror = function () { G.release(); };
+      P('script_requested'); document.head.appendChild(s);
+      setTimeout(function () { G.release(); }, 30000);   // safety net: whatever the bundle has not taken by then is freed
+    }
+    function near() { var r = box.getBoundingClientRect(); return r.bottom > -300 && r.top < (window.innerHeight || 800) + 300; }
     function arm() {
-      if (!('IntersectionObserver' in window)) { load(); return; }
+      if (near() || !('IntersectionObserver' in window)) { load(); return; }
       new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); load(); } }, { rootMargin: '300px' }).observe(box);
     }
-    function idle() { if (window.requestIdleCallback) requestIdleCallback(arm, { timeout: 400 }); else setTimeout(arm, 0); }   // as soon as the DOM is ready and the browser is idle (the identical V4 poster is shown meanwhile)
-    // Start as soon as the browser has painted its first largest-contentful element (text or poster): the globe never competes with what the visitor is
-    // waiting for, and it never waits for unrelated resources (cards, favicons: window load). 1.5 s safety net for browsers that report no LCP.
-    var armed = false; function begin() { if (armed) return; armed = true; idle(); }
-    try { new PerformanceObserver(function (l, o) { o.disconnect(); begin(); }).observe({ type: 'largest-contentful-paint', buffered: true }); } catch (e) { begin(); }
+    // Start when the browser reports the poster (the LCP image) as painted: the globe never competes with what the visitor waits for (this is the
+    // same signal Lighthouse's LCP uses) and never waits for unrelated resources (cards, favicons, window load). No idle-callback or observer hop when the
+    // hero is already near the viewport. Browsers without the LCP API: two frames after the poster loaded. 1.5 s safety net.
+    var armed = false; function begin() { if (armed) return; armed = true; P('loader_trigger'); arm(); }
+    function afterPaint() { requestAnimationFrame(function () { requestAnimationFrame(begin); }); }
+    var poster = box.querySelector('.globePoster'), firstLcp = false;
+    try {
+      new PerformanceObserver(function (l) {
+        l.getEntries().forEach(function (e) {
+          if (e.element === poster) begin();
+          else if (!firstLcp) { firstLcp = true; setTimeout(begin, 400); }   // the poster was not (yet) the largest element: do not wait for it forever
+        });
+      }).observe({ type: 'largest-contentful-paint', buffered: true });
+    } catch (e) { if (poster && !poster.complete) { on(poster, 'load', afterPaint); on(poster, 'error', begin); } else afterPaint(); }
     setTimeout(begin, 1500);
   })();
 

@@ -94,7 +94,7 @@ $__cur = function (string $href) use ($__curBase, $__inUniverse): string {
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicon-180.png">
-<link rel="manifest" href="/site.webmanifest">
+<link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials">
 <link rel="alternate" type="text/plain" title="LLM-friendly site summary" href="/llms.txt">
 
 <meta property="og:site_name" content="AIHubpedia">
