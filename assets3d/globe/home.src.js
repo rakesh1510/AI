@@ -172,11 +172,11 @@ export async function init(box, data, opts = {}) {
   const assign = (s, t) => { s.tool = t; paintTile(s.tex, t, null, s.idx); if (t.svg) loadImg(t.svg).then((im) => { if (s.tool === t && im) paintTile(s.tex, t, im, s.idx); }); };
   slots.forEach((s) => assign(s, withLogo[firstFill] ? withLogo[firstFill++] : nextPool()));
   // frame
-  let holdUntil = 0, W = 1, H = 1, last = 0, simT = 0, mx = 0, my = 0, tx = 0, ty = 0, hover = null, running = false;
+  let liveAt = 0, W = 1, H = 1, last = 0, simT = 0, mx = 0, my = 0, tx = 0, ty = 0, hover = null, running = false;
   const pos = new Vector3(), pos2 = new Vector3(), proj2 = new Vector3(), proj = new Vector3(), qP = new Quaternion(), qT = new Quaternion(), eul = new Euler(), arcP = new Vector3();
   const resize = () => { const r = box.getBoundingClientRect(); W = Math.max(1, r.width | 0); H = Math.max(1, r.height | 0); renderer.setSize(W, H, false); composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(W, H); bloomComposer.setPixelRatio(renderer.getPixelRatio() * .5); bloomComposer.setSize(W, H); camera.aspect = W / H; camera.updateProjectionMatrix(); const t = Math.tan(camera.fov * Math.PI / 360); camera.position.z = Math.max((mobile ? 2.12 : 2.48) / (t * camera.aspect), (mobile ? 1.85 : 1.70) / t); };
   const tick = (t) => {
-    const dt = (freeze || reduced.matches || hover || performance.now() < holdUntil) ? 0 : Math.max(0, Math.min(.05, t - last)); last = t; simT = freeze ? opts.freezeAt : simT + dt;
+    const ramp = liveAt ? Math.min(1, (performance.now() - liveAt) / 700) : 0, dt = (freeze || reduced.matches || hover) ? 0 : Math.max(0, Math.min(.05, t - last)) * ramp * ramp * (3 - 2 * ramp);   /* motion eases in from the poster's frame instead of waiting */ last = t; simT = freeze ? opts.freezeAt : simT + dt;
     if (!freeze && !reduced.matches) { world.rotation.y += dt * .075; cloudMesh.rotation.y += dt * .004; orbit.rotation.y += dt * .015; }
     ringObjs.forEach((g, i) => { g.rotation.y += dt * rings[i].sp; }); glowMats.forEach((m) => { m.uniforms.uTime.value = simT; });
     tx += (mx * .10 - tx) * Math.min(1, dt * 2.5); ty += (my * .06 - ty) * Math.min(1, dt * 2.5); scene.rotation.y = tx; scene.rotation.x = ty; camera.position.x += (mx * .14 - camera.position.x) * Math.min(1, dt * 3); camera.position.y += (-my * .10 - camera.position.y) * Math.min(1, dt * 3); camera.lookAt(0, 0, 0);
@@ -226,7 +226,7 @@ export async function init(box, data, opts = {}) {
   canvas.addEventListener('pointerleave',()=>{hover=null;panel.hidden=true;mx=0;my=0;});
   box.snapshotFrames = (n) => { simT = 0; for (let i = 0; i < n; i++) tick(i * .03); };
   if (freeze) { tick(opts.freezeAt); box.dataset.ready = '1'; return; }
-  let vis = true, live = false; const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; holdUntil = performance.now() + 800; box.classList.add('is-live'); } requestAnimationFrame(loop); };
+  let vis = true, live = false; const loop = (ms) => { if (!running) return; const t = ms / 1000; if (!last) last = t; tick(t); if (!live) { live = true; liveAt = performance.now(); box.classList.add('is-live'); } requestAnimationFrame(loop); };
   const go = () => { if (running || !vis || document.hidden) return; running = true; last = 0; requestAnimationFrame(loop); }, halt = () => { running = false; };
   new IntersectionObserver((en) => { vis = en[0].isIntersecting; vis ? go() : halt(); }, { threshold: .05 }).observe(box); document.addEventListener('visibilitychange', () => { (!document.hidden && vis) ? go() : halt(); });
   // Warm-up in small steps so no single frame has to compile every shader and upload every texture (that was one ~1.5 s frame).
@@ -234,7 +234,7 @@ export async function init(box, data, opts = {}) {
   const idle = () => new Promise((r) => setTimeout(r, 0)), nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
   try { await renderer.compileAsync(scene, camera); } catch (e) {}
   for (const t of [day, night, water, clouds].concat(slots.map((s) => s.tex))) { try { renderer.initTexture(t); } catch (e) {} await idle(); }
-  await nextFrame(); tick(0); await nextFrame();
+  await nextFrame(); tick(0);
   box.dataset.ready = '1'; go();
 }
 (async () => { const box = document.querySelector('[data-globe]'); if (!box) return; const data = JSON.parse(document.getElementById('globeData').textContent); await new Promise((r) => (document.fonts ? document.fonts.ready.then(r) : r())); if (box.dataset.ready) return; try { await init(box, data, new URLSearchParams(location.search).has('freeze') ? { freezeAt: 0 } : {}); } catch (e) { /* no WebGL / textures: the static poster stays */ } })();
