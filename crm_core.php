@@ -164,8 +164,9 @@ function crm_audit_recent(PDO $pdo, int $limit = 50): array { $s = $pdo->prepare
 function crm_entity_types(): array { return ['lead', 'opportunity', 'company', 'contact', 'campaign', 'partner', 'prospect', 'proposal', 'contract']; }
 function crm_activity_add(PDO $pdo, ?array $user, string $type, int $id, string $kind, string $body): bool {
   $body = crm_text($body, 4000);
-  if (!in_array($type, crm_entity_types(), true) || $body === '' || !in_array($kind, ['note', 'call', 'email_draft', 'meeting', 'system'], true)) return false;
+  if (!in_array($type, crm_entity_types(), true) || $body === '' || !in_array($kind, ['note', 'call', 'email_draft', 'meeting', 'reply', 'system'], true)) return false;
   $pdo->prepare('INSERT INTO crm_activities (entity_type, entity_id, kind, body, user_id, created_at) VALUES (?,?,?,?,?,?)')->execute([$type, $id, $kind, $body, $user['id'] ?? null, crm_now()]);
+  if ($type === 'lead' && $user !== null && in_array($kind, ['reply', 'call', 'meeting'], true) && function_exists('crm_response_mark')) crm_response_mark($pdo, $id, $user, $kind);   // Phase 7B: only a signed-in person counts as a human response
   return true;
 }
 function crm_activities(PDO $pdo, string $type, int $id, int $limit = 100): array {
@@ -207,3 +208,4 @@ function crm_percent_to_bp(string $s): ?int {
   [$w, $f] = array_pad(explode('.', $s, 2), 2, ''); $bp = (int)$w * 100 + (int)str_pad($f, 2, '0');
   return $bp <= 10000 ? $bp : null;
 }
+require_once __DIR__ . '/crm_response.php';   // Phase 7B (response tracking); degrades gracefully until database/phase7b_lead_management.sql is applied
