@@ -11,7 +11,7 @@ const sizes = [['desktop', 1280, 800], ['tablet', 768, 1024], ['mobile', 360, 74
   const browser = await chromium.launch();
   // sign in ONCE (the sign-in limiter allows 5 attempts per 15 minutes) and reuse the session for every viewport and colour scheme
   const lc = await browser.newContext({ viewport: { width: 1280, height: 800 } }); const lp = await lc.newPage();
-  await lp.goto(base + '/admin-center.php'); await lp.waitForTimeout(1300); await lp.fill('#crmUser', user); await lp.fill('#crmPw', pass); await lp.press('#crmPw', 'Enter'); await lp.waitForLoadState('load');
+  await lp.goto(base + '/admin-center.php'); await lp.waitForTimeout(1300); await lp.fill('#admUser', user); await lp.fill('#admPw', pass); await lp.press('#admPw', 'Enter'); await lp.waitForLoadState('load');
   const state = await lc.storageState(); await lc.close();
   for (const scheme of ['light', 'dark']) for (const [name, w, h] of sizes) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce', storageState: state });
