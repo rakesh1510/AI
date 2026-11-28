@@ -2,7 +2,7 @@
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/crm_intake.php';
 $company = getenv('AIHUB_BUSINESS_NAME') ?: 'TrustNova Tech';
-$title = 'AI, Automation & Enterprise Software Solutions by ' . $company;
+$title = 'Book a Free AI and Software Consultation with ' . $company;
 $meta_desc = 'Book a free consultation with ' . $company . ': custom AI agents, business process automation, AI chatbots and assistants, custom software, enterprise integrations, data insights, cloud transformation and AI consulting.';
 $crumbs = [['Home', site_url('/')], ['For business', null]];
 $jsonld = [['@type' => 'WebPage', '@id' => site_url('/business.php#webpage'), 'url' => site_url('/business.php'), 'name' => seo_title($title), 'description' => seo_description($meta_desc), 'isPartOf' => ['@id' => site_url('/#website')]], seo_breadcrumb_node($crumbs)];
