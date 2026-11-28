@@ -15,10 +15,13 @@ $crmView = (string)($_GET["v"] ?? "dashboard"); if (!in_array($crmView, crm_view
 $title = 'CRM — AIHubpedia'; $robots = 'noindex, nofollow';   // private page: the layout must not downgrade this to "noindex, follow"
 require __DIR__ . '/layout_top.php';
 ?>
+<style>.crmAdmin a:not(.btn),.crmAdmin .crmForm button,.crmAdmin .crmForm select,.crmAdmin .crmForm input:not([type=checkbox]):not([type=hidden]){min-height:44px;box-sizing:border-box}.crmAdmin a:not(.btn){display:inline-flex;align-items:center;min-width:44px}.crmAdmin label:has(>input[type=checkbox]){display:inline-flex;align-items:center;min-height:44px;gap:8px}.crmAdmin input[type=checkbox]{width:44px;height:44px;margin:0}.crmAdmin td a,.crmAdmin th a{padding:0 6px}.crmAdmin .btn.sm{min-height:44px}</style>
+<div class="crmAdmin">
 <h1>CRM <span class="small">(internal)</span></h1>
 <form method="post" action="/crm.php" style="float:right"><?= crm_csrf_field() ?><input type="hidden" name="act" value="logout"><button class="btn secondary sm">Sign out <?= crm_h($crmUser['display_name']) ?> (<?= crm_h($crmUser['role']) ?>)</button></form>
 <p class="small">Internal records only. Nothing here sends email, invoices or payments. Personal data is limited to business contact details; opening a lead is logged.</p>
 <?= crm_nav($crmView, $crmUser) ?>
 <?php if (isset($_GET['m'])): $m = (string)$_GET['m']; ?><div class="noteBox" role="status"><?= crm_h(crm_msg_label($m)) ?></div><?php endif; ?>
 <?php crm_render_view($pdo, $crmUser, $crmView, $_GET); ?>
+</div>
 <?php require __DIR__ . '/layout_bottom.php'; ?>

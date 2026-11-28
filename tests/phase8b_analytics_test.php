@@ -92,6 +92,7 @@ function login(string $base, array $own, string $username): string {
 }
 $jars = []; foreach (['owner', 'sales', 'viewer', 'editor'] as $r) $jars[$r] = login($base, $own, "t8b$r");
 $page = fn(string $r, string $q = '') => http('GET', "$base/admin-center.php?m=analytics$q", null, [], $jars[$r]);
+$det = fn(string $q = '') => $page('owner', '&view=details' . $q);   // since the A2-A6 dashboard, the conversions / lifetime-counter report lives on its own tab
 
 section('authorization: owner only, anonymous gets nothing');
 foreach (['sales', 'viewer', 'editor'] as $r) { $x = $page($r); ok($x['code'] === 403 && stripos($x['body'], 'Page views (human)') === false, "$r is refused the analytics page"); $x = $page($r, '&export=daily'); ok($x['code'] === 403 && strpos($x['head'], 'text/csv') === false, "$r cannot export"); }
@@ -99,11 +100,11 @@ $x = http('GET', "$base/admin-center.php?m=analytics"); ok(stripos($x['body'], '
 $x = http('GET', "$base/admin-center.php?m=analytics&export=daily"); ok(strpos($x['head'], 'text/csv') === false && stripos($x['body'], 'date_utc') === false, 'anonymous cannot export');
 
 section('report content and honest definitions');
-$x = $page('owner', '&range=custom&from=' . $D1 . '&to=' . $D0); $b = $x['body']; ok($x['code'] === 200, 'owner opens the report');
+$x = $det('&range=custom&from=' . $D1 . '&to=' . $D0); $b = $x['body']; ok($x['code'] === 200, 'owner opens the report (details tab)');
 $flat = preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $b));
 ok(stripos($flat, 'Page views (human) 5') !== false && stripos($flat, 'Visitor-days 2') !== false && stripos($flat, 'Sessions (approximate) 3') !== false && stripos($flat, 'Bot views (not counted) 3') !== false && stripos($flat, 'Views without visitor id 1') !== false, 'the five headline figures match the hand-computed values');
 ok(stripos($flat, 'NOT the number of different people') !== false, 'visitor-days are explained as not being people');
-$sx = $page('owner', '&range=yesterday')['body']; ok(stripos(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $sx)), 'Unique visitors (that day) 2') !== false, 'a single day says "Unique visitors (that day)", not visitor-days');
+$sx = $page('owner', '&range=yesterday')['body']; ok(stripos(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $sx)), 'Daily visitors yesterday 2') !== false, 'a single day says "Daily visitors yesterday 2" (hand-computed), not visitor-days');
 ok(preg_match('/click-through|\bCTR\b/i', preg_replace('/no click-through rate is calculated/i', '', $flat)) === 0 && stripos($flat, 'no click-through rate is calculated') !== false && stripos($flat, 'Listing-card clicks are not tracked') !== false || stripos($flat, 'Clicks on listing cards are not tracked') !== false, 'no click-through rate is shown; listing clicks are stated as not tracked');
 ok(preg_match('/alpha\s*(?:<\/th>\s*)?<td>2<\/td>\s*<td>2<\/td>/i', $b) === 1 || (stripos($flat, 'alpha 2 2 1 1') !== false), 'tool row: alpha 2 detail views, 2 outbound click events, 1 affiliate, 1 sponsored');
 ok(stripos($flat, 'Lifetime tool popularity counter') !== false && preg_match('/alpha\s*5\b/', $flat) === 1, 'the lifetime counter (5) is a separate table, not added to the 2 click events');
@@ -113,8 +114,8 @@ ok(stripos($flat, 'Newsletter sign-ups 2') !== false && stripos($flat, 'Inquiry 
 ok(stripos($flat, 'No CRM inquiries were created') !== false, 'CRM inquiries are a separate source (none here)');
 ok(stripos($flat, '(no visitor id)') !== false && stripos($flat, 'search') !== false, 'attribution shows referrer classes and the "(no visitor id)" bucket');
 ok(stripos($flat, 'Countries (') !== false && stripos($flat, 'Unknown') !== false, 'countries show the share with a known country and "Unknown"');
-$old = $page('owner', '&range=custom&from=' . gmdate('Y-m-d', time() - 40 * 86400) . '&to=' . gmdate('Y-m-d', time() - 30 * 86400))['body']; ok(stripos($old, 'unavailable, not zero') !== false && stripos($old, 'Page views (human)') === false, 'a range before tracking started says unavailable, not zero');
-$wide = preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $page('owner', '&range=30d')['body'])); ok(stripos($wide, 'Days before the start are unavailable, not zero') !== false, 'a range that starts before tracking says so');
+$old = $det('&range=custom&from=' . gmdate('Y-m-d', time() - 40 * 86400) . '&to=' . gmdate('Y-m-d', time() - 30 * 86400))['body']; ok(stripos($old, 'unavailable, not zero') !== false && stripos($old, 'Page views (human)') === false, 'a range before tracking started says unavailable, not zero');
+$wide = preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $det('&range=30d')['body'])); ok(stripos($wide, 'Days before the start are unavailable, not zero') !== false, 'a range that starts before tracking says so');
 
 section('safe CSV export, audit, hostile input');
 foreach (['daily' => 'date_utc', 'pages' => 'page_views', 'referrers' => 'referrer_class', 'countries' => 'country', 'tools' => 'tool_detail_page_views', 'conversions' => 'description'] as $k => $col) { $x = $page('owner', "&range=custom&from=$D1&to=$D0&export=$k"); ok($x['code'] === 200 && strpos($x['head'], 'text/csv') !== false && stripos($x['head'], 'attachment') !== false && strpos($x['body'], $col) !== false && stripos($x['head'], 'no-store') !== false, "export $k downloads as a CSV attachment"); }
@@ -134,8 +135,8 @@ $ov = http('GET', "$base/admin-center.php", null, [], $jars['owner'])['body']; o
 
 section('honest states: storage missing, no tracking rows');
 $pdo2 = new PDO($dsnBase . ";dbname=$db", $user, $pw, $opt);
-$pdo2->exec('RENAME TABLE adm_traffic_daily TO adm_traffic_daily_x'); $x = $page('owner'); ok(stripos($x['body'], 'storage is not installed') !== false && stripos($x['body'], 'not zero') !== false, 'missing storage says "not installed ... not zero"'); $ov = http('GET', "$base/admin-center.php", null, [], $jars['owner'])['body']; ok(stripos($ov, 'storage is not installed') !== false, 'the overview says so too'); $x2 = $page('owner', '&export=daily'); ok($x2['code'] === 404, 'export is refused without storage'); $pdo2->exec('RENAME TABLE adm_traffic_daily_x TO adm_traffic_daily');
-$pdo2->exec('DELETE FROM adm_traffic_daily'); $x = $page('owner'); ok(stripos($x['body'], 'No tracking data yet') !== false && stripos($x['body'], 'not zero visitors') !== false, 'storage without data says "No tracking data yet ... not zero visitors"'); adma_rollup_range($pdo, $D1, $D1);
+$pdo2->exec('RENAME TABLE adm_traffic_daily TO adm_traffic_daily_x'); $x = $page('owner'); ok(stripos($x['body'], 'storage is not installed') !== false && stripos($x['body'], 'nothing to show') !== false && stripos($x['body'], 'Daily visitors yesterday') === false, 'missing storage says "not installed ... nothing to show" and shows no figures'); $ov = http('GET', "$base/admin-center.php", null, [], $jars['owner'])['body']; ok(stripos($ov, 'storage is not installed') !== false, 'the overview says so too'); $x2 = $page('owner', '&export=daily'); ok($x2['code'] === 404, 'export is refused without storage'); $pdo2->exec('RENAME TABLE adm_traffic_daily_x TO adm_traffic_daily');
+$pdo2->exec('DELETE FROM adm_traffic_daily'); $x = $page('owner'); ok(stripos($x['body'], 'No tracking data yet') !== false && stripos($x['body'], 'estimate of past traffic') !== false && stripos($x['body'], 'Daily visitors yesterday') === false, 'storage without data says "No tracking data yet", shows no figures and no estimate'); adma_rollup_range($pdo, $D1, $D1);
 
 section('bot filtering for new outbound-click events');
 $tid = null; ob_start(); require_once $root . '/helpers.php'; ob_end_clean(); try { $tools = load_tools()['tools'] ?? []; $tid = $tools[0]['id'] ?? null; } catch (Throwable $e) {}
