@@ -94,7 +94,7 @@ function render_project_form(array $opts = []): string {
       . crm_form_field('pj-tech', 'Existing technology <span class="opt">(optional)</span>', '<textarea class="input" id="pj-tech" name="existing_tech" rows="2" maxlength="600">' . $h($v['existing_tech'] ?? '') . '</textarea>', '', 'Systems, languages or services you already use.')
       . '</details>';
   $o .= '<div class="field check"><label><input type="checkbox" name="consent" value="1" required' . (!empty($v['consent']) ? ' checked' : '') . $aria('consent') . '> I agree that TrustNova Tech may use these details to reply to my inquiry. <a href="/privacy.php">Privacy policy</a></label>' . (isset($e['consent']) ? '<p class="fieldError" id="pj-consent-err">' . $h($e['consent']) . '</p>' : '') . '</div>';
-  return $o . '<button class="btn btn--accent" type="submit">Send project inquiry</button><p class="small">We read every inquiry and reply by email if it looks like a fit. We do not promise a response time, and we never add you to a mailing list from this form.</p></form>';
+  return $o . '<button class="btn btn--accent" type="submit">Request my free consultation</button><p class="small">The consultation is free and without obligation. We read every inquiry and reply by email to arrange it if it looks like a fit. We do not promise a response time, and we never add you to a mailing list from this form.</p></form>';
 }
 function render_partner_form(array $opts = []): string {
   $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES); $v = $opts['values'] ?? []; $e = $opts['errors'] ?? []; $att = lead_attribution_from_request($_GET);

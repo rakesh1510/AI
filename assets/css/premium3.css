@@ -615,10 +615,6 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 @supports selector(:has(*)){
   body:has(main>.stage:first-child) .siteHeader{margin-bottom:calc(-1 * var(--hdr-h))}
   main>.stage:first-child{padding-top:calc(var(--hdr-h) + clamp(22px,3.6vw,52px))}
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen){background:linear-gradient(180deg,rgba(6,8,26,.62),rgba(6,8,26,.16));border-bottom-color:rgba(255,255,255,.10);box-shadow:none}
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) :is(.siteNav__list>li>.siteNav__link,.siteMore__details>summary,.iconBtn,.brandWord){color:#eef0ff}
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) :is(.siteNav__list>li>.siteNav__link,.siteMore__details>summary):hover{background:rgba(255,255,255,.10);color:#fff}
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .iconBtn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)}
 }
 .siteHeader.isScrolled{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 18px 44px -20px rgba(15,18,60,.42)}
 .siteHeader.navOpen{background:var(--bg)}
@@ -704,8 +700,6 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 :root[data-theme="dark"] .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent)}
 @media (prefers-color-scheme:dark){:root:not([data-theme]) .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent)}}
 @supports selector(:has(*)){
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .hdrSearchBtn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#e6e9ff}
-  body:has(main>.stage:first-child) .siteHeader:not(.isScrolled):not(.navOpen) .hdrSearchBtn kbd{border-color:rgba(255,255,255,.28);color:#cfd5f5}
 }
 .hdrSearchBtn{background:color-mix(in srgb,var(--surface) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 /* the suggestions dropdown must stay above the later (animated) hero blocks */
@@ -724,8 +718,8 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 .heroGlobe::before{inset:2% -4% 6% -4%;background:radial-gradient(44% 44% at 50% 48%,rgba(110,120,255,.34),transparent 72%),radial-gradient(28% 30% at 70% 26%,rgba(56,189,248,.18),transparent 74%)}
 .globeBox{position:relative;width:100%;aspect-ratio:1100/1000}
 .globePoster,.globeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.globePoster{object-fit:contain;transition:opacity 1s .25s}
-.globeCanvas{opacity:0;transition:opacity 1s;outline:none;-webkit-tap-highlight-color:transparent}
+.globePoster{object-fit:contain;transition:opacity .5s}
+.globeCanvas{opacity:0;transition:opacity .5s;outline:none;-webkit-tap-highlight-color:transparent}
 .globeBox.is-live .globeCanvas{opacity:1}
 .globeBox.is-live .globePoster{opacity:0}
 .globeBox.is-live .globeCanvas{cursor:grab}
@@ -747,10 +741,72 @@ ul.catPills{list-style:none;margin:0 0 var(--s-3);padding:0}
 @media (prefers-reduced-motion:reduce){.globePoster,.globeCanvas{transition:none}}
 .homeHero{overflow-x:clip}
 @media (min-width:901px){.heroGlobe{width:122%;max-width:none;margin-left:-16%;margin-right:-6%}}
-.globeCanvas{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
-.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 84%,transparent 100%)}
+.globeCanvas,.globePoster{-webkit-mask-image:radial-gradient(ellipse 71% 71% at 50% 50%,#000 90%,transparent 100%);mask-image:radial-gradient(ellipse 71% 71% at 50% 50%,#000 90%,transparent 100%)}   /* transparent canvas + alpha poster: the artwork blends into the page; this only feathers the extreme corners (all content lies well inside) */
 .globeBox{aspect-ratio:1200/1000}
 @media (max-width:900px){.globeBox{aspect-ratio:1/1.02}}
-.globeCanvas{-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 62%,rgba(0,0,0,.55) 84%,transparent 100%),linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent);-webkit-mask-composite:source-in,source-in;mask-composite:intersect,intersect}
-.globePoster{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%)}
 .heroGlobe::before{opacity:.7}
+
+/* =====================================================================================================================================================
+   V4.2 hero composition (layout only; the globe, its poster and all scripts are unchanged).
+   Desktop: copy and globe share one top line, the globe is larger and its centre sits level with the headline/lead; the copy column is compacted so the
+   search bar and all six popular goals sit higher. Every size is fluid or breakpoint-based, nothing is a fixed per-viewport offset.
+   ===================================================================================================================================================== */
+@media (min-width:901px){
+  .homeHero.stage{padding-top:clamp(18px,2.8vw,44px);padding-bottom:clamp(24px,3vw,44px);overflow-x:clip;overflow-y:visible}
+  .homeHero .heroGrid{align-items:start}
+  .homeHero h1{font-size:clamp(2.4rem,.8rem + 3.45vw,3.65rem);line-height:1.05;margin:12px 0 14px}
+  .homeHero .heroLead{margin:0 0 20px;font-size:clamp(1rem,.9rem + .3vw,1.16rem);line-height:1.55}
+  .homeHero .searchBox{min-height:72px;box-shadow:0 26px 64px -24px rgba(124,92,255,.85),0 10px 28px rgba(4,4,40,.4)}
+  .homeHero .heroTry{margin-top:14px}
+  .heroTry__label{margin-bottom:8px}
+  .heroGoals{gap:8px}
+  .homeHero .heroBiz{margin-top:20px;padding-top:14px}
+  .homeHero .trustStrip{margin-top:24px}
+  .heroGlobe{align-self:start;margin-top:clamp(12px,2.7vw,44px)}
+}
+@media (min-width:1300px){.heroGlobe{width:128%;margin-right:-12%}}
+@media (min-width:1440px){.heroGlobe{width:136%;margin-right:-20%}}
+@media (min-width:1700px){.heroGlobe{width:140%;margin-right:-24%}}
+@media (max-width:900px){
+  .homeHero.stage{padding-top:clamp(16px,3.2vw,28px)}
+  .homeHero h1{margin:12px 0 14px}
+  .homeHero .heroLead{margin-bottom:18px}
+  .homeHero .heroBiz{margin-top:20px}
+  .heroGlobe{margin-top:0}
+}
+
+
+/* =====================================================================================================================================================
+   Header: the frosted-glass look is the DEFAULT from the first paint (no transparent state, so nothing changes when the page scrolls), both themes.
+   Light: light frosted glass + subtle bottom border; dark: dark frosted glass. The `isScrolled` class stays but is now visually identical.
+   ===================================================================================================================================================== */
+.siteHeader,.siteHeader.isScrolled{background:color-mix(in srgb,var(--bg) 91%,transparent);border-bottom:1px solid color-mix(in srgb,var(--text) 10%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 18px 44px -20px rgba(15,18,60,.42)}
+:root[data-theme="dark"] .siteHeader,:root[data-theme="dark"] .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent);border-bottom-color:rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 16px 44px -20px rgba(0,0,0,.7)}
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .siteHeader,:root:not([data-theme]) .siteHeader.isScrolled{background:color-mix(in srgb,#0a0d24 86%,transparent);border-bottom-color:rgba(255,255,255,.10)}}
+.siteHeader.navOpen{background:var(--bg)}
+.siteHeader{transition:none}
+
+/* =====================================================================================================================================================
+   Revenue-focused additions: consultation CTA emphasis and tighter mobile rhythm
+   ===================================================================================================================================================== */
+.homeHero .heroBiz{border:1px solid rgba(167,155,255,.28);border-radius:16px;background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(59,130,246,.08));padding:14px 16px;margin-top:20px;gap:14px 18px}
+.homeHero .heroBiz p{color:#dfe3fb}
+.homeHero .heroBiz .btn--accent{box-shadow:0 10px 26px -10px rgba(99,102,241,.9)}
+@media (max-width:560px){
+  .section{padding-block:clamp(28px,8vw,40px)}
+  .sectionHead{margin-bottom:16px}
+  .homeHero.stage{padding-bottom:20px}
+  .homeHero .heroLead{font-size:1rem;line-height:1.5;margin-bottom:14px}
+  .homeHero .heroTry{margin-top:12px}
+  .homeHero .heroBiz{margin-top:16px;padding:14px}
+  .homeHero .trustStrip{margin-top:16px}
+  .paths{gap:12px}
+  .path{padding:18px}
+  .bizBand{padding-block:32px}
+  .svcCta{margin-top:18px}
+  .cardGrid{gap:12px}
+  .tCard{padding:14px 16px;gap:8px}
+  .tCard__desc{-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .intentGrid{gap:8px}
+  .catGrid--mini{gap:10px}
+}

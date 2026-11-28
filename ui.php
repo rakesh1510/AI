@@ -160,7 +160,7 @@ function site_nav_primary(): array {
   return [['/categories.php', 'Discover'], ['/compare.php', 'Compare'], ['/guides.php', 'Guides'], ['/business.php', 'For Business'], ['/advertise.php', 'Advertise']];
 }
 /** The call to action next to the primary links: the existing project enquiry form. */
-function site_nav_cta(): array { return ['/services.php#inquiry', 'Discuss Your Project']; }
+function site_nav_cta(): array { return ['/services.php#inquiry', 'Book a Free Consultation']; }
 /** Secondary navigation, grouped. Every group has at least one link; nothing here points to AI Universe. */
 function site_nav_more(): array {
   $c = ['#3b82f6', '#4f46e5']; $g = ['#10b981', '#0ea5e9']; $v = ['#8b5cf6', '#ec4899']; $o = ['#f59e0b', '#ef4444']; $t = ['#06b6d4', '#2563eb'];

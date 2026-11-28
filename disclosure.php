@@ -36,7 +36,7 @@ echo page_hero(['crumbs' => $crumbs, 'eyebrow' => 'Disclosure', 'icon' => 'shiel
   </ul>
 
   <h2>Our own services</h2>
-  <p>The company behind this site also offers consulting and software development (<a href="/business.php">TrustNova Tech</a>). Those services are not reviewed, ranked or recommended inside tool listings.</p>
+  <p>The company behind this site also offers AI consulting, automation and software solutions (<a href="/business.php">TrustNova Tech</a>). Those services are not reviewed, ranked or recommended inside tool listings.</p>
 
   <h2>Questions or corrections</h2>
   <p>Email <a href="mailto:contact@aihubpedia.com">contact@aihubpedia.com</a>. If a label is missing where one is required, we will fix it.</p>

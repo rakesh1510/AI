@@ -103,19 +103,19 @@ require __DIR__ . '/layout_top.php';
     <div class="heroCopy">
       <span class="eyebrow"><?= ui_icon('shield') ?><span>Independent directory<span class="eyebrow__more"> · every review is sourced and dated</span></span></span>
       <h1 id="heroTitle">Find the right <span class="gradText">AI tool</span>, with the sources to back it up</h1>
-      <p class="heroLead">Search <?= h(number_format(count($tools))) ?> AI tools, compare plans and limits side by side, and read guides built from vendors' own pages. We say where sources disagree and what we have not tested.</p>
+      <p class="heroLead">Search <?= h(number_format(count($tools))) ?> AI tools and compare plans, limits and prices side by side, with sources and dates from the vendors' own pages. Choose with confidence, and if no tool fits, our team builds custom AI for your business.</p>
       <?= render_search_box('heroSearch', ['big' => true, 'source' => 'hero', 'placeholder' => 'Try “transcribe meetings”']) ?>
       <div class="heroTry"><p class="heroTry__label" id="goalsLabel">Popular goals</p>
         <div class="heroGoals" role="group" aria-labelledby="goalsLabel"><?php foreach (array_slice($intents, 0, 6) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?></div>
       </div>
       <div class="heroBiz">
-        <p><strong>Need something built?</strong> TrustNova Tech builds API integrations, workflow automation and custom AI solutions.</p>
-        <a class="btn secondary sm" href="/services.php#inquiry" data-cta="hero_project">Discuss Your Project</a>
+        <p><strong>For businesses:</strong> custom AI agents, process automation, chatbots, integrations, analytics and software that save time, cut cost and scale, from TrustNova Tech.</p>
+        <a class="btn btn--accent sm" href="/services.php#inquiry" data-cta="hero_project">Book a Free Consultation</a>
       </div>
     </div>
     <div class="heroStack heroGlobe" role="group" aria-label="Global AI ecosystem: an illustration of AI tools from the directory orbiting the Earth">
       <div class="globeBox" data-globe data-base="/assets/globe/" data-src="<?= h('/assets/globe/globe.v4.min.js?v=' . substr((string)@md5_file(__DIR__ . '/assets/globe/globe.v4.min.js'), 0, 8)) ?>">
-        <img class="globePoster" src="/assets/globe/earth-poster.webp" srcset="/assets/globe/earth-poster-sm.webp 640w, /assets/globe/earth-poster.webp 1200w" sizes="(max-width:900px) 92vw, 46vw" width="1200" height="1000" alt="" fetchpriority="high" decoding="async">
+        <picture><source media="(max-width:600px)" srcset="/assets/globe/globe-poster-v4-m.webp"><source media="(max-width:900px)" srcset="/assets/globe/globe-poster-v4-t.webp"><img class="globePoster" src="/assets/globe/globe-poster-v4.webp" width="921" height="767" alt="" fetchpriority="high" decoding="async"></picture>
         <canvas class="globeCanvas" aria-hidden="true"></canvas>
         <div class="globeTip" hidden aria-hidden="true"><strong data-n></strong><span data-c></span><span data-p></span><em data-a hidden>Sponsored placement · paid, never changes a tool's facts</em></div>
       </div>
@@ -146,8 +146,8 @@ require __DIR__ . '/layout_top.php';
       <a class="path path--build" href="/services.php#inquiry" data-cta="path_build">
         <span class="bubble"><?= ui_icon('code') ?></span>
         <h3>Build With AI</h3>
-        <p>API integrations, workflow automation, PHP/MySQL development and custom AI solutions from TrustNova Tech.</p>
-        <span class="path__go">Discuss your project <?= ui_icon('arrow') ?></span>
+        <p>Custom AI agents, process automation, chatbots, integrations, analytics and software from TrustNova Tech, designed to save time, cut cost and scale. Free consultation, written scope first.</p>
+        <span class="path__go">Book a free consultation <?= ui_icon('arrow') ?></span>
       </a>
       <a class="path path--promote" href="/advertise.php" data-cta="path_promote">
         <span class="bubble"><?= ui_icon('megaphone') ?></span>
@@ -199,7 +199,7 @@ require __DIR__ . '/layout_top.php';
 
 <section class="bizBand stage" aria-labelledby="svcTitle" id="services">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="svcTitle">Build with AI</h2><p>AIHubpedia is built and run by TrustNova Tech. These are the projects we take on, and what you receive from each.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
+    <div class="sectionHead"><div><h2 id="svcTitle">AI, automation and enterprise software for your business</h2><p>AIHubpedia is built and run by TrustNova Tech. When no ready-made tool fits, these are the eight service areas we deliver, each described by the business outcome it is designed to support.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
     <ul class="svcTiles">
       <?php foreach ($svcCatalog as $i => $sv): $__t = [['#06b6d4', '#2563eb'], ['#8b5cf6', '#ec4899'], ['#10b981', '#0ea5e9'], ['#f59e0b', '#ef4444']][$i % 4]; ?>
       <li><article class="svcTile" style="--c1:<?= $__t[0] ?>;--c2:<?= $__t[1] ?>">
@@ -213,7 +213,7 @@ require __DIR__ . '/layout_top.php';
     </ul>
     <div class="svcCta">
       <p><strong>Every project starts with a written scope.</strong> We do not promise outcomes in advance; we agree how success will be measured. No client case studies are published here.</p>
-      <a class="btn btn--accent" href="/services.php#inquiry" data-cta="services_project">Discuss Your Project</a>
+      <a class="btn btn--accent" href="/services.php#inquiry" data-cta="services_project">Book a Free Consultation</a>
     </div>
   </div>
 </section>
