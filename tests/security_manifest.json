@@ -30,6 +30,8 @@
   "uni_views.php": "lib",
   "crm_money.php": "lib",
   "crm_growth.php": "lib",
+  "crm_acquisition.php": "lib",
+  "crm_acq_views.php": "lib",
   "crm_dashboard.php": "lib",
   "crm_intake.php": "lib",
   "crm_views.php": "lib",

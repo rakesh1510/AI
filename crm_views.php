@@ -5,6 +5,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  * token and a same-origin request; every action is permission-checked again inside the library functions.
  */
 require_once __DIR__ . '/crm_intake.php';
+require_once __DIR__ . '/crm_acq_views.php';
 
 function crm_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES); }
 function crm_gate_page(string $title, string $body, int $status = 200): void {
@@ -48,7 +49,7 @@ function crm_handle_action(PDO $pdo, array $u, array $p): array {
     case 'lead_assign': $r = crm_lead_assign($pdo, $u, $id, $s('assignee') === '' ? null : (int)$s('assignee')); $go = "v=lead&id=$id"; break;
     case 'lead_qualify': $r = crm_lead_qualify($pdo, $u, $id, ['need' => $s('need'), 'budget' => $s('budget'), 'timeline' => $s('timeline'), 'authority' => $s('authority')], $s('decision'), $s('reason')); $go = "v=lead&id=$id"; break;
     case 'lead_convert': $r = crm_lead_convert($pdo, $u, $id, $s('title'), $s('amount'), $s('currency') ?: 'EUR', $s('close') ?: null); $go = $r[0] ? 'v=opportunity&id=' . (int)$r[1] : "v=lead&id=$id"; break;
-    case 'note': $t = $s('etype'); $eid = (int)$s('eid'); $can = crm_can($u['role'], 'write'); $done = $can && crm_activity_add($pdo, $u, $t, $eid, in_array($s('kind'), ['note', 'call', 'meeting'], true) ? $s('kind') : 'note', $s('body')); $r = [$done, $done ? 'ok' : ($can ? 'body_required' : 'forbidden')]; if ($done) crm_audit($pdo, $u, 'note_add', $t, $eid, 'note added'); $go = 'v=' . (in_array($t, ['lead', 'opportunity', 'company', 'campaign', 'partner'], true) ? $t : 'dashboard') . '&id=' . $eid; break;
+    case 'note': $t = $s('etype'); $eid = (int)$s('eid'); $can = crm_can($u['role'], 'write'); $done = $can && crm_activity_add($pdo, $u, $t, $eid, in_array($s('kind'), ['note', 'call', 'meeting'], true) ? $s('kind') : 'note', $s('body')); $r = [$done, $done ? 'ok' : ($can ? 'body_required' : 'forbidden')]; if ($done) crm_audit($pdo, $u, 'note_add', $t, $eid, 'note added'); $go = 'v=' . (in_array($t, ['lead', 'opportunity', 'company', 'campaign', 'partner', 'prospect'], true) ? $t : 'dashboard') . '&id=' . $eid; break;
     case 'task_add': $r = crm_can($u['role'], 'write') ? crm_task_add($pdo, $u, $s('etype'), (int)$s('eid'), $s('title'), $s('due'), $s('assignee') === '' ? null : (int)$s('assignee')) : [false, 'forbidden']; $go = 'v=' . ($s('back') ?: 'tasks'); break;
     case 'task_done': $r = crm_can($u['role'], 'write') ? [crm_task_done($pdo, $id), 'ok'] : [false, 'forbidden']; $go = 'v=tasks'; break;
     case 'opp_create': $r = crm_opp_create($pdo, $u, (int)$s('company_id'), null, $s('kind'), $s('title'), $s('amount'), $s('currency') ?: 'EUR', $s('close') ?: null); $go = $r[0] ? 'v=opportunity&id=' . (int)$r[1] : 'v=opportunities'; break;
@@ -69,9 +70,17 @@ function crm_handle_action(PDO $pdo, array $u, array $p): array {
     case 'partner_publish': $r = crm_partner_publish($pdo, $u, $id, $s('evidence')); $go = "v=partner&id=$id"; break;
     case 'partner_unpublish': $r = crm_partner_unpublish($pdo, $u, $id); $go = "v=partner&id=$id"; break;
     case 'prospect_add': $r = crm_prospect_add($pdo, $u, $s('company'), $s('website'), $s('kind'), $s('notes'), $s('source_url')); $go = 'v=prospects'; break;
+    case 'acq_create': $r = crm_acq_create($pdo, $u, ['company' => $s('company'), 'website' => $s('website'), 'country' => $s('country'), 'region' => $s('region'), 'industry' => $s('industry'), 'size_band' => $s('size_band'), 'services' => array_values(array_filter((array)($p['services'] ?? []), 'is_string')), 'requirements' => $s('requirements'), 'automation_notes' => $s('automation_notes'), 'budget_info' => $s('budget_info'), 'urgency' => $s('urgency'), 'urgency_note' => $s('urgency_note'), 'est_value' => $s('est_value'), 'est_currency' => $s('est_currency') ?: 'EUR', 'est_basis' => $s('est_basis'), 'notes' => $s('notes'), 'next_action' => $s('next_action'), 'next_action_at' => $s('next_action_at'), 'owner_id' => $s('owner_id'), 'source_url' => $s('source_url'), 'source_label' => $s('source_label')]); $go = $r[0] ? 'v=prospect&id=' . (int)$r[1] : 'v=prospects'; break;
+    case 'acq_update': $r = crm_acq_update($pdo, $u, $id, ['company' => $s('company'), 'website' => $s('website'), 'country' => $s('country'), 'region' => $s('region'), 'industry' => $s('industry'), 'size_band' => $s('size_band'), 'services' => array_values(array_filter((array)($p['services'] ?? []), 'is_string')), 'requirements' => $s('requirements'), 'automation_notes' => $s('automation_notes'), 'budget_info' => $s('budget_info'), 'urgency' => $s('urgency'), 'urgency_note' => $s('urgency_note'), 'est_value' => $s('est_value'), 'est_currency' => $s('est_currency') ?: 'EUR', 'est_basis' => $s('est_basis'), 'notes' => $s('notes'), 'next_action' => $s('next_action'), 'next_action_at' => $s('next_action_at'), 'owner_id' => $s('owner_id')]); $go = "v=prospect&id=$id"; break;
+    case 'acq_source': $r = crm_acq_add_source($pdo, $u, $id, $s('url'), $s('label'), $s('checked')); $go = "v=prospect&id=$id"; break;
+    case 'acq_basis': $r = crm_acq_set_contact_basis($pdo, $u, $id, $s('basis'), $s('note')); $go = "v=prospect&id=$id"; break;
+    case 'acq_move': $r = crm_acq_move($pdo, $u, $id, $s('to'), $s('note')); $go = "v=prospect&id=$id"; break;
+    case 'acq_convert': $r = crm_acq_convert($pdo, $u, $id, $s('name'), $s('email'), $s('message')); $go = $r[0] ? 'v=lead&id=' . (int)$r[1] : "v=prospect&id=$id"; break;
+    case 'acq_draft': $r = crm_acq_draft_add($pdo, $u, $id, $s('subject'), $s('body')); $go = "v=prospect&id=$id"; break;
+    case 'acq_unsuppress': $pp = crm_acq_get($pdo, $id); $r = $pp ? crm_acq_unsuppress($pdo, $u, (string)$pp['website'], $s('reason')) : [false, 'not_found']; $go = "v=prospect&id=$id"; break;
     case 'prospect_fit': $r = crm_prospect_qualify($pdo, $u, $id, $s('fit')); $go = 'v=prospects'; break;
     case 'outreach_draft': $r = crm_outreach_draft_add($pdo, $u, $s('subject'), $s('body'), $s('prospect') === '' ? null : (int)$s('prospect'), $s('contact') === '' ? null : (int)$s('contact')); $go = 'v=outreach'; break;
-    case 'outreach_status': $r = crm_outreach_draft_status($pdo, $u, $id, $s('to')); $go = 'v=outreach'; break;
+    case 'outreach_status': $r = crm_outreach_draft_status($pdo, $u, $id, $s('to')); $go = 'v=' . ($s('back') !== '' ? $s('back') : 'outreach'); break;
     case 'consent': $r = crm_contact_set_consent($pdo, $u, $id, $s('status'), $s('source')); $go = 'v=company&id=' . (int)$s('company'); break;
     case 'unsubscribe': $r = crm_contact_unsubscribe($pdo, $u, $id); $go = 'v=company&id=' . (int)$s('company'); break;
   }
@@ -79,9 +88,9 @@ function crm_handle_action(PDO $pdo, array $u, array $p): array {
 }
 
 // ---- views ---------------------------------------------------------------------------------------------------------------------------
-function crm_views(): array { return ['dashboard', 'leads', 'lead', 'opportunities', 'opportunity', 'proposals', 'proposal', 'contracts', 'contract', 'campaigns', 'campaign', 'partners', 'partner', 'prospects', 'outreach', 'companies', 'company', 'tasks', 'audit', 'users']; }
+function crm_views(): array { return ['acquisition', 'prospect', 'dashboard', 'leads', 'lead', 'opportunities', 'opportunity', 'proposals', 'proposal', 'contracts', 'contract', 'campaigns', 'campaign', 'partners', 'partner', 'prospects', 'outreach', 'companies', 'company', 'tasks', 'audit', 'users']; }
 function crm_nav(string $v, array $u): string {
-  $items = ['dashboard' => 'Dashboard', 'leads' => 'Leads', 'opportunities' => 'Pipeline', 'proposals' => 'Proposals', 'contracts' => 'Contracts', 'campaigns' => 'Campaigns', 'partners' => 'Partners', 'prospects' => 'Prospects', 'outreach' => 'Outreach drafts', 'companies' => 'Companies', 'tasks' => 'Tasks'] + ($u['role'] === 'owner' ? ['audit' => 'Audit log', 'users' => 'Users'] : []);
+  $items = ['dashboard' => 'Dashboard', 'leads' => 'Leads', 'opportunities' => 'Pipeline', 'proposals' => 'Proposals', 'contracts' => 'Contracts', 'campaigns' => 'Campaigns', 'partners' => 'Partners', 'acquisition' => 'Acquisition', 'prospects' => 'Prospects', 'outreach' => 'Outreach drafts', 'companies' => 'Companies', 'tasks' => 'Tasks'] + ($u['role'] === 'owner' ? ['audit' => 'Audit log', 'users' => 'Users'] : []);
   $top = ['lead' => 'leads', 'opportunity' => 'opportunities', 'proposal' => 'proposals', 'contract' => 'contracts', 'campaign' => 'campaigns', 'partner' => 'partners', 'company' => 'companies'][$v] ?? $v;
   $o = '<nav aria-label="CRM sections" class="crmNav" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 16px">'; foreach ($items as $k => $l) $o .= '<a class="btn sm' . ($k === $top ? '' : ' secondary') . '" href="/crm.php?v=' . $k . '"' . ($k === $top ? ' aria-current="page"' : '') . '>' . crm_h($l) . '</a>'; return $o . '</nav>';
 }
@@ -191,9 +200,9 @@ function crm_render_view(PDO $pdo, array $u, string $v, array $q): void {
       if ($mv) echo '<h3>Status</h3>' . crm_form('partner_move', ['id' => $id], crm_f_select('to', 'Move to', $mv) . crm_f_input('reason', 'Reason (required to reject or suspend)'), 'Update status');
       if ($p['status'] === 'approved' && crm_can($u['role'], 'approve')) echo '<h3>Public listing</h3>' . ($p['public_listing'] === 'listed' ? crm_form('partner_unpublish', ['id' => $id], '', 'Withdraw public listing') : crm_form('partner_publish', ['id' => $id], crm_f_input('evidence', 'Public https source that verifies this relationship'), 'List publicly'));
       echo crm_notes_block($pdo, $u, 'partner', $id); break;
-    case 'prospects':
-      echo '<h2>Prospects (research records)</h2><p class="small">Company-level research only. Do not store personal contact details. Nothing is contacted from here.</p>' . crm_tbl('Prospects', ['#', 'Company', 'Kind', 'Fit', 'Source', ''], array_map(fn($x) => [(int)$x['id'], crm_h($x['company_name']) . '<br><span class="small">' . crm_h($x['website']) . '</span>', crm_h(crm_lead_kinds()[$x['kind']] ?? $x['kind']), crm_h(crm_prospect_fit_statuses()[$x['fit_status']] ?? ''), crm_h($x['source_url'] ?: '—'), $canW ? crm_form('prospect_fit', ['id' => $x['id']], crm_f_select('fit', 'Fit', crm_prospect_fit_statuses(), $x['fit_status']), 'Set', 'inline') : ''], crm_prospects_list($pdo)));
-      if ($canW) echo '<h3>Add a prospect</h3>' . crm_form('prospect_add', [], crm_f_input('company', 'Company') . crm_f_input('website', 'Website (https://…)') . crm_f_select('kind', 'Kind', crm_lead_kinds()) . crm_f_input('source_url', 'Public source URL') . crm_f_area('notes', 'Research notes (no emails or phone numbers)'), 'Add prospect'); break;
+    case 'acquisition': crm_acq_view_dashboard($pdo); break;
+    case 'prospects': crm_acq_view_prospects($pdo, $u, $q, $users); break;
+    case 'prospect': crm_acq_view_prospect($pdo, $u, $id, $q, $users); break;
     case 'outreach':
       $rp = crm_outreach_report($pdo); echo '<h2>Outreach drafts</h2><div class="noteBox" role="status">This system does not send outreach. Drafts are for internal planning; “sent” is always ' . (int)$rp['sent'] . '. Contacting a real company needs the owner’s explicit approval and happens outside this system.</div><p class="small">Drafts: ' . (int)$rp['drafts'] . ' · prospects: ' . (int)$rp['prospects'] . ' · unsubscribed contacts: ' . (int)$rp['unsubscribed_contacts'] . ' · open follow-ups: ' . (int)$rp['open_followups'] . '</p>';
       echo crm_tbl('Drafts', ['#', 'Prospect', 'Subject', 'Status', ''], array_map(fn($d) => [(int)$d['id'], crm_h($d['company_name'] ?: ($d['contact_id'] ? 'contact #' . $d['contact_id'] : '—')), crm_h($d['subject']), crm_h($d['status']), crm_can($u['role'], 'outreach') ? crm_form('outreach_status', ['id' => $d['id']], crm_f_select('to', 'Status', ['draft' => 'Draft', 'reviewed' => 'Reviewed', 'archived' => 'Archived'], $d['status']), 'Set', 'inline') : ''], crm_outreach_drafts_list($pdo)));
