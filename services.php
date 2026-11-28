@@ -1,21 +1,23 @@
 <?php
-// TrustNova Tech AI development services: landing pages and a guided project inquiry. No client names, case studies or results are claimed.
+// TrustNova Tech AI, automation and enterprise software services: landing pages and a guided consultation request. No client names, case studies, certifications or guarantees are claimed.
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/crm_intake.php';
 $cat = trustnova_catalog(); $services = $cat['services']; $slug = (string)($_GET['s'] ?? ''); $svc = $services[$slug] ?? null;
 if ($slug !== '' && !$svc) { http_response_code(404); require __DIR__ . '/404.php'; exit; }
 $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES);
 if ($svc) { $title = $svc['title'] . ' by TrustNova Tech — AIHubpedia'; $meta_desc = mb_substr($svc['summary'], 0, 158); $crumbs = [['Home', site_url('/')], ['Services', site_url('/services.php')], [$svc['title'], null]]; }
-else { $title = 'AI Development Services by TrustNova Tech — Agents, RAG, Automation, Custom Software'; $meta_desc = 'TrustNova Tech builds custom AI agents, enterprise assistants, document intelligence, workflow automation and custom software. Describe your project and get a reply by email.'; $crumbs = [['Home', site_url('/')], ['Services', null]]; }
+else { $title = 'AI, Automation & Enterprise Software Solutions by TrustNova Tech'; $meta_desc = 'TrustNova Tech delivers custom AI agents, business process automation, AI chatbots and assistants, custom software, enterprise integrations, data insights, cloud transformation and AI consulting. Book a free consultation. Describe your project and get a reply by email.'; $crumbs = [['Home', site_url('/')], ['Services', null]]; }
 $main_class = 'fullbleed';
 require __DIR__ . '/layout_top.php';
-$__ico = ['custom-ai-agents' => 'sparkle', 'enterprise-ai-assistants' => 'chat', 'rag-document-intelligence' => 'book', 'ai-workflow-automation' => 'flow', 'custom-saas-applications' => 'layers', 'api-integrations' => 'plug', 'backend-development' => 'database', 'software-modernization' => 'code', 'cloud-solutions' => 'bolt', 'ai-business-applications' => 'briefcase'];
+$__icoLegacy = ['custom-ai-agents' => 'sparkle', 'enterprise-ai-assistants' => 'chat', 'rag-document-intelligence' => 'book', 'ai-workflow-automation' => 'flow', 'custom-saas-applications' => 'layers', 'api-integrations' => 'plug', 'backend-development' => 'database', 'software-modernization' => 'code', 'cloud-solutions' => 'bolt', 'ai-business-applications' => 'briefcase'];
+$__ico = []; foreach ($services as $__k => $__s) $__ico[$__k] = (string)($__s['icon'] ?? 'sparkle');
+$__primary = array_filter($services, fn($s) => (int)($s['portfolio'] ?? 0) > 0); $__special = array_filter($services, fn($s) => (int)($s['portfolio'] ?? 0) === 0);
 $__acc = [['#8b5cf6', '#ec4899'], ['#06b6d4', '#2563eb'], ['#10b981', '#0ea5e9'], ['#f59e0b', '#ef4444'], ['#3b82f6', '#4f46e5']];
 $__spans = ['a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'a', 'a'];   // bento rhythm: 4+2, then threes of 2, then 3+3
 $__spanClass = [0 => 'c', 1 => 'b'];
 ?>
 <?php if ($svc): ?>
-<?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI development services', 'icon' => $__ico[$slug] ?? 'code', 'title' => $svc['title'], 'lead' => $h($svc['summary']), 'art' => 'agent',
+<?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI development services', 'icon' => $__ico[$slug] ?? 'code', 'title' => $svc['title'], 'lead' => $h($svc['summary']), 'art' => 'agent', 'facts' => array_slice((array)($svc['outcomes'] ?? []), 0, 3),
   'actions' => '<a class="btn btn--accent" href="#inquiry" data-cta="svc_describe">Describe your project</a><a class="btn secondary" href="/services.php">All services</a>']) ?>
 <div class="wrap pgBody">
   <div class="bento">
@@ -26,23 +28,24 @@ $__spanClass = [0 => 'c', 1 => 'b'];
   </div>
 </div>
 <?php else: ?>
-<?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI development services', 'icon' => 'code', 'title_html' => 'Custom AI and software, <span class="gradText2">built around your process</span>',
-  'lead' => 'AIHubpedia is built and run by TrustNova Tech. If you need an AI system or custom software built, tell us about the problem. We reply by email if it looks like a fit; there is no obligation.', 'art' => 'workflow',
+<?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI, automation and enterprise software', 'icon' => 'code', 'title_html' => 'AI and software solutions that <span class="gradText2">move your business forward</span>',
+  'lead' => 'TrustNova Tech builds custom AI agents, automation, chatbots, enterprise integrations and software that help organisations save time, reduce cost, scale and grow. Book a free consultation: tell us the problem and we reply by email if it looks like a fit, with no obligation.', 'art' => 'workflow',
   'actions' => '<a class="btn btn--accent" href="#inquiry" data-cta="svc_hero_project">Book a Free Consultation</a><a class="btn secondary" href="#build">See what we build</a>',
-  'facts' => ['Written scope before work starts', 'No outcomes promised in advance', 'No client case studies claimed']]) ?>
+  'facts' => ['Free consultation, no obligation', 'Written scope before work starts', 'Outcomes are agreed goals, not guarantees']]) ?>
 <div class="wrap pgBody" id="build">
-  <div class="sectionHead"><div><h2 id="svcTitle">What we build</h2><p>Ten kinds of project. Open one to see who it suits, what you receive and what we will ask.</p></div></div>
+  <div class="sectionHead"><div><h2 id="svcTitle">Our services</h2><p>Eight service areas, each described by the business benefit it is designed to deliver. Open one to see who it suits, what you receive and what we will ask.</p></div></div>
   <div class="bento" aria-labelledby="svcTitle">
-    <?php $n = 0; foreach ($services as $k => $sv): $ac = $__acc[$n % 5]; $span = in_array($n, [0]) ? 'c' : (in_array($n, [8, 9]) ? 'a' : 'b'); $dark = $n === 0; ?>
+    <?php $n = 0; foreach ($__primary as $k => $sv): $ac = $__acc[$n % 5]; $span = $n === 0 ? 'c' : 'b'; $dark = $n === 0; ?>
       <a class="bento__cell bento__cell--<?= $span ?><?= $dark ? ' bento__cell--dark' : '' ?>" href="/services.php?s=<?= $h(rawurlencode($k)) ?>" style="--c1:<?= $ac[0] ?>;--c2:<?= $ac[1] ?>;text-decoration:none;color:inherit">
         <span class="ico3d"><?= ui_icon($__ico[$k] ?? 'sparkle') ?></span>
         <h3><?= $h($sv['title']) ?></h3>
-        <p><?= $h($sv['summary']) ?></p>
+        <p><?= $h($sv['short'] ?? $sv['summary']) ?></p>
         <span class="readGo">Learn more <?= ui_icon('arrow') ?><span class="sr"> about <?= $h($sv['title']) ?></span></span>
         <?php if ($dark): ?><span class="bento__art" aria-hidden="true"><?= art_agent() ?></span><?php endif; ?>
       </a>
     <?php $n++; endforeach; ?>
   </div>
+  <p class="small" style="margin-top:18px"><strong>Specialist engagements:</strong> <?php $__i = 0; foreach ($__special as $__k => $__sv): ?><?= $__i++ ? ' · ' : '' ?><a href="/services.php?s=<?= $h(rawurlencode($__k)) ?>"><?= $h($__sv['title']) ?></a><?php endforeach; ?>. These are delivered as part of the services above.</p>
 </div>
 <section class="bizBand wrap" aria-labelledby="flowT" style="padding-top:0;padding-inline:28px">
   <div class="sectionHead"><div><h2 id="flowT">How an automation fits together</h2><p>A typical workflow connects a trigger, your data, an AI step and a result, with a person approving anything important.</p></div></div>

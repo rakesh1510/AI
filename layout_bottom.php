@@ -27,7 +27,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <?php else: ?>
           <span class="eyebrow"><?= ui_icon('briefcase') ?> For business</span>
           <h2 id="ftCta">Have a project in mind?</h2>
-          <p>TrustNova Tech builds custom AI agents, workflow automation, chatbots, API integrations and custom software. Book a free consultation: tell us your goal and we will reply by email to arrange it if it is a fit.</p>
+          <p>TrustNova Tech delivers custom AI agents, process automation, chatbots, integrations, analytics, cloud transformation and AI consulting. Book a free consultation: tell us your goal and we will reply by email to arrange it if it is a fit.</p>
           <div class="fHero__cta"><a class="btn btn--accent" href="/services.php#inquiry" data-cta="footer_project">Book a Free Consultation</a><a class="btn secondary" href="/advertise.php">Advertise a tool</a></div>
         <?php endif; ?>
       </div>
@@ -53,7 +53,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
       <nav class="footerCol" aria-label="For business">
         <h3>For business</h3>
         <a href="/services.php#inquiry">Book a free consultation</a>
-        <a href="/services.php">AI development services</a>
+        <a href="/services.php">AI, automation &amp; software services</a>
         <a href="/advertise.php">Advertise a tool</a>
         <a href="/partners.php">Partnerships</a>
         <a href="/submit.php">Submit your AI tool</a>

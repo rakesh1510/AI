@@ -109,7 +109,7 @@ require __DIR__ . '/layout_top.php';
         <div class="heroGoals" role="group" aria-labelledby="goalsLabel"><?php foreach (array_slice($intents, 0, 6) as $i): ?><a class="chipLink" href="<?= h($i['url']) ?>"><?= h($i['label']) ?></a><?php endforeach; ?></div>
       </div>
       <div class="heroBiz">
-        <p><strong>For businesses:</strong> custom AI agents, workflow automation, chatbots, API integrations and custom software, built by TrustNova Tech.</p>
+        <p><strong>For businesses:</strong> custom AI agents, process automation, chatbots, integrations, analytics and software that save time, cut cost and scale, from TrustNova Tech.</p>
         <a class="btn btn--accent sm" href="/services.php#inquiry" data-cta="hero_project">Book a Free Consultation</a>
       </div>
     </div>
@@ -146,7 +146,7 @@ require __DIR__ . '/layout_top.php';
       <a class="path path--build" href="/services.php#inquiry" data-cta="path_build">
         <span class="bubble"><?= ui_icon('code') ?></span>
         <h3>Build With AI</h3>
-        <p>Custom AI agents, workflow automation, chatbots, API integrations and custom software from TrustNova Tech. Free consultation, written scope before work starts.</p>
+        <p>Custom AI agents, process automation, chatbots, integrations, analytics and software from TrustNova Tech, designed to save time, cut cost and scale. Free consultation, written scope first.</p>
         <span class="path__go">Book a free consultation <?= ui_icon('arrow') ?></span>
       </a>
       <a class="path path--promote" href="/advertise.php" data-cta="path_promote">
@@ -199,7 +199,7 @@ require __DIR__ . '/layout_top.php';
 
 <section class="bizBand stage" aria-labelledby="svcTitle" id="services">
   <div class="wrap">
-    <div class="sectionHead"><div><h2 id="svcTitle">Custom AI and software for your business</h2><p>AIHubpedia is built and run by TrustNova Tech. When no ready-made tool fits, we build custom AI agents, workflow automation, chatbots and assistants, API integrations and custom software. These are the projects we take on, and what you receive from each.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
+    <div class="sectionHead"><div><h2 id="svcTitle">AI, automation and enterprise software for your business</h2><p>AIHubpedia is built and run by TrustNova Tech. When no ready-made tool fits, these are the eight service areas we deliver, each described by the business outcome it is designed to support.</p></div><a class="moreLink" href="/services.php">All services <?= ui_icon('arrow') ?></a></div>
     <ul class="svcTiles">
       <?php foreach ($svcCatalog as $i => $sv): $__t = [['#06b6d4', '#2563eb'], ['#8b5cf6', '#ec4899'], ['#10b981', '#0ea5e9'], ['#f59e0b', '#ef4444']][$i % 4]; ?>
       <li><article class="svcTile" style="--c1:<?= $__t[0] ?>;--c2:<?= $__t[1] ?>">

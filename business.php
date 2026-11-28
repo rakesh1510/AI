@@ -2,8 +2,8 @@
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/crm_intake.php';
 $company = getenv('AIHUB_BUSINESS_NAME') ?: 'TrustNova Tech';
-$title = 'AI Consulting & Custom AI Agents by ' . $company;
-$meta_desc = 'Request an AI consultation, a custom AI agent or a custom software project from ' . $company . '. Tell us what you want to build and we will reply by email if it is a fit.';
+$title = 'AI, Automation & Enterprise Software Solutions by ' . $company;
+$meta_desc = 'Book a free consultation with ' . $company . ': custom AI agents, business process automation, AI chatbots and assistants, custom software, enterprise integrations, data insights, cloud transformation and AI consulting.';
 $crumbs = [['Home', site_url('/')], ['For business', null]];
 $jsonld = [['@type' => 'WebPage', '@id' => site_url('/business.php#webpage'), 'url' => site_url('/business.php'), 'name' => seo_title($title), 'description' => seo_description($meta_desc), 'isPartOf' => ['@id' => site_url('/#website')]], seo_breadcrumb_node($crumbs)];
 $default = in_array($_GET['need'] ?? '', ['consultation', 'ai_agent', 'software_dev'], true) ? $_GET['need'] : 'consultation';
@@ -16,9 +16,9 @@ require __DIR__ . '/layout_top.php';
   <div class="wrap">
     <div>
       <div class="pgHero__crumbs" style="padding:0 0 14px"><?= render_breadcrumbs($crumbs) ?></div>
-      <span class="eyebrow"><?= ui_icon('briefcase') ?> AI development and automation</span>
-      <h1>Build the AI your business <span class="gradText2">actually needs</span></h1>
-      <p class="lead">AIHubpedia helps you choose existing tools. When no off-the-shelf tool fits, <?= h($company) ?> designs and builds API integrations, workflow automation, custom AI agents and PHP/MySQL software around your process.</p>
+      <span class="eyebrow"><?= ui_icon('briefcase') ?> AI, automation and enterprise software</span>
+      <h1>AI and software that <span class="gradText2">move your business forward</span></h1>
+      <p class="lead">AIHubpedia helps you choose existing tools. When no off-the-shelf tool fits, <?= h($company) ?> delivers custom AI agents, business process automation, chatbots, enterprise integrations and software designed to save time, reduce cost, scale and support growth.</p>
       <div class="heroActions">
         <a class="btn btn--accent" href="#request" data-cta="biz_hero_project">Book a Free Consultation</a>
         <a class="btn secondary" href="#services">See what we build</a>
@@ -35,7 +35,7 @@ require __DIR__ . '/layout_top.php';
 
 <section class="bizBand stage" data-tone="<?= h(page_tone()) ?>" id="services" aria-labelledby="whatTitle">
  <div class="wrap">
-  <div class="sectionHead"><div><h2 id="whatTitle">What you can request</h2><p>Four kinds of project, each with concrete things you receive. Scope and fit are agreed with you before any work starts.</p></div></div>
+  <div class="sectionHead"><div><h2 id="whatTitle">Our services</h2><p>Eight service areas, each with the business outcomes it is designed to deliver. Scope, fit and how success is measured are agreed with you in writing before any work starts. <a href="/services.php">See every service</a>.</p></div></div>
   <ul class="svcTiles" style="--x:0">
     <?php foreach ($svc as $i => $sv): $ac = $accents[$i % 4]; ?>
     <li><article class="svcTile bizTile" style="--c1:<?= $ac[0] ?>;--c2:<?= $ac[1] ?>">
@@ -69,7 +69,7 @@ require __DIR__ . '/layout_top.php';
       ['chat', 'Support triage', 'Route and draft replies to incoming messages, with a person approving anything sent.', 0],
       ['database', 'Data hand-offs', 'Move records between your CRM, billing and spreadsheets through their APIs, with logging.', 2],
       ['bolt', 'Document processing', 'Extract fields from forms and PDFs into your database for review.', 1],
-      ['code', 'Internal tools', 'PHP/MySQL dashboards and admin screens built around how your team works.', 3],
+      ['code', 'Internal tools', 'Dashboards and admin screens built around how your team works.', 3],
       ['mail', 'Lead handling', 'Capture enquiries, tag them and notify the right person, with consent recorded.', 0],
       ['flow', 'AI agents', 'A scoped agent that uses defined tools and stops for approval at set points.', 1],
     ] as [$ic, $t, $d, $k]): $ac = $accents[$k]; ?>

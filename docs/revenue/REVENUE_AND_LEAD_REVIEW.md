@@ -38,3 +38,22 @@ Gaps and ranked opportunities (none built here, to avoid duplication and keep th
 
 ## 4. Trust and credibility (verifiable only)
 Kept: "509 tools listed", "20 reviewed profiles with sources", "4 comparison guides", "Prices carry an as-of date", the independent-directory statement, the disclosure page, and on `services.php` the commitments that already exist: written scope before work starts, no outcomes promised in advance, no client case studies claimed. Not added: client logos, testimonials, ratings, user counts or revenue/traffic figures (none are verifiable from the repository). When real, permissioned references exist they can be added to the services page.
+
+## 5. Positioning update: global AI, automation and enterprise software company
+TrustNova Tech is presented through eight business-oriented services (`data/trustnova_services.json`, field `portfolio` 1-8). **Every existing slug is kept** (URLs, sitemap entries, stored enquiries and `service` values stay valid); one slug is new.
+
+| # | Customer-facing service | Slug | Note |
+|---|---|---|---|
+| 1 | Custom AI Agents | `custom-ai-agents` | unchanged URL |
+| 2 | Business Process Automation | `ai-workflow-automation` | retitled |
+| 3 | AI Chatbots & Assistants | `enterprise-ai-assistants` | retitled |
+| 4 | Custom Software Solutions | `custom-saas-applications` | retitled; backend work is part of it |
+| 5 | AI & Enterprise Integrations | `api-integrations` | retitled |
+| 6 | Data Analytics & AI Insights | `rag-document-intelligence` | reframed around business data and referenced insights |
+| 7 | Cloud & Digital Transformation | `cloud-solutions` | retitled; includes staged modernisation |
+| 8 | AI Consulting & Strategy | `ai-consulting-strategy` | **new page**, added to the sitemap automatically |
+
+Specialist engagements keep their URLs and are listed on the services page as part of a portfolio service: Backend & API Engineering (was "Backend development"; the homepage tile "PHP/MySQL development" is gone), Enterprise Software Modernisation, AI-Powered Business Applications.
+Updated for consistency: homepage services band, hero business panel and path card, services overview and detail pages (outcomes shown as the fact row), business page, footer, project-type list in the consultation form, SEO titles/descriptions (`seo.php`, `services.php`, `business.php`), disclosure wording. No technology names (PHP, MySQL) appear in customer-facing service copy; the technology stack itself is unchanged.
+Honesty rules kept: outcomes are "designed to support / aims", a new catalogue note states they are goals, not guarantees; no clients, testimonials, certifications, statistics or guarantees were added.
+**Owner to confirm before production:** that TrustNova can genuinely deliver (a) analytics and reporting views for client data (service 6 lists "reports or views that present the findings") and (b) AI strategy consulting engagements (service 8). Remove or soften a deliverable line in `data/trustnova_services.json` if not.
