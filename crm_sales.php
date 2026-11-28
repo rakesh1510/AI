@@ -101,6 +101,7 @@ function crm_lead_ingest(PDO $pdo, array $in): array {
     $leadId = (int)$pdo->lastInsertId();
     crm_activity_add($pdo, null, 'lead', $leadId, 'system', 'Inquiry received' . (($in['source'] ?? '') !== '' ? ' via ' . crm_line($in['source'], 60) : '') . ($dupOf ? '. Possible duplicate of lead #' . $dupOf . '.' : '.'));
     crm_audit($pdo, null, 'lead_ingest', 'lead', $leadId, $kind . '/' . crm_slug($in['subtype'] ?? '', 40) . ($dupOf ? ' (possible duplicate)' : ''));
+    if (!$syn && function_exists('crm_response_ready') && crm_response_ready($pdo)) { try { crm_response_open($pdo, $leadId, $in, $now); } catch (Throwable $e) { sec_log_exception($e, 'crm_response_open'); } }   // Phase 7B: exactly one follow-up task + priority; never blocks the enquiry
     if ($own) $pdo->commit();
     return [true, $leadId, ['company_id' => $companyId, 'contact_id' => $contactId, 'duplicate_of' => $dupOf, 'duplicates' => $dupes]];
   } catch (Throwable $e) { if ($own && $pdo->inTransaction()) $pdo->rollBack(); sec_log_exception($e, 'crm_lead_ingest'); return [false, 'storage_error']; }
@@ -117,11 +118,13 @@ function crm_leads_list(PDO $pdo, array $f = [], int $perPage = 25): array {
   if (isset($f['assigned']) && $f['assigned'] === 'none') $w[] = 'l.assigned_to IS NULL'; elseif (!empty($f['assigned'])) { $w[] = 'l.assigned_to = ?'; $a[] = (int)$f['assigned']; }
   if (!empty($f['source'])) { $w[] = 'l.attr_source = ?'; $a[] = crm_slug($f['source'], 40); }
   if (!empty($f['duplicates'])) $w[] = 'l.duplicate_of IS NOT NULL';
+  $rr = function_exists('crm_response_ready') && crm_response_ready($pdo); $nowU = crm_now();
+  if ($rr && !empty($f['response'])) { if ($f['response'] === 'answered') $w[] = 'r.first_response_at IS NOT NULL'; elseif ($f['response'] === 'unanswered') $w[] = "r.lead_id IS NOT NULL AND r.first_response_at IS NULL AND l.status IN ('new','qualified')"; elseif ($f['response'] === 'overdue') { $w[] = "r.lead_id IS NOT NULL AND r.first_response_at IS NULL AND l.status IN ('new','qualified') AND r.due_at < ?"; $a[] = $nowU; } }
   if (!empty($f['q'])) { $like = '%' . addcslashes(crm_text($f['q'], 80), '%_\\') . '%'; $w[] = '(c.name LIKE ? OR k.name LIKE ? OR k.email_norm LIKE ? OR l.message LIKE ?)'; array_push($a, $like, $like, $like, $like); }
-  $where = $w ? ' WHERE ' . implode(' AND ', $w) : ''; $base = ' FROM crm_leads l LEFT JOIN crm_companies c ON c.id = l.company_id LEFT JOIN crm_contacts k ON k.id = l.contact_id LEFT JOIN crm_users u ON u.id = l.assigned_to' . $where;
+  $where = $w ? ' WHERE ' . implode(' AND ', $w) : ''; $base = ' FROM crm_leads l LEFT JOIN crm_companies c ON c.id = l.company_id LEFT JOIN crm_contacts k ON k.id = l.contact_id LEFT JOIN crm_users u ON u.id = l.assigned_to' . ($rr ? ' LEFT JOIN crm_lead_response r ON r.lead_id = l.id' : '') . $where;
   $s = $pdo->prepare('SELECT COUNT(*)' . $base); $s->execute($a); $total = (int)$s->fetchColumn();
   $page = max(1, (int)($f['page'] ?? 1)); $off = ($page - 1) * $perPage;
-  $s = $pdo->prepare('SELECT l.id, l.kind, l.subtype, l.status, l.created_at, l.attr_source, l.attr_campaign, l.duplicate_of, l.is_synthetic, c.name AS company_name, k.name AS contact_name, k.email AS contact_email, u.display_name AS assignee' . $base . ' ORDER BY l.id DESC LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$off);
+  $s = $pdo->prepare('SELECT l.id, l.kind, l.subtype, l.status, l.created_at, l.attr_source, l.attr_campaign, l.duplicate_of, l.is_synthetic, c.name AS company_name, k.name AS contact_name, k.email AS contact_email, u.display_name AS assignee' . ($rr ? ', r.priority_band, r.priority_score, r.first_response_at, r.due_at' : '') . $base . ' ORDER BY l.id DESC LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$off);
   $s->execute($a); return ['rows' => $s->fetchAll(PDO::FETCH_ASSOC), 'total' => $total, 'page' => $page, 'per_page' => $perPage];
 }
 function crm_lead_assign(PDO $pdo, ?array $user, int $leadId, ?int $assignee): array {

@@ -60,13 +60,52 @@ function adm_tiles_crm(PDO $pdo): array {
   $eur = $d['revenue'][ADM_REPORT_CURRENCY] ?? null; $others = array_diff(array_keys($d['revenue']), [ADM_REPORT_CURRENCY]);
   $note = $others ? 'Other currencies exist (' . implode(', ', $others) . ') and are not converted here.' : '';
   return [
-    adm_tile('New inquiries, last 30 days', adm_n((int)$d['inquiries']), 'From the public forms into the CRM.'),
     adm_tile('Open opportunities', adm_n((int)$d['open_opportunities']), 'Pipeline stages that are not won or lost.'),
-    adm_tile('Follow-ups overdue', adm_n((int)$d['tasks_overdue']), adm_n((int)$d['tasks_open']) . ' open tasks in total.'),
     adm_tile('Recurring revenue (MRR, ' . ADM_REPORT_CURRENCY . ')', $eur ? adm_eur((int)$eur['mrr']) : null, $eur ? 'Active recurring contracts in the CRM. ' . $note : 'No contracts recorded in ' . ADM_REPORT_CURRENCY . ' yet. ' . $note),
-    adm_tile('Revenue received (' . ADM_REPORT_CURRENCY . ')', $eur ? adm_eur((int)$eur['received']) : null, $eur ? 'Payments recorded against CRM contracts. Full finance reporting arrives in Phase 8D.' : 'No payments recorded in ' . ADM_REPORT_CURRENCY . ' yet.'),
+    adm_tile('Revenue received, all time (' . ADM_REPORT_CURRENCY . ')', $eur ? adm_eur((int)$eur['received']) : null, $eur ? 'Payments recorded against CRM contracts. Full finance reporting arrives in Phase 8D.' : 'No payments recorded in ' . ADM_REPORT_CURRENCY . ' yet.'),
     adm_tile('Renewals due in 60 days', adm_n((int)$d['renewals_60d']), 'Contracts reaching their end date.'),
   ];
+}
+
+/* ---- Phase 7B CEO overview: counts and recorded figures only. Actual results and estimated opportunities are separate sections with separate labels. ---- */
+function adm_dur(?int $min): string { return $min === null ? '' : ($min >= 60 ? intdiv($min, 60) . ' h ' . ($min % 60) . ' min' : $min . ' min'); }
+function adm_tiles_attention(PDO $pdo): array {
+  $o = adm_safe(fn() => crm_response_overview($pdo)); if (!$o) return [adm_tile('Enquiries', null, 'The CRM could not be read.', 'na')];
+  $unready = 'Needs the Phase 7B database migration (database/phase7b_lead_management.sql).';
+  $t = [adm_tile('New enquiries, last 7 days', $o['new_7d'] === null ? null : adm_n($o['new_7d']), 'Real enquiries only; test records excluded.')];
+  $t[] = adm_tile('Unanswered enquiries', $o['ready'] ? adm_n($o['unanswered']) : null, $o['ready'] ? 'No human reply yet. Automatic acknowledgements do not count.' : $unready, $o['ready'] ? 'ok' : 'na');
+  $t[] = adm_tile('Past the 4-hour target', $o['ready'] ? adm_n($o['overdue']) : null, $o['ready'] ? 'Four business hours, Mon-Fri 09:00-17:00 Europe/Berlin, holidays excluded.' : $unready, $o['ready'] ? 'ok' : 'na');
+  $t[] = adm_tile('High-priority, unanswered', $o['ready'] ? adm_n($o['high_unanswered']) : null, $o['ready'] ? 'Score 60 or more; the reasons are shown on each lead.' : $unready, $o['ready'] ? 'ok' : 'na');
+  $t[] = adm_tile('Upcoming consultations (14 days)', $o['ready'] ? adm_n(count($o['consultations'])) : null, $o['ready'] ? ($o['consultations'] ? 'Next: ' . crm_fmt_berlin($o['consultations'][0]['scheduled_at']) . ' (Berlin).' : 'None scheduled.') : $unready, $o['ready'] ? 'ok' : 'na');
+  $t[] = adm_tile('Follow-ups overdue', $o['tasks_overdue'] === null ? null : adm_n($o['tasks_overdue']), 'Open tasks past their due time.');
+  $t[] = adm_tile('Pending proposals', $o['pending_proposals'] === null ? null : adm_n($o['pending_proposals']), $o['stale_proposals'] ? adm_n($o['stale_proposals']) . ' waiting more than ' . CRM_STALE_PROPOSAL_DAYS . ' days.' : 'Pending approval or approved, not yet accepted.');
+  $t[] = adm_tile('Average first response (30 days)', $o['ready'] && $o['avg_minutes'] !== null ? adm_dur($o['avg_minutes']) : null, $o['ready'] ? ($o['avg_minutes'] !== null ? $o['within_target_pct'] . '% of ' . $o['answered_30d'] . ' answered within target. Business minutes.' : 'No answered enquiries in the period yet.') : $unready, $o['ready'] ? 'ok' : 'na');
+  return $t;
+}
+function adm_attention_list(PDO $pdo): string {
+  $o = adm_safe(fn() => crm_response_overview($pdo)); if (!$o || empty($o['unanswered_list'])) return '';
+  $h = '<div class="panel scroll" role="region" tabindex="0" aria-label="Unanswered enquiries"><table><caption class="sr" style="position:absolute;left:-999px">Unanswered enquiries, most urgent first</caption><thead><tr><th scope="col">Enquiry</th><th scope="col">Priority</th><th scope="col">Status</th></tr></thead><tbody>';
+  foreach ($o['unanswered_list'] as $r) $h .= '<tr><th scope="row"><a class="admLink" href="/crm.php?v=lead&amp;id=' . (int)$r['id'] . '">#' . (int)$r['id'] . ' ' . adm_h($r['company'] ?: 'individual') . '</a></th><td>' . adm_h(crm_priority_label($r['priority_band'])) . ' (' . (int)$r['priority_score'] . ')</td><td>' . ($r['state']['state'] === 'overdue' ? 'Overdue since ' : 'Due ') . adm_h(crm_fmt_berlin($r['due_at'])) . '</td></tr>';
+  return $h . '</tbody></table></div><p><a class="admLink" href="/crm.php?v=leads&amp;response=unanswered">All unanswered enquiries</a></p>';
+}
+/** @return array{estimate:array,actual:array,targets:array} tiles for the three finance-driven sections; each says "Not available" when the finance tables or records are missing. */
+function adm_tiles_finance(PDO $pdo): array {
+  $store = adm_safe(fn() => class_exists('AdmFinancePdoStore') ? new AdmFinancePdoStore($pdo) : null);
+  $d = adm_safe(fn() => crm_dashboard($pdo, 30)); $cur = ADM_REPORT_CURRENCY; $pv = $d['pipeline_value'][$cur] ?? null; $others = $d ? array_diff(array_keys($d['pipeline_value']), [$cur]) : [];
+  $rep = $store ? adm_safe(fn() => admf_report(admf_load($store))) : null; $e = $rep['currencies'][$cur] ?? null; $ym = $rep ? admf_ym($rep['as_of']) : '';
+  $est = [adm_tile('Pipeline value, open opportunities (' . $cur . ')', $pv !== null ? adm_eur((int)$pv) : null, 'ESTIMATE: expected deal values typed into the CRM, not revenue and not a forecast of cash.' . ($others ? ' Other currencies (' . implode(', ', $others) . ') are not converted.' : ''), $d ? 'ok' : 'na'),
+          adm_tile('Weighted pipeline (' . $cur . ')', $e && $e['forecast'] > 0 ? adm_eur((int)$e['forecast']) : null, 'ESTIMATE: stage weights are planning assumptions (5-70%), not measured win rates.', $rep ? 'ok' : 'na')];
+  $hasR = $e && $e['has_revenue']; $hasX = $e && $e['has_expenses']; $m = $e['series'][$ym] ?? null;
+  $act = [adm_tile('Revenue received, this month (' . $cur . ')', $hasR && $m ? adm_eur((int)$m['income']) : null, $hasR ? 'ACTUAL: payments recorded against contracts, less refunds. Recorded manually, not bank-verified.' : 'No payments recorded yet.', $rep ? 'ok' : 'na'),
+          adm_tile('Expenses, this month (' . $cur . ')', $hasX && $m ? adm_eur((int)$m['expenses']) : null, $hasX ? 'ACTUAL: recorded expenses (cash basis).' : 'No expenses recorded yet.', $rep ? 'ok' : 'na'),
+          adm_tile('Profit, this month (' . $cur . ')', ($hasR || $hasX) && $m ? adm_eur((int)$m['profit']) : null, ($hasR || $hasX) ? 'ACTUAL: received minus expenses; only as complete as the records.' : 'Needs recorded revenue or expenses.', $rep ? 'ok' : 'na'),
+          adm_tile('Year to date: revenue / expenses / profit', $e && ($hasR || $hasX) ? adm_eur((int)$e['ytd_income']) . ' / ' . adm_eur((int)$e['ytd_expenses']) . ' / ' . adm_eur((int)$e['ytd_profit']) : null, 'ACTUAL, cash basis, recorded entries only.', $rep ? 'ok' : 'na')];
+  $tg = []; if ($rep && $store) { $lad = adm_safe(fn() => admf_ladder($rep, $store->targets()));
+    if ($lad) { $month = null; foreach ($lad['custom'] as $c) if ($c['month'] === $ym && $c['metric'] === 'received') $month = $c;
+      $tg[] = $month ? adm_tile('Monthly revenue target (' . $ym . ')', adm_eur((int)$month['amount_minor']), 'TARGET set by you' . ($lad['income_minor'] !== null ? '. Recorded so far: ' . adm_eur((int)$lad['income_minor']) . ' (' . ($month['amount_minor'] > 0 ? round($lad['income_minor'] / $month['amount_minor'] * 100) : 0) . '%).' : '. No recorded income to compare yet.'))
+                      : adm_tile('Monthly revenue target (' . $ym . ')', null, 'No custom target set for this month. Set one in Finance, Targets.');
+      $tg[] = adm_tile('Next ladder step', $lad['next_eur'] !== null ? adm_eur($lad['next_eur'] * 100) . ' / month' : 'All steps reached', 'TARGET (aspirational, not a forecast)' . ($lad['active'] ? '' : '; monitoring starts ' . $lad['start']) . ($lad['income_minor'] !== null ? '. Recorded income this month: ' . adm_eur((int)$lad['income_minor']) . '.' : '. No recorded income to compare yet.')); } }
+  return ['estimate' => $est, 'actual' => $act, 'targets' => $tg];
 }
 
 function adm_tiles_universe(PDO $pdo): array {
@@ -174,7 +213,13 @@ function adm_tiles_html(array $tiles): string {
 
 function adm_dashboard_body(PDO $pdo, array $user): string {
   $role = (string)$user['role']; $o = '<h1>Overview</h1><p class="lead">Every figure comes from stored records; where there is nothing to show, the tile says so. Reporting currency: ' . ADM_REPORT_CURRENCY . '.</p>';
-  if (adm_can($role, 'crm')) $o .= '<section class="sec" aria-labelledby="s-crm"><h2 id="s-crm">Sales and revenue (CRM)</h2>' . adm_tiles_html(adm_tiles_crm($pdo)) . '</section>';
+  if (adm_can($role, 'crm')) {
+    $f = adm_tiles_finance($pdo);
+    $o .= '<section class="sec" aria-labelledby="s-att"><h2 id="s-att">Needs attention</h2>' . adm_tiles_html(adm_tiles_attention($pdo)) . adm_attention_list($pdo) . '</section>';
+    $o .= '<section class="sec" aria-labelledby="s-est"><h2 id="s-est">Estimated opportunities (not revenue)</h2>' . adm_tiles_html($f['estimate']) . '</section>';
+    $o .= '<section class="sec" aria-labelledby="s-act"><h2 id="s-act">Actual results (recorded)</h2>' . adm_tiles_html($f['actual']) . adm_tiles_html(adm_tiles_crm($pdo)) . '</section>';
+    if ($f['targets']) $o .= '<section class="sec" aria-labelledby="s-tgt"><h2 id="s-tgt">Targets</h2>' . adm_tiles_html($f['targets']) . '</section>';
+  }
   if (adm_can($role, 'universe')) $o .= '<section class="sec" aria-labelledby="s-uni"><h2 id="s-uni">AI Universe</h2>' . adm_tiles_html(adm_tiles_universe($pdo)) . '</section>';
   if (adm_can($role, 'analytics') && function_exists('adma_overview_tiles')) $o .= '<section class="sec" aria-labelledby="s-traf"><h2 id="s-traf">Traffic (last 7 days)</h2>' . adm_tiles_html(adma_overview_tiles($pdo)) . '<p><a class="admLink" href="/admin-center.php?m=analytics">Open the full analytics report</a></p></section>';
   if (adm_can($role, 'analytics')) $o .= '<section class="sec" aria-labelledby="s-pend"><h2 id="s-pend">Coming in later phases</h2>' . adm_tiles_html(adm_tiles_pending()) . '</section>';
