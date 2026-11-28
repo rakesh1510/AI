@@ -21,7 +21,7 @@ interface AdmFinanceStore {
   public function setTarget(string $month, string $metric, int $minor, string $label, string $actor): array;
 }
 /** Everything the report needs, in the shape admf_report() expects. */
-function admf_load(AdmFinanceStore $s): array { return ['contracts' => $s->contracts(), 'revenue' => $s->revenueEntries(), 'adjustments' => $s->adjustments(), 'expenses' => $s->expenses(), 'legacy' => $s->legacyPayments(), 'pipeline' => $s->pipeline(), 'campaigns' => $s->campaigns()]; }
+function admf_load(AdmFinanceStore $s): array { return ['affiliate' => method_exists($s, 'affiliateRows') ? $s->affiliateRows() : [], 'contracts' => $s->contracts(), 'revenue' => $s->revenueEntries(), 'adjustments' => $s->adjustments(), 'expenses' => $s->expenses(), 'legacy' => $s->legacyPayments(), 'pipeline' => $s->pipeline(), 'campaigns' => $s->campaigns()]; }
 
 final class AdmFinanceMemoryStore implements AdmFinanceStore {
   public array $d; private int $seq = 0; public bool $ready = true; public int $clock = 1700000000;
@@ -54,6 +54,8 @@ final class AdmFinancePdoStore implements AdmFinanceStore {
   public function legacyPayments(): array { return $this->rows('SELECT id, name, plan, price, currency, status, payment_status, created_at FROM submissions ORDER BY id'); }
   public function expenses(): array { return $this->rows('SELECT id, entry_date, category, vendor, description, amount_minor, currency, recurrence, recurrence_end, reference, created_by, created_at, voided_at, voided_by, void_reason, is_synthetic FROM fin_expense_entry ORDER BY entry_date DESC, id DESC LIMIT 2000'); }
   public function adjustments(): array { return $this->rows('SELECT id, contract_id, kind, amount_minor, currency, entry_date, reference, note, created_by, created_at, voided_at, voided_by, void_reason, is_synthetic FROM fin_adjustment ORDER BY entry_date DESC, id DESC LIMIT 2000'); }
+  /** Phase 7E: affiliate commissions received (paid), as income rows for the report. Empty while the affiliate tables are not installed. */
+  public function affiliateRows(): array { return function_exists('aff_finance_rows') ? aff_finance_rows($this->pdo) : []; }
   public function targets(): array { return $this->rows('SELECT id, month, metric, amount_minor, currency, label, created_by, created_at, superseded_at FROM fin_target ORDER BY month DESC, id DESC LIMIT 500'); }
   private function tx(callable $f): array { try { $this->pdo->beginTransaction(); $r = $f(); if (!$r['ok']) { $this->pdo->rollBack(); return $r; } $this->pdo->commit(); return $r; } catch (Throwable $e) { if ($this->pdo->inTransaction()) $this->pdo->rollBack(); sec_log_exception($e, 'finance store'); return ['ok' => false, 'error' => 'failed']; } }
   public function addExpense(array $e, string $actor): array {

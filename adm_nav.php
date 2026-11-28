@@ -18,7 +18,8 @@ function adm_nav_groups(): array {
     ['id' => 'growth', 'label' => 'Growth', 'items' => [['mod' => 'analytics', 'children' => [$v('Overview', 'view', ''), $v('Visitors and history', 'view', 'visitors'), $v('Pages', 'view', 'pages'), $v('Sources, devices, countries', 'view', 'sources'), $v('AI tool clicks', 'view', 'tools'), $v('Categories', 'view', 'categories'), $v('Featured placements', 'view', 'placements'), $v('Legacy click records', 'view', 'legacy'), $v('Exports', 'view', 'exports')]], ['mod' => 'advertising', 'children' => [$v('Overview', 'view', ''), $v('Campaigns', 'view', 'campaigns'), $v('Featured placements', 'view', 'featured', 'tools_publish'), $v('Paid listing submissions', 'view', 'listings', 'tools_publish')]]]],
     ['id' => 'money', 'label' => 'Money', 'items' => [['mod' => 'finance', 'children' => [
       $v('Overview', 'view', ''), $v('Revenue', 'view', 'revenue'), $v('Advertising and sponsorship', 'view', 'advertising'), $v('Projects and retainers', 'view', 'projects'),
-      $v('Expenses and profit', 'view', 'expenses'), $v('Refunds and credits', 'view', 'refunds'), $v('Targets', 'view', 'targets'), $v('Exports', 'view', 'exports')]]]],
+      $v('Expenses and profit', 'view', 'expenses'), $v('Refunds and credits', 'view', 'refunds'), $v('Targets', 'view', 'targets'), $v('Exports', 'view', 'exports')]],
+      ['mod' => 'affiliate', 'children' => [$v('Dashboard', 'view', ''), $v('Opportunities', 'view', 'opportunities'), $v('Partners', 'view', 'partners'), $v('Links', 'view', 'links'), $v('Commissions', 'view', 'commissions'), $v('Import', 'view', 'import')]]]],
     ['id' => 'ops', 'label' => 'Operations', 'items' => [['mod' => 'operations'], ['mod' => 'performance'], ['mod' => 'access', 'children' => [$v('Users and roles', 'view', ''), $v('Audit log', 'view', 'audit'), $v('System health', 'view', 'health')]]]],
     ['id' => 'account', 'label' => 'Account', 'items' => [['mod' => 'account']]],
   ];
