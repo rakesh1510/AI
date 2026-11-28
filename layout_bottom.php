@@ -27,8 +27,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <?php else: ?>
           <span class="eyebrow"><?= ui_icon('briefcase') ?> For business</span>
           <h2 id="ftCta">Have a project in mind?</h2>
-          <p>TrustNova Tech builds API integrations, workflow automation and custom AI solutions. Tell us your goal and we will reply by email if it is a fit.</p>
-          <div class="fHero__cta"><a class="btn btn--accent" href="/services.php#inquiry" data-cta="footer_project">Discuss Your Project</a><a class="btn secondary" href="/advertise.php">Advertise a tool</a></div>
+          <p>TrustNova Tech builds custom AI agents, workflow automation, chatbots, API integrations and custom software. Book a free consultation: tell us your goal and we will reply by email to arrange it if it is a fit.</p>
+          <div class="fHero__cta"><a class="btn btn--accent" href="/services.php#inquiry" data-cta="footer_project">Book a Free Consultation</a><a class="btn secondary" href="/advertise.php">Advertise a tool</a></div>
         <?php endif; ?>
       </div>
       <div class="fHero__art" aria-hidden="true"><?= ($footer_newsletter ?? true) !== false ? art_mail() : art_orb() ?></div>
@@ -39,7 +39,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
         <a class="fLogo brand" href="/" aria-label="AIHubpedia home"><img class="brandMark" src="/assets/images/logo-mark-44.webp" srcset="/assets/images/logo-mark-44.webp 1x, /assets/images/logo-mark-88.webp 2x" width="34" height="34" alt="" loading="lazy"><span class="brandWord" aria-hidden="true">Hubpedia</span></a>
         <p>Discover, compare and choose AI tools, with sources and dates. An independent directory run by TrustNova Tech.</p>
         <a class="fMail" href="mailto:contact@aihubpedia.com"><?= ui_icon('mail') ?> contact@aihubpedia.com</a>
-        <?php if (($footer_newsletter ?? true) !== false): ?><div style="margin-top:8px"><a class="btn sm secondary" href="/services.php#inquiry" data-cta="footer_project">Discuss Your Project</a></div><?php endif; ?>
+        <?php if (($footer_newsletter ?? true) !== false): ?><div style="margin-top:8px"><a class="btn sm secondary" href="/services.php#inquiry" data-cta="footer_project">Book a Free Consultation</a></div><?php endif; ?>
       </div>
       <nav class="footerCol" aria-label="Discover">
         <h3>Discover</h3>
@@ -52,7 +52,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
       </nav>
       <nav class="footerCol" aria-label="For business">
         <h3>For business</h3>
-        <a href="/services.php#inquiry">Discuss your project</a>
+        <a href="/services.php#inquiry">Book a free consultation</a>
         <a href="/services.php">AI development services</a>
         <a href="/advertise.php">Advertise a tool</a>
         <a href="/partners.php">Partnerships</a>

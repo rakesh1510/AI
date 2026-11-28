@@ -1,11 +1,11 @@
 {
-    "built": "2026-11-27",
+    "built": "2026-11-28",
     "sources": {
         "assets/css/style.css": "852c95249e04d540de8e513978c6422e3afaff24",
         "assets/css/ui.css": "0c7011c9cc887db37ca103b4e19269c796039353",
         "assets/css/premium.css": "20140c082a417630940214067b203f323afb0ef4",
         "assets/css/premium2.css": "c7ee9dc371f277182b01426ff0c087a60949ad5e",
-        "assets/css/premium3.css": "fe63a32cdb11ead135c3e24f6a72af3447e1848f",
+        "assets/css/premium3.css": "f364acf4044ba7ad3ea0ff0a6d64f9f1e4f044bd",
         "assets/js/app.js": "dad9e6c553eb545893b3ed0df89d32bf52fc8d9e",
         "assets/js/interactions.js": "0ca96431bf9113f8b34bac995fb64f0b94781b8a",
         "prototypes/universe-graph/data-source.js": "c93919bf744b870f9476af51ba49598d6bbe401b",

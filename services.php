@@ -28,7 +28,7 @@ $__spanClass = [0 => 'c', 1 => 'b'];
 <?php else: ?>
 <?= page_hero(['crumbs' => $crumbs, 'eyebrow' => 'AI development services', 'icon' => 'code', 'title_html' => 'Custom AI and software, <span class="gradText2">built around your process</span>',
   'lead' => 'AIHubpedia is built and run by TrustNova Tech. If you need an AI system or custom software built, tell us about the problem. We reply by email if it looks like a fit; there is no obligation.', 'art' => 'workflow',
-  'actions' => '<a class="btn btn--accent" href="#inquiry" data-cta="svc_hero_project">Discuss Your Project</a><a class="btn secondary" href="#build">See what we build</a>',
+  'actions' => '<a class="btn btn--accent" href="#inquiry" data-cta="svc_hero_project">Book a Free Consultation</a><a class="btn secondary" href="#build">See what we build</a>',
   'facts' => ['Written scope before work starts', 'No outcomes promised in advance', 'No client case studies claimed']]) ?>
 <div class="wrap pgBody" id="build">
   <div class="sectionHead"><div><h2 id="svcTitle">What we build</h2><p>Ten kinds of project. Open one to see who it suits, what you receive and what we will ask.</p></div></div>
@@ -64,9 +64,9 @@ $__spanClass = [0 => 'c', 1 => 'b'];
 <section class="bizBand stage" id="inquiry" aria-labelledby="inqTitle" style="padding-top:clamp(40px,6vw,80px)">
   <div class="wrap consult">
     <div class="consult__copy">
-      <span class="eyebrow"><?= ui_icon('briefcase') ?> Project enquiry</span>
-      <h2 id="inqTitle">Tell us about your project</h2>
-      <p>A short form: your goal, your name and email. Everything under “Add details” is optional.</p>
+      <span class="eyebrow"><?= ui_icon('briefcase') ?> Free consultation</span>
+      <h2 id="inqTitle">Book a free consultation</h2>
+      <p>Tell us about your project in a short form: your goal, your name and email. Everything under “Add details” is optional.</p>
       <ul><li><?= ui_icon('check') ?><span>Describe the problem and who will use the result.</span></li><li><?= ui_icon('check') ?><span>We reply by email if it looks like a fit.</span></li><li><?= ui_icon('check') ?><span>No obligation from sending an enquiry.</span></li></ul>
     </div>
     <div class="consult__form"><?= render_project_form(['service' => $slug]) ?></div>

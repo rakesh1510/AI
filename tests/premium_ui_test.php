@@ -6,7 +6,7 @@ $p = 0; $f = 0; function ck($ok, $m) { global $p, $f; if ($ok) $p++; else { $f++
 // nav
 $labels = array_column(site_nav_primary(), 1);
 ck($labels === ['Discover', 'Compare', 'Guides', 'For Business', 'Advertise'], 'primary nav labels');
-ck(site_nav_cta()[1] === 'Discuss Your Project', 'CTA label');
+ck(site_nav_cta()[1] === 'Book a Free Consultation', 'CTA label');
 $all = json_encode([site_nav_primary(), site_nav_more(), site_nav_cta()]);
 ck(stripos($all, 'universe') === false && stripos($all, 'heatmap') === false && stripos($all, 'battle') === false, 'no Universe links in nav');
 foreach (['layout_bottom.php'] as $file) ck(stripos(file_get_contents($file), 'universe') === false, "$file has no Universe link");

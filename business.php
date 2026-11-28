@@ -20,7 +20,7 @@ require __DIR__ . '/layout_top.php';
       <h1>Build the AI your business <span class="gradText2">actually needs</span></h1>
       <p class="lead">AIHubpedia helps you choose existing tools. When no off-the-shelf tool fits, <?= h($company) ?> designs and builds API integrations, workflow automation, custom AI agents and PHP/MySQL software around your process.</p>
       <div class="heroActions">
-        <a class="btn btn--accent" href="#request" data-cta="biz_hero_project">Discuss Your Project</a>
+        <a class="btn btn--accent" href="#request" data-cta="biz_hero_project">Book a Free Consultation</a>
         <a class="btn secondary" href="#services">See what we build</a>
       </div>
       <ul class="factRow">
