@@ -11,7 +11,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   parse_str($go, $gq); if (!in_array($gq['v'] ?? '', crm_views(), true)) $gq = ['v' => 'dashboard'];
   header('Location: /crm.php?' . http_build_query($gq + ['m' => $code]), true, 303); exit;
 }
-$crmView = (string)($_GET["v"] ?? "dashboard"); if (!in_array($crmView, crm_views(), true)) $crmView = "dashboard";   // not $v: layout_top.php overwrites $v
+$crmView = (string)($_GET["v"] ?? "dashboard"); if (!in_array($crmView, crm_views(), true)) $crmView = "dashboard";
+if ($crmView === 'quote') {   // printable quotation: standalone page (no site chrome), same sign-in, noindex
+  $q = crm_quote_print_html($pdo, (int)($_GET['id'] ?? 0)); if ($q === null) { http_response_code(404); exit('Quotation not found.'); }
+  sec_log('crm_quote_view', ['id' => (int)($_GET['id'] ?? 0)]); header('Content-Type: text/html; charset=utf-8'); header('X-Robots-Tag: noindex, nofollow'); header('Cache-Control: no-store'); echo $q; exit;
+}   // not $v: layout_top.php overwrites $v
 $title = 'CRM — AIHubpedia'; $robots = 'noindex, nofollow';   // private page: the layout must not downgrade this to "noindex, follow"
 require __DIR__ . '/layout_top.php';
 ?>

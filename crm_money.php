@@ -70,6 +70,7 @@ function crm_proposal_save_version(PDO $pdo, ?array $user, int $proposalId, int 
       ->execute([$proposalId, $version, $cur, $valid, $disc, $tax, $tot['subtotal_minor'], $tot['discount_minor'], $tot['tax_minor'], $tot['total_minor'], $period, crm_text($in['terms'] ?? '', 4000), $user['id'] ?? null, crm_now()]);
   $vid = (int)$pdo->lastInsertId(); $ins = $pdo->prepare('INSERT INTO crm_proposal_items (version_id, position, description, qty_x100, unit_minor, discount_bp, line_total_minor) VALUES (?,?,?,?,?,?,?)');
   foreach ($tot['lines'] as $l) $ins->execute([$vid, $l['position'], $l['description'], $l['qty_x100'], $l['unit_minor'], $l['discount_bp'], $l['line_total_minor']]);
+  if (function_exists('crm_quote_save_extras')) { [$xo, $xe] = crm_quote_save_extras($pdo, $vid, $in, $tot); if (!$xo) return [false, $xe]; }   // Phase 7C: tax label, intro, customer terms, payment milestones
   return [true, (string)$vid];
 }
 function crm_proposal_create(PDO $pdo, ?array $user, int $oppId, array $in): array {
@@ -79,7 +80,7 @@ function crm_proposal_create(PDO $pdo, ?array $user, int $oppId, array $in): arr
   try {
     $now = crm_now(); $tmp = 'T' . bin2hex(random_bytes(8));
     $pdo->prepare("INSERT INTO crm_proposals (opportunity_id, number, status, current_version, created_by, created_at, updated_at) VALUES (?,?,'draft',1,?,?,?)")->execute([$oppId, $tmp, $user['id'] ?? null, $now, $now]);
-    $id = (int)$pdo->lastInsertId(); $number = 'P-' . gmdate('Y') . '-' . str_pad((string)$id, 4, '0', STR_PAD_LEFT);
+    $id = (int)$pdo->lastInsertId(); $number = (function_exists('crm_quote_next_number') ? crm_quote_next_number($pdo) : null) ?? 'P-' . gmdate('Y') . '-' . str_pad((string)$id, 4, '0', STR_PAD_LEFT);   // Phase 7C: sequential per year once migrated
     $pdo->prepare('UPDATE crm_proposals SET number = ? WHERE id = ?')->execute([$number, $id]);
     [$ok, $err] = crm_proposal_save_version($pdo, $user, $id, 1, $in); if (!$ok) { if ($own) $pdo->rollBack(); return [false, $err]; }
     crm_audit($pdo, $user, 'proposal_create', 'proposal', $id, $number); if ($own) $pdo->commit(); return [true, (string)$id];
@@ -201,3 +202,4 @@ function crm_revenue_summary(PDO $pdo, ?string $asOf = null): array {
   foreach ($pdo->query('SELECT kind, currency, SUM(amount_minor) AS s FROM crm_revenue_entries GROUP BY kind, currency') as $r) $add($r['currency'], $r['kind'], (int)$r['s']);
   ksort($out); return $out;
 }
+require_once __DIR__ . '/crm_quote.php';   // Phase 7C (quotations); degrades gracefully until database/phase7c_quotations.sql is applied
