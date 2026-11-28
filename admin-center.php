@@ -59,7 +59,7 @@ if ($method === 'POST') {
   if (strpos((string)($_POST['act'] ?? ''), 'aff_') === 0) {   // Phase 7E affiliate revenue: owner only (the finance permission); validation, permission and audit inside the aff_* functions
     if (!adm_can((string)$user['role'], 'finance')) { adm_audit($pdo, $user, 'admin_center_denied', 'affiliate action'); http_response_code(403); exit('Not allowed.'); }
     $r = aff_handle_post($pdo, $user, $_POST); if (isset($r['redirect'])) { header('Location: ' . sec_safe_local_path($r['redirect'], '/admin-center.php?m=affiliate'), true, 303); exit; }
-    adm_page($user, 'affiliate', 'Affiliate revenue', aff_nav('import') . $r['html']); exit;
+    adm_page($user, 'affiliate', 'Affiliate revenue', aff_wrap(aff_nav('import') . $r['html'])); exit;
   }
   http_response_code(400); exit('Unknown action.');
 }

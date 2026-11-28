@@ -17,6 +17,8 @@ function aff_table(string $caption, array $head, array $rows, string $empty = 'N
   if (!$rows) return '<p class="small">' . aff_h($empty) . '</p>'; $o = '<div class="scroll" role="region" tabindex="0" aria-label="' . aff_h($caption) . '"><table><caption class="sr" style="position:absolute;left:-999px">' . aff_h($caption) . '</caption><thead><tr>';
   foreach ($head as $h) $o .= '<th scope="col">' . aff_h($h) . '</th>'; $o .= '</tr></thead><tbody>'; foreach ($rows as $r) { $o .= '<tr>'; foreach ($r as $i => $c) $o .= $i === 0 ? '<th scope="row">' . $c . '</th>' : '<td>' . $c . '</td>'; $o .= '</tr>'; } return $o . '</tbody></table></div>';
 }
+/** Page wrapper: 44px touch targets for the controls on these pages (private Control Center only). */
+function aff_wrap(string $inner): string { return '<style>.affPage select,.affPage input[type=text],.affPage input[type=date],.affPage input[type=url],.affPage input[type=file]{min-height:44px;box-sizing:border-box}.affPage a:not(.admBtn){display:inline-flex;align-items:center;min-height:44px;min-width:44px}.affPage label:has(>input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;min-height:44px}.affPage input[type=checkbox]{width:28px;height:28px}</style><div class="affPage">' . $inner . '</div>'; }
 function aff_nav(string $view): string { $items = ['overview' => 'Dashboard', 'opportunities' => 'Opportunities', 'partners' => 'Partners', 'links' => 'Links', 'commissions' => 'Commissions', 'import' => 'Import']; $o = '<p class="affNav">'; foreach ($items as $k => $l) $o .= '<a class="admBtn" style="margin:0 6px 6px 0;display:inline-flex;align-items:center"' . ($k === $view ? ' aria-current="page"' : '') . ' href="' . aff_h(aff_url($k === 'overview' ? [] : ['view' => $k])) . '">' . aff_h($l) . '</a>'; return $o . '</p>'; }
 function aff_status_badge(string $st): string { return '<span class="badge">' . aff_h(aff_statuses()[$st] ?? $st) . '</span>'; }
 function aff_tool_label(string $slug): string { $c = aff_catalogue(); return $slug === '' ? '—' : aff_h((string)($c[$slug]['name'] ?? $slug)); }
@@ -130,7 +132,7 @@ function aff_body(PDO $pdo, array $user, array $get, ?string $flash = null): str
   if (!crm_can($user['role'] ?? null, 'revenue')) return '<h1>Not allowed</h1><p>Affiliate revenue is for the owner only.</p>';
   $view = (string)($get['view'] ?? 'overview'); $msg = ''; if (isset($get['msg']) && is_string($get['msg'])) $msg = '<div class="panel" role="status">' . aff_h(aff_msg($get['msg'])) . '</div>'; if ($flash) $msg .= '<div class="panel" role="status">' . aff_h($flash) . '</div>';
   $b = match ($view) { 'opportunities' => aff_view_opportunities($pdo, $get), 'partners' => aff_view_partners($pdo, $get), 'partner' => aff_view_partner($pdo, (int)($get['id'] ?? 0), $get), 'links' => aff_view_links($pdo), 'commissions' => aff_view_commissions($pdo, $get), 'import' => aff_view_import(), default => aff_view_dashboard($pdo, $get) };
-  return aff_nav(in_array($view, ['partner'], true) ? 'partners' : $view) . $msg . $b;
+  return aff_wrap(aff_nav(in_array($view, ['partner'], true) ? 'partners' : $view) . $msg . $b);
 }
 /** Applies one POST action. Returns ['redirect' => url] or ['html' => body] (CSV check page). Permission, validation and audit are inside the aff_* functions. */
 function aff_handle_post(PDO $pdo, array $user, array $p): array {
