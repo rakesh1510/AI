@@ -7,7 +7,7 @@ $pass = 0; $fail = 0; function ok($c, string $m): void { global $pass, $fail; if
 $roles = ['owner', 'sales', 'viewer', 'editor', 'verifier']; $labelsOf = function (string $role, string $cur = 'dashboard', array $get = []) { $o = []; foreach (adm_nav_tree($role, $cur, $get) as $g) foreach ($g['items'] as $i) $o[] = $i['label']; return $o; };
 
 // ---- visibility matrix: the menu only shows what the role may open ----
-$exp = ['owner' => ['Overview', 'CRM and leads', 'AI tool management', 'AI Universe review', 'Tool profile verification', 'Legacy admin', 'Analytics', 'Advertising', 'Finance and revenue', 'Users, roles and audit', 'Operations', 'Performance', 'Account and password'],
+$exp = ['owner' => ['Overview', 'CRM and leads', 'AI tool management', 'AI Universe review', 'Tool profile verification', 'Legacy admin', 'Analytics', 'Advertising', 'Finance and revenue', 'Affiliate revenue', 'Users, roles and audit', 'Operations', 'Performance', 'Account and password'],
   'sales' => ['Overview', 'CRM and leads', 'Advertising', 'Account and password'], 'viewer' => ['Overview', 'CRM and leads', 'Account and password'],
   'editor' => ['Overview', 'AI tool management', 'AI Universe review', 'Tool profile verification', 'Account and password'], 'verifier' => ['Overview', 'AI Universe review', 'Tool profile verification', 'Account and password']];
 foreach ($exp as $r => $want) { $got = $labelsOf($r); sort($want); $g2 = $got; sort($g2); ok($g2 === $want, "$r sees exactly: " . implode(', ', $want) . ($g2 === $want ? '' : ' (got ' . implode(', ', $got) . ')')); }
