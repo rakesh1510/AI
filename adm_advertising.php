@@ -7,7 +7,7 @@ if (isset($_SERVER["SCRIPT_FILENAME"]) && realpath($_SERVER["SCRIPT_FILENAME"]) 
 function admv_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function admv_url(array $q = []): string { return '/admin-center.php?' . http_build_query(['m' => 'advertising'] + $q); }
 /** Views: the first two need the advertising permission (owner, sales); the last two use tool-management data and are owner only. */
-function admv_views(): array { return ['overview' => ['Overview', 'advertising'], 'campaigns' => ['Campaigns', 'advertising'], 'featured' => ['Featured placements', 'tools_publish'], 'listings' => ['Paid listing submissions', 'tools_publish']]; }
+function admv_views(): array { return ['overview' => ['Overview', 'advertising'], 'campaigns' => ['Campaigns', 'advertising'], 'featured' => ['Featured placements', 'tools_publish'], 'listings' => ['Paid listing submissions', 'tools_publish'], 'revenue' => ['Revenue dashboard', 'advertising'], 'bookings' => ['Bookings', 'advertising'], 'booking' => ['Booking', 'advertising'], 'packages' => ['Packages and inventory', 'advertising'], 'advertisers' => ['Advertisers', 'advertising'], 'opportunities' => ['Sales opportunities', 'advertising'], 'report' => ['Campaign report', 'advertising']]; }
 function admv_view(array $get, string $role): string { $v = $get['view'] ?? 'overview'; if (!is_string($v) || !isset(admv_views()[$v])) return 'overview'; return adm_can($role, admv_views()[$v][1]) ? $v : 'overview'; }
 
 function admv_table(string $caption, array $head, array $rows): string {
@@ -34,7 +34,7 @@ function admv_campaigns_table(array $campaigns, string $role): string {
 /** $placements and $listings are null when the viewer may not see them (or tool management is not installed). */
 function admv_body(array $user, array $get, array $campaigns, ?array $placements, ?array $listings): string {
   $role = (string)$user['role']; $view = admv_view($get, $role); $nav = '<nav aria-label="Advertising sections" class="crmNav">';
-  foreach (admv_views() as $k => [$l, $perm]) if (adm_can($role, $perm)) $nav .= '<a class="btn sm' . ($k === $view ? '' : ' secondary') . '" href="' . admv_h(admv_url(['view' => $k])) . '"' . ($k === $view ? ' aria-current="page"' : '') . '>' . admv_h($l) . '</a>';
+  foreach (admv_views() as $k => [$l, $perm]) if (!in_array($k, ['booking', 'report'], true) && adm_can($role, $perm)) $nav .= '<a class="btn sm' . ($k === $view ? '' : ' secondary') . '" href="' . admv_h(admv_url(['view' => $k])) . '"' . ($k === $view ? ' aria-current="page"' : '') . '>' . admv_h($l) . '</a>';
   $nav .= '</nav>'; $o = '<div class="admCrm admAdv"><h1>Advertising</h1><p class="small">A read-only overview of advertising records that already exist. Nothing here books, bills, emails or publishes. Edit campaigns in the CRM and featured placements in Tool management.</p>' . $nav;
   if ($view === 'campaigns') return $o . '<h2>Campaigns</h2>' . admv_campaigns_table($campaigns, $role) . '</div>';
   if ($view === 'featured') {
@@ -52,6 +52,6 @@ function admv_body(array $user, array $get, array $campaigns, ?array $placements
   $o .= '<h2>Campaigns by status</h2><div class="cardGrid">' . $tiles . '</div><p class="small">Counts exclude synthetic test records. Quotes are indicative and are not revenue; recorded income lives in Finance.</p>';
   if ($placements !== null) { $act = array_filter($placements, fn($p) => ($p['status'] ?? '') === 'active'); $o .= '<h2>Featured placements</h2><p>' . count($act) . ' active, ' . count($placements) . ' in the history. <a href="' . admv_h(admv_url(['view' => 'featured'])) . '">See placements</a></p>'; }
   if ($listings !== null) { $unp = array_filter($listings, fn($s) => ($s['payment_status'] ?? '') === 'unpaid' && ($s['status'] ?? '') === 'pending'); $o .= '<h2>Paid listing submissions</h2><p>' . count($listings) . ' with a price; ' . count($unp) . ' pending and unpaid. <a href="' . admv_h(admv_url(['view' => 'listings'])) . '">See submissions</a></p>'; }
-  $o .= '<h2>Not built yet</h2><p class="small">Advertiser profiles, renewal reminders, sponsored newsletter bookings and approved outbound messages are part of the approved Phase 8E to 8G roadmap and have not been started.</p>';
+  $o .= '<h2>Bookings, revenue and opportunities</h2><p class="small">Packages, bookings, advertiser profiles, the revenue dashboard and sales opportunities are in the sections above (Phase 7F). They need the advertising database migration. Renewal reminders by e-mail and automatic outbound messages do not exist: nothing is sent to anyone.</p>';
   return $o . '</div>';
 }

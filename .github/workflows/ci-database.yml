@@ -80,6 +80,9 @@ jobs:
       - name: Phase 6 CRM logic tests (roles, leads, deduplication, pipeline, proposals, revenue, campaigns, partners, outreach drafts, dashboard)
         run: php tests/crm_logic_test.php
 
+      - name: Phase 7F advertising revenue tests (packages, bookings, conflicts, agreement and payments, owner-approved activation and expiry, metrics, dashboard, opportunities)
+        run: php tests/ad_db_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 

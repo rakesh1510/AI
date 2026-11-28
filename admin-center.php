@@ -16,6 +16,7 @@ require_once __DIR__ . '/adm_an2_store.php';
 require_once __DIR__ . '/adm_an2_views.php';
 require_once __DIR__ . '/adm_auth.php';
 require_once __DIR__ . '/adm_account.php';
+require_once __DIR__ . '/ad_views.php';
 $user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
 $pdo = crm_pdo();
 $method = (string)($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -55,6 +56,10 @@ if ($method === 'POST') {
     if (isset($res['redirect'])) { header('Location: ' . sec_safe_local_path((string)$res['redirect'], '/admin-center.php?m=finance'), true, 303); exit; }
     adm_page($user, 'finance', 'Finance', admf_body($fs, $user, $res['get'], $res['form'], $res['errs'], $res['top']), $res['code']); exit;
   }
+  if (strpos((string)($_POST['act'] ?? ''), 'ad_') === 0) {   // Phase 7F advertising: sign-in role checked here; per-action roles (write, approve, revenue) are enforced inside the ad_* functions
+    if (!adm_can((string)$user['role'], 'advertising')) { adm_audit($pdo, $user, 'admin_center_denied', 'advertising action'); http_response_code(403); exit('Not allowed.'); }
+    $r = ad_handle_post($pdo, $user, $_POST); header('Location: ' . sec_safe_local_path($r['redirect'], '/admin-center.php?m=advertising'), true, 303); exit;
+  }
   http_response_code(400); exit('Unknown action.');
 }
 if (!in_array($method, ['GET', 'HEAD'], true)) { header('Allow: GET, HEAD, POST'); http_response_code(405); exit('Method not allowed.'); }
@@ -74,6 +79,10 @@ if ($m === 'analytics' && isset($_GET['export'])) {   // read-only CSV download:
   adm_audit($pdo, $user, 'admin_center_export', 'analytics ' . $which . ' ' . $x[0]);
   header('Content-Type: text/csv; charset=UTF-8'); header('Content-Disposition: attachment; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', $x[0]) . '"'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex, nofollow'); echo $x[1]; exit;
 }
+if ($m === 'advertising' && ad_ready($pdo) && (($_GET['export'] ?? '') === 'campaigns' || (($_GET['view'] ?? '') === 'report' && isset($_GET['id'])))) {   // read-only: CSV (formula-safe, audited, never cached) or the printable single-campaign report (standalone page)
+  if (($_GET['export'] ?? '') === 'campaigns') { adm_audit($pdo, $user, 'admin_center_export', 'advertising campaigns'); header('Content-Type: text/csv; charset=UTF-8'); header('Content-Disposition: attachment; filename="advertising-campaigns-' . gmdate('Ymd') . '.csv"'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex, nofollow'); echo ad_report_csv($pdo); exit; }
+  $rep = ad_report_print_html($pdo, (int)$_GET['id']); if ($rep === null) { http_response_code(404); exit('Campaign not found.'); } adm_audit($pdo, $user, 'admin_center_view', 'advertising report #' . (int)$_GET['id']); header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store'); header('X-Robots-Tag: noindex, nofollow'); echo $rep; exit;
+}
 if ($m === 'finance' && isset($_GET['export'])) {   // owner only (checked above); every export is audited; CSV is formula-safe and never cached
   $fs = new AdmFinancePdoStore($pdo); $d = admf_load($fs); $x = is_string($_GET['export']) ? admf_export($_GET['export'], admf_report($d), $d) : null;
   if ($x === null) { adm_page($user, 'finance', 'Export not available', '<h1>Export not available</h1><p>Unknown export.</p><p><a href="/admin-center.php?m=finance&amp;view=exports">Back to Exports</a></p>', 404); exit; }
@@ -84,6 +93,7 @@ crm_session_start();
 if (empty($_SESSION['adm_view_at']) || time() - (int)$_SESSION['adm_view_at'] > 1800) { $_SESSION['adm_view_at'] = time(); adm_audit($pdo, $user, 'admin_center_view', 'overview opened'); }   // one audit row per 30 minutes, not per page load
 if ($m === 'dashboard') adm_page($user, 'dashboard', 'Overview', adm_dashboard_body($pdo, $user));
 elseif ($m === 'analytics') adm_page($user, 'analytics', 'Analytics', anz_body(new AdmAnPdoStore($pdo), $_GET, anz_catalogue(), null, fn() => adma_body($pdo, $_GET)));
+elseif ($m === 'advertising' && in_array(admv_view($_GET, (string)$user['role']), array_merge(array_keys(ad_new_views()), ['booking']), true)) adm_page($user, 'advertising', 'Advertising', ad_body($pdo, $user, $_GET));
 elseif ($m === 'advertising') {   // U6: read-only hub over existing records (CRM campaigns, 8C placements, paid submissions); the tool-management views are owner only
   $camps = (array)adm_safe(fn() => crm_campaigns_list($pdo, '', 200), []); $toolsOk = adm_can((string)$user['role'], 'tools_publish') && AdmToolPdoStore::ready($pdo); $ts = $toolsOk ? new AdmToolPdoStore($pdo) : null;
   adm_page($user, 'advertising', 'Advertising', admv_body($user, $_GET, $camps, $ts ? $ts->placements() : null, $ts ? array_values(array_filter($ts->submissions(), fn($x) => (int)$x['price'] > 0)) : null));
