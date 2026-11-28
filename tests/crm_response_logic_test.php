@@ -12,10 +12,13 @@ $X = [];   // no extra holidays
 fwrite(STDERR, "== holidays\n");
 foreach ([2024 => '03-31', 2025 => '04-20', 2026 => '04-05', 2027 => '03-28'] as $y => $md) { [$m, $d] = crm_bh_easter($y); ok(sprintf('%02d-%02d', $m, $d) === $md, "Easter $y");}
 $h = crm_bh_holidays(2026, $X);
-foreach (['2026-01-01', '2026-03-08', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-10-03', '2026-12-25', '2026-12-26'] as $d) ok(isset($h[$d]), "holiday $d");
+foreach (['2026-01-01', '2026-01-06', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-06-04', '2026-10-03', '2026-11-01', '2026-12-25', '2026-12-26'] as $d) ok(isset($h[$d]), "holiday $d");
 ok(!isset($h['2026-12-24']) && !isset($h['2026-12-31']), 'Dec 24/31 are working days unless the owner configures them');
-ok(!isset(crm_bh_holidays(2018, $X)['2018-03-08']), "Women's Day only from 2019");
-ok(!crm_bh_is_workday(B('2026-03-08 10:00'), $X) , "2026-03-08 is a Sunday and a holiday"); ok(!crm_bh_is_workday(B('2027-03-08 10:00'), $X), "Women's Day 2027 (Monday) is not a business day");
+ok(!isset($h['2026-03-08']), "Women's Day is not a holiday in Baden-Wuerttemberg"); ok(crm_bh_is_workday(B('2027-03-08 10:00'), $X), "Monday 2027-03-08 is a working day in BW");
+ok(isset(crm_bh_holidays(2027, $X, 'BE')['2027-03-08']) && !isset(crm_bh_holidays(2018, $X, 'BE')['2018-03-08']), "region BE adds Women's Day from 2019");
+ok(!isset(crm_bh_holidays(2026, $X, 'DE')['2026-01-06']) && !isset(crm_bh_holidays(2026, $X, 'DE')['2026-06-04']) && isset(crm_bh_holidays(2026, $X, 'DE')['2026-04-03']), 'region DE = nationwide only');
+ok(isset(crm_bh_holidays(2026, $X, 'BY')['2026-11-01']), 'region BY has All Saints'); putenv('AIHUB_CRM_HOLIDAY_REGION=XX'); ok(crm_bh_region() === 'BW', 'unknown region falls back to BW'); putenv('AIHUB_CRM_HOLIDAY_REGION=be'); ok(crm_bh_region() === 'BE', 'region setting is case-insensitive'); putenv('AIHUB_CRM_HOLIDAY_REGION');
+ok(!crm_bh_is_workday(B('2026-03-08 10:00'), $X), '2026-03-08 is a Sunday');
 ok(crm_bh_is_workday(B('2026-03-03 10:00'), $X), 'ordinary Tuesday'); ok(!crm_bh_is_workday(B('2026-03-07 10:00'), $X), 'Saturday');
 $ex = ['2026-12-24' => 'x']; ok(!crm_bh_is_workday(B('2026-12-24 10:00'), $ex), 'owner-configured extra holiday');
 

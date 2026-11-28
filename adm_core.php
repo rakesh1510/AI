@@ -57,14 +57,7 @@ function adm_safe(callable $f, $fallback = null) { try { return $f(); } catch (T
 function adm_tiles_crm(PDO $pdo): array {
   $d = adm_safe(fn() => crm_dashboard($pdo, 30));
   if (!$d) return [adm_tile('CRM', null, 'The CRM could not be read.', 'na')];
-  $eur = $d['revenue'][ADM_REPORT_CURRENCY] ?? null; $others = array_diff(array_keys($d['revenue']), [ADM_REPORT_CURRENCY]);
-  $note = $others ? 'Other currencies exist (' . implode(', ', $others) . ') and are not converted here.' : '';
-  return [
-    adm_tile('Open opportunities', adm_n((int)$d['open_opportunities']), 'Pipeline stages that are not won or lost.'),
-    adm_tile('Recurring revenue (MRR, ' . ADM_REPORT_CURRENCY . ')', $eur ? adm_eur((int)$eur['mrr']) : null, $eur ? 'Active recurring contracts in the CRM. ' . $note : 'No contracts recorded in ' . ADM_REPORT_CURRENCY . ' yet. ' . $note),
-    adm_tile('Revenue received, all time (' . ADM_REPORT_CURRENCY . ')', $eur ? adm_eur((int)$eur['received']) : null, $eur ? 'Payments recorded against CRM contracts. Full finance reporting arrives in Phase 8D.' : 'No payments recorded in ' . ADM_REPORT_CURRENCY . ' yet.'),
-    adm_tile('Renewals due in 60 days', adm_n((int)$d['renewals_60d']), 'Contracts reaching their end date.'),
-  ];
+  return [adm_tile('Open opportunities', adm_n((int)$d['open_opportunities']), 'A count of CRM records in stages that are not won or lost.')];
 }
 
 /* ---- Phase 7B CEO overview: counts and recorded figures only. Actual results and estimated opportunities are separate sections with separate labels. ---- */
@@ -94,12 +87,18 @@ function adm_tiles_finance(PDO $pdo): array {
   $d = adm_safe(fn() => crm_dashboard($pdo, 30)); $cur = ADM_REPORT_CURRENCY; $pv = $d['pipeline_value'][$cur] ?? null; $others = $d ? array_diff(array_keys($d['pipeline_value']), [$cur]) : [];
   $rep = $store ? adm_safe(fn() => admf_report(admf_load($store))) : null; $e = $rep['currencies'][$cur] ?? null; $ym = $rep ? admf_ym($rep['as_of']) : '';
   $est = [adm_tile('Pipeline value, open opportunities (' . $cur . ')', $pv !== null ? adm_eur((int)$pv) : null, 'ESTIMATE: expected deal values typed into the CRM, not revenue and not a forecast of cash.' . ($others ? ' Other currencies (' . implode(', ', $others) . ') are not converted.' : ''), $d ? 'ok' : 'na'),
-          adm_tile('Weighted pipeline (' . $cur . ')', $e && $e['forecast'] > 0 ? adm_eur((int)$e['forecast']) : null, 'ESTIMATE: stage weights are planning assumptions (5-70%), not measured win rates.', $rep ? 'ok' : 'na')];
-  $hasR = $e && $e['has_revenue']; $hasX = $e && $e['has_expenses']; $m = $e['series'][$ym] ?? null;
-  $act = [adm_tile('Revenue received, this month (' . $cur . ')', $hasR && $m ? adm_eur((int)$m['income']) : null, $hasR ? 'ACTUAL: payments recorded against contracts, less refunds. Recorded manually, not bank-verified.' : 'No payments recorded yet.', $rep ? 'ok' : 'na'),
-          adm_tile('Expenses, this month (' . $cur . ')', $hasX && $m ? adm_eur((int)$m['expenses']) : null, $hasX ? 'ACTUAL: recorded expenses (cash basis).' : 'No expenses recorded yet.', $rep ? 'ok' : 'na'),
-          adm_tile('Profit, this month (' . $cur . ')', ($hasR || $hasX) && $m ? adm_eur((int)$m['profit']) : null, ($hasR || $hasX) ? 'ACTUAL: received minus expenses; only as complete as the records.' : 'Needs recorded revenue or expenses.', $rep ? 'ok' : 'na'),
-          adm_tile('Year to date: revenue / expenses / profit', $e && ($hasR || $hasX) ? adm_eur((int)$e['ytd_income']) . ' / ' . adm_eur((int)$e['ytd_expenses']) . ' / ' . adm_eur((int)$e['ytd_profit']) : null, 'ACTUAL, cash basis, recorded entries only.', $rep ? 'ok' : 'na')];
+          adm_tile('Weighted pipeline (' . $cur . ')', $e && $e['forecast'] > 0 ? adm_eur((int)$e['forecast']) : null, 'ESTIMATE: stage weights are planning assumptions (5-70%), not measured win rates.' . ($e && $e['forecast'] > 0 ? '' : ' No open opportunities with a value.'), $rep ? 'ok' : 'na')];
+  // Zero vs missing: a figure is shown (including 0.00) only when records exist to back it; no records = "No data yet"; finance storage missing = "Not available yet".
+  $ready = $store && adm_safe(fn() => $store->finReady()) === true; $st = $ready && $rep ? 'ok' : 'na'; $why = $ready ? '' : 'Not available yet: the finance migration (Phase 8D) is not applied on this server.';
+  $rv = $d['revenue'][$cur] ?? null; $crmK = $rv && ($rv['mrr'] > 0 || $rv['contracted'] > 0 || $rv['invoiced'] > 0 || $rv['received'] > 0 || $rv['recognized'] > 0); $crmR = $rv && ($rv['invoiced'] > 0 || $rv['received'] > 0);
+  $hasR = $ready && $e && $e['has_revenue']; $hasX = $ready && $e && $e['has_expenses']; $m = $e['series'][$ym] ?? null;
+  $act = [adm_tile('Revenue received, this month (' . $cur . ')', $hasR && $m ? adm_eur((int)$m['income']) : null, $why ?: ($hasR ? 'ACTUAL: payments recorded against contracts, less refunds' . ($m && (int)$m['income'] === 0 ? '. Zero here means records exist but none fall in this month.' : '.') . ' Recorded manually, not bank-verified.' : 'No payments recorded yet (this is missing data, not a confirmed zero).'), $st),
+          adm_tile('Expenses, this month (' . $cur . ')', $hasX && $m ? adm_eur((int)$m['expenses']) : null, $why ?: ($hasX ? 'ACTUAL: recorded expenses (cash basis).' : 'No expenses recorded yet.'), $st),
+          adm_tile('Profit, this month (' . $cur . ')', ($hasR || $hasX) && $m ? adm_eur((int)$m['profit']) : null, $why ?: (($hasR && $hasX) ? 'ACTUAL: received minus expenses; only as complete as the records.' : (($hasR || $hasX) ? 'INCOMPLETE: only ' . ($hasR ? 'revenue' : 'expenses') . ' are recorded, so this is not a full profit figure.' : 'Needs recorded revenue and expenses.')), $st),
+          adm_tile('Year to date (' . $cur . ')', $e && ($hasR || $hasX) ? 'Revenue ' . ($hasR ? adm_eur((int)$e['ytd_income']) : 'not recorded') . ' / expenses ' . ($hasX ? adm_eur((int)$e['ytd_expenses']) : 'not recorded') . ' / profit ' . ($hasR && $hasX ? adm_eur((int)$e['ytd_profit']) : 'incomplete') : null, $why ?: 'ACTUAL, cash basis, recorded entries only. "Not recorded" means no entries exist, not zero.', $st),
+          adm_tile('Recurring revenue (MRR, ' . $cur . ')', $crmK ? adm_eur((int)$rv['mrr']) : null, $crmK ? 'Active recurring contracts recorded in the CRM.' : 'No contracts recorded yet.'),
+          adm_tile('Revenue received, all time (' . $cur . ')', $crmR ? adm_eur((int)$rv['received']) : null, $crmR ? 'Payments recorded against CRM contracts.' : 'No invoices or payments recorded yet (missing data, not a confirmed zero).'),
+          adm_tile('Renewals due in 60 days', $crmK && $d ? adm_n((int)$d['renewals_60d']) : null, $crmK ? 'Active contracts reaching their end date.' : 'No contracts recorded yet.')];
   $tg = []; if ($rep && $store) { $lad = adm_safe(fn() => admf_ladder($rep, $store->targets()));
     if ($lad) { $month = null; foreach ($lad['custom'] as $c) if ($c['month'] === $ym && $c['metric'] === 'received') $month = $c;
       $tg[] = $month ? adm_tile('Monthly revenue target (' . $ym . ')', adm_eur((int)$month['amount_minor']), 'TARGET set by you' . ($lad['income_minor'] !== null ? '. Recorded so far: ' . adm_eur((int)$lad['income_minor']) . ' (' . ($month['amount_minor'] > 0 ? round($lad['income_minor'] / $month['amount_minor'] * 100) : 0) . '%).' : '. No recorded income to compare yet.'))

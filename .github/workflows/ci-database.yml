@@ -83,6 +83,9 @@ jobs:
       - name: Phase 7B lead response tests (one task per enquiry, first human response, Overview, owner-only notifications; mail goes to a temp spool)
         run: php tests/crm_response_db_test.php
 
+      - name: Phase 7B notification reliability (parallel cron runs, SMTP failure, spool, retry, duplicate prevention; local mock SMTP)
+        run: php tests/crm_notify_reliability_test.php
+
       - name: UX logic tests (search ranking, form tokens, leads, newsletter, event privacy)
         run: php tests/ux_logic_test.php
 

@@ -31,12 +31,15 @@ function crm_bh_extra_holidays(): array {
   foreach (preg_split('/[\s,;]+/', $raw, -1, PREG_SPLIT_NO_EMPTY) as $d) if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) && checkdate((int)substr($d, 5, 2), (int)substr($d, 8, 2), (int)substr($d, 0, 4))) $o[$d] = 'Owner-configured non-working day';
   return $o;
 }
-/** Public holidays that apply to the Europe/Berlin business: the nationwide German holidays plus International Women's Day (Berlin, since 2019). */
-function crm_bh_holidays(int $year, ?array $extra = null): array {
-  [$em, $ed] = crm_bh_easter($year); $easter = new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $em, $ed), crm_bh_tz());
+/** Region whose public holidays apply: AIHUB_CRM_HOLIDAY_REGION (BW default = Baden-Wuerttemberg). Supported: DE (nationwide only), BW, BY, BE. Unknown values fall back to BW. */
+function crm_bh_region(): string { $r = strtoupper(function_exists('sec_setting') ? trim(sec_setting('AIHUB_CRM_HOLIDAY_REGION', 'crm_holiday_region')) : ''); return in_array($r, ['DE', 'BW', 'BY', 'BE'], true) ? $r : 'BW'; }
+/** Public holidays for $year: the nationwide German holidays plus those of the region (default Baden-Wuerttemberg), plus owner-configured extra dates. Time zone stays Europe/Berlin. */
+function crm_bh_holidays(int $year, ?array $extra = null, ?string $region = null): array {
+  [$em, $ed] = crm_bh_easter($year); $easter = new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $em, $ed), crm_bh_tz()); $region = $region ?? crm_bh_region();
   $o = [sprintf('%04d-01-01', $year) => 'New Year', $easter->modify('-2 days')->format('Y-m-d') => 'Good Friday', $easter->modify('+1 day')->format('Y-m-d') => 'Easter Monday', sprintf('%04d-05-01', $year) => 'Labour Day',
     $easter->modify('+39 days')->format('Y-m-d') => 'Ascension Day', $easter->modify('+50 days')->format('Y-m-d') => 'Whit Monday', sprintf('%04d-10-03', $year) => 'German Unity Day', sprintf('%04d-12-25', $year) => 'Christmas Day', sprintf('%04d-12-26', $year) => 'Second Christmas Day'];
-  if ($year >= 2019) $o[sprintf('%04d-03-08', $year)] = 'International Women\'s Day (Berlin)';
+  if (in_array($region, ['BW', 'BY'], true)) { $o[sprintf('%04d-01-06', $year)] = 'Epiphany'; $o[$easter->modify('+60 days')->format('Y-m-d')] = 'Corpus Christi'; $o[sprintf('%04d-11-01', $year)] = 'All Saints\' Day'; }
+  if ($region === 'BE' && $year >= 2019) $o[sprintf('%04d-03-08', $year)] = 'International Women\'s Day (Berlin)';
   return $o + ($extra ?? crm_bh_extra_holidays());
 }
 function crm_bh_is_workday(DateTimeImmutable $d, ?array $extra = null): bool { return (int)$d->format('N') < 6 && !isset(crm_bh_holidays((int)$d->format('Y'), $extra)[$d->format('Y-m-d')]); }
@@ -146,7 +149,7 @@ function crm_response_get(PDO $pdo, int $leadId): ?array {
 
 // ---- consultations ---------------------------------------------------------------------------------------------------------------------
 function crm_consult_statuses(): array { return ['scheduled' => 'Scheduled', 'held' => 'Held', 'cancelled' => 'Cancelled', 'no_show' => 'No-show']; }
-/** $local is "YYYY-MM-DD HH:MM" in Europe/Berlin. Scheduling is a human response to the enquiry. */
+/** $local is "YYYY-MM-DD HH:MM" in Europe/Berlin. Scheduling alone is NOT a response (nothing has happened yet): only marking it held, or logging a reply/call/meeting, counts. */
 function crm_consult_schedule(PDO $pdo, ?array $user, int $leadId, string $local, int $minutes = 30, string $note = '', ?int $nowTs = null): array {
   if ($user === null || !crm_can($user['role'] ?? '', 'write')) return [false, 'forbidden']; if (!crm_response_ready($pdo)) return [false, 'not_migrated'];
   $nowTs = $nowTs ?? time(); $d = DateTimeImmutable::createFromFormat('Y-m-d H:i', str_replace('T', ' ', trim($local)), crm_bh_tz()); $err = DateTimeImmutable::getLastErrors();
@@ -154,11 +157,12 @@ function crm_consult_schedule(PDO $pdo, ?array $user, int $leadId, string $local
   if ($ts < $nowTs - 300 || $ts > $nowTs + 400 * 86400) return [false, 'time_out_of_range']; $minutes = max(15, min(240, $minutes));
   $q = $pdo->prepare('SELECT id FROM crm_leads WHERE id = ?'); $q->execute([$leadId]); if (!$q->fetchColumn()) return [false, 'lead_missing'];
   $pdo->prepare('INSERT INTO crm_consultations (lead_id, scheduled_at, duration_min, status, note, created_by, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)')->execute([$leadId, crm_now($ts), $minutes, 'scheduled', crm_line($note, 250), $user['id'], crm_now($nowTs), crm_now($nowTs)]);
-  $id = (int)$pdo->lastInsertId(); crm_response_mark($pdo, $leadId, $user, 'consultation', crm_now($nowTs)); crm_activity_add($pdo, $user, 'lead', $leadId, 'meeting', 'Consultation scheduled for ' . $d->format('Y-m-d H:i') . ' (Europe/Berlin), ' . $minutes . ' minutes.');
+  $id = (int)$pdo->lastInsertId(); crm_activity_add($pdo, $user, 'lead', $leadId, 'note', 'Consultation scheduled for ' . $d->format('Y-m-d H:i') . ' (Europe/Berlin), ' . $minutes . ' minutes.');
   crm_audit($pdo, $user, 'consultation_schedule', 'lead', $leadId, 'consultation #' . $id); return [true, (string)$id];
 }
 function crm_consult_set_status(PDO $pdo, ?array $user, int $id, string $to): array {
   if ($user === null || !crm_can($user['role'] ?? '', 'write')) return [false, 'forbidden']; if (!crm_response_ready($pdo) || !isset(crm_consult_statuses()[$to]) || $to === 'scheduled') return [false, 'status_invalid'];
+  if ($to === 'held') { $c = $pdo->prepare('SELECT scheduled_at FROM crm_consultations WHERE id = ?'); $c->execute([$id]); $at = $c->fetchColumn(); if ($at !== false && strtotime($at . ' UTC') > time() + 900) return [false, 'not_yet_held']; }   // cannot be held before it starts
   $s = $pdo->prepare("UPDATE crm_consultations SET status = ?, updated_at = ? WHERE id = ? AND status = 'scheduled'"); $s->execute([$to, crm_now(), $id]); if ($s->rowCount() !== 1) return [false, 'not_scheduled'];
   $q = $pdo->prepare('SELECT lead_id FROM crm_consultations WHERE id = ?'); $q->execute([$id]); $lead = (int)$q->fetchColumn();
   crm_activity_add($pdo, $user, 'lead', $lead, 'note', 'Consultation #' . $id . ' marked ' . crm_consult_statuses()[$to] . '.'); if ($to === 'held') crm_response_mark($pdo, $lead, $user, 'consultation');
@@ -240,7 +244,13 @@ function crm_send_digest(PDO $pdo, int $nowTs, bool $dry = false, bool $force = 
   return 'sent';   // a failed first attempt is spooled and retried by scripts/mail_spool_flush.php; the log row stays so the digest is not sent twice
 }
 /** One alert e-mail per run listing enquiries that have JUST passed their target and were never alerted before (dedupe: one alert per lead, ever). Working hours only. */
-function crm_send_alerts(PDO $pdo, int $nowTs, bool $dry = false): string {
+/** Runs $fn only if no other process holds the named database lock (parallel cron runs: the loser returns 'busy' and its work is picked up by the next run). */
+function crm_with_lock(PDO $pdo, string $name, callable $fn): string {
+  $g = $pdo->prepare('SELECT GET_LOCK(?, 0)'); $g->execute(['aihub_crm_' . $name]); if ((int)$g->fetchColumn() !== 1) return 'busy';
+  try { return $fn(); } finally { $r = $pdo->prepare('SELECT RELEASE_LOCK(?)'); $r->execute(['aihub_crm_' . $name]); }
+}
+function crm_send_alerts(PDO $pdo, int $nowTs, bool $dry = false): string { return crm_with_lock($pdo, 'alerts', fn() => crm_send_alerts_locked($pdo, $nowTs, $dry)); }
+function crm_send_alerts_locked(PDO $pdo, int $nowTs, bool $dry): string {
   $now = crm_bh_at($nowTs); if (!crm_bh_is_workday($now) || crm_bh_minute_of_day($now) < CRM_BH_OPEN || crm_bh_minute_of_day($now) > CRM_BH_CLOSE) return 'outside_hours';
   $to = function_exists('site_owner_email') ? site_owner_email() : ''; if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return 'no_owner'; crm_response_sync($pdo);
   $new = array_filter(crm_unanswered_leads($pdo, $nowTs, 100), fn($r) => $r['state']['state'] === 'overdue'); if (!$new) return 'none';
@@ -280,7 +290,8 @@ function crm_response_panel(PDO $pdo, array $u, int $leadId, bool $canW): string
 }
 
 /** Weekly reminder for overdue follow-up tasks and stale proposals: each task/proposal is mentioned at most once per 7-day window (dedupe key), working days and hours only. */
-function crm_send_reminders(PDO $pdo, int $nowTs, bool $dry = false): string {
+function crm_send_reminders(PDO $pdo, int $nowTs, bool $dry = false): string { return crm_with_lock($pdo, 'reminders', fn() => crm_send_reminders_locked($pdo, $nowTs, $dry)); }
+function crm_send_reminders_locked(PDO $pdo, int $nowTs, bool $dry): string {
   $now = crm_bh_at($nowTs); if (!crm_bh_is_workday($now) || crm_bh_minute_of_day($now) < CRM_BH_OPEN || crm_bh_minute_of_day($now) > CRM_BH_CLOSE) return 'outside_hours';
   $to = function_exists('site_owner_email') ? site_owner_email() : ''; if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return 'no_owner';
   $win = 'w' . intdiv($nowTs, 7 * 86400); $d = crm_digest_data($pdo, $nowTs); $fresh = ['tasks' => [], 'stale' => []];
