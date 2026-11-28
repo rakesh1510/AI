@@ -11,7 +11,7 @@ const ADMF_LADDER = [10000, 50000, 100000, 250000, 500000, 979000];   // owner-a
 const ADMF_TARGET_START = '2026-12';                                   // monitoring starts December 2026
 const ADMF_PRIMARY = 'EUR';
 const ADMF_MAX_MINOR = 10000000000;                                    // 100 million units per entry
-const ADMF_STREAMS = ['featured' => 'Featured placements', 'newsletter' => 'Newsletter sponsorship', 'category' => 'Category sponsorship', 'advertising' => 'Other advertising campaigns', 'partnership' => 'Affiliate and partnerships', 'project' => 'Enterprise AI projects', 'retainer' => 'Retainers and managed services', 'unclassified' => 'Unclassified'];
+const ADMF_STREAMS = ['affiliate' => 'Affiliate commissions (received)', 'featured' => 'Featured placements', 'newsletter' => 'Newsletter sponsorship', 'category' => 'Category sponsorship', 'advertising' => 'Other advertising campaigns', 'partnership' => 'Affiliate and partnerships', 'project' => 'Enterprise AI projects', 'retainer' => 'Retainers and managed services', 'unclassified' => 'Unclassified'];
 const ADMF_STREAMS_NO_FIELD = ['Custom AI agents and automation', 'AI vendor subscriptions', 'Enterprise software integration services'];   // the CRM has no field that separates these: shown as "No record yet", never estimated
 const ADMF_STATES = ['recorded' => 'Recorded manually, not bank-verified', 'synthetic' => 'Synthetic, excluded', 'estimate' => 'Estimate', 'target' => 'Target', 'unavailable' => 'Unavailable', 'reconstructed' => 'Reconstructed, approximate', 'hypothetical' => 'Hypothetical', 'terms' => 'From contract terms'];
 const ADMF_VAT = 'VAT: Not tracked. Amounts are as recorded; they are not assumed to be net or gross.';
@@ -54,7 +54,7 @@ function admf_expense_months(array $e, string $asOfYm): array {
 function admf_report(array $d, ?string $asOf = null): array {
   $asOf = $asOf ?? admf_today(); $nowYm = admf_ym($asOf); $months = admf_months($nowYm, 12); $yearStart = substr($asOf, 0, 4) . '-01';
   $syn = []; $real = []; foreach (['contracts', 'revenue', 'adjustments', 'expenses', 'legacy', 'pipeline', 'campaigns'] as $k) { $rows = $d[$k] ?? []; $real[$k] = admf_real($rows); $syn[$k] = count($rows) - count($real[$k]); }
-  $blank = fn() => ['invoiced' => 0, 'received' => 0, 'refunds' => 0, 'credits' => 0, 'expenses' => 0, 'mrr' => 0, 'arr' => 0, 'recognized' => 0, 'contracted' => 0, 'forecast' => 0, 'ytd_income' => 0, 'ytd_expenses' => 0, 'month' => array_fill_keys($months, ['received' => 0, 'refunds' => 0, 'expenses' => 0]), 'mrr_trend' => array_fill_keys($months, 0), 'streams' => [], 'has_revenue' => false, 'has_expenses' => false, 'has_contracts' => false];
+  $blank = fn() => ['invoiced' => 0, 'received' => 0, 'refunds' => 0, 'credits' => 0, 'expenses' => 0, 'mrr' => 0, 'arr' => 0, 'recognized' => 0, 'contracted' => 0, 'forecast' => 0, 'ytd_income' => 0, 'ytd_expenses' => 0, 'affiliate' => 0, 'month' => array_fill_keys($months, ['received' => 0, 'refunds' => 0, 'expenses' => 0, 'affiliate' => 0]), 'mrr_trend' => array_fill_keys($months, 0), 'streams' => [], 'has_revenue' => false, 'has_expenses' => false, 'has_contracts' => false];
   $cur = []; $C = function (string $c) use (&$cur, $blank) { if (!isset($cur[$c])) $cur[$c] = $blank(); return $c; };
   $byContract = []; foreach ($real['contracts'] as $k) $byContract[(int)$k['id']] = $k;
   foreach ($real['contracts'] as $k) {
@@ -78,12 +78,17 @@ function admf_report(array $d, ?string $asOf = null): array {
     if (!empty($e['voided_at'])) continue; $c = $C((string)$e['currency']); $cur[$c]['has_expenses'] = true;
     foreach (admf_expense_months($e, $nowYm) as $ym => $amt) { $cur[$c]['expenses'] += $amt; if (isset($cur[$c]['month'][$ym])) $cur[$c]['month'][$ym]['expenses'] += $amt; if ($ym >= $yearStart) $cur[$c]['ytd_expenses'] += $amt; }
   }
+  foreach (($d['affiliate'] ?? []) as $a) {   // Phase 7E: affiliate commissions RECEIVED (paid) in the month paid; a later reversal counts negative in the month reversed. Never also a contract payment, so nothing is counted twice.
+    $c = $C((string)$a['currency']); $amt = ((string)($a['kind'] ?? '') === 'reversal' ? -1 : 1) * (int)$a['amount_minor']; $ym = admf_ym((string)$a['date']); $cur[$c]['has_revenue'] = true; $cur[$c]['affiliate'] += $amt;
+    if (isset($cur[$c]['month'][$ym])) $cur[$c]['month'][$ym]['affiliate'] += $amt; if ($ym >= $yearStart && $ym <= $nowYm) $cur[$c]['ytd_income'] += $amt;
+    $cur[$c]['streams']['affiliate'] = $cur[$c]['streams']['affiliate'] ?? ['contracts' => 0, 'received' => 0, 'mrr' => 0, 'contracted' => 0]; $cur[$c]['streams']['affiliate']['received'] += $amt;
+  }
   $w = function_exists('crm_stage_weights_bp') ? crm_stage_weights_bp() : [];
   foreach ($real['pipeline'] as $p) { $c = $C((string)$p['currency']); $cur[$c]['forecast'] += crm_div_round((int)$p['amount_minor'] * ($w[$p['stage']] ?? 0), 10000); }
   ksort($cur);
   foreach ($cur as $c => &$x) {
-    $x['net_invoiced'] = $x['invoiced'] - $x['credits']; $x['net_income'] = $x['received'] - $x['refunds']; $x['outstanding'] = max(0, $x['net_invoiced'] - $x['received']); $x['profit'] = $x['net_income'] - $x['expenses']; $x['ytd_profit'] = $x['ytd_income'] - $x['ytd_expenses'];
-    $x['series'] = []; foreach ($months as $mo) { $m = $x['month'][$mo]; $x['series'][$mo] = ['income' => $m['received'] - $m['refunds'], 'received' => $m['received'], 'refunds' => $m['refunds'], 'expenses' => $m['expenses'], 'profit' => $m['received'] - $m['refunds'] - $m['expenses'], 'mrr' => $x['mrr_trend'][$mo]]; }
+    $x['net_invoiced'] = $x['invoiced'] - $x['credits']; $x['net_income'] = $x['received'] - $x['refunds'] + $x['affiliate']; $x['outstanding'] = max(0, $x['net_invoiced'] - $x['received']); $x['profit'] = $x['net_income'] - $x['expenses']; $x['ytd_profit'] = $x['ytd_income'] - $x['ytd_expenses'];
+    $x['series'] = []; foreach ($months as $mo) { $m = $x['month'][$mo]; $x['series'][$mo] = ['income' => $m['received'] - $m['refunds'] + $m['affiliate'], 'received' => $m['received'], 'affiliate' => $m['affiliate'], 'refunds' => $m['refunds'], 'expenses' => $m['expenses'], 'profit' => $m['received'] - $m['refunds'] + $m['affiliate'] - $m['expenses'], 'mrr' => $x['mrr_trend'][$mo]]; }
   } unset($x);
   // legacy listing payments: kept apart, never added to CRM totals (they might also be recorded in the CRM)
   $legacy = []; foreach ($real['legacy'] as $l) { $c = (string)($l['currency'] ?? ''); if ($c === '') continue; $legacy[$c] = $legacy[$c] ?? ['paid_count' => 0, 'paid_minor' => 0, 'unpaid_count' => 0]; if (($l['payment_status'] ?? '') === 'paid' && (int)$l['price'] > 0) { $legacy[$c]['paid_count']++; $legacy[$c]['paid_minor'] += (int)$l['price'] * 100; } elseif ((int)($l['price'] ?? 0) > 0) $legacy[$c]['unpaid_count']++; }

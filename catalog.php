@@ -1,5 +1,6 @@
 <?php
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }   // include-only: never executable directly (defence in depth if web-server rules are missing)
+require_once __DIR__ . '/aff_public.php';   // Phase 7E: the only database read in this file is the cached list of owner-approved affiliate links (never throws)
 /**
  * Catalogue quality layer (Phase 2).
  *
@@ -8,7 +9,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) 
  *  - Curated profiles: evidence-backed editorial profiles with sources and review status (data/curated_profiles.json)
  *  - Overlay: applies classification + curated profiles on top of the raw tool records (JSON or MySQL)
  *
- * No network access and no database access happen in this file.
+ * No network access happens in this file. Database access: only the cached, failure-safe list of approved affiliate links (aff_public.php, Phase 7E).
  */
 
 const CATALOG_UNCLASSIFIED = 'Other';
@@ -158,6 +159,7 @@ function catalog_overlay_tool(array $tool): array {
     if (!empty($p['seo_title'])) $tool['seo_title'] = (string)$p['seo_title'];
     if (!empty($p['seo_description'])) $tool['seo_description'] = (string)$p['seo_description'];
   }
+  if (function_exists('aff_overlay_tool')) $tool = aff_overlay_tool($tool);   // Phase 7E: owner-approved affiliate link, if any
   return $tool;
 }
 

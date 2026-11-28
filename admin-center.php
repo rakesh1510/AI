@@ -16,6 +16,7 @@ require_once __DIR__ . '/adm_an2_store.php';
 require_once __DIR__ . '/adm_an2_views.php';
 require_once __DIR__ . '/adm_auth.php';
 require_once __DIR__ . '/adm_account.php';
+require_once __DIR__ . '/aff_views.php';
 $user = adm_gate();                  // ONE sign-in for every admin area: renders the Control Center sign-in page / setup notice and exits when there is no signed-in user (uses the existing CRM accounts)
 $pdo = crm_pdo();
 $method = (string)($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -55,6 +56,11 @@ if ($method === 'POST') {
     if (isset($res['redirect'])) { header('Location: ' . sec_safe_local_path((string)$res['redirect'], '/admin-center.php?m=finance'), true, 303); exit; }
     adm_page($user, 'finance', 'Finance', admf_body($fs, $user, $res['get'], $res['form'], $res['errs'], $res['top']), $res['code']); exit;
   }
+  if (strpos((string)($_POST['act'] ?? ''), 'aff_') === 0) {   // Phase 7E affiliate revenue: owner only (the finance permission); validation, permission and audit inside the aff_* functions
+    if (!adm_can((string)$user['role'], 'finance')) { adm_audit($pdo, $user, 'admin_center_denied', 'affiliate action'); http_response_code(403); exit('Not allowed.'); }
+    $r = aff_handle_post($pdo, $user, $_POST); if (isset($r['redirect'])) { header('Location: ' . sec_safe_local_path($r['redirect'], '/admin-center.php?m=affiliate'), true, 303); exit; }
+    adm_page($user, 'affiliate', 'Affiliate revenue', aff_wrap(aff_nav('import') . $r['html'])); exit;
+  }
   http_response_code(400); exit('Unknown action.');
 }
 if (!in_array($method, ['GET', 'HEAD'], true)) { header('Allow: GET, HEAD, POST'); http_response_code(405); exit('Method not allowed.'); }
@@ -73,6 +79,9 @@ if ($m === 'analytics' && isset($_GET['export'])) {   // read-only CSV download:
   if ($x === null) { adm_page($user, 'analytics', 'Export not available', '<h1>Export not available</h1><p>Unknown export, or the analytics storage is not installed.</p><p><a href="/admin-center.php?m=analytics">Back to Analytics</a></p>', 404); exit; }
   adm_audit($pdo, $user, 'admin_center_export', 'analytics ' . $which . ' ' . $x[0]);
   header('Content-Type: text/csv; charset=UTF-8'); header('Content-Disposition: attachment; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', $x[0]) . '"'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex, nofollow'); echo $x[1]; exit;
+}
+if ($m === 'affiliate' && ($_GET['export'] ?? '') === 'commissions') {   // owner only (checked above); audited; formula-safe; never cached
+  adm_audit($pdo, $user, 'admin_center_export', 'affiliate commissions'); header('Content-Type: text/csv; charset=UTF-8'); header('Content-Disposition: attachment; filename="affiliate-commissions-' . gmdate('Ymd') . '.csv"'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex, nofollow'); echo aff_commission_export_csv($pdo); exit;
 }
 if ($m === 'finance' && isset($_GET['export'])) {   // owner only (checked above); every export is audited; CSV is formula-safe and never cached
   $fs = new AdmFinancePdoStore($pdo); $d = admf_load($fs); $x = is_string($_GET['export']) ? admf_export($_GET['export'], admf_report($d), $d) : null;
@@ -94,5 +103,6 @@ elseif ($m === 'universe') { $r = admu_run($pdo, $user, 'GET', $_GET, []); adm_p
 elseif ($m === 'crm') adm_page($user, 'crm', 'CRM and leads', admc_body($pdo, $user, $_GET));
 elseif ($m === 'account') adm_page($user, 'account', 'Account and password', adm_account_body($user, $_GET));
 elseif ($m === 'finance') adm_page($user, 'finance', 'Finance', admf_body(new AdmFinancePdoStore($pdo), $user, $_GET));
+elseif ($m === 'affiliate') adm_page($user, 'affiliate', 'Affiliate revenue', aff_body($pdo, $user, $_GET));
 elseif ($m === 'tools') adm_page($user, 'tools', 'AI tool management', AdmToolPdoStore::ready($pdo) ? admt_body(new AdmToolPdoStore($pdo), $user, $_GET) : admt_not_installed());
 else adm_page($user, $m, $mod['label'], adm_planned_body($m, $mod));
