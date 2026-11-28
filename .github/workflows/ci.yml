@@ -61,6 +61,7 @@ jobs:
           php tests/phase8c_tools_m4_m7_test.php
           php tests/phase8c_category_safeguards_test.php
           php tests/phase8d_finance_test.php
+          php tests/crm_quote_logic_test.php
           php tests/unified_admin_u1_test.php
           php tests/unified_admin_u2_test.php
           php tests/unified_admin_u3_test.php
