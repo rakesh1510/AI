@@ -111,7 +111,7 @@ function crm_partners_public(PDO $pdo): array {
 
 // ---- business development: prospects, outreach drafts, consent -----------------------------------------------------------------------
 function crm_prospect_fit_statuses(): array { return ['unqualified' => 'Unqualified', 'fit' => 'Good fit', 'not_fit' => 'Not a fit', 'archived' => 'Archived']; }
-function crm_contains_personal_contact(string $s): bool { return (bool)preg_match('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(\+?\d[\d\s().-]{8,}\d)/', $s); }
+function crm_contains_personal_contact(string $s): bool { $s = preg_replace('/\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\.\d{1,2}\.(\d{4}|\d{2})\b/', ' ', $s) ?? $s; return (bool)preg_match('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(\+?\d[\d\s().-]{8,}\d)/', $s); }
 /** Company-level research only. Emails and phone numbers are refused so private personal data is not collected into research notes. */
 function crm_prospect_add(PDO $pdo, ?array $user, string $company, string $website, string $kind, string $notes, string $sourceUrl = '', bool $synthetic = false): array {
   if (crm_deny($user, 'write')) return [false, 'forbidden']; $company = crm_line($company, 190); if ($company === '') return [false, 'company_required']; if (!isset(crm_lead_kinds()[$kind])) return [false, 'kind_invalid'];
@@ -145,6 +145,7 @@ function crm_outreach_draft_add(PDO $pdo, ?array $user, string $subject, string 
 }
 function crm_outreach_draft_status(PDO $pdo, ?array $user, int $id, string $to): array {
   if (crm_deny($user, 'outreach')) return [false, 'forbidden']; if (!in_array($to, ['draft', 'reviewed', 'archived'], true)) return [false, 'status_invalid'];   // there is deliberately no "sent"
+  if ($to === 'reviewed') { $b = $pdo->prepare('SELECT subject, body FROM crm_outreach_drafts WHERE id = ?'); $b->execute([$id]); $d = $b->fetch(PDO::FETCH_ASSOC); if ($d && preg_match('/\{\{\s*[a-z_]+\s*\}\}/i', $d['subject'] . ' ' . $d['body'])) return [false, 'placeholders_unresolved']; }   // Phase 7D: a draft with unfilled {{placeholders}} cannot be reviewed
   $s = $pdo->prepare('UPDATE crm_outreach_drafts SET status = ? WHERE id = ?'); $s->execute([$to, $id]); crm_audit($pdo, $user, 'outreach_status', 'prospect', null, 'draft #' . $id . ' ' . $to); return [true, 'ok'];
 }
 function crm_outreach_drafts_list(PDO $pdo, int $limit = 100): array { return $pdo->query('SELECT d.*, p.company_name FROM crm_outreach_drafts d LEFT JOIN crm_prospects p ON p.id = d.prospect_id ORDER BY d.id DESC LIMIT ' . max(1, min(500, $limit)))->fetchAll(PDO::FETCH_ASSOC); }
@@ -166,3 +167,4 @@ function crm_outreach_report(PDO $pdo): array {
     'prospects' => (int)$pdo->query('SELECT COUNT(*) FROM crm_prospects')->fetchColumn(), 'unsubscribed_contacts' => (int)$pdo->query('SELECT COUNT(*) FROM crm_contacts WHERE unsubscribed_at IS NOT NULL')->fetchColumn(),
     'open_followups' => (int)$pdo->query('SELECT COUNT(*) FROM crm_tasks WHERE done_at IS NULL')->fetchColumn()];
 }
+require_once __DIR__ . '/crm_acquisition.php';   // Phase 7D (customer acquisition); degrades gracefully until database/phase7d_acquisition.sql is applied
